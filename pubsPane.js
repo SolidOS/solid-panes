@@ -171,7 +171,7 @@ module.exports = {
 
                         // Journal Title has dropdown menu option
                         // THIS ONE LINE LINKS TO USERINPUT.JS:
-                        userinputResult = tabulator.outline.UserInput.getAutoCompleteHandler("JournalTAC")(e); //**This (e) is passed to event in userinput.js that will handle keypresses, including up and down in menu
+                        userinputResult = UI.outline.UserInput.getAutoCompleteHandler("JournalTAC")(e); //**This (e) is passed to event in userinput.js that will handle keypresses, including up and down in menu
                         // If AC used: userinputResult = ['gotdptitle', str title, str uri]
                         // -- else: userinputResult = A string
                         dump("\nACRESULT!!="+userinputResult+"\n");
@@ -190,7 +190,7 @@ module.exports = {
                 if (e.keyCode == 13 ){
                     dump("In " + caption_title + ", 2 Enter PRESSED title=" + doctitle_value+"\n");
                     // clear dropdown menu, the function will check if one exists
-                    tabulator.outline.UserInput.clearMenu();
+                    UI.outline.UserInput.clearMenu();
 
                     // ======== If autocomplete was selected ==========
                     // Right now "got dropdown title" only is for Journal

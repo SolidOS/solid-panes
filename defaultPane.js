@@ -28,7 +28,7 @@ module.exports = {
         //var doc = myDocument.wrappedJSObject;   Jim? why-tim
         // dump( doc );
         var kb = UI.store;
-        var outline = tabulator.outline; //@@
+        var outline = UI.outline; //@@
         UI.log.info("@defaultPane.render, myDocument is now " + myDocument.location);
         subject = kb.canon(subject);
         var div = myDocument.createElement('div')
@@ -39,11 +39,11 @@ module.exports = {
 //        appendRemoveIcon(div, subject, div);
 
         var plist = kb.statementsMatching(subject)
-        tabulator.outline.appendPropertyTRs(div, plist, false, filter)
+        UI.outline.appendPropertyTRs(div, plist, false, filter)
         plist = kb.statementsMatching(undefined, undefined, subject)
-        tabulator.outline.appendPropertyTRs(div, plist, true, filter)
+        UI.outline.appendPropertyTRs(div, plist, true, filter)
         if ((subject.termType == 'literal') && (subject.value.slice(0,7) == 'http://'))
-            tabulator.outline.appendPropertyTRs(div,
+            UI.outline.appendPropertyTRs(div,
                 [$rdf.st(kb.sym(subject.value), UI.ns.link('uri'), subject)],
                 true, filter)
         if ((subject.termType == 'symbol' &&
@@ -61,8 +61,8 @@ module.exports = {
             holdingTd.setAttribute('notSelectable','true');
             var img = myDocument.createElement('img');
             img.src = UI.icons.originalIconBase + 'tango/22-list-add-new.png';
-            img.addEventListener('click', function  add_new_tripleIconMouseDownListener(e) { 
-                    tabulator.outline.UserInput.addNewPredicateObject(e);
+            img.addEventListener('click', function  add_new_tripleIconMouseDownListener(e) {
+                    UI.outline.UserInput.addNewPredicateObject(e);
                     e.stopPropagation();
                     e.preventDefault();
                     return;

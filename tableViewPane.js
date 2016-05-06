@@ -20,7 +20,7 @@
 var UI = require('solid-ui')
 
 module.exports = {
-    icon: tabulator.iconPrefix + "icons/table.png",
+    icon: UI.icons.originalIconBase + "table.png",
 
     name: "tableOfClass",
 

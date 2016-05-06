@@ -87,7 +87,7 @@ airPane.label = function(subject) {
 airPane.render = function(subject, myDocument) {
 
 	//Variables specific to the UI
-	var statementsAsTables = tabulator.panes.dataContentPane.statementsAsTables;
+	var statementsAsTables = UI.panes.dataContentPane.statementsAsTables;
 	var divClass;
 	var div = myDocument.createElement("div");
 

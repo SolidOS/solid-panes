@@ -42,7 +42,7 @@ module.exports = {
     var contentsStatements = kb.statementsMatching(subject, UI.ns.ldp('contains'))
     if (contentsStatements.length) {
       // complain("Contents:", 'white'); // filter out hidden files?
-      tabulator.outline.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
+      UI.outline.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
     }
 
     // If this is a class, look for all both explicit and implicit

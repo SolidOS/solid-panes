@@ -5,6 +5,7 @@
 **  Goal:  A *distributed* version of facebook, advogato, etc etc
 **  - Similarly easy user interface, but data storage distributed
 **  - Read and write both user-private (address book) and public data clearly
+**  -- todo: use common code to get username and load profile and set 'me'
 */
 
 var UI = require('solid-ui')
@@ -20,8 +21,6 @@ module.exports  = {
             subject, UI.ns.rdf( 'type'), UI.ns.foaf('Person'))) return null;
         return "Friends";
     },
-
-    tb: tabulator,
 
     render: function(s, dom) {
 
@@ -175,7 +174,7 @@ module.exports  = {
             webid = targetURI + "#" + localid;
 
             var content_type = "application/rdf+xml";
-            var xhr = tabulator.util.XMLHTTPFactory();
+            var xhr = UI.rdf.Util.XMLHTTPFactory();
             var doc = dom;
             xhr.onreadystatechange = function (){
                 if (xhr.readyState == 4){
@@ -211,8 +210,7 @@ module.exports  = {
 
         //////////// Body of render():
 
-        if (typeof tabulator == 'undefined') tabulator = this.tb;
-        var outline = tabulator.outline;
+        var outline = UI.outline;
         var thisPane = this; // For re-render
         var kb = UI.store
         var div = dom.createElement("div")
@@ -562,9 +560,4 @@ module.exports  = {
     }  // render()
 
 }  //
-/*
-if (tabulator.preferences && tabulator.preferences.get('me')) {
-    UI.store.fetcher.lookUpThing(UI.store.sym(tabulator.preferences.get('me')));
-};
-*/
 //ends

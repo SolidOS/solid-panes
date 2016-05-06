@@ -32,7 +32,7 @@ tagPane.render = function(subject, myDocument) {
     var kb = UI.store
     var docURI = subject.uri.substring(0,subject.uri.lastIndexOf("#"));
     var stWhy = new UI.rdf.NamedNode(docURI);
-    var outline = tabulator.outline;
+    var outline = UI.outline;
     var editable = outline.UserInput.sparqler.editable(docURI, kb);
     var tag = kb.the(subject, RDFS("label"), undefined, stWhy);
 

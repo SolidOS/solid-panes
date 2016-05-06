@@ -62,7 +62,6 @@ module.exports = {
 
 
 
-        if (!tabulator.sparql) tabulator.sparql = new UI.rdf.UpdateManager(kb);
 
         var plist = kb.statementsMatching(subject)
         var qlist = kb.statementsMatching(undefined, undefined, subject)
@@ -76,7 +75,7 @@ module.exports = {
         if (subject.uri) {
             var docuri = $rdf.Util.uri.docpart(subject.uri);
             if (subject.uri != docuri
-                && tabulator.sparql.editable(docuri))
+                && UI.store.updater.editable(docuri))
                 store = kb.sym($rdf.Util.uri.docpart(subject.uri)); // an editable ontology with hash
         }
         if (!store) store = kb.any(kb.sym(docuri), ns.link('annotationStore'));

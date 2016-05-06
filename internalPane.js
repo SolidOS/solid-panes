@@ -23,7 +23,7 @@ module.exports = {
         var types = kb.findTypeURIs(subject);
         function filter(pred, inverse) {
             if (types['http://www.w3.org/2007/ont/link#ProtocolEvent']) return true; // display everything for them
-            return  !!(typeof tabulator.panes.internal.predicates[pred.uri] != 'undefined');
+            return  !!(typeof UI.panes.internal.predicates[pred.uri] != 'undefined');
         }
         var div = myDocument.createElement('div')
         div.setAttribute('class', 'internalPane')
@@ -48,16 +48,16 @@ module.exports = {
             }
         }
         if (doc_uri) {
-            var ed = tabulator.sparql.editable(doc_uri);
+            var ed = UI.store.updater.editable(doc_uri);
             if (ed) {
                 plist.push($r.st(subject,
                     kb.sym('http://www.w3.org/ns/rww#editable'),
                     kb.literal(ed), UI.store.fetcher.appNode));
             }
         }
-        tabulator.outline.appendPropertyTRs(div, plist, false, filter)
+        UI.outline.appendPropertyTRs(div, plist, false, filter)
         plist = kb.statementsMatching(undefined, undefined, subject)
-        tabulator.outline.appendPropertyTRs(div, plist, true, filter);
+        UI.outline.appendPropertyTRs(div, plist, true, filter);
         return div
     },
 
@@ -80,8 +80,5 @@ module.exports = {
     }
 };
 
-//    if (!SourceOptions["seeAlso not internal"].enabled)
-// tabulator.panes.internal.predicates['http://www.w3.org/2000/01/rdf-schema#seeAlso'] = 1;
-// tabulator.panes.internal.predicates[UI.ns.owl('sameAs').uri] = 1;
 
 //ends

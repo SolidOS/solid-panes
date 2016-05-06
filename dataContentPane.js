@@ -135,7 +135,7 @@ module.exports = {
                     }
                     return  res;
                 case 'formula':
-                    var res = tabulator.panes.dataContentPane.statementsAsTables(obj.statements, myDocument);
+                    var res = UI.panes.dataContentPane.statementsAsTables(obj.statements, myDocument);
                     res.setAttribute('class', 'nestedFormula')
                     return res;
                 case 'variable':
@@ -201,7 +201,7 @@ module.exports = {
             // Then about the primary topic of the document if any
             var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject);
             if (ps) initialRoots.push(ps);
-            div.appendChild(tabulator.panes.dataContentPane.statementsAsTables(
+            div.appendChild(UI.panes.dataContentPane.statementsAsTables(
                             sts, myDocument, initialRoots));
 
         } else {  // An outline mode openable rendering .. might be better

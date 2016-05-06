@@ -5,8 +5,8 @@
 */
 
 
-
-tabulator.panes.metaPane = {
+// UI.panes.metaPane
+module.exports = {
 
     icon:  UI.icons.originalIconBase + 'rdf_flyer.24.gif', // @@ fix
 
@@ -20,17 +20,17 @@ tabulator.panes.metaPane = {
             ps = ps.concat(kb.each(t, UI.ns.ui('formDefinition')));
         }
         for (var i=0; i <ps.length; i++) {
-            if (tabulator.panes.index[ps[i].uri] == undefined) { // New one
+            if (UI.panes.index[ps[i].uri] == undefined) { // New one
                 var pane = {}; // Internal tabulator object
                 var p = ps[i]; // The pane definition on the web
                 pane.definition = p;
-                pane.render = tabulator.panes.metaPane.render; // ie below
+                pane.render = UI.panes.metaPane.render; // ie below
                 pane.icon = image = kb.any(p, UI.ns.ui('icon'));
                 pane.label = kb.any(p, UI.ns.ui('icon'));
                 if (!p.label) p.label = UI.utils.label(p);
                 pane.definition = p;
-                tabulator.panes.index[ps[i].uri] = p;
-                tabulator.panes.register(p, false); // no "Find all" button
+                UI.panes.index[ps[i].uri] = p;
+                UI.panes.register(p, false); // no "Find all" button
             }
         }
 
@@ -58,9 +58,6 @@ tabulator.panes.metaPane = {
       return div
     }
 };
-
-tabulator.panes.register(tabulator.panes.dataContentPane, true);
-
 
 
 // ENDS
