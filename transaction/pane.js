@@ -79,7 +79,7 @@ module.exports = {
 
 
 
-        var sparqlService = tabulator.updater = tabulator.updater || new UI.rdf.UpdateManager(kb);
+        var sparqlService = UI.store.updater
 
 
         var plist = kb.statementsMatching(subject)
@@ -148,7 +148,7 @@ module.exports = {
 
 
         var insertedPane = function(dom, subject, paneName) {
-            var p = tabulator.panes.byName(paneName);
+            var p = UI.panes.byName(paneName);
             var d = p.render(subject, dom);
             d.setAttribute('style', 'border: 0.1em solid green;')
             return d;
@@ -380,7 +380,7 @@ module.exports = {
             // Add in simple comments about the transaction
 
             donePredicate(ns.rdfs('comment')); // Done above
-/*            tabulator.outline.appendPropertyTRs(div, plist, false,
+/*            UI.outline.appendPropertyTRs(div, plist, false,
                 function(pred, inverse) {
                     if (!inverse && pred.uri ==
                         "http://www.w3.org/2000/01/rdf-schema#comment") return true;
@@ -391,11 +391,11 @@ module.exports = {
                         .setAttribute('style','height: 1em'); // spacer
 
             // Remaining properties
-            tabulator.outline.appendPropertyTRs(div, plist, false,
+            UI.outline.appendPropertyTRs(div, plist, false,
                 function(pred, inverse) {
                     return !(pred.uri in predicateURIsDone)
                 });
-            tabulator.outline.appendPropertyTRs(div, qlist, true,
+            UI.outline.appendPropertyTRs(div, qlist, true,
                 function(pred, inverse) {
                     return !(pred.uri in predicateURIsDone)
                 });

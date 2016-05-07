@@ -23,8 +23,6 @@ module.exports = {
   // and follow instructions there
   render: function(subject, dom) {
 
-
-
     // Utility functions
 
     var complainIfBad = function(ok, message) {

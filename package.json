@@ -35,9 +35,6 @@
   },
   "homepage": "https://github.com/linkeddata/solid-app-set",
   "dependencies": {
-    "http-browserify": "^0.0.0",
-    "events": "",
-    "url":"",
     "better-simple-slideshow": "git://github.com/linkeddata/better-simple-slideshow.git#gh-pages",
     "solid-ui": "git://github.com/linkeddata/solid-ui.git"
   },
