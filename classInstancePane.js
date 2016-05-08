@@ -23,6 +23,7 @@ module.exports = {
   },
 
   render: function (subject, myDocument) {
+    var outliner = UI.panes.getOutliner(myDocument)
     var kb = UI.store
     var complain = function complain (message, color) {
       var pre = myDocument.createElement('pre')
@@ -42,7 +43,7 @@ module.exports = {
     var contentsStatements = kb.statementsMatching(subject, UI.ns.ldp('contains'))
     if (contentsStatements.length) {
       // complain("Contents:", 'white'); // filter out hidden files?
-      UI.outline.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
+      outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
     }
 
     // If this is a class, look for all both explicit and implicit
@@ -75,11 +76,11 @@ module.exports = {
         div.appendChild(tr)
       }
 
-      UI.outline.appendPropertyTRs(div, sts, true, function (pred) {return true;})
+      outliner.appendPropertyTRs(div, sts, true, function (pred) {return true;})
 
       if (more.length) {
         complain('Implcit:')
-        UI.outline.appendPropertyTRs(div, more, true, function (pred) {return true;})
+        outliner.appendPropertyTRs(div, more, true, function (pred) {return true;})
       }
     }
     return div

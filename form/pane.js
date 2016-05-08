@@ -23,7 +23,6 @@ module.exports =  {
         var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#');
         var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
         var DCT = $rdf.Namespace('http://purl.org/dc/terms/');
-        var UI = $rdf.Namespace('http://www.w3.org/ns/ui#');
 
 
         var mention = function complain(message, style){

@@ -14,7 +14,7 @@ module.exports = {
 
     label: function(subject) { return 'about ';},
 
-    render: function(subject, myDocument) {
+    render: function(subject, dom) {
 
       var filter = function(pred, inverse) {
         if (typeof UI.panes.internal.predicates[pred.uri] !== 'undefined')
@@ -25,13 +25,14 @@ module.exports = {
       }
 
 
-        //var doc = myDocument.wrappedJSObject;   Jim? why-tim
+        //var doc = dom.wrappedJSObject;   Jim? why-tim
         // dump( doc );
+        var outliner = UI.panes.getOutliner(dom)
         var kb = UI.store;
-        var outline = UI.outline; //@@
-        UI.log.info("@defaultPane.render, myDocument is now " + myDocument.location);
+        var outline = outliner; //@@
+        UI.log.info("@defaultPane.render, dom is now " + dom.location);
         subject = kb.canon(subject);
-        var div = myDocument.createElement('div')
+        var div = dom.createElement('div')
         //var f = jq("<div></div>", doc);
         //jq(div, doc).append(f);
         //f.resource({subject:"http://web.mit.edu/jambo/www/foaf.rdf#jambo", predicate:"http://xmlns.com/foaf/0.1/knows"});
@@ -39,11 +40,11 @@ module.exports = {
 //        appendRemoveIcon(div, subject, div);
 
         var plist = kb.statementsMatching(subject)
-        UI.outline.appendPropertyTRs(div, plist, false, filter)
+        outliner.appendPropertyTRs(div, plist, false, filter)
         plist = kb.statementsMatching(undefined, undefined, subject)
-        UI.outline.appendPropertyTRs(div, plist, true, filter)
+        outliner.appendPropertyTRs(div, plist, true, filter)
         if ((subject.termType == 'literal') && (subject.value.slice(0,7) == 'http://'))
-            UI.outline.appendPropertyTRs(div,
+            outliner.appendPropertyTRs(div,
                 [$rdf.st(kb.sym(subject.value), UI.ns.link('uri'), subject)],
                 true, filter)
         if ((subject.termType == 'symbol' &&
@@ -55,14 +56,14 @@ module.exports = {
                 && kb.updater.editable(kb.anyStatementMatching(subject).why.uri)
                 //check the document containing something about of the bnode @@ what about as object?
              /*! && HCIoptions["bottom insert highlights"].enabled*/)) {
-            var holdingTr = myDocument.createElement('tr'); //these are to minimize required changes
-            var holdingTd = myDocument.createElement('td'); //in userinput.js
+            var holdingTr = dom.createElement('tr'); //these are to minimize required changes
+            var holdingTd = dom.createElement('td'); //in userinput.js
             holdingTd.setAttribute('colspan','2');
             holdingTd.setAttribute('notSelectable','true');
-            var img = myDocument.createElement('img');
+            var img = dom.createElement('img');
             img.src = UI.icons.originalIconBase + 'tango/22-list-add-new.png';
             img.addEventListener('click', function  add_new_tripleIconMouseDownListener(e) {
-                    UI.outline.UserInput.addNewPredicateObject(e);
+                    outliner.UserInput.addNewPredicateObject(e);
                     e.stopPropagation();
                     e.preventDefault();
                     return;
@@ -74,7 +75,7 @@ module.exports = {
         return div
     },
 
-    sync: function(subject, myDocument, div) { // Untested  and not the best way to do it
+    sync: function(subject, dom, div) { // Untested  and not the best way to do it
     // This code was cut out of outline.js
     //    best way is to leave TRs there and add/delete any necessray extras
 

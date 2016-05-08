@@ -184,7 +184,7 @@ photoImportPane.render = function (subject, myDocument) {
 
   photoImportPane.render.InsertTriples = function (triples, id) {
     // var st = new RDFStatement(PAC('PhotoAlbum'),PAC('Owner'),ME('me'))
-    var sparqlService = new UI.rdf.UpdateManager(kb)
+    var sparqlService = UI.store.updater
     sparqlService.insert_statement(triples, function (uri, success, error) {
       if (!success) {
         alert('Error.')
@@ -287,6 +287,6 @@ photoImportPane.render = function (subject, myDocument) {
   return main_div
 }
 
-tabulator.panes.register(photoImportPane, false)
+UI.panes.register(photoImportPane, false)
 
 // End photoImportPane

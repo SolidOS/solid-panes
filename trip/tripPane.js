@@ -23,10 +23,10 @@ module.exports = {
         var t = kb.findTypeURIs(subject);
 
         // if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction']) return "$$";
-        //if(kb.any(subject, Q('amount'))) return "$$$"; // In case schema not picked up
+        //if(kb.any(subject, UI.ns.qu('amount'))) return "$$$"; // In case schema not picked up
 
 
-        if (Q('Transaction') in kb.findSuperClassesNT(subject)) return "by Trip";
+        if (UI.ns.qu('Transaction') in kb.findSuperClassesNT(subject)) return "by Trip";
         if (t['http://www.w3.org/ns/pim/trip#Trip']) return "Trip $";
 
         return null; // No under other circumstances (while testing at least!)
@@ -39,7 +39,6 @@ module.exports = {
         var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#');
         var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
         var DCT = $rdf.Namespace('http://purl.org/dc/terms/');
-        var UI = $rdf.Namespace('http://www.w3.org/ns/ui#');
         var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#');
         var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#');
 
@@ -82,7 +81,7 @@ module.exports = {
 
 
 
-        var sparqlService = new UI.rdf.UpdateManager(kb);
+        var sparqlService = UI.store.updater;
 
 
         var plist = kb.statementsMatching(subject)
@@ -106,14 +105,14 @@ module.exports = {
             opt.add(v['transaction'], ns.rdf('type'), v['type']); // Issue: this will get stored supertypes too
             query.pat.optional.push(opt);
 
-            query.pat.add(v['transaction'], Q('date'), v['date']);
+            query.pat.add(v['transaction'], UI.ns.qu('date'), v['date']);
 
             var opt = kb.formula();
             opt.add(v['transaction'], ns.rdfs('comment'), v['comment']);
             query.pat.optional.push(opt);
 
             //opt = kb.formula();
-            query.pat.add(v['transaction'], Q('in_USD'), v['in_USD']);
+            query.pat.add(v['transaction'], UI.ns.qu('in_USD'), v['in_USD']);
             //query.pat.optional.push(opt);
 
             var calculations = function() {
@@ -122,12 +121,12 @@ module.exports = {
                 // complain("@@ Number of transactions in this trip: " + trans.length);
                 trans.map(function(t){
                     var ty = kb.the(t, ns.rdf('type'));
-                    // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, Q('in_USD')));
-                    if (!ty) ty = Q('ErrorNoType');
+                    // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')));
+                    if (!ty) ty = UI.ns.qu('ErrorNoType');
                     if (ty && ty.uri) {
                         var tyuri = ty.uri;
                         if (!total[tyuri]) total[tyuri] = 0.0;
-                        var lit = kb.any(t, Q('in_USD'));
+                        var lit = kb.any(t, UI.ns.qu('in_USD'));
                         if (!lit) {
                             complain("    @@ No amount in USD: "+lit+" for " + t);
                         }
@@ -156,7 +155,7 @@ module.exports = {
 
         //          Render the set of trips which have transactions in this class
 
-        if (Q('Transaction') in kb.findSuperClassesNT(subject)) {
+        if (UI.ns.qu('Transaction') in kb.findSuperClassesNT(subject)) {
 
             ts = kb.each(undefined, ns.rdf('type'), subject);
             var tripless = [];
@@ -168,9 +167,9 @@ module.exports = {
                     tripless.push(trans);
                 } else {
                     if (!(trans in index)) index[trip] =  { total:0, transactions: [] };
-                    var usd = kb.any(trans, Q('in_USD'));
+                    var usd = kb.any(trans, UI.ns.qu('in_USD'));
                     if (usd) index[trip]['total'] += usd;
-                    var date = kb.any(trans, Q('date'));
+                    var date = kb.any(trans, UI.ns.qu('date'));
                     index[trip.toNT()]['transactions'].push([date, trans]);
                 }
             }

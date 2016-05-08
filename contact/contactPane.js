@@ -234,7 +234,7 @@ module.exports = {
 
     // /////////////////////////////////////////////////////////////////////////////
 
-    var updater = new UI.rdf.UpdateManager(kb)
+    var updater = UI.store.updater
     UI.widgets.preventBrowserDropEvents(dom)
 
     var plist = kb.statementsMatching(subject)
@@ -517,7 +517,7 @@ module.exports = {
 
         var toolsPane = function (selectedGroups, groupsMainTable) {
           var kb = UI.store, ns = UI.ns
-          var updater = new UI.rdf.UpdateManager(kb)
+          var updater = UI.store.updater
           var ACL = UI.ns.acl, VCARD = UI.ns.vcard
           var doc = $rdf.sym(book.uri.split('#')[0]) // The ACL is actually to the doc describing the thing
 
@@ -731,7 +731,7 @@ module.exports = {
         }
 
         var cardPane = function (dom, subject, paneName) {
-          var p = tabulator.panes.byName(paneName)
+          var p = UI.panes.byName(paneName)
           var d = p.render(subject, dom)
           d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
           return d

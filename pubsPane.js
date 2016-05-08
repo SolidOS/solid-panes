@@ -50,7 +50,7 @@ module.exports = {
     },
 
     render: function(subject, myDocument) { //Subject is source of doc, document is HTML doc element we are attaching elements to
-
+        var outliner = UI.panes.getOutliner(myDocument)
         //NAMESPACES ------------------------------------------------------
         var foaf = UI.rdf.Namespace("http://xmlns.com/foaf/0.1/");
         //var rdf= UI.ns.rdf;
@@ -61,7 +61,7 @@ module.exports = {
         var dcelems = UI.rdf.Namespace('http://purl.org/dc/elements/1.1/');
         var soics = UI.rdf.Namespace('http://rdfs.org/sioc/spec/');
         var kb = UI.store;
-        var sparqlUpdater = new UI.rdf.UpdateManager(kb);
+        var sparqlUpdater = UI.store.updater;
 
         var collections_URI = 'http://dig.csail.mit.edu/2007/wiki/docs/collections';
         var journalURI = "";
@@ -171,7 +171,7 @@ module.exports = {
 
                         // Journal Title has dropdown menu option
                         // THIS ONE LINE LINKS TO USERINPUT.JS:
-                        userinputResult = UI.outline.UserInput.getAutoCompleteHandler("JournalTAC")(e); //**This (e) is passed to event in userinput.js that will handle keypresses, including up and down in menu
+                        userinputResult = outliner.UserInput.getAutoCompleteHandler("JournalTAC")(e); //**This (e) is passed to event in userinput.js that will handle keypresses, including up and down in menu
                         // If AC used: userinputResult = ['gotdptitle', str title, str uri]
                         // -- else: userinputResult = A string
                         dump("\nACRESULT!!="+userinputResult+"\n");
@@ -190,7 +190,7 @@ module.exports = {
                 if (e.keyCode == 13 ){
                     dump("In " + caption_title + ", 2 Enter PRESSED title=" + doctitle_value+"\n");
                     // clear dropdown menu, the function will check if one exists
-                    UI.outline.UserInput.clearMenu();
+                    outliner.UserInput.clearMenu();
 
                     // ======== If autocomplete was selected ==========
                     // Right now "got dropdown title" only is for Journal

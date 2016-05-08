@@ -78,7 +78,7 @@ module.exports = {
       var rss = UI.rdf.Namespace("http://purl.org/rss/1.0/");
       var kb = UI.store;
       var sf = UI.store.fetcher;
-      var sparqlUpdater = new UI.rdf.UpdateManager(kb);
+      var sparqlUpdater = UI.store.updater;
       var Events = new CustomEvents();
 
 
@@ -283,7 +283,7 @@ module.exports = {
       var profile = getProfileData(p);
       var ui={};
       sf.addCallback('done',function(){Events.raiseEvent("evtUpdateFriendState",[],this);
-          tabulator.panes.newsocialpane.render(s,doc);
+          UI.panes.newsocialpane.render(s,doc);
           })
       if (!(kb.whether(I, rdf('type'),foaf('Person')))){
           sf.lookUpThing(I);

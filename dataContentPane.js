@@ -30,6 +30,7 @@ module.exports = {
     },
 */
     statementsAsTables: function statementsAsTables(sts, myDocument, initialRoots) {
+        var outliner = UI.panes.getOutliner(myDocument)
         var rep = myDocument.createElement('table');
         var sz = UI.rdf.Serializer( UI.store );
         var res = sz.rootSubjects(sts);
@@ -37,7 +38,7 @@ module.exports = {
         var subjects = res.subjects;
         var loopBreakers = res.loopBreakers;
         for (var x in loopBreakers) dump('\tdataContentPane: loopbreaker:'+x+'\n')
-        var outline = UI.outline;
+        var outline = outliner;
         var doneBnodes = {}; // For preventing looping
         var referencedBnodes = {}; // Bnodes which need to be named alas
 
@@ -188,6 +189,7 @@ module.exports = {
     // View the data in a file in user-friendly way
     render: function(subject, myDocument) {
 
+        var outliner = UI.panes.getOutliner(myDocument)
         var kb = UI.store;
         var div = myDocument.createElement("div")
         div.setAttribute('class', 'dataContentPane');
@@ -222,7 +224,7 @@ module.exports = {
                 var tr = myDocument.createElement("TR");
                 root = roots[i];
                 tr.style.verticalAlign="top";
-                var td = thisOutline.outline_objectTD(root, undefined, tr)
+                var td = outliner.outline_objectTD(root, undefined, tr)
                 tr.appendChild(td)
                 div.appendChild(tr);
                 outline_expand(td, root,  {'pane': p});

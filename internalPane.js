@@ -55,9 +55,10 @@ module.exports = {
                     kb.literal(ed), UI.store.fetcher.appNode));
             }
         }
-        UI.outline.appendPropertyTRs(div, plist, false, filter)
+        var outliner = UI.panes.getOutliner(myDocument)
+        outliner.appendPropertyTRs(div, plist, false, filter)
         plist = kb.statementsMatching(undefined, undefined, subject)
-        UI.outline.appendPropertyTRs(div, plist, true, filter);
+        outliner.appendPropertyTRs(div, plist, true, filter);
         return div
     },
 

@@ -32,7 +32,7 @@ tagPane.render = function(subject, myDocument) {
     var kb = UI.store
     var docURI = subject.uri.substring(0,subject.uri.lastIndexOf("#"));
     var stWhy = new UI.rdf.NamedNode(docURI);
-    var outline = UI.outline;
+    var outline = UI.panes.getOutliner(myDocument)
     var editable = outline.UserInput.sparqler.editable(docURI, kb);
     var tag = kb.the(subject, RDFS("label"), undefined, stWhy);
 
@@ -49,7 +49,7 @@ var main_div = myDocument.createElement("div");
         var p = OWL("sameAs");
         var o = new UI.rdf.NamedNode(uri);
         var triple = new UI.rdf.Statement(s, p, o, stWhy);
-        var sparqlService = new UI.rdf.UpdateManager(kb);
+        var sparqlService = UI.store.updater;
         sparqlService.delete_statement(triple, function(uri,success,error){
             if (!success) {
                 alert("Error.");
@@ -126,7 +126,7 @@ var main_div = myDocument.createElement("div");
                 for (var i = 0; i < cn.length; i++) {
                     list.removeChild(cn[i]);
                 }
-                var data = (new DOMParser()).parseFromString(xmlhttp.responseText, "text/xml");
+                var data = (new myDocumentParser()).parseFromString(xmlhttp.responseText, "text/xml");
                 var uris = data.getElementsByTagName("uri");
                 for (var i = 0; i < uris.length; i++) {
                     var op = myDocument.createElement("option");
@@ -151,7 +151,7 @@ var main_div = myDocument.createElement("div");
             var p = OWL("sameAs");
             var o = new UI.rdf.NamedNode(uri);
             var triple = new UI.rdf.Statement(s, p, o, stWhy);
-            var sparqlService = new UI.rdf.UpdateManager(kb);
+            var sparqlService = UI.store.updater;
             sparqlService.insert_statement(triple, function(uri,success,error){
                 if (!success) {
                     alert("Error.");
@@ -174,7 +174,7 @@ var main_div = myDocument.createElement("div");
             var p = OWL("sameAs");
             var o = new UI.rdf.NamedNode(uri);
             var triple = new UI.rdf.Statement(s, p, o, stWhy);
-            var sparqlService = new UI.rdf.UpdateManager(kb);
+            var sparqlService = UI.store.updater;
             sparqlService.insert_statement(triple, function(uri,success,error){
                 if (!success) {
                     alert("Error.");

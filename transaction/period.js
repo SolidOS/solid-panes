@@ -16,7 +16,6 @@ module.exports = {
 
     // Does the subject deserve this pane?
     label: function(subject) {
-        var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#');
         var kb = UI.store;
         var t = kb.findTypeURIs(subject);
         if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) return "period";
@@ -26,18 +25,9 @@ module.exports = {
     render: function(subject, dom) {
         var kb = UI.store;
         var ns = UI.ns;
-        var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#');
-        var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
-        var DCT = $rdf.Namespace('http://purl.org/dc/terms/');
-        var UI = $rdf.Namespace('http://www.w3.org/ns/ui#');
-        var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#');
-        var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#');
 
         var div = dom.createElement('div')
         div.setAttribute('class', 'periodPane');
-        div.innerHTML='<h1>Period</h1><table><tbody><tr>\
-        <td>%s</tr></tbody></table>\
-        <p>This is a pane under development.</p>';
 
         var commentFlter = function(pred, inverse) {
             if (!inverse && pred.uri ==
@@ -71,7 +61,7 @@ module.exports = {
 
 
 
-        var sparqlService = new UI.rdf.UpdateManager(kb);
+        var sparqlService = UI.store.updater;
 
 
         var plist = kb.statementsMatching(subject)
@@ -101,7 +91,7 @@ module.exports = {
                         +subject.uri+'>,\n -- every period needs one.)')
             };
 
-            var store = kb.any(subject, Q('annotationStore')) || null;
+            var store = kb.any(subject, UI.ns.qu('annotationStore')) || null;
 
             var needed = kb.each(subject, ns.rdfs('seeAlso'));
 
@@ -141,7 +131,7 @@ module.exports = {
             var setPaneStyle = function() {
                 var mystyle = "padding: 0.5em 1.5em 1em 1.5em; ";
                 if (account) {
-                    var backgroundColor = kb.any(account,UI('backgroundColor'));
+                    var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'));
                     if (backgroundColor) mystyle += "background-color: "
                                 +backgroundColor.value+"; ";
                 }
@@ -153,7 +143,7 @@ module.exports = {
             h2.textContent = "Period " + dtstart.value.slice(0,10) + ' - ' + dtend.value.slice(0,10);
 
             var insertedPane = function(dom, subject, paneName) {
-                var p = tabulator.panes.byName(paneName);
+                var p = UI.panes.byName(paneName);
                 var d = p.render(subject, dom);
                 d.setAttribute('style', 'border: 0.1em solid green;')
                 return d;
@@ -203,7 +193,7 @@ module.exports = {
                         // var mystyle = "padding: 0.5em 1.5em 1em 1.5em; ";
                         var mystyle = "margin-left: 8em; padding-left: 5em;";
                         if (account) {
-                            var backgroundColor = kb.any(account,UI('backgroundColor'));
+                            var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'));
                             if (backgroundColor) mystyle += "background-color: "
                                         +backgroundColor.value+"; ";
                         }

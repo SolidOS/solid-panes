@@ -9,21 +9,21 @@
 var UI = require('solid-ui')
 
 module.exports = {
-
-    icon:  (module.__dirname || __dirname) + '22-pixel-068010-3d-transparent-glass-icon-alphanumeric-dollar-sign.png',
+    // icon:  (module.__dirname || __dirname) + '22-pixel-068010-3d-transparent-glass-icon-alphanumeric-dollar-sign.png',
+    icon:  UI.icons.iconBase + 'noun_106746.svg',
 
     name: 'transaction',
 
     // Does the subject deserve this pane?
     label: function(subject) {
-        var UI = require('solid-ui')
 
         var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#');
         var kb = UI.store;
         var t = kb.findTypeURIs(subject);
         if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction']) return "$$";
-        if(kb.any(subject, Q('amount'))) return "$$$"; // In case schema not picked up
-        if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) return "period $";
+        if(kb.any(subject, UI.ns.qu('amount'))) return "$$$"; // In case schema not picked up
+
+        // if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) return "period $";
 
         if (t['http://www.w3.org/ns/pim/trip#Trip']) return "Trip $";
 
@@ -31,14 +31,12 @@ module.exports = {
     },
 
     render: function(subject, dom) {
-        var UI = require('solid-ui')
 
         var kb = UI.store;
         var ns = UI.ns;
         var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#');
         var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
         var DCT = $rdf.Namespace('http://purl.org/dc/terms/');
-        var UI = $rdf.Namespace('http://www.w3.org/ns/ui#');
         var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#');
         var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#');
 
@@ -96,7 +94,7 @@ module.exports = {
         var setPaneStyle = function() {
             var mystyle = "padding: 0.5em 1.5em 1em 1.5em; ";
             if (account) {
-                var backgroundColor = kb.any(account,UI('backgroundColor'));
+                var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
                 if (backgroundColor) mystyle += "background-color: "
                             +backgroundColor.value+"; ";
             }
@@ -198,7 +196,7 @@ module.exports = {
                     // var mystyle = "padding: 0.5em 1.5em 1em 1.5em; ";
                     var mystyle = "'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;";
                     if (account) {
-                        var backgroundColor = kb.any(account,UI('backgroundColor'));
+                        var backgroundColor = kb.any(account,UI.ns.ui('backgroundColor'));
                         if (backgroundColor) mystyle += "background-color: "
                                     +backgroundColor.value+"; ";
                     }
@@ -242,13 +240,6 @@ module.exports = {
         };
 
 
-
-
-
-
-
-
-
         //              Render a single transaction
 
         // This works only if enough metadata about the properties can drive the RDFS
@@ -262,14 +253,14 @@ module.exports = {
             var setPaneStyle = function(account) {
                 var mystyle = "padding: 0.5em 1.5em 1em 1.5em; ";
                 if (account) {
-                    var backgroundColor = kb.any(account,UI('backgroundColor'));
+                    var backgroundColor = kb.any(account,UI.ns.ui('backgroundColor'));
                     if (backgroundColor) mystyle += "background-color: "
                                 +backgroundColor.value+"; ";
                 }
                 div.setAttribute('style', mystyle);
             }
 
-            var account = kb.any(subject, Q('toAccount'));
+            var account = kb.any(subject, UI.ns.qu('toAccount'));
             setPaneStyle(account);
             if (account == undefined) {
                 complain('(Error: There is no bank account known for this transaction <'
@@ -277,12 +268,12 @@ module.exports = {
             };
 
 	    var store = null;
-            var statement = kb.any(subject, Q('accordingTo'));
+            var statement = kb.any(subject, UI.ns.qu('accordingTo'));
             if (statement == undefined) {
                 complain('(Error: There is no back link to the original data source foir this transaction <'
                         +subject.uri+'>,\nso I can\'t tell how to annotate it.)')
             } else {
-		store = statement != undefined ? kb.any(statement, Q('annotationStore')) :null;
+		store = statement != undefined ? kb.any(statement, UI.ns.qu('annotationStore')) :null;
 		if (store == undefined) {
 		    complain('(There is no annotation document for this statement\n<'
 			    +statement.uri+'>,\nso you cannot classify this transaction.)')
@@ -303,8 +294,8 @@ module.exports = {
                 nav.appendChild(dom.createElement('br'));
             }
 
-            navLink(Q('toAccount'));
-            navLink(Q('accordingTo'), "Statement");
+            navLink(UI.ns.qu('toAccount'));
+            navLink(UI.ns.qu('accordingTo'), "Statement");
             navLink(TRIP('trip'));
 
             // Basic data:
@@ -336,7 +327,7 @@ module.exports = {
                     if (!ok) complain("Cannot load store " + store + " " + body);
                     div.appendChild(
                         UI.widgets.makeSelectForNestedCategory(dom, kb,
-                            subject, Q('Classified'), store, complainIfBad));
+                            subject, UI.ns.qu('Classified'), store, complainIfBad));
 
                     div.appendChild(UI.widgets.makeDescription(dom, kb, subject,
                             UI.ns.rdfs('comment'), store, complainIfBad));
@@ -379,8 +370,10 @@ module.exports = {
 
             // Add in simple comments about the transaction
 
+            var outliner = UI.panes.getOutliner(dom)
+
             donePredicate(ns.rdfs('comment')); // Done above
-/*            UI.outline.appendPropertyTRs(div, plist, false,
+/*            outliner.appendPropertyTRs(div, plist, false,
                 function(pred, inverse) {
                     if (!inverse && pred.uri ==
                         "http://www.w3.org/2000/01/rdf-schema#comment") return true;
@@ -391,11 +384,11 @@ module.exports = {
                         .setAttribute('style','height: 1em'); // spacer
 
             // Remaining properties
-            UI.outline.appendPropertyTRs(div, plist, false,
+            outliner.appendPropertyTRs(div, plist, false,
                 function(pred, inverse) {
                     return !(pred.uri in predicateURIsDone)
                 });
-            UI.outline.appendPropertyTRs(div, qlist, true,
+            outliner.appendPropertyTRs(div, qlist, true,
                 function(pred, inverse) {
                     return !(pred.uri in predicateURIsDone)
                 });
@@ -418,14 +411,14 @@ module.exports = {
             opt.add(v['transaction'], ns.rdf('type'), v['type']); // Issue: this will get stored supertypes too
             query.pat.optional.push(opt);
 
-            query.pat.add(v['transaction'], Q('date'), v['date']);
+            query.pat.add(v['transaction'], UI.ns.qu('date'), v['date']);
 
             var opt = kb.formula();
             opt.add(v['transaction'], ns.rdfs('comment'), v['comment']);
             query.pat.optional.push(opt);
 
             //opt = kb.formula();
-            query.pat.add(v['transaction'], Q('in_USD'), v['in_USD']);
+            query.pat.add(v['transaction'], UI.ns.qu('in_USD'), v['in_USD']);
 
             //query.pat.optional.push(opt);
 
@@ -442,8 +435,8 @@ module.exports = {
                     var date = kb.the(t, ns.qu('date'));
                     var year =  date ? ('' + date.value).slice(0,4) : '????';
                     var ty = kb.the(t, ns.rdf('type')); // @@ find most specific type
-                    // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, Q('in_USD')));
-                    if (!ty) ty = Q('ErrorNoType');
+                    // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')));
+                    if (!ty) ty = UI.ns.qu('ErrorNoType');
                     if (ty && ty.uri) {
                         var tyuri = ty.uri;
                         if (!yearTotal[year]) yearTotal[year] = 0.0;
@@ -451,7 +444,7 @@ module.exports = {
                         if (!total[tyuri]) total[tyuri] = 0.0;
                         if (!yearCategoryTotal[year][tyuri]) yearCategoryTotal[year][tyuri] = 0.0;
 
-                        var lit = kb.any(t, Q('in_USD'));
+                        var lit = kb.any(t, UI.ns.qu('in_USD'));
                         if (!lit) {
                             complain("@@ No amount in USD: "+lit+" for " + t);
                         }
@@ -532,211 +525,6 @@ module.exports = {
             tab.setAttribute('style', 'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;')
             div.appendChild(tab);
             calculations();
-
-
-
-
-
-        //              Render a single Period
-
-        // This works only if enough metadata about the properties can drive the RDFS
-        // (or actual type statements which typically are NOT there on)
-
-        } else if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) {
-
-            var dtstart = kb.any(subject, ns.cal('dtstart'));
-            if (dtstart === undefined) {
-                complain('(Error: There is no start date known for this period <'
-                        +subject.uri+'>,\n -- every period needs one.)')
-            };
-
-            var dtend = kb.any(subject, ns.cal('dtend'));
-            if (dtend === undefined) {
-                complain('(Error: There is no end date known for this period <'
-                        +subject.uri+'>,\n -- every period needs one.)')
-            };
-
-            var store = kb.any(subject, Q('annotationStore')) || null;
-
-            var needed = kb.each(subject, ns.rdfs('seeAlso'));
-
-            donePredicate(ns.rdf('type'));
-
-            var inPeriod = function(date) {
-                return !!(date && date >= dtstart && date < dtend);
-            };
-
-            var transactionInPeriod = function(x) {
-                return inPeriod(kb.any(x, ns.qu('date')));
-            };
-
-            var h2 = div.appendChild(dom.createElement('p'));
-            h2.textContent = "Period " + dtstart.value.slice(0,10) + ' - ' + dtend.value.slice(0,10);
-
-
-            // List unclassified transactions
-
-
-            var dummies = {
-                'http://www.w3.org/2000/10/swap/pim/qif#Transaction': true, // (we knew)
-                'http://www.w3.org/2000/10/swap/pim/qif#Unclassified': true, // pseudo classifications we may phase out
-                'http://www.w3.org/2000/10/swap/pim/qif#UnclassifiedOutgoing': true,
-                'http://www.w3.org/2000/10/swap/pim/qif#UnclassifiedIncome': true,
-            };
-            var xURIs = kb.findMemberURIs(ns.qu('Transaction'));
-            var unc_in = [], unc_out = [], usd, z, tt, t, j;
-            for (var y in xURIs) { // For each thing which can be inferred to be a transaction
-                if (xURIs.hasOwnProperty(y)) {
-                    z = kb.sym(y);
-                    tt = kb.each(z, ns.rdf('type')); // What EXPLICIT definitions
-                    classified = false;
-                    for (j=0; j< tt.length; j++) {
-                        t = tt[j];
-                        if ( dummies[t.uri] === undefined) {
-                            classified = true;
-                        }
-                    };
-                    if (!classified) {
-                        usd = kb.any(z, ns.qu('in_USD'));
-                        if (usd === undefined) {
-                            usd = kb.any(z, ns.qu('amount'));
-                        }
-                        if (usd && ( '' + usd.value).indexOf('-') >= 0) {
-                            unc_out.push(kb.sym(y));
-                        } else {
-                            unc_in.push(kb.sym(y));
-                        }
-                    }
-                }
-            }
-            var tab, count;
-            if (unc_in.length) {
-                tab = transactionTable(dom, unc_in, transactionInPeriod);
-                count = tab.children.length;
-                div.appendChild(dom.createElement('h3')).textContent = "Unclassified Income" +
-                    ( count < 4 ? '' : ' (' + count + ')' );
-                div.appendChild(tab);
-            } else {
-                happy("No unclassified income");
-            }
-            if (unc_out.length) {
-                tab = transactionTable(dom, unc_out, transactionInPeriod);
-                count = tab.children.length;
-                div.appendChild(dom.createElement('h3')).textContent = "Unclassified Outgoings" +
-                    ( count < 4 ? '' : ' (' + count+ ')' );
-                div.appendChild(tab);
-            } else {
-                happy("No unclassified outgoings ");
-            }
-
-            /////////////////  Check some categories of transaction for having given fields
-
-            var catSymbol = function(catTail) {
-                var cat, cats = kb.findSubClassesNT(ns.qu('Transaction'));
-                for (cat in cats) {
-                    if (cats.hasOwnProperty(cat)) {
-                        if (cat.slice(1,-1).split('#')[1] === catTail) {
-                            return kb.sym(cat.slice(1,-1));
-                        }
-                    };
-                 };
-                 return null;
-            };
-
-            var checkCatHasField = function(catTail, pred) {
-                var cat = catSymbol(catTail), tab, count;
-                var guilty = [], count = 0;
-                if (!cat) {
-                    complain("Error: No category correspnding to " + catTail)
-                    return null;
-                }
-                var list = kb.each(undefined, ns.rdf('type'), cat);
-                for (var i=0; i<list.length; i++) {
-                    if (transactionInPeriod(list[i]) &&
-                        (!kb.any(list[i], pred))) {
-                        guilty.push(list[i]);
-                    }
-                }
-                if (guilty.length) {
-                    tab = transactionTable(dom, guilty);
-                    count = tab.children.length;
-                    div.appendChild(dom.createElement('h3')).textContent = UI.utils.label(cat)
-                        + " with no " + UI.utils.label(pred) +
-                        ( count < 4 ? '' : ' (' + count + ')' );
-                    div.appendChild(tab);
-                }
-                return count;
-            }
-
-            // @@ In future could load these params dynamically as properties of period
-            if (checkCatHasField('Reimbursables', ns.trip('trip')) === 0) {
-                happy("Reimbursables all have trips")
-            };
-            if (checkCatHasField('Other_Inc_Speaking', ns.trip('trip')) === 0) {
-                happy("Speaking income all has trips")
-            };
-            if (checkCatHasField('Vacation', ns.trip('trip')) === 0) {
-                happy("Vacation all has trips")
-            };
-
-	    ///////////////   Check Internal transactions balance
-
-
-            var checkInternals = function() {
-		var catTail = 'Internal';
-		var pred = ns.qu('in_USD');
-                var cat = catSymbol(catTail), tab, count, x, y, ax, ay;
-                var guilty = [], count = 0;
-                if (!cat) {
-                    complain("Error: No category correspnding to " + catTail)
-                    return null;
-                }
-                var list = kb.each(undefined, ns.rdf('type'), cat);
-		var matched = false;
-		while (list.length > 0) {
-		    x = list.shift(); // take off list[0]
-		    if (!transactionInPeriod(x)) {
-			continue;
-		    }
-		    ax = kb.any(x, pred);
-		    if (!ax) continue;
-		    ax = Number(ax.value)
-		    matched = false;
-		    for (var i=0; i<list.length; i++) {
-			if (!transactionInPeriod(list[i])) {
-			    continue;
-			}
-			ay = kb.any(list[i], pred);
-			if (!ay) continue;
-			ay = Number(ay.value)
-			if (Math.abs(ax + ay) < 0.01) {
-			    matched = true;
-			    list.splice(i, 1); // remove y
-			    break;
-			}
-		    }
-		    if (!matched) {
-			guilty.push(x);
-		    }
-		}
-                if (guilty.length) {
-                    tab = transactionTable(dom, guilty);
-                    count = tab.children.length;
-                    div.appendChild(dom.createElement('h3')).textContent = UI.utils.label(cat)
-                        + " which do not pair up " +
-                        ( count < 4 ? '' : ' (' + count + ')' );
-                    div.appendChild(tab);
-                }
-                return count;
-            }
-
-            if (checkInternals() === 0) {
-                happy("Intenral transactions all pair up")
-            };
-
-
-
-        // end of render period instance
 
         }; // if
 

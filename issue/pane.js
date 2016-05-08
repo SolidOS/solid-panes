@@ -34,6 +34,8 @@ module.exports = {
         var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/');
         var DCT = $rdf.Namespace('http://purl.org/dc/terms/');
         var div = dom.createElement("div")
+        var outliner = UI.panes.getOutliner(dom)
+
         div.setAttribute('class', 'issuePane');
 
         var commentFlter = function(pred, inverse) {
@@ -116,7 +118,7 @@ module.exports = {
                     } else {
                         form.parentNode.removeChild(form);
                         rerender(div);
-                        UI.outline.GotoSubject(issue, true, undefined, true, undefined);
+                        outliner.GotoSubject(issue, true, undefined, true, undefined);
                     }
                 }
                 updater.update([], sts, sendComplete);
@@ -413,14 +415,14 @@ module.exports = {
 
             if ( getOption(tracker, 'allowSubIssues')) {
                 // Sub issues
-                UI.outline.appendPropertyTRs(div, plist, false,
+                outliner.appendPropertyTRs(div, plist, false,
                     function(pred, inverse) {
                         if (!inverse && pred.sameTerm(WF('dependent'))) return true;
                         return false
                     });
 
                 // Super issues
-                UI.outline.appendPropertyTRs(div, qlist, true,
+                outliner.appendPropertyTRs(div, qlist, true,
                     function(pred, inverse) {
                         if (inverse && pred.sameTerm(WF('dependent'))) return true;
                         return false
@@ -480,11 +482,11 @@ module.exports = {
 	    var plist = kb.statementsMatching(subject)
 	    var qlist = kb.statementsMatching(undefined, undefined, subject)
 
-            UI.outline.appendPropertyTRs(div, plist, false,
+            outliner.appendPropertyTRs(div, plist, false,
                 function(pred, inverse) {
                     return !(pred.uri in predicateURIsDone)
                 });
-            UI.outline.appendPropertyTRs(div, qlist, true,
+            outliner.appendPropertyTRs(div, qlist, true,
                 function(pred, inverse) {
                     return !(pred.uri in predicateURIsDone)
                 });

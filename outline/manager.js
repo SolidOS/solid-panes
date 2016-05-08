@@ -355,7 +355,7 @@ if (statement){
       //td.appendChild( iconBox.construct(document.createTextNode('bla')) );
 
       //Create an inquiry icon if there is proof about this triple
-if(statement){
+      if(statement){
           var one_statement_formula = new UI.rdf.IndexedFormula();
           one_statement_formula.statements.push(statement); //st.asFormula()
           //The following works because Formula.hashString works fine for
@@ -456,7 +456,7 @@ if(statement){
               UI.log.info('the '+i+'th pane steals the focus');
           }
       }
-      if (!relevantPanes.length) relevantPanes.push(internalPane);
+      if (!relevantPanes.length) relevantPanes.push(UI.panes.internalPane);
       tr.firstPane = tr.firstPane || relevantPanes[0];
       if (relevantPanes.length != 1) { // if only one, simplify interface
           for (var i=0; i<relevantPanes.length; i++) {
@@ -491,16 +491,21 @@ if(statement){
                       }
                       var renderPane = function(pane) {
                           var paneDiv;
-                          try {
-                              UI.log.info('outline: Rendering pane (2): '+pane.name)
-                              paneDiv = pane.render(subject, myDocument);
-                          }
-                          catch(e) { // Easier debugging for pane developers
-                              paneDiv = myDocument.createElement("div")
-                              paneDiv.setAttribute('class', 'exceptionPane');
-                              var pre = myDocument.createElement("pre")
-                              paneDiv.appendChild(pre);
-                              pre.appendChild(myDocument.createTextNode(UI.utils.stackString(e)));
+                          UI.log.info('outline: Rendering pane (2): '+pane.name)
+                          if (UI.no_catch_pane_errors){ // for debugging
+                            paneDiv = pane.render(subject, myDocument);
+                          } else {
+                            try {
+                                paneDiv = pane.render(subject, myDocument);
+                            }
+                            catch(e) { // Easier debugging for pane developers
+                                paneDiv = myDocument.createElement("div")
+                                paneDiv.setAttribute('class', 'exceptionPane');
+                                var pre = myDocument.createElement("pre")
+                                paneDiv.appendChild(pre);
+                                pre.appendChild(myDocument.createTextNode(UI.utils.stackString(e)));
+                            }
+
                           }
                           if (pane.requireQueryButton && myDocument.getElementById('queryButton'))
                               myDocument.getElementById('queryButton').removeAttribute('style');
@@ -1470,7 +1475,7 @@ if(statement){
       var target = thisOutline.targetOf(e);
       var returnSignal = thisOutline.UserInput.addNewObject(e);
       if (returnSignal){ //when expand signal returned
-          outline_expand(returnSignal[0],returnSignal[1], { 'pane': internalPane});
+          outline_expand(returnSignal[0],returnSignal[1], { 'pane': UI.panes.internalPane});
           for (var trIterator = returnSignal[0].firstChild.childNodes[1].firstChild;
               trIterator; trIterator=trIterator.nextSibling) {
               var st = trIterator.AJAR_statement;

@@ -49,10 +49,22 @@ paneModule.byName = function (name) {
   return undefined
 }
 
+// This has comon outline mode functionality for the default and other other panes
+paneModule.OutlineManager = require('./outline/manager.js')
+
+paneModule.getOutliner = function(dom){
+  if (!dom.outliner) {
+    dom.outliner =  UI.panes.OutlineManager(dom)
+  }
+  return dom.outliner
+}
+
+
 /*  Note that the earliest panes have priority. So the most specific ones are first.
 **
 */
 // Developer designed:
+
 paneModule.register(require('./issue/pane.js'))
 paneModule.register(require('./contact/contactPane.js'))
 

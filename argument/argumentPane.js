@@ -20,6 +20,7 @@ module.exports = {
 
   // View the data in a file in user-friendly way
   render: function (subject, myDocument) {
+    var outliner = UI.panes.getOutliner(dom)
     var $r = UI.rdf
     var kb = UI.store
     var arg = UI.ns.arg
@@ -40,10 +41,10 @@ module.exports = {
       para.textContent = comment.value
     }
     var plist = kb.statementsMatching(subject, arg('support'))
-    UI.outline.appendPropertyTRs(div, plist, false)
+    outliner.appendPropertyTRs(div, plist, false)
 
     var plist = kb.statementsMatching(subject, arg('opposition'))
-    UI.outline.appendPropertyTRs(div, plist, false)
+    outliner.appendPropertyTRs(div, plist, false)
 
     return div
   }

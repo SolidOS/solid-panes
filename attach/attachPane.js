@@ -309,7 +309,8 @@ module.exports = {
               preview.textContent = 'Error loading ' + x.uri + ': ' + body
               return
             }
-            var display = UI.outline.propertyTable(x); //  ,table, pane
+            var outliner = UI.panes.getOutliner(dom)
+            var display = outliner.propertyTable(x); //  ,table, pane
             preview.innerHTML = ''
             preview.appendChild(display)
           })

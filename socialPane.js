@@ -84,7 +84,7 @@ module.exports  = {
                 // alert('Should be greyed out')
                 if (this.checked) { // Add link
                     try {
-                        outline.UserInput.sparqler.insert_statement(statement, function(uri,success,error_body) {
+                        outliner.UserInput.sparqler.insert_statement(statement, function(uri,success,error_body) {
                             tx.className = 'question';
                             if (!success){
                                 UI.log.alert(null,"Message","Error occurs while inserting "+statement+'\n\n'+error_body);
@@ -101,7 +101,7 @@ module.exports  = {
                     }
                 } else { // Remove link
                     try {
-                        outline.UserInput.sparqler.delete_statement(statement, function(uri,success,error_body) {
+                        outliner.UserInput.sparqler.delete_statement(statement, function(uri,success,error_body) {
                             tx.className = 'question';
                             if (!success){
                                 UI.log.alert("Error occurs while deleting "+statement+'\n\n'+error_body);
@@ -210,7 +210,7 @@ module.exports  = {
 
         //////////// Body of render():
 
-        var outline = UI.outline;
+        var outliner = UI.panes.getOutliner(dom)
         var thisPane = this; // For re-render
         var kb = UI.store
         var div = dom.createElement("div")
@@ -303,7 +303,7 @@ module.exports  = {
                 if (kb.whether(works[i], UI.ns.rdf('type'),
                                             foaf('PersonalProfileDocument'))) {
 
-                    editable = outline.UserInput.sparqler.editable(works[i].uri, kb);
+                    editable = outliner.UserInput.sparqler.editable(works[i].uri, kb);
                     if (!editable) {
                         message += ("Your profile <"+UI.utils.escapeForXML(works[i].uri)+"> is not remotely editable.");
                     } else {
@@ -319,7 +319,7 @@ module.exports  = {
                 } else  {
                     say("Editing your profile <"+UI.utils.escapeForXML(profile.uri)+">.");
                      // Do I have an EDITABLE profile?
-                    editable = outline.UserInput.sparqler.editable(profile.uri, kb);
+                    editable = outliner.UserInput.sparqler.editable(profile.uri, kb);
                 }
             } else { // This is about someone else
                 // My relationship with this person
@@ -472,7 +472,7 @@ module.exports  = {
         }
 
         // var plist = kb.statementsMatching(s, knows)
-        // outline.appendPropertyTRs(div, plist, false, function(pred){return true;})
+        // outliner.appendPropertyTRs(div, plist, false, function(pred){return true;})
 
         var h3 = dom.createElement('h3');
         h3.appendChild(dom.createTextNode('Basic Information'));
@@ -532,7 +532,7 @@ module.exports  = {
             if (sts.length == 0) {
                 // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
             } else {
-                outline.appendPropertyTRs(tools, sts, false, function(pred){return true;});
+                outliner.appendPropertyTRs(tools, sts, false, function(pred){return true;});
             }
         }
 
@@ -550,7 +550,7 @@ module.exports  = {
         var d = dom.createElement('div');
         d.className = 'social_linkButton';
         d.appendChild(t);
-        outline.appendAccessIcon(d, uri);
+        outliner.appendAccessIcon(d, uri);
         tools.appendChild(d);
 */
 
