@@ -470,7 +470,7 @@ module.exports = {
 		    er.textContent = body; // @@ use nice error message
 		    div.insertBefore(er, spacer);
 		} else {
-		    var discussion = UI.widgets.messageArea(
+		    var discussion = UI.messageArea(
 			dom, kb, subject, messageStore)
 		    div.insertBefore(discussion, spacer);
 		}

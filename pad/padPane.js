@@ -416,7 +416,7 @@ module.exports = {
             window.document.title = title.value;
         }
         options.exists = exists;
-        padEle = (UI.widgets.notepad(dom, padDoc, subject, me, options));
+        padEle = (UI.pad.notepad(dom, padDoc, subject, me, options));
         naviMain.appendChild(padEle);
 
         var initiated = UI.store.updater.setRefreshHandler(padDoc, UI.store, padEle.reloadAndSync);
@@ -480,9 +480,9 @@ module.exports = {
 
     var kb = UI.store;
     var fetcher = UI.store.fetcher;
+    var updater = UI.store.updater
     var ns = UI.ns;
-    var me;
-    var updater = new $rdf.UpdateManager(kb);
+    var me
     var waitingForLogin = false;
 
     var PAD = $rdf.Namespace('http://www.w3.org/ns/pim/pad#');
