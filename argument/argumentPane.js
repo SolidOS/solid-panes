@@ -4,8 +4,9 @@
 ** support or oppose it.
 */
 
+console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
 module.exports = {
-  icon: __dirname + 'icon_argument.png', // @@
+  icon: (module.__dirname || __dirname) + '/icon_argument.png', // @@ fix fro mashlib version
 
   name: 'argument',
 

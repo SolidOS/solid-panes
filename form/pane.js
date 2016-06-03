@@ -3,9 +3,10 @@
 **
 */
 
+var UI = require('solid-ui')
 module.exports =  {
 
-    icon: (module.__dirname || __dirname) + 'form-b-22.png',
+    icon: UI.icons.iconBase + 'noun_122196.svg',
 
     name: 'form',
 

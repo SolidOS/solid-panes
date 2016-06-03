@@ -136,7 +136,7 @@ module.exports = {
                     }
                     return  res;
                 case 'formula':
-                    var res = UI.panes.dataContentPane.statementsAsTables(obj.statements, myDocument);
+                    var res = UI.panes.dataContents.statementsAsTables(obj.statements, myDocument);
                     res.setAttribute('class', 'nestedFormula')
                     return res;
                 case 'variable':
@@ -203,7 +203,7 @@ module.exports = {
             // Then about the primary topic of the document if any
             var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject);
             if (ps) initialRoots.push(ps);
-            div.appendChild(UI.panes.dataContentPane.statementsAsTables(
+            div.appendChild(UI.panes.dataContents.statementsAsTables(
                             sts, myDocument, initialRoots));
 
         } else {  // An outline mode openable rendering .. might be better
@@ -211,7 +211,6 @@ module.exports = {
             var res = sz.rootSubjects(sts);
             var roots = res.roots;
             var p  = {};
-            // p.icon = dataContentPane.icon
             p.render = function(s2) {
                 var div = myDocument.createElement('div')
 

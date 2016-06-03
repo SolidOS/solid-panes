@@ -313,8 +313,8 @@ module.exports = {
 
             var complainIfBad = function(ok,body){
                 if (ok) {
-                    setModifiedDate(store, kb, store);
-                    rerender(div);
+                    // setModifiedDate(store, kb, store);
+                    // rerender(div); // deletes the new trip form
                 }
                 else complain("Sorry, failed to save your change:\n"+body);
             }
@@ -356,7 +356,7 @@ module.exports = {
                                 'mintClass':  TRIP('Trip'),
                                 'mintStatementsFun': function(trip){
                                     var is = [];
-                                    is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip')));
+                                    is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc()));
                                     return is}},
                             store, complainIfBad));
 

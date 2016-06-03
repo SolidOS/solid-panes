@@ -44,22 +44,12 @@ module.exports = {
 
         var div = myDocument.createElement('div')
         div.setAttribute('class', 'transactionPane');
-        div.innerHTML='<h1>Transaction</h1><table><tbody><tr>\
-        <td>%s</tr></tbody></table>\
-        <p>This is a pane under development.</p>';
+        div.innerHTML='<h2>Trip transactions</h2>';
 
         var commentFlter = function(pred, inverse) {
             if (!inverse && pred.uri ==
                 'http://www.w3.org/2000/01/rdf-schema#comment') return true;
             return false
-        }
-
-        var setModifiedDate = function(subj, kb, doc) {
-            var deletions = kb.statementsMatching(subject, DCT('modified'));
-            var deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')));
-            var insertions = [ $rdf.st(subject, DCT('modified'), new Date(), doc) ];
-            if (me) insertions.push($rdf.st(subject, WF('modifiedBy'), me, doc) );
-            sparqlService.update(deletions, insertions, function(uri, ok, body){});
         }
 
         var complain = function complain(message, style){
@@ -77,12 +67,9 @@ module.exports = {
         };
 
 
- // //////////////////////////////////////////////////////////////////////////////
-
-
-
-        var sparqlService = UI.store.updater;
-
+////////////////////////////////////////////////////////////////////////////////
+//
+//   Body of trip pane
 
         var plist = kb.statementsMatching(subject)
         var qlist = kb.statementsMatching(undefined, undefined, subject)

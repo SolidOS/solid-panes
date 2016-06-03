@@ -13,7 +13,7 @@
 
 module.exports = {
 
-  icon:  UI.icons.iconBase + 'js/panes/common/icons/noun_123691.svg',
+  icon:  UI.icons.iconBase + 'noun_123691.svg',
 
   name: 'sharing',
 
@@ -55,9 +55,9 @@ module.exports = {
         div: pane, dom: dom, statusRegion: statusBlock };
     var uri = tabulator.preferences.get('me');
     context.me =  uri ? $rdf.sym(uri) : null;
-    UI.widgets.preventBrowserDropEvents(dom);
+    UI.aclControl.preventBrowserDropEvents(dom);
 
-    box.appendChild(UI.widgets.ACLControlBox(subject, dom, noun, function(ok, body){
+    box.appendChild(UI.aclControl.ACLControlBox5(subject, dom, noun, kb, function(ok, body){
       if (!ok) {
         box.innerHTML = "ACL control box Failed: " + body
       }

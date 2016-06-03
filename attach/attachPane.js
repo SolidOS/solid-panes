@@ -11,17 +11,10 @@
 ** like "this" where th string is seen by the user and so I18n is an issue.
 */
 
-// These used to be in js/init/icons.js but are better in the pane.
 var UI = require('solid-ui')
 
-var here;
-if (typeof __dirname !== 'undefined'){
-  here = __dirname
-} else {
-  here = module.__dirname
-}
 module.exports = {
-  icon: here + 'tbl-paperclip-22.png',
+  icon: UI.icons.iconBase + 'noun_25830.svg', // noun_25830
 
   name: 'attachments',
 

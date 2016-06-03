@@ -235,7 +235,7 @@ module.exports = {
     // /////////////////////////////////////////////////////////////////////////////
 
     var updater = UI.store.updater
-    UI.widgets.preventBrowserDropEvents(dom)
+    UI.aclControl.preventBrowserDropEvents(dom)
 
     var plist = kb.statementsMatching(subject)
     var qlist = kb.statementsMatching(undefined, undefined, subject)
@@ -538,7 +538,7 @@ module.exports = {
           context = { target: book, me: me, noun: 'address book',
           div: pane, dom: dom, statusRegion: statusBlock }
 
-          box.appendChild(UI.widgets.ACLControlBox(book, dom, 'book', function (ok, body) {
+          box.appendChild(UI.aclControl.ACLControlBox5(book, dom, 'book', kb, function (ok, body) {
             if (!ok) box.innerHTML = 'ACL control box Failed: ' + body
           }))
 
@@ -901,7 +901,7 @@ module.exports = {
 
                     if (!event.altKey) { // If only one group has beeen selected show ACL
                       cardMain.innerHTML = ''
-                      cardMain.appendChild(UI.widgets.ACLControlBox(group, dom, 'group', function (ok, body) {
+                      cardMain.appendChild(UI.aclControl.ACLControlBox5(group, dom, 'group', kb, function (ok, body) {
                         if (!ok) cardMain.innerHTML = 'Failed: ' + body
                       }))
                     }
@@ -1001,7 +1001,7 @@ module.exports = {
                   syncGroupTable() // Refresh list of groups
 
                   cardMain.innerHTML = ''
-                  cardMain.appendChild(UI.widgets.ACLControlBox(body, dom, 'group', function (ok, body) {
+                  cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
                     if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
                   }))
                 }
