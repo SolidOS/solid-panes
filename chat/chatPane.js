@@ -38,9 +38,14 @@ module.exports = {
     var n = UI.store.each(subject, ns.wf('message')).length
     if (n > 0) return 'Chat (' + n + ')' // Show how many in hover text
 
-    if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // subject is the file
-      return 'IRC log'
-    }
+//  ns.meeting('Chat')
+
+if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
+  return 'Meeting chat'
+}
+if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // subject is the file
+  return 'IRC log' // contains anything of this type
+}
     return null // Suppress pane otherwise
   },
 
@@ -57,8 +62,9 @@ module.exports = {
     div.setAttribute('class', 'chatPane')
     options = {} // Like newestFirst
     var messageStore
-
-    if (kb.any(subject, UI.ns.wf('message'))) {
+    if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
+      messageStore = subject
+    } else if (kb.any(subject, UI.ns.wf('message'))) {
       messageStore = UI.store.any(subject, UI.ns.wf('message')).doc()
 
     } else if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // subject is the file
@@ -80,7 +86,7 @@ module.exports = {
       complain('Unknown chat type')
     }
 
-    div.appendChild(UI.widgets.messageArea(dom, kb, subject, messageStore, options))
+    div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
 
     return div
   }

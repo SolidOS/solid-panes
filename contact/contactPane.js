@@ -1076,7 +1076,7 @@ module.exports = {
         /*
         var messageStore = kb.any(tracker, ns.wf('messageStore'))
         if (!messageStore) messageStore = kb.any(tracker, ns.wf('doc'))
-        div.appendChild(UI.widgets.messageArea(dom, kb, subject, messageStore))
+        div.appendChild(UI.messageArea(dom, kb, subject, messageStore))
         donePredicate(ns.wf('message'))
         */
 

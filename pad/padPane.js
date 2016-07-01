@@ -5,7 +5,8 @@ var UI = require('solid-ui')
 
 module.exports = {
 
-  icon:  (module.__dirname || __dirname) + 'images/ColourOn.png',
+  //icon:  (module.__dirname || __dirname) + 'images/ColourOn.png',
+  icon:  UI.icons.iconBase + 'noun_79217.svg',
 
   name: 'pad',
 
@@ -419,7 +420,7 @@ module.exports = {
         padEle = (UI.pad.notepad(dom, padDoc, subject, me, options));
         naviMain.appendChild(padEle);
 
-        var initiated = UI.store.updater.setRefreshHandler(padDoc, UI.store, padEle.reloadAndSync);
+        var initiated = UI.store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync);
     };
 
     var showSignon = function showSignon() {

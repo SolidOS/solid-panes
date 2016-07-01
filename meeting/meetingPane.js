@@ -27,6 +27,7 @@ module.exports = {
     var updater = kb.updater
 
     var complain = function complain (message, color) {
+      console.log(message)
       var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
       div.appendChild(pre)
@@ -63,7 +64,7 @@ module.exports = {
 
     var addInNewThing = function(thing, pred){
       var ins = []
-      kb.add(meeting, pred, thing)
+      kb.add(meeting, pred, thing, meetingDoc)
       var toolList = kb.the(meeting, ns.meeting('toolList'))
       toolList.elements.push(thing) //  Will this work?  Should use patch?
       updater.put(
@@ -77,7 +78,6 @@ module.exports = {
           } else {
               message = "FAILED to save new thing at: "+ there.uri +' : ' + message
               complain(message)
-              console.log(message)
           };
       })
     }
@@ -88,6 +88,37 @@ module.exports = {
     var makePoll = function(event, icon){
       selectTool(icon);
 
+      var newBase = meetingBase + 'Schedule/'
+
+
+      // This should all really be in with the pad code:
+
+      var kb = UI.store
+      var newDetailsDoc = kb.sym(newBase + 'poll.ttl');
+      //var newIndexDoc = kb.sym(newBase + 'index.html');
+      if (kb.holds(meeting, ns.meeting('schedulingPoll'))){
+        console.log("Ignored - already have a scheduling poll");
+        return // already got one
+      }
+
+      var div = UI.panes.byName('schedule').mintNew(undefined, newBase, function(ok, newInstance){
+        if (ok) {
+          addInNewThing(newInstance, ns.meeting('schedulingPoll'))
+        } else {
+
+        }
+      })
+
+/*
+
+      kb.add(newInstance, ns.rdf('type'), SCHED('SchedulableEvent'), newDetailsDoc);
+	    if (me) {
+		      kb.add(newInstance, DC('author'), me, newDetailsDoc);
+	    }
+
+	    kb.add(newInstance, DC('created'), new Date(), newDetailsDoc);
+	    kb.add(newInstance, SCHED('resultsDocument'), newDetailsDoc);
+*/
     }
 
     //   Make Pad for notes of meeting
@@ -109,7 +140,7 @@ module.exports = {
       newInstance = kb.sym(newPadDoc.uri + '#thisPad');
 
       kb.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc);
-      kb.add(newInstance, ns.dc('title'), 'Shared Notes')
+      kb.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
 	    kb.add(newInstance, ns.dc('created'), new Date(), newPadDoc);
 	    if (me) {
 		      kb.add(newInstance, ns.dc('author'), me, newPadDoc);
@@ -129,13 +160,10 @@ module.exports = {
               addInNewThing(newInstance, ns.meeting('sharedNotes'))
           } else {
               complain("FAILED to save new notepad at: "+ there.uri +' : ' + message);
-              console.log("FAILED to save new notepad at: "+ there.uri +' : ' + message);
           };
       })
-
-
-
     }
+
     var makeAgenda = function(event, icon){
       selectTool(icon);
 
@@ -167,10 +195,25 @@ module.exports = {
               addInNewThing(messageStore, ns.meeting('chat'))
           } else {
               complain("FAILED to save new chat at: "+ there.uri +' : ' + message);
-              console.log("FAILED to save new chat at: "+ there.uri +' : ' + message);
           };
       })
-      // div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
+    }
+
+    var makeVideoCall = function(event, icon){
+      selectTool(icon);
+
+      var kb = UI.store
+      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.gen_uuid())
+
+      if (kb.holds(meeting, ns.meeting('videoCallPage'))){
+        console.log("Ignored - already have a videoCallPage");
+        return // already got one
+      }
+
+      kb.add(newInstance, ns.rdf('type'), ns.meeting('VideoCallPage'), meetingDoc);
+      kb.add(newInstance, ns.dc('title'), 'Video call', meetingDoc)
+      addInNewThing(newInstance, ns.meeting('videoCallPage'))
+
     }
 
     var makeAttachment = function(event, icon){
@@ -184,8 +227,9 @@ module.exports = {
       { icon: 'noun_346777.svg', maker: makePoll }, // When meet THIS or NEXT time
       { icon: 'noun_48218.svg', maker: makeAgenda, limit:1 }, // When meet THIS or NEXT time
       { icon: 'noun_79217.svg', maker: makePad },
-      { icon: 'noun_346319.svg', maker: makeChat, limit:1},
-      { icon: 'noun_17020.svg', maker: makeActions, limit:1}, // When meet THIS or NEXT time
+      { icon: 'noun_346319.svg', maker: makeChat, limit:1 },
+      { icon: 'noun_17020.svg', maker: makeActions, limit: 1}, // When meet THIS or NEXT time
+      { icon: 'noun_260227.svg', maker: makeVideoCall, limit: 1},
       { icon: 'noun_25830.svg', maker: makeAttachment }
     ]
 
@@ -237,8 +281,15 @@ module.exports = {
 
     var showMain = function(containerDiv, subject){
       containerDiv.innerHTML = ''
-      var table = containerDiv.appendChild(dom.createElement('table'))
-      UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
+      if (subject.sameTerm(subject.doc())){
+        var iframe = containerDiv.appendChild(dom.createElement('iframe'))
+        iframe.setAttribute('src', subject.uri)
+        iframe.setAttribute('style', 'border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
+        //tabContentCache[subject.uri] = iframe
+      } else {
+        var table = containerDiv.appendChild(dom.createElement('table'))
+        UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
+      }
     }
 
     options = {dom: dom} // Like newestFirst

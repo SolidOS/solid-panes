@@ -2174,8 +2174,15 @@ if (statement){
         myDocument.URL+"?uri="+myDocument.getElementById('UserURI').value;
   }
 
+  var keyPressHandler = function(e){
+    thisOutline.OutlinerKeypressPanel.apply(thisOutline,[e])
+  }
+
   var wholeDoc = doc.getElementById('docHTML');
-  if (wholeDoc) wholeDoc.addEventListener('keypress',function(e){thisOutline.OutlinerKeypressPanel.apply(thisOutline,[e])},false);
+  /*     2016-06   This whole document handler is bad design.
+  ** This has been renmoved -- it should be applied only to the outliner TRs have focus and not otrher nested panes
+  if (wholeDoc) wholeDoc.addEventListener('keypress', keyPressHandler, false);
+*/
 
   /*   2015-08-30  Removed this global overal listerner - should have been on individual elelments
 

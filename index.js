@@ -75,6 +75,8 @@ paneModule.register(require('./transaction/pane.js'))
 paneModule.register(require('./transaction/period.js'))
 paneModule.register(require('./chat/chatPane.js'))
 //paneModule.register(require('./publication/publicationPane.js'))
+paneModule.register(require('./meeting/meetingPane.js'))
+paneModule.register(require('./schedule/schedulePane.js'))
 
 paneModule.register(require('./trip/tripPane.js'))
 paneModule.register(require('./airPane.js'))
@@ -100,6 +102,7 @@ paneModule.register(require('./RDFXMLPane.js'))
 paneModule.register(require('./form/pane.js'))
 
 // Generic:
+
 paneModule.register(require('./attach/attachPane.js'))
 paneModule.register(require('./tableViewPane.js'))
 
