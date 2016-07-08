@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var now = new Date()
     newBase += appPathSegment + '/id' + now.getTime() + '/' // unique id
 
-    initializeNewInstanceAtBase(thisInstance, newBase)
+    initializeNewInstanceAtBase(null, newBase)
   }
 
   var initializeNewInstanceAtBase = function (thisInstance, newBase) {
