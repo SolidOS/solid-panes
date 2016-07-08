@@ -6,6 +6,12 @@
 document.addEventListener('DOMContentLoaded', function () {
 
   var UI = require('mashlib')
+
+  var appPathSegment = 'meetulator.timbl.com'
+
+  var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%;
+
+
   var kb = UI.store
   var fetcher = kb.fetcher
   var ns = UI.ns
@@ -102,6 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
     UI.outline.GotoSubject(newInstance, true, undefined, true);
   }
 
-  div.appendChild(newInstanceButton())
+  var button = newInstanceButton()
+  button.setAttribute('style', )
+  div.appendChild(button)
 
 })
