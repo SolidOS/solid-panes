@@ -107,13 +107,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var newInstance = pane.mint(newBase)
     .then(function(newInstance){
       UI.outline.GotoSubject(newInstance, true, undefined, true);
+      div.removeChild(d)
     })
     .catch(function(e){
       div.textContent = 'Error making new meeting: ' + e
     })
   }
 
-  var d = newInstanceButton()
+  var d = newInstanceButton() // Actually a div in which minting will happen
   var button = d.firstChild
   button.setAttribute('style', inputStyle)
   div.appendChild(d)

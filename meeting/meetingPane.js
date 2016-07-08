@@ -27,8 +27,16 @@ module.exports = {
       var kb = UI.store, ns = UI.ns
       var meeting = kb.sym(base + 'meet#this')
       var meetingDoc = meeting.doc()
+
+      var me = tabulator.preferences.get('me')
+      me = me ? kb.sym(me) : null
+      if (me){
+        kb.add(meeting, ns.dc('author'), me, meetingDoc)
+      }
+
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
-      kb.add(meeting, ns.meeting('toolList'), new $rdf.Collection())
+      kb.add(meeting, ns.dc('created'), new Date(), meetingDoc)
+      kb.add(meeting, ns.meeting('toolList'), new $rdf.Collection(), meetingDoc)
       kb.fetcher.webOperation('PUT', meetingDoc).then(function(xhr){
         resolve(meeting)})
         .catch(function(err){
