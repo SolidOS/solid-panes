@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var appPathSegment = 'meetulator.timbl.com'
 
-  var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%;
+  var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 150%; text-align: center;' //  ;
 
 
   var kb = UI.store
