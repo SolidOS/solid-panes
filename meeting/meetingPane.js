@@ -28,6 +28,7 @@ module.exports = {
       var meeting = kb.sym(base + 'meet#this')
       var meetingDoc = meeting.doc()
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
+      kb.add(meeting, ns.meeting('toolList'), new $rdf.Empty())
       kb.fetcher.webOperation('PUT', meetingDoc).then(function(xhr){
         resolve(meeting)})
         .catch(function(err){
