@@ -28,7 +28,7 @@ module.exports = {
       var meeting = kb.sym(base + 'meet#this')
       var meetingDoc = meeting.doc()
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
-      fetcher.webOperation('PUT', meetingDoc).then(function(xhr){
+      kb.fetcher.webOperation('PUT', meetingDoc).then(function(xhr){
         resolve(meeting)})
         .catch(function(err){
           reject('Error writing meeting configuration: ' + err)

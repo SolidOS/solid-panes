@@ -105,7 +105,12 @@ document.addEventListener('DOMContentLoaded', function () {
   var initializeNewInstanceAtBase = function (thisInstance, newBase) {
     var pane = UI.panes.byName('meeting')
     var newInstance = pane.mint(newBase)
-    UI.outline.GotoSubject(newInstance, true, undefined, true);
+    .then(function(meeting){
+      UI.outline.GotoSubject(newInstance, true, undefined, true);
+    })
+    .catch(function(e){
+      div.textContent = 'Error making new meeting: ' + e
+    })
   }
 
   var d = newInstanceButton()
