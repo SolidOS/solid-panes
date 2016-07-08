@@ -111,6 +111,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var div = newInstanceButton()
   var button = div.firstChild
   button.setAttribute('style', inputStyle)
-  div.appendChild(button)
+  div.appendChild(div)
 
 })
