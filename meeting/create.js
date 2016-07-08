@@ -108,7 +108,8 @@ document.addEventListener('DOMContentLoaded', function () {
     UI.outline.GotoSubject(newInstance, true, undefined, true);
   }
 
-  var button = newInstanceButton()
+  var div = newInstanceButton()
+  var button = div.firstChild
   button.setAttribute('style', inputStyle)
   div.appendChild(button)
 
