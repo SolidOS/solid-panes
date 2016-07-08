@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
   var initializeNewInstanceAtBase = function (thisInstance, newBase) {
     var pane = UI.panes.byName('meeting')
     var newInstance = pane.mint(newBase)
-    .then(function(meeting){
+    .then(function(newInstance){
       UI.outline.GotoSubject(newInstance, true, undefined, true);
     })
     .catch(function(e){
