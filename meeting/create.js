@@ -16,19 +16,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var uri = window.location.href
   var base = uri.slice(0, uri.lastIndexOf('/') + 1)
-  var subject_uri = base + 'details.ttl#event1'
+  // var subject_uri = base + 'details.ttl#event1'
+
+  var logInOutButton = null
 
   // var forms_uri = window.document.title = base+ 'forms.ttl'
   //    var forms_uri = 'https://linkeddata.github.io/app-schedule/forms.ttl' // CORS blocks
 
   var scriptBase = 'https://linkeddata.github.io/solid-app-set/'
-
+/*
   var subject = kb.sym(subject_uri)
   var thisInstance = subject
   var detailsDoc = kb.sym(subject_uri.split('#')[0])
 
   var resultsDoc = $rdf.sym(base + 'results.ttl')
-
+*/
   // kb.fetcher.nowOrWhenLoaded(kb.sym(data_uri2), undefined, function(ok, body) {
   // })
 
@@ -60,7 +62,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var me_uri = tabulator.preferences.get('me')
   var me = me_uri ? kb.sym(me_uri) : null
-  tabulator.panes.utils.checkUser(detailsDoc, setUser)
+
+  var userTest = $rdf.sym('https://databox.me/')
+
+  UI.widgets.checkUser(userTest, setUser)
 
   // //////////////////////////////  Reproduction: spawn a new instance
   //
@@ -68,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
   //
 
   var newInstanceButton = function () {
-    return tabulator.panes.utils.newAppInstance(dom, 'Schedule another event',
+    return UI.widgets.newAppInstance(dom, { noun: 'meeting'},
       initializeNewInstanceInWorkspace)
   } // newInstanceButton
 
@@ -96,5 +101,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var newInstance = pane.mint(newBase)
     UI.outline.GotoSubject(newInstance, true, undefined, true);
   }
+
+  div.appendChild(newInstanceButton())
 
 })
