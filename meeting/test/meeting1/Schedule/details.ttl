@@ -1,0 +1,34 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix c: <https://www.w3.org/People/Berners-Lee/card#>.
+@prefix XML: <http://www.w3.org/2001/XMLSchema#>.
+@prefix sch: <http://www.w3.org/ns/pim/schedule#>.
+@prefix ic: <http://www.w3.org/2002/12/cal/ical#>.
+@prefix n0: <http://xmlns.com/foaf/0.1/>.
+@prefix rd: <http://www.w3.org/2000/01/rdf-schema#>.
+
+<#event>
+    dc:author
+       c:i, c:i;
+    dc:created
+       "2016-06-30T02:15:58Z"^^XML:dateTime, "2016-06-30T02:31:46Z"^^XML:dateTime;
+    a    sch:SchedulableEvent, sch:SchedulableEvent;
+    rd:comment
+       "A test meeting";
+    ic:location
+       "MIT";
+    sch:availabilityOptions
+       sch:YesNoMaybe;
+    sch:invitee
+       <#id1467291038898>, <#id1467304803258>;
+    sch:option
+       <#id1467291038892>, <#id1467291038896>, <#id1467291658332>;
+    sch:ready
+       "2016-06-30T12:50:38Z"^^XML:dateTime;
+    sch:results
+       <results.ttl>.
+   c:i n0:mbox "deiu@mit.edu"; n0:name "" .
+   <#id1467291038892> ic:dtstart "2016-06-23" .
+   <#id1467291038896> ic:dtstart "2016-06-16" .
+   <#id1467291658332> ic:dtstart "2016-07-22" .
+   <#id1467291038898> n0:mbox "timbl@w3.org" .
+   <#id1467304803258> n0:mbox "ilaria@mit.edu" .

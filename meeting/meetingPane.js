@@ -18,10 +18,24 @@ module.exports = {
     return null // Suppress pane otherwise
   },
 
-  mint: function(base){
-    var kb = UI.store, ns = UI.ns
-    var ins
+  // Create a new Meeting thing
+  //
+  // Returns a promise of meeting
+  //
+  mint: function(base, context){
+    return new Promise(function(resolve, reject){
+      var kb = UI.store, ns = UI.ns
+      var meeting = kb.sym(base + 'meet#this')
+      var meetingDoc = meeting.doc()
+      kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
+      fetcher.webOperation('PUT', meetingDoc).then(function(xhr){
+        resolve(meeting)})
+        .catch(function(err){
+          reject('Error writing meeting configuration: ' + err)
+        })
+    })
   },
+
   render: function (subject, dom) {
     var kb = UI.store, ns = UI.ns
     var updater = kb.updater
@@ -82,6 +96,77 @@ module.exports = {
       })
     }
 
+//////////////////////  DRAG and Drop
+
+    var dragoverListener = function (e) {
+      e.preventDefault() // Neeed else drop does not work [sic]
+      e.dataTransfer.dropEffect = 'copy'
+    // console.log('dragover event') // millions of them
+    }
+
+    var dragenterListener = function (e) {
+      console.log('dragenter event dropEffect: ' + e.dataTransfer.dropEffect)
+      this.style.backgroundColor = '#ccc'
+      e.dataTransfer.dropEffect = 'link'
+      console.log('dragenter event dropEffect 2: ' + e.dataTransfer.dropEffect)
+    }
+    var dragleaveListener = function (e) {
+      console.log('dragleave event dropEffect: ' + e.dataTransfer.dropEffect)
+      this.style.backgroundColor = 'white'
+    }
+
+
+    var dropListener = function (e) {
+      if (e.preventDefault) e.preventDefault() // stops the browser from redirecting off to the text.
+      console.log('Drop event. dropEffect: ' + e.dataTransfer.dropEffect)
+      console.log('Drop event. types: ' + (e.dataTransfer.types ? e.dataTransfer.types.join(', ') : 'NOPE'))
+
+      var uris = null
+      var text
+      var thisEle = this
+      if (e.dataTransfer.types) {
+        for (var t = 0; t < e.dataTransfer.types.length; t++) {
+          var type = e.dataTransfer.types[t]
+          if (type === 'text/uri-list') {
+            uris = e.dataTransfer.getData(type).split('\n') // @ ignore those starting with #
+            console.log('Dropped text/uri-list: ' + uris)
+          } else if (type === 'text/plain') {
+            text = e.dataTransfer.getData(type)
+          }
+        }
+        if (uris === null && text && text.slice(0, 4) === 'http') {
+          uris = text
+          console.log("Waring: Poor man's drop: using text for URI") // chrome disables text/uri-list??
+        }
+      } else {
+        // ... however, if we're IE, we don't have the .types property, so we'll just get the Text value
+        uris = [ e.dataTransfer.getData('Text') ]
+        console.log('@@ WARNING non-standrad drop event: ' + uris[0])
+      }
+      console.log('Dropped URI list (2): ' + uris)
+      if (uris) {
+        uris.map(function (u) {
+          var thing = $rdf.sym(u)
+          console.log('Dropped on attachemnt ' + u)
+          addInNewThing(thing, UI.ns.wf('attachment'))
+        })
+      }
+      return false
+    } // dropListener
+
+    var addTargetListeners = function(ele){
+      if (!ele){
+        console.log("@@@ addTargetListeners: ele " + ele)
+      }
+      ele.addEventListener('dragover', dragoverListener)
+      ele.addEventListener('dragenter', dragenterListener)
+      ele.addEventListener('dragleave', dragleaveListener)
+      ele.addEventListener('drop', dropListener)
+    }
+
+/////////////////////////
+
+
     var makeGroup = function(event, icon){
       selectTool(icon);
     }
@@ -105,20 +190,9 @@ module.exports = {
         if (ok) {
           addInNewThing(newInstance, ns.meeting('schedulingPoll'))
         } else {
-
+          complain('Error making new scheduler: ' + newInstance)
         }
       })
-
-/*
-
-      kb.add(newInstance, ns.rdf('type'), SCHED('SchedulableEvent'), newDetailsDoc);
-	    if (me) {
-		      kb.add(newInstance, DC('author'), me, newDetailsDoc);
-	    }
-
-	    kb.add(newInstance, DC('created'), new Date(), newDetailsDoc);
-	    kb.add(newInstance, SCHED('resultsDocument'), newDetailsDoc);
-*/
     }
 
     //   Make Pad for notes of meeting
@@ -175,7 +249,7 @@ module.exports = {
     }
 
     var makeChat = function(event, icon){
-      var newBase = meetingBase + 'chat/'
+      var newBase = meetingBase + 'Chat/'
       var kb = UI.store
       selectTool(icon);
       if (kb.holds(meeting, ns.meeting('chat'))){
@@ -183,8 +257,12 @@ module.exports = {
         return // already got one
       }
       var messageStore = kb.sym(newBase + 'chat.ttl');
-      kb.add(messageStore, ns.dc('title'), 'Chat')
-      kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'))
+
+      kb.add(messageStore, ns.dc('title'), 'Chat', meetingDoc)
+      kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'), meetingDoc)
+
+      // Flag its type in the chat itself as well as in the master meeting config file
+      kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'), messageStore)
 
       updater.put(
         messageStore,
@@ -284,7 +362,7 @@ module.exports = {
       if (subject.sameTerm(subject.doc())){
         var iframe = containerDiv.appendChild(dom.createElement('iframe'))
         iframe.setAttribute('src', subject.uri)
-        iframe.setAttribute('style', 'border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
+        iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
         //tabContentCache[subject.uri] = iframe
       } else {
         var table = containerDiv.appendChild(dom.createElement('table'))
@@ -292,14 +370,17 @@ module.exports = {
       }
     }
 
-    options = {dom: dom} // Like newestFirst
-
+    options = {dom: dom}
     options.predicate = ns.meeting('toolList')
     options.subject = subject
     options.ordered = true
     options.orientation = 1 // tabs on LHS
     options.showMain = showMain
     var tabs = mainTR.appendChild(UI.tabs.tabWidget(options));
+
+    UI.aclControl.preventBrowserDropEvents(dom)
+    addTargetListeners(tabs.tabContainer)
+    addTargetListeners(bottomTR)
 
     return div
   }

@@ -1,0 +1,26 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix meeting: <http://www.w3.org/ns/pim/meeting#>.
+@prefix p1: <SharedNotes/pad.ttl#>.
+@prefix det: <Schedule/details.ttl#>.
+@prefix n0: <http://appear.in/>.
+
+<#this>
+    dc:title
+       "Our first test meeting";
+    a    meeting:Meeting;
+    meeting:chat
+       <chat/chat.ttl>;
+    meeting:toolList
+            (    <chat/chat.ttl>
+               p1:thisPad
+               det:event
+               <chat/chat.ttl>
+               <https://www.w3.org/>
+               n0:8424c698-1d30-4d8e-ac47-dfe610f331ba );
+    meeting:videoCallPage
+       n0:8424c698-1d30-4d8e-ac47-dfe610f331ba.
+   p1:thisPad dc:title "Shared notes" .
+   <chat/chat.ttl> dc:title "Discusssion" .
+   det:event dc:title "Schedule" .
+n0:8424c698-1d30-4d8e-ac47-dfe610f331ba
+   dc:title "Video call"; a meeting:VideoCallPage.

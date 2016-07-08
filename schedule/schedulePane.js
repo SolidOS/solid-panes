@@ -1,6 +1,6 @@
 /*   Scheduler Pane
 **
-** UNFINISHED
+**
 */
 
 var UI = require('solid-ui')
@@ -277,6 +277,7 @@ module.exports = {
     var form2 = kb.sym(forms_uri + '#form2')
     var form3 = kb.sym(forms_uri + '#form3')
 
+    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%;
 
     // Utility functions
 
@@ -325,8 +326,10 @@ module.exports = {
     //
 
     var newInstanceButton = function () {
-      return UI.widgets.newAppInstance(dom, 'Schedule another event',
+      var b = UI.widgets.newAppInstance(dom, { noun: 'scheduler'},
         initializeNewInstanceInWorkspace)
+      b.firstChild.setAttribute('style', inputStyle)
+      return b
     } // newInstanceButton
 
     // ///////////////////////  Create new document files for new instance of app
@@ -587,6 +590,7 @@ module.exports = {
       div.appendChild(dom.createElement('br')); // @@
 
       var button = div.appendChild(dom.createElement('button'))
+      button.setAttribute('style', inputStyle)
       button.textContent = 'Start new poll at this URI'
       button.addEventListener('click', function (e) {
         var newBase = baseField.value
@@ -635,6 +639,7 @@ module.exports = {
 
         }
         var b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
+        b1.setAttribute('style', inputStyle)
         b1.textContent = '<- go back'
         b1.addEventListener('click', function (e) {
           if (currentSlide > 0) {
@@ -644,6 +649,7 @@ module.exports = {
         }, false)
 
         var b2 = clearElement(naviRight).appendChild(dom.createElement('button'))
+        b2.setAttribute('style', inputStyle)
         b2.textContent = 'continue ->'
         b2.addEventListener('click', function (e) {
           if (currentSlide < slides.length - 1) {
@@ -671,6 +677,7 @@ module.exports = {
       insertables.push($rdf.st(subject, SCHED('results'), resultsDoc, detailsDoc)); // @@ also link in results
 
       var doneButton = dom.createElement('button')
+      doneButton.setAttribute('style', inputStyle)
       doneButton.textContent = 'Go to poll'
       doneButton.addEventListener('click', function (e) {
         if (kb.any(subject, SCHED('ready'))) { // already done
@@ -690,6 +697,7 @@ module.exports = {
       }, false)
 
       var emailButton = dom.createElement('button')
+      emailButton.setAttribute('style', inputStyle)
       var emailIcon = emailButton.appendChild(dom.createElement('img'))
       //emailIcon.setAttribute('src', scriptBase + 'envelope-icon.png') // noun_480183.svg
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
@@ -760,10 +768,11 @@ module.exports = {
         matrix.setAttribute('class', 'matrix')
 
         var refreshButton = dom.createElement('button')
+        refreshButton.setAttribute('style', inputStyle)
         refreshButton.textContent = 'refresh'
         refreshButton.addEventListener('click', function (e) {
           refreshButton.disabled = true
-          UI.store.fetcher.nowOrWhenFetched(subject_uri.split('#')[0], undefined, function (ok, body) {
+          UI.store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
             if (!ok) {
               console.log('Cant refresh matrix' + body)
             } else {
@@ -925,10 +934,12 @@ module.exports = {
         matrix.setAttribute('class', 'matrix')
 
         var refreshButton = dom.createElement('button')
+        refreshButton.setAttribute('style', inputStyle)
+
         refreshButton.textContent = 'refresh'
         refreshButton.addEventListener('click', function (e) {
           refreshButton.disabled = true
-          UI.store.fetcher.nowOrWhenFetched(subject_uri.split('#')[0], undefined, function (ok, body) {
+          UI.store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
             if (!ok) {
               console.log('Cant refresh matrix' + body)
             } else {
@@ -958,7 +969,7 @@ module.exports = {
         options.cellFunction = function (cell, x, y, value) {
           var refreshColor = function () {
             var bg = kb.any(value, UI.ns.ui('backgroundColor'))
-            if (bg) cell.setAttribute('style', 'text-align: center; background-color: ' + bg + ';')
+            if (bg) cell.setAttribute('style', 'padding: 0.3em; text-align: center; background-color: ' + bg + ';')
           }
           if (value !== null) {
             kb.fetcher.nowOrWhenFetched(value.uri.split('#')[0], undefined, function (uri, ok, error) {
@@ -1027,6 +1038,7 @@ module.exports = {
       var instanceAuthor = kb.any(subject, DC('author'))
       if (!instanceAuthor || instanceAuthor.sameTerm(me)) {
         var editButton = dom.createElement('button')
+        editButton.setAttribute('style', inputStyle)
         editButton.textContent = '(Modify the poll)'
         editButton.addEventListener('click', function (e) {
           clearElement(div)
@@ -1067,6 +1079,7 @@ module.exports = {
 
     var naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.setAttribute('class', 'naviMenu')
+    naviMenu.setAttribute('style', ' text-align: middle; vertical-align: middle; padding-top: 4em; ')
     //    naviMenu.setAttribute('style', 'margin-top: 3em;')
     var naviLeft = naviMenu.appendChild(dom.createElement('td'))
     var naviCenter = naviMenu.appendChild(dom.createElement('td'))

@@ -58,6 +58,50 @@ if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // s
       pre.appendChild(dom.createTextNode(message))
     }
 
+    ////////////////////////////////////// Getting logged in with a WebId
+
+    var me = null;
+    var setUser = function(webid) {
+        if (webid) {
+            tabulator.preferences.set('me', webid);
+            console.log("(SetUser: Logged in as "+ webid+")")
+            me = kb.sym(webid);
+            // @@ Here enable all kinds of stuff
+        } else {
+            tabulator.preferences.set('me', '');
+            console.log("(SetUser: Logged out)")
+            me = null;
+        }
+    }
+
+
+    ////////// Who am I
+
+    var whoAmI = function() {
+        var me_uri = tabulator.preferences.get('me');
+        me = me_uri? kb.sym(me_uri) : null;
+        UI.widgets.checkUser(messageStore, setUser);
+
+        if (!tabulator.preferences.get('me')) {
+            console.log("(You do not have your Web Id set. Sign in or sign up to make changes.)");
+/*
+            if (tabulator.mode == 'webapp' && typeof document !== 'undefined' &&
+                document.location &&  ('' + document.location).slice(0,16) === 'http://localhost') {
+
+                me = kb.any(subject, UI.ns.dc('author')); // when testing on plane with no webid
+                console.log("Assuming user is " + me)
+            }
+*/
+        } else {
+            me = kb.sym(tabulator.preferences.get('me'))
+            // console.log("(Your webid is "+ tabulator.preferences.get('me')+")");
+        };
+
+    }
+
+//////////////////////////
+
+
     var div = dom.createElement('div')
     div.setAttribute('class', 'chatPane')
     options = {} // Like newestFirst
@@ -86,6 +130,7 @@ if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // s
       complain('Unknown chat type')
     }
 
+    whoAmI()
     div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
 
     return div

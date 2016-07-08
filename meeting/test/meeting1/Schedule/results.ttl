@@ -1,0 +1,15 @@
+@prefix det: <details.ttl#>.
+@prefix sch: <http://www.w3.org/ns/pim/schedule#>.
+@prefix n0: <http://purl.org/dc/elements/1.1/>.
+@prefix c: <https://www.w3.org/People/Berners-Lee/card#>.
+@prefix ic: <http://www.w3.org/2002/12/cal/ical#>.
+
+   det:event sch:response <#id1467291979007_response> .
+<#id1467291979007_response>
+    n0:author
+       c:i;
+    sch:cell
+       <#id1467291979007_0>, <#id1467291979007_1>, <#id1467291979007_2>.
+   <#id1467291979007_0> ic:dtstart "2016-06-23"; sch:availabilty sch:Maybe .
+   <#id1467291979007_1> ic:dtstart "2016-06-16"; sch:availabilty sch:No .
+   <#id1467291979007_2> ic:dtstart "2016-07-22"; sch:availabilty sch:Yes .

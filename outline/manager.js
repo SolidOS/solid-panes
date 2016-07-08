@@ -299,6 +299,7 @@ module.exports = function(doc) {
   this.outline_objectTD = function outline_objectTD(obj, view, deleteNode, statement) {
       // UI.log.info("@outline_objectTD, myDocument is now " + this.document.location);
       var td = myDocument.createElement('td');
+      td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('notSelectable','false');
       var theClass = "obj";
 
@@ -394,6 +395,7 @@ if (statement){
       //if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) td_p.className='undetermined';
 
       var labelTD = myDocument.createElement('TD')
+      labelTD.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       labelTD.setAttribute('notSelectable','true')
       labelTD.appendChild(myDocument.createTextNode(lab))
       td_p.appendChild(labelTD);
@@ -419,7 +421,9 @@ if (statement){
 
   function expandedHeaderTR(subject, requiredPane) {
       var tr = myDocument.createElement('tr');
+      tr.setAttribute('class','hoverControl')
       var td = myDocument.createElement('td');
+      td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('notSelectable','false');
 
       td.setAttribute('colspan', '2');
@@ -762,6 +766,7 @@ if (statement){
               if (show<predDups){ //Add the x more <TR> here
                   var moreTR=myDocument.createElement('tr');
                   var moreTD=moreTR.appendChild(myDocument.createElement('td'));
+                  moreTD.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
                   moreTD.setAttribute('notSelectable','false');
                   if (predDups>n){ //what is this for??
                       var small=myDocument.createElement('a');
@@ -815,6 +820,7 @@ if (statement){
   termWidget.construct = function (myDocument) {
       myDocument = myDocument||document;
       var td = myDocument.createElement('TD')
+      td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('class','iconTD')
       td.setAttribute('notSelectable','true')
       td.style.width = '0px';
@@ -1914,6 +1920,7 @@ if (statement){
           uri.spec = spec;
           return uri;
       }
+
       var td = GotoSubject_default();
       if (!td) td = GotoSubject_default(); //the first tr is required
       if (expand) {
@@ -1922,6 +1929,12 @@ if (statement){
           tr=td.parentNode;
           UI.utils.getEyeFocus(tr,false,undefined,window);//instantly: false
       }
+      /*
+      if (solo && typeof History !== 'undefined'){
+        History.pushstate(@@)
+      }
+      */
+
       if (solo && tabulator.isExtension) {
           // See https://developer.mozilla.org/en/NsIGlobalHistory2
           // See <http://mxr.mozilla.org/mozilla-central/source/toolkit/
@@ -2045,7 +2058,8 @@ if (statement){
               var elt = obj.elements[i];
               var row = rep.appendChild(myDocument.createElement('tr'));
               var numcell = row.appendChild(myDocument.createElement('td'));
-              numcell .setAttribute('notSelectable','false')
+              numcell.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
+              numcell.setAttribute('notSelectable','false')
               numcell.setAttribute('about', obj.toNT());
               numcell.innerHTML = (i+1) + ')';
               row.appendChild(thisOutline.outline_objectTD(elt));
