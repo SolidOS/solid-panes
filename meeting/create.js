@@ -78,10 +78,12 @@ document.addEventListener('DOMContentLoaded', function () {
   // Viral growth path: user of app decides to make another instance
   //
 
-  var newInstanceButton = function () {
-    return UI.widgets.newAppInstance(dom, { noun: 'meeting'},
+  var newInstanceButtonDiv = function () {
+    return UI.widgets.newAppInstance(dom,
+      { noun: 'meeting',
+        appPathSegment: appPathSegment},
       initializeNewInstanceInWorkspace)
-  } // newInstanceButton
+  } // newInstanceButtonDiv
 
   // ///////////////////////  Create new document files for new instance of app
 
@@ -99,7 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
       newBase = newBase + '/'
     }
     var now = new Date()
-    newBase += appPathSegment + '/id' + now.getTime() + '/' // unique id
 
     initializeNewInstanceAtBase(null, newBase)
   }
@@ -116,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function () {
     })
   }
 
-  var d = newInstanceButton() // Actually a div in which minting will happen
+  var d = newInstanceButtonDiv() // Actually a div in which minting will happen
   var button = d.firstChild
   button.setAttribute('style', inputStyle)
   div.appendChild(d)
