@@ -85,15 +85,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ///////////////////////  Create new document files for new instance of app
 
-  var initializeNewInstanceInWorkspace = function (ws) {
+  var initializeNewInstanceInWorkspace = function (ws, newBase) {
+    /*
     var newBase = kb.any(ws, ns.space('uriPrefix'))
     if (!newBase) {
       newBase = ws.uri.split('#')[0]
     } else {
       newBase = newBase.value
     }
+    */
     if (newBase.slice(-1) !== '/') {
-      $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
+      console.log(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
       newBase = newBase + '/'
     }
     var now = new Date()

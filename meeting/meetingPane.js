@@ -20,12 +20,11 @@ module.exports = {
 
   // Create a new Meeting thing
   //
-  // Returns a promise of meeting
   //
   mint: function(base, context){
     return new Promise(function(resolve, reject){
       var kb = UI.store, ns = UI.ns
-      var meeting = kb.sym(base + 'meet#this')
+      var meeting = kb.sym(base + 'index.ttl#this')
       var meetingDoc = meeting.doc()
 
       var me = tabulator.preferences.get('me')
@@ -37,17 +36,27 @@ module.exports = {
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
       kb.add(meeting, ns.dc('created'), new Date(), meetingDoc)
       kb.add(meeting, ns.meeting('toolList'), new $rdf.Collection(), meetingDoc)
-      kb.fetcher.webOperation('PUT', meetingDoc).then(function(xhr){
-        resolve(meeting)})
-        .catch(function(err){
-          reject('Error writing meeting configuration: ' + err)
+
+      kb.updater.put(
+        meetingDoc,
+        kb.statementsMatching(undefined, undefined, undefined, meetingDoc),
+        'text/turtle',
+        function(uri2, ok, message) {
+          if (ok){
+            resolve(meeting)
+          } else {
+              reject('Error writing meeting configuration: ' + err)
+          }
         })
     })
   },
 
+  // Returns a div
+
   render: function (subject, dom) {
     var kb = UI.store, ns = UI.ns
     var updater = kb.updater
+    var thisPane = this
 
     var complain = function complain (message, color) {
       console.log(message)
@@ -67,6 +76,8 @@ module.exports = {
     var topDiv = topTR.appendChild(dom.createElement('div'))
     var mainTR = table.appendChild(dom.createElement('tr'))
     var bottomTR = table.appendChild(dom.createElement('tr'))
+
+    topTR.setAttribute('style','min-height:4em;') // spacer if notthing else
 
     var me = null; // @@ Put code to find out logged in person
     var loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
@@ -101,6 +112,22 @@ module.exports = {
           } else {
               message = "FAILED to save new thing at: "+ there.uri +' : ' + message
               complain(message)
+          };
+      })
+    }
+
+    var saveAppDocumentLinkAndAddNewThing = function(thing, pred){
+      var appDoc = thing.doc()
+      kb.add(meeting, pred, thing, appDoc) // Link back to meeting
+      updater.put(
+        appDoc,
+        kb.statementsMatching(undefined, undefined, undefined, appDoc),
+        'text/turtle',
+        function(uri2, ok, message) {
+          if (ok) {
+              addInNewThing(newInstance, pred)
+          } else {
+              complain("FAILED to save new tool at: "+ thing +' : ' + message);
           };
       })
     }
@@ -183,13 +210,8 @@ module.exports = {
       selectTool(icon);
 
       var newBase = meetingBase + 'Schedule/'
-
-
-      // This should all really be in with the pad code:
-
       var kb = UI.store
       var newDetailsDoc = kb.sym(newBase + 'poll.ttl');
-      //var newIndexDoc = kb.sym(newBase + 'index.html');
       if (kb.holds(meeting, ns.meeting('schedulingPoll'))){
         console.log("Ignored - already have a scheduling poll");
         return // already got one
@@ -209,18 +231,15 @@ module.exports = {
     var makePad = function(event, icon){
       selectTool(icon);
       var newBase = meetingBase + 'SharedNotes/'
-
-      // This should all really be in with the pad code:
-
       var kb = UI.store
-      var newPadDoc = kb.sym(newBase + 'pad.ttl');
-      //var newIndexDoc = kb.sym(newBase + 'index.html');
+
       if (kb.holds(meeting, ns.meeting('sharedNotes'))){
         console.log("Ignored - already have a shared notepad");
         return // already got one
       }
 
-      newInstance = kb.sym(newPadDoc.uri + '#thisPad');
+      var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
+      var newPadDoc = newInstance.doc()
 
       kb.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc);
       kb.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
@@ -230,31 +249,37 @@ module.exports = {
 	    }
 	    kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc); // linked list empty
 
-	    // Keep a paper trail   @@ Revisit when we have non-public ones @@ Privacy
-	    // kb.add(newInstance, UI.ns.space('inspiration'), thisInstance, padDoc);
-	    // kb.add(newInstance, UI.ns.space('inspiration'), thisInstance, newPadDoc);
-
-      updater.put(
-        newPadDoc,
-        kb.statementsMatching(undefined, undefined, undefined, newPadDoc),
-        'text/turtle',
-        function(uri2, ok, message) {
-          if (ok) {
-              addInNewThing(newInstance, ns.meeting('sharedNotes'))
-          } else {
-              complain("FAILED to save new notepad at: "+ there.uri +' : ' + message);
-          };
-      })
+      saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('sharedNotes'))
     }
 
     var makeAgenda = function(event, icon){
       selectTool(icon);
-
     }
 
     var makeActions = function(event, icon){
       selectTool(icon);
+      var newBase = meetingBase + 'Actions/'
+      var kb = UI.store
+      if (kb.holds(meeting, ns.meeting('actions'))){
+        console.log("Ignored - already have chat");
+        return // already got one
+      }
+      var appDoc = kb.sym(newBase + 'config.ttl');
+      var newInstance = kb.sym(newBase + 'config.ttl#this');
+      var stateStore = kb.sym(newBase + 'state.ttl');
 
+      kb.add(newInstance, ns.dc('title'), 'Actions', appDoc)
+
+      kb.add(newInstance, ns.wf('issueClass'), ns.wf('Task'), appDoc)
+      kb.add(newInstance, ns.wf('initialState'), ns.wf('Open'), appDoc)
+      kb.add(newInstance, ns.wf('stateStore'), stateStore, appDoc)
+      kb.add(newInstance, ns.wf('assigneeClass'), ns.foaf('Person'), appDoc) // @@ set to people in the meeting?
+
+      kb.add(newInstance, ns.rdf('type'), ns.wf('Tracker'), appDoc)
+
+      // Flag its type in the chat itself as well as in the master meeting config file
+      kb.add(newInstance, ns.rdf('type'), ns.wf('Tracker'), appDoc)
+      saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('actions'))
     }
 
     var makeChat = function(event, icon){
@@ -273,17 +298,7 @@ module.exports = {
       // Flag its type in the chat itself as well as in the master meeting config file
       kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'), messageStore)
 
-      updater.put(
-        messageStore,
-        kb.statementsMatching(undefined, undefined, undefined, messageStore),
-        'text/turtle',
-        function(uri2, ok, message) {
-          if (ok) {
-              addInNewThing(messageStore, ns.meeting('chat'))
-          } else {
-              complain("FAILED to save new chat at: "+ there.uri +' : ' + message);
-          };
-      })
+      saveAppDocumentLinkAndAddNewThing(messageStore, ns.meeting('chat'))
     }
 
     var makeVideoCall = function(event, icon){
@@ -296,35 +311,55 @@ module.exports = {
         console.log("Ignored - already have a videoCallPage");
         return // already got one
       }
-
       kb.add(newInstance, ns.rdf('type'), ns.meeting('VideoCallPage'), meetingDoc);
       kb.add(newInstance, ns.dc('title'), 'Video call', meetingDoc)
       addInNewThing(newInstance, ns.meeting('videoCallPage'))
-
     }
 
     var makeAttachment = function(event, icon){
       selectTool(icon);
     }
 
+    var makeMeeting = function(event, icon){ // @@@ make option of continuing series
+      selectTool(icon);
+      var appDetails = { noun: 'meeting'}
+      var gotWS = function(ws, base){
+        thisPane.mint(base, {}).then(function(newInstance){
+          bottomTR.removeChild(mintUI)
+          var p = bottomTR.appendChild(dom.createElement('p'))
+          p.setAttribute('style', 'font-size: 140%;')
+          p.innerHTML =
+            "Your <a target='newMeeting' href='" + newInstance.uri + "'><b>new meeting</b></a> is ready to be set up. " +
+            "<br/><br/><a target='newMeeting' href='" + newInstance.uri + "'>Go to your new meeting.</a>"
+        }).catch(function(err){
+          bottomTR.removeChild(mintUI)
+          bottomTR.appendChild(UI.widgets.errorMessageBlock(dom, err))
+        })
+      }
+      var mintUI = UI.widgets.selectWorkspace(dom, appDetails, gotWS)
+      bottomTR.appendChild(mintUI)
+    }
+
     ///////////////////////////////////
 
     var toolIcons = [
-      { icon: 'noun_339237.svg', maker: makeGroup, limit: 1},
-      { icon: 'noun_346777.svg', maker: makePoll }, // When meet THIS or NEXT time
-      { icon: 'noun_48218.svg', maker: makeAgenda, limit:1 }, // When meet THIS or NEXT time
-      { icon: 'noun_79217.svg', maker: makePad },
-      { icon: 'noun_346319.svg', maker: makeChat, limit:1 },
-      { icon: 'noun_17020.svg', maker: makeActions, limit: 1}, // When meet THIS or NEXT time
-      { icon: 'noun_260227.svg', maker: makeVideoCall, limit: 1},
-      { icon: 'noun_25830.svg', maker: makeAttachment }
-    ]
+      { icon: 'noun_339237.svg', maker: makeGroup, hint: 'Make a group of people', limit: 1, disabled: true},
+      { icon: 'noun_346777.svg', maker: makePoll, hint: 'Make a poll to schedule the meeting'}, // When meet THIS or NEXT time
+      { icon: 'noun_48218.svg', maker: makeAgenda, limit:1 , hint: 'Add an agenda list', disabled: true}, // When meet THIS or NEXT time
+      { icon: 'noun_79217.svg', maker: makePad, hint: 'Add a shared notepad'},
+      { icon: 'noun_346319.svg', maker: makeChat, limit:1, hint: 'Add a chat channel for the meeting'},
+      { icon: 'noun_17020.svg', maker: makeActions, limit: 1, hint: 'Add a list of action items'}, // When meet THIS or NEXT time
+      { icon: 'noun_260227.svg', maker: makeVideoCall, limit: 1, hint: 'Add a video call for the meeting'},
+      { icon: 'noun_25830.svg', maker: makeAttachment, hint: 'Attach meeting materials', disabled: true},
+      { icon: 'noun_66617.svg', maker: makeMeeting, hint: 'Make a new separate meeting', disabled: false}
+    ] // 'noun_66617.svg'
 
     var iconStyle = 'padding: 1em; width: 3em; height: 3em;'
     var star = bottomTR.appendChild(dom.createElement('img'))
     var visible = false; // the inividual tools tools
     star.setAttribute('src', UI.icons.iconBase + 'noun_272948.svg')
     star.setAttribute('style', iconStyle)
+    star.setAttribute('title', 'Add another tool to the meeting')
     var selectNewTool = function(event){
       visible = !visible
       star.setAttribute('style', iconStyle + (visible? 'background-color: yellow;': ''));
@@ -338,22 +373,30 @@ module.exports = {
     var icon, iconArray = []
     for (var i=0; i< toolIcons.length; i++){
       var foo = function() {
+        var tool = toolIcons[i]
         var icon = bottomTR.appendChild(dom.createElement('img'))
-        icon.setAttribute('src', UI.icons.iconBase + toolIcons[i].icon)
+        icon.setAttribute('src', UI.icons.iconBase + tool.icon)
+        icon.setAttribute('title', tool.hint)
         icon.setAttribute('style', iconStyle + "display: none;")
         iconArray.push(icon)
-        icon.tool = toolIcons[i]
+        icon.tool = tool
         var maker = toolIcons[i].maker
-        icon.addEventListener('click', function(e){
-            maker(e, icon)
-        })
+        if (!tool.disabled){
+          icon.addEventListener('click', function(e){
+              maker(e, icon)
+          })
+        }
       }
       foo()
     }
 
     var styleTheIcons = function(style){
       for (var i=0; i<iconArray.length; i++){
-        iconArray[i].setAttribute('style', iconStyle + style) // eg 'background-color: #ccc;'
+        var st = iconStyle + style
+        if (toolIcons[i].disabled){
+          st += 'opacity: 0.3;'
+        }
+        iconArray[i].setAttribute('style', st) // eg 'background-color: #ccc;'
       }
     }
     var resetTools = function(){
