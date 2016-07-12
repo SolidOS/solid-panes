@@ -1,0 +1,14 @@
+@prefix dc: <http://purl.org/dc/elements/1.1/>.
+@prefix flow: <http://www.w3.org/2005/01/wf/flow#>.
+@prefix n1: <http://xmlns.com/foaf/0.1/>.
+
+<#this>
+    dc:title
+       "Actions";
+    a    flow:Tracker, flow:Tracker;
+    flow:assigneeClass
+       n1:Person;
+    flow:initialState
+       flow:Open;
+    flow:issueClass
+       flow:Task.

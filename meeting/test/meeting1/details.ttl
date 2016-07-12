@@ -3,11 +3,18 @@
 @prefix p1: <SharedNotes/pad.ttl#>.
 @prefix det: <Schedule/details.ttl#>.
 @prefix n0: <http://appear.in/>.
+@prefix www: <https://www.w3.org/>.
+@prefix flow: <http://www.w3.org/2005/01/wf/flow#>.
+@prefix con: <Actions/config.ttl#>.
 
 <#this>
     dc:title
        "Our first test meeting";
     a    meeting:Meeting;
+    flow:attachment
+       <../../../../solid-ui/lib/icons/noun_25830.svg>;
+    meeting:actions
+       con:this;
     meeting:chat
        <chat/chat.ttl>;
     meeting:toolList
@@ -15,8 +22,10 @@
                p1:thisPad
                det:event
                <chat/chat.ttl>
-               <https://www.w3.org/>
-               n0:8424c698-1d30-4d8e-ac47-dfe610f331ba );
+               www:
+               n0:8424c698-1d30-4d8e-ac47-dfe610f331ba
+               <../../../../solid-ui/lib/icons/noun_25830.svg>
+               con:this );
     meeting:videoCallPage
        n0:8424c698-1d30-4d8e-ac47-dfe610f331ba.
    p1:thisPad dc:title "Shared notes" .

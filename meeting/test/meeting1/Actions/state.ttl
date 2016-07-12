@@ -1,0 +1,30 @@
+@prefix n0: <http://purl.org/dc/elements/1.1/>.
+@prefix terms: <http://purl.org/dc/terms/>.
+@prefix XML: <http://www.w3.org/2001/XMLSchema#>.
+@prefix flow: <http://www.w3.org/2005/01/wf/flow#>.
+@prefix con: <config.ttl#>.
+
+<#Iss1468035881396>
+    n0:title
+       "Repair hole in bucket";
+    terms:created
+       "2016-07-09T03:44:41Z"^^XML:dateTime;
+    a    flow:Open, flow:Open;
+    flow:tracker
+       con:this.
+<#Iss1468108200988>
+    n0:title
+       "foo bat";
+    terms:created
+       "2016-07-09T23:50:00Z"^^XML:dateTime;
+    a    flow:Open;
+    flow:tracker
+       con:this.
+<#Iss1468108377764>
+    n0:title
+       "foo bar baz";
+    terms:created
+       "2016-07-09T23:52:57Z"^^XML:dateTime;
+    a    flow:Open;
+    flow:tracker
+       con:this.
