@@ -111,11 +111,15 @@ if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // s
     } else if (kb.any(subject, UI.ns.wf('message'))) {
       messageStore = UI.store.any(subject, UI.ns.wf('message')).doc()
 
-    } else if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // subject is the file
+    } else if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)
+       || kb.holds(subject, ns.rdf('type'), ns.foaf('ChatChannel'))) { // subject is the file
       var ircLogQuery = function () {
         var query = new $rdf.Query('IRC log entries')
-        var v = {}['chan', 'msg', 'date', 'list', 'pred', 'creator', 'content'].map(function (x) {
-          query.vars.push(v[x] = $rdf.variable(x))})
+        var v = []
+        var vv = ['chan', 'msg', 'date', 'list', 'pred', 'creator', 'content']
+        vv.map(function (x) {
+          query.vars.push(v[x] = $rdf.variable(x))
+        })
         query.pat.add(v['chan'], ns.foaf('chatEventList'), v['list']) // chatEventList
         query.pat.add(v['list'], v['pred'], v['msg']) //
         query.pat.add(v['msg'], ns.dc('date'), v['date'])

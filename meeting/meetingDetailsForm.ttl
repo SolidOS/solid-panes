@@ -1,0 +1,145 @@
+#Processed by Id
+        #    using base file:///devel/github.com/linkeddata/solid-app-set/meeting/meetingDetailsForm.ttl
+             @prefix : <http://www.w3.org/ns/ui#> .
+    @prefix mee: <#> .
+    @prefix ns: <http://www.w3.org/2006/vcard/ns#> .
+    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+    @prefix te: <http://purl.org/dc/terms/> .
+    @prefix dc: <http://purl.org/dc/elements/1.1/>.
+
+
+mee:main    a :Form;
+                <title> "Meeting Details";
+                :part mee:titleField.
+
+  mee:titleField     a :SingleLineTextField;
+       :maxLength "128";
+       :property dc:title;
+       :size "40" .
+
+
+<#spares> :part               mee:addresses,
+                       mee:addressesComment,
+                       mee:eMails,
+                       mee:emailComment,
+                       mee:fullNameField,
+                       mee:noteComment,
+                       mee:noteField,
+                       mee:telephoneComment,
+                       mee:telephones .
+
+
+###################
+
+    mee:addresses     a :Multiple;
+         <http://purl.org/dc/elements/1.1/title> "Address details";
+         :part mee:oneAddress;
+         :property ns:hasAddress .
+
+    mee:addressesComment     a :Comment;
+         :contents "Address" .
+
+    mee:eMails     a :Multiple;
+         :part mee:oneEMail;
+         :property ns:hasEmail .
+
+    mee:emailComment     a :Comment;
+         :contents "Email" .
+
+    mee:emailType     a :Classifier;
+         :canMintNew "0";
+         :category ns:Type;
+         :from ns:Type;
+         :property te:type .
+
+    mee:emailValue     a :EmailField;
+         :property ns:value;
+         :size "50" .
+
+         mee:form1     a :Form;
+              <http://purl.org/dc/elements/1.1/title> "Contact Details";
+              :part mee:addresses,
+                     mee:addressesComment,
+                     mee:eMails,
+                     mee:emailComment,
+                     mee:fullNameField,
+                     mee:noteComment,
+                     mee:noteField,
+                     mee:telephoneComment,
+                     mee:telephones .
+
+
+        mee:fullNameField     a :SingleLineTextField;
+         :maxLength "128";
+         :property ns:fn;
+         :size "40" .
+
+    mee:id1409437207443     a :SingleLineTextField;
+         :maxLength "128";
+         :property ns:street-address;
+         :size "40" .
+
+    mee:id1409437292400     a :SingleLineTextField;
+         :maxLength "128";
+         :property ns:locality;
+         :size "40" .
+
+    mee:id1409437421996     a :SingleLineTextField;
+         :maxLength "25";
+         :property ns:postal-code;
+         :size "25" .
+
+    mee:id1409437467649     a :SingleLineTextField;
+         :maxLength "128";
+         :property ns:region;
+         :size "40" .
+
+    mee:id1409437569420     a :SingleLineTextField;
+         :maxLength "128";
+         :property ns:country-name;
+         :size "40" .
+
+    mee:id1409437646712     a :Classifier;
+         :from rdf:Class;
+         :property te:type .
+
+    mee:noteComment     a :Comment;
+         :contents "General Notes" .
+
+    mee:noteField     a :MultiLineTextField;
+         :property ns:note .
+
+    mee:oneAddress     a :Group;
+         :part mee:id1409437207443,
+                mee:id1409437292400,
+                mee:id1409437421996,
+                mee:id1409437467649,
+                mee:id1409437569420,
+                mee:id1409437646712 .
+
+    mee:oneEMail     a :Group;
+         :part mee:emailType,
+                mee:emailValue .
+
+    mee:onetelephone     a :Group;
+         :part mee:telephoneType,
+                mee:telephoneValue .
+
+    mee:telephoneComment     a :Comment;
+         :contents "Phones" .
+
+    mee:telephoneType     a :Classifier;
+         :canMintNew "0";
+         :category ns:Type;
+         :from ns:Type;
+         :property te:type .
+
+    mee:telephoneValue     a :PhoneField;
+         :property ns:value;
+         :size "50" .
+
+    mee:telephones     a :Multiple;
+         :part mee:onetelephone;
+         :property ns:hasTelephone .
+
+    ns:Individual     :creationForm mee:form1 .

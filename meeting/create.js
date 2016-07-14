@@ -10,8 +10,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var appPathSegment = 'meetulator.timbl.com'
 
   var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 150%; text-align: center;' //  ;
-
-
   var kb = UI.store
   var fetcher = kb.fetcher
   var ns = UI.ns
@@ -22,12 +20,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var uri = window.location.href
   var base = uri.slice(0, uri.lastIndexOf('/') + 1)
-  // var subject_uri = base + 'details.ttl#event1'
-
-  var logInOutButton = null
-
-  // var forms_uri = window.document.title = base+ 'forms.ttl'
-  //    var forms_uri = 'https://linkeddata.github.io/app-schedule/forms.ttl' // CORS blocks
 
   var scriptBase = 'https://linkeddata.github.io/solid-app-set/'
 /*
@@ -57,13 +49,6 @@ document.addEventListener('DOMContentLoaded', function () {
       console.log('(SetUser: Logged out)')
       me = null
     }
-    if (logInOutButton) {
-      logInOutButton.refresh()
-    }
-    if (webid && waitingForLogin) {
-      waitingForLogin = false
-      showAppropriateDisplay()
-    }
   }
 
   var me_uri = tabulator.preferences.get('me')
@@ -88,14 +73,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ///////////////////////  Create new document files for new instance of app
 
   var initializeNewInstanceInWorkspace = function (ws, newBase) {
-    /*
-    var newBase = kb.any(ws, ns.space('uriPrefix'))
-    if (!newBase) {
-      newBase = ws.uri.split('#')[0]
-    } else {
-      newBase = newBase.value
-    }
-    */
+
     if (newBase.slice(-1) !== '/') {
       console.log(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
       newBase = newBase + '/'
@@ -121,5 +99,4 @@ document.addEventListener('DOMContentLoaded', function () {
   var button = d.firstChild
   button.setAttribute('style', inputStyle)
   div.appendChild(d)
-
 })

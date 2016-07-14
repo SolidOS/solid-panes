@@ -20,6 +20,7 @@ module.exports = {
 
   // Create a new Meeting thing
   //
+  //  returns: A promise of a meeting object
   //
   mint: function(base, context){
     return new Promise(function(resolve, reject){
@@ -252,6 +253,14 @@ module.exports = {
       saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('sharedNotes'))
     }
 
+    var makeDetails = function(event, icon){
+      selectTool(icon);
+      var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
+      var box = dom.createElement('div')
+      UI.widgets.appendForm(document, box, {}, subject, form, detailsDoc, complainIfBad)
+
+    }
+
     var makeAgenda = function(event, icon){
       selectTool(icon);
     }
@@ -411,7 +420,9 @@ module.exports = {
 
     var showMain = function(containerDiv, subject){
       containerDiv.innerHTML = ''
-      if (subject.sameTerm(subject.doc())){
+      if (subject.sameTerm(subject.doc()) &&
+        !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
+          !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))){
         var iframe = containerDiv.appendChild(dom.createElement('iframe'))
         iframe.setAttribute('src', subject.uri)
         iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
