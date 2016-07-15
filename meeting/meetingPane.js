@@ -38,6 +38,8 @@ module.exports = {
       kb.add(meeting, ns.dc('created'), new Date(), meetingDoc)
       kb.add(meeting, ns.meeting('toolList'), new $rdf.Collection(), meetingDoc)
 
+      toolList.elements.push(meeting) // Add the meeting itself - see showMain()
+
       kb.updater.put(
         meetingDoc,
         kb.statementsMatching(undefined, undefined, undefined, meetingDoc),
@@ -99,7 +101,9 @@ module.exports = {
 
     var addInNewThing = function(thing, pred){
       var ins = []
-      kb.add(meeting, pred, thing, meetingDoc)
+      if (pred){
+        kb.add(meeting, pred, thing, meetingDoc)
+      }
       var toolList = kb.the(meeting, ns.meeting('toolList'))
       toolList.elements.push(thing) //  Will this work?  Should use patch?
       updater.put(
@@ -119,14 +123,16 @@ module.exports = {
 
     var saveAppDocumentLinkAndAddNewThing = function(thing, pred){
       var appDoc = thing.doc()
-      kb.add(meeting, pred, thing, appDoc) // Link back to meeting
+      if (pred) {
+        kb.add(meeting, pred, thing, appDoc) // Link back to meeting
+      }
       updater.put(
         appDoc,
         kb.statementsMatching(undefined, undefined, undefined, appDoc),
         'text/turtle',
         function(uri2, ok, message) {
           if (ok) {
-              addInNewThing(newInstance, pred)
+              addInNewThing(thing, pred)
           } else {
               complain("FAILED to save new tool at: "+ thing +' : ' + message);
           };
@@ -253,14 +259,22 @@ module.exports = {
       saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('sharedNotes'))
     }
 
-    var makeDetails = function(event, icon){
-      selectTool(icon);
-      var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
+    // Basic initial details of meeting
+/*
+    var makeDetails = function(){
       var box = dom.createElement('div')
-      UI.widgets.appendForm(document, box, {}, subject, form, detailsDoc, complainIfBad)
-
+      addInNewThing(meeting) // add self
+      var complainIfBad = function(ok, message){
+        if (!ok){
+          complain(message)
+        }
+      }
+      var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
+      UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
+        UI.widgets.appendForm(document, box, {}, meeting, form, meeting.doc(), complainIfBad)
+      })
     }
-
+*/
     var makeAgenda = function(event, icon){
       selectTool(icon);
     }
@@ -420,13 +434,25 @@ module.exports = {
 
     var showMain = function(containerDiv, subject){
       containerDiv.innerHTML = ''
-      if (subject.sameTerm(subject.doc()) &&
+      var complainIfBad = function(ok, message){
+        if (!ok){
+          box.textContent = '' + message
+        }
+      }
+      if (subject.sameTerm(meeting)){ // self reference? force details form
+        containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
+        var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
+        UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
+          UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
+        })
+
+      } else if (subject.sameTerm(subject.doc()) &&
         !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
           !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))){
         var iframe = containerDiv.appendChild(dom.createElement('iframe'))
         iframe.setAttribute('src', subject.uri)
         iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
-        //tabContentCache[subject.uri] = iframe
+
       } else {
         var table = containerDiv.appendChild(dom.createElement('table'))
         UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
@@ -444,6 +470,7 @@ module.exports = {
     UI.aclControl.preventBrowserDropEvents(dom)
     addTargetListeners(tabs.tabContainer)
     addTargetListeners(bottomTR)
+
 
     return div
   }
