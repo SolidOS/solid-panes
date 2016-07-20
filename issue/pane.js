@@ -20,7 +20,8 @@ module.exports = {
     label: function(subject) {
         var kb = UI.store;
         var t = kb.findTypeURIs(subject);
-        if (t['http://www.w3.org/2005/01/wf/flow#Task']) return "issue";
+        if (t['http://www.w3.org/2005/01/wf/flow#Task'] ||
+          kb.holds(subject, UI.ns.wf('tracker'))) return "issue"; // in case ontology not available
         if (t['http://www.w3.org/2005/01/wf/flow#Tracker']) return "tracker";
         // Later: Person. For a list of things assigned to them,
         // open bugs on projects they are developer on, etc
@@ -512,7 +513,8 @@ module.exports = {
 
         //              Render a single issue
 
-        if (t["http://www.w3.org/2005/01/wf/flow#Task"]) {
+        if (t["http://www.w3.org/2005/01/wf/flow#Task"] ||
+         kb.holds(subject, UI.ns.wf('tracker'))) {
 
             var tracker = kb.any(subject, WF('tracker'));
             if (!tracker) throw 'This issue '+subject+'has no tracker';

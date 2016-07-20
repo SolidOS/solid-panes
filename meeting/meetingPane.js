@@ -36,7 +36,8 @@ module.exports = {
 
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
       kb.add(meeting, ns.dc('created'), new Date(), meetingDoc)
-      kb.add(meeting, ns.meeting('toolList'), new $rdf.Collection(), meetingDoc)
+      var toolList = new $rdf.Collection()
+      kb.add(meeting, ns.meeting('toolList'), toolList , meetingDoc)
 
       toolList.elements.push(meeting) // Add the meeting itself - see showMain()
 
@@ -80,7 +81,7 @@ module.exports = {
     var mainTR = table.appendChild(dom.createElement('tr'))
     var bottomTR = table.appendChild(dom.createElement('tr'))
 
-    topTR.setAttribute('style','min-height:4em;') // spacer if notthing else
+    topTR.setAttribute('style','height: 2em;') // spacer if notthing else
 
     var me = null; // @@ Put code to find out logged in person
     var loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
@@ -259,22 +260,6 @@ module.exports = {
       saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('sharedNotes'))
     }
 
-    // Basic initial details of meeting
-/*
-    var makeDetails = function(){
-      var box = dom.createElement('div')
-      addInNewThing(meeting) // add self
-      var complainIfBad = function(ok, message){
-        if (!ok){
-          complain(message)
-        }
-      }
-      var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
-      UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
-        UI.widgets.appendForm(document, box, {}, meeting, form, meeting.doc(), complainIfBad)
-      })
-    }
-*/
     var makeAgenda = function(event, icon){
       selectTool(icon);
     }
@@ -305,6 +290,15 @@ module.exports = {
       saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('actions'))
     }
 
+    var makeToolNode = function(target, pred, label, icon, clas){
+      var x = UI.widgets.newThing(meetingDoc)
+      kb.add(meeting, ns.meeting('tool'), x)
+      if (label) kb.add(x, ns.rdfs('label'), label)
+      if (icon) kb.add(x, ns.meeting('icon'), icon)
+      if (clas) kb.add(x, ns.rdf('type'), clas)
+      // kb.add(x, ns.meeeting('predicate'), pred)
+    }
+
     var makeChat = function(event, icon){
       var newBase = meetingBase + 'Chat/'
       var kb = UI.store
@@ -315,8 +309,10 @@ module.exports = {
       }
       var messageStore = kb.sym(newBase + 'chat.ttl');
 
-      kb.add(messageStore, ns.dc('title'), 'Chat', meetingDoc)
-      kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'), meetingDoc)
+      // kb.add(messageStore, ns.dc('title'), 'Chat', meetingDoc)
+
+      makeToolNode(messageStore, ns.meeting('chat'), 'Shared Chat',
+        kb.sym(UI.icons.iconBase + 'noun_346319.svg'), ns.meeting('Chat'))
 
       // Flag its type in the chat itself as well as in the master meeting config file
       kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'), messageStore)
@@ -432,18 +428,73 @@ module.exports = {
       icon.setAttribute('style', iconStyle + 'background-color: yellow;')
     }
 
+
+    var renderTab = function(div, item){
+      if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
+        var target = kb.any(subject, ns.meeting('target'))
+        var label = kb.any(subject, ns.rdfs('label'))
+        label = label ? label.value : UI.utils.label(item)
+        // var view = kb.any(subject, ns.meeting('view'))
+        var icon = kb.any(subject, ns.meeting('icon'))
+        if (icon){
+          var img = bottomTR.appendChild(dom.createElement('img'))
+          var visible = false; // the inividual tools tools
+          img.setAttribute('src', icon.uri)
+          img.setAttribute('style', 'max-width: 3em; max-height: 3em;') // @
+          img.setAttribute('title', label)
+        }
+      } else {
+        div.textContent = UI.utils.label(item)
+      }
+    }
+
+    var tipDiv = function(div, text){
+      var d = div.appendChild(dom.createElement('div'))
+      var p = d.appendChild(dom.createElement('p'))
+      p.setAttribute('style', 'margin: 0em; padding:3em; color: #888;')
+      p.textContent = 'Tip: ' + text
+      return d
+    }
+
+    var renderTabSettings = function(containerDiv, subject){
+      containerDiv.innerHTML = ''
+      containerDiv.appendChild(dom.createElement('h3')).textContent = 'Adjust this tab'
+      if (kb.holds(subject, ns.rdf('type'), ns/meeting('Tool'))){
+        var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
+        UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
+          UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
+          containerDiv.appendChild(tipDiv(
+            'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
+        })
+
+      } else {
+        containerDiv.appendChild(dom.createElement('h4')).textContent = 'Not available'
+      }
+    }
+
     var showMain = function(containerDiv, subject){
+      var pane = null, table
       containerDiv.innerHTML = ''
       var complainIfBad = function(ok, message){
         if (!ok){
           box.textContent = '' + message
         }
       }
-      if (subject.sameTerm(meeting)){ // self reference? force details form
+      if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
+        var target = kb.any(subject, ns.meeting('target'))
+        var view = kb.any(subject, ns.meeting('view'))
+        if (view) {
+          pane = UI.panes.byName(view)
+        }
+        table = containerDiv.appendChild(dom.createElement('table'))
+        UI.outline.GotoSubject(target, true, pane, false, undefined, table)
+      } else if (subject.sameTerm(meeting)){ // self reference? force details form
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
         UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
           UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
+          containerDiv.appendChild(tipDiv(
+            'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })
 
       } else if (subject.sameTerm(subject.doc()) &&
@@ -454,7 +505,7 @@ module.exports = {
         iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
 
       } else {
-        var table = containerDiv.appendChild(dom.createElement('table'))
+        table = containerDiv.appendChild(dom.createElement('table'))
         UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
       }
     }
@@ -465,6 +516,8 @@ module.exports = {
     options.ordered = true
     options.orientation = 1 // tabs on LHS
     options.showMain = showMain
+    options.renderTab = renderTab
+    options.renderTabSettings = renderTabSettings
     var tabs = mainTR.appendChild(UI.tabs.tabWidget(options));
 
     UI.aclControl.preventBrowserDropEvents(dom)

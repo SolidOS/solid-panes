@@ -15,10 +15,10 @@ f:main    a :Form;
                 :part f:titleField, f:locationField, f:dateField .
 
   f:titleField     a :SingleLineTextField;
-       :maxLength 12;
+       :maxLength 256;
        :property cal:summary;
        :name "Name of meeting";
-       :size 40 .
+       :size 80 .
 
    f:locationField     a :SingleLineTextField;
         :maxLength 128;
