@@ -5,6 +5,7 @@
     @prefix cal: <http://www.w3.org/2002/12/cal/ical#>.
     @prefix ns: <http://www.w3.org/2006/vcard/ns#> .
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+    @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
     @prefix te: <http://purl.org/dc/terms/> .
     @prefix dc: <http://purl.org/dc/elements/1.1/>.
 
@@ -14,143 +15,34 @@ f:main    a :Form;
                 :part f:titleField, f:locationField, f:dateField .
 
   f:titleField     a :SingleLineTextField;
-       :maxLength "128";
+       :maxLength 12;
        :property cal:summary;
        :name "Name of meeting";
-       :size "40" .
+       :size 40 .
 
    f:locationField     a :SingleLineTextField;
-        :maxLength "128";
+        :maxLength 128;
         :property cal:location;
-        :size "40" .
+        :size 40 .
 
   f:dateField     a :DateField;
        :property cal:dtstart .
 
-###############################################
 
-<#spares> :part               f:addresses,
-                       f:addressesComment,
-                       f:eMails,
-                       f:emailComment,
-                       f:fullNameField,
-                       f:noteComment,
-                       f:noteField,
-                       f:telephoneComment,
-                       f:telephones .
+f:settings a :Form;
+    <title> "Tab settings";
+    :part f:labelField, f:targetField .
 
+    f:labelField     a :SingleLineTextField;
+         :maxLength 128;
+         :property rdfs:label;
+         :name "Label on tab";
+         :size 40 .
 
-###################
+         f:targetField     a :NamedNodeURIField;
+         :maxLength 1024;  # Longer?
+         :property rdfs:label;
+         :name "URL of resource";
+         :size 80 .
 
-    f:addresses     a :Multiple;
-         <http://purl.org/dc/elements/1.1/title> "Address details";
-         :part f:oneAddress;
-         :property ns:hasAddress .
-
-    f:addressesComment     a :Comment;
-         :contents "Address" .
-
-    f:eMails     a :Multiple;
-         :part f:oneEMail;
-         :property ns:hasEmail .
-
-    f:emailComment     a :Comment;
-         :contents "Email" .
-
-    f:emailType     a :Classifier;
-         :canMintNew "0";
-         :category ns:Type;
-         :from ns:Type;
-         :property te:type .
-
-    f:emailValue     a :EmailField;
-         :property ns:value;
-         :size "50" .
-
-         f:form1     a :Form;
-              <http://purl.org/dc/elements/1.1/title> "Contact Details";
-              :part f:addresses,
-                     f:addressesComment,
-                     f:eMails,
-                     f:emailComment,
-                     f:fullNameField,
-                     f:noteComment,
-                     f:noteField,
-                     f:telephoneComment,
-                     f:telephones .
-
-
-        f:fullNameField     a :SingleLineTextField;
-         :maxLength "128";
-         :property ns:fn;
-         :size "40" .
-
-    f:id1409437207443     a :SingleLineTextField;
-         :maxLength "128";
-         :property ns:street-address;
-         :size "40" .
-
-    f:id1409437292400     a :SingleLineTextField;
-         :maxLength "128";
-         :property ns:locality;
-         :size "40" .
-
-    f:id1409437421996     a :SingleLineTextField;
-         :maxLength "25";
-         :property ns:postal-code;
-         :size "25" .
-
-    f:id1409437467649     a :SingleLineTextField;
-         :maxLength "128";
-         :property ns:region;
-         :size "40" .
-
-    f:id1409437569420     a :SingleLineTextField;
-         :maxLength "128";
-         :property ns:country-name;
-         :size "40" .
-
-    f:id1409437646712     a :Classifier;
-         :from rdf:Class;
-         :property te:type .
-
-    f:noteComment     a :Comment;
-         :contents "General Notes" .
-
-    f:noteField     a :MultiLineTextField;
-         :property ns:note .
-
-    f:oneAddress     a :Group;
-         :part f:id1409437207443,
-                f:id1409437292400,
-                f:id1409437421996,
-                f:id1409437467649,
-                f:id1409437569420,
-                f:id1409437646712 .
-
-    f:oneEMail     a :Group;
-         :part f:emailType,
-                f:emailValue .
-
-    f:onetelephone     a :Group;
-         :part f:telephoneType,
-                f:telephoneValue .
-
-    f:telephoneComment     a :Comment;
-         :contents "Phones" .
-
-    f:telephoneType     a :Classifier;
-         :canMintNew "0";
-         :category ns:Type;
-         :from ns:Type;
-         :property te:type .
-
-    f:telephoneValue     a :PhoneField;
-         :property ns:value;
-         :size "50" .
-
-    f:telephones     a :Multiple;
-         :part f:onetelephone;
-         :property ns:hasTelephone .
-
-    ns:Individual     :creationForm f:form1 .
+#
