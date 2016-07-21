@@ -2,6 +2,7 @@
         #    using base file:///devel/github.com/linkeddata/solid-app-set/meeting/meetingDetailsForm.ttl
              @prefix : <http://www.w3.org/ns/ui#> .
     @prefix f: <#> .
+    @prefix dc: <http://purl.org/dc/elements/1.1/>.
     @prefix cal: <http://www.w3.org/2002/12/cal/ical#>.
     @prefix meeting: <http://www.w3.org/ns/pim/meeting#>.
     @prefix ns: <http://www.w3.org/2006/vcard/ns#> .
@@ -12,7 +13,7 @@
 
 
 f:main    a :Form;
-                <title> "Meeting Details";
+                dc:title "Meeting Details";
                 :part f:titleField, f:locationField, f:dateField .
 
   f:titleField     a :SingleLineTextField;
@@ -32,7 +33,7 @@ f:main    a :Form;
 
 
 f:settings a :Form;
-    <title> "Tab settings";
+    dc:title "Tab settings";
     :part f:labelField, f:targetField .
 
     f:labelField     a :SingleLineTextField;
@@ -41,7 +42,7 @@ f:settings a :Form;
          :label "Label on tab";
          :size 40 .
 
-         f:targetField     a :labeldNodeURIField;
+         f:targetField     a :NamedNodeURIField;
          :maxLength 1024;  # Longer?
          :property meeting:target;
          :label "URL of resource";
