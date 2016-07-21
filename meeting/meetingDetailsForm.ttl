@@ -17,7 +17,7 @@ f:main    a :Form;
   f:titleField     a :SingleLineTextField;
        :maxLength 256;
        :property cal:summary;
-       :name "Name of meeting";
+       :label "Name of meeting";
        :size 80 .
 
    f:locationField     a :SingleLineTextField;
@@ -36,13 +36,13 @@ f:settings a :Form;
     f:labelField     a :SingleLineTextField;
          :maxLength 128;
          :property rdfs:label;
-         :name "Label on tab";
+         :label "Label on tab";
          :size 40 .
 
-         f:targetField     a :NamedNodeURIField;
+         f:targetField     a :labeldNodeURIField;
          :maxLength 1024;  # Longer?
-         :property rdfs:label;
-         :name "URL of resource";
+         :property meeting:target;
+         :label "URL of resource";
          :size 80 .
 
 #

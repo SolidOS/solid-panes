@@ -70,6 +70,10 @@ module.exports = {
       pre.appendChild(dom.createTextNode(message))
     }
 
+    var complainIfBad = function(ok, message){
+      if (!ok) complain(message)
+    }
+
     var meeting = subject
     var meetingDoc = subject.doc()
     var meetingBase = subject.dir().uri
@@ -100,13 +104,9 @@ module.exports = {
     loginOutButton.setAttribute('style', 'margin: 0.5em 1em;');
     topDiv.appendChild(loginOutButton);
 
-    var addInNewThing = function(thing, pred){
+
+    var saveBackMeetingDoc = function(){
       var ins = []
-      if (pred){
-        kb.add(meeting, pred, thing, meetingDoc)
-      }
-      var toolList = kb.the(meeting, ns.meeting('toolList'))
-      toolList.elements.push(thing) //  Will this work?  Should use patch?
       updater.put(
         meetingDoc,
         kb.statementsMatching(undefined, undefined, undefined, meetingDoc),
@@ -116,13 +116,13 @@ module.exports = {
               tabs.refresh()
               resetTools()
           } else {
-              message = "FAILED to save new thing at: "+ there.uri +' : ' + message
+              message = "FAILED to save new thing at: "+ meetingDoc +' : ' + message
               complain(message)
           };
       })
     }
 
-    var saveAppDocumentLinkAndAddNewThing = function(thing, pred){
+    var saveAppDocumentLinkAndAddNewThing = function(tool, thing, pred){
       var appDoc = thing.doc()
       if (pred) {
         kb.add(meeting, pred, thing, appDoc) // Link back to meeting
@@ -133,11 +133,21 @@ module.exports = {
         'text/turtle',
         function(uri2, ok, message) {
           if (ok) {
-              addInNewThing(thing, pred)
+              saveBackMeetingDoc()
           } else {
               complain("FAILED to save new tool at: "+ thing +' : ' + message);
           };
       })
+    }
+
+    var makeToolNode = function(target, pred, label, iconURI){
+      var x = UI.widgets.newThing(meetingDoc)
+      if (label) kb.add(x, ns.rdfs('label'), label)
+      if (iconURI) kb.add(x, ns.meeting('icon'), kb.sym(iconURI))
+      kb.add(x, ns.rdf('type'), ns.meeting('Tool'))
+      kb.add(x, ns.meeting('target'), target)
+      var toolList = kb.the(meeting, ns.meeting('toolList'))
+      toolList.elements.push(x)
     }
 
 //////////////////////  DRAG and Drop
@@ -190,9 +200,10 @@ module.exports = {
       console.log('Dropped URI list (2): ' + uris)
       if (uris) {
         uris.map(function (u) {
-          var thing = $rdf.sym(u)
+          var target = $rdf.sym(u)
           console.log('Dropped on attachemnt ' + u)
-          addInNewThing(thing, UI.ns.wf('attachment'))
+          var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), UI.icons.iconBase + 'noun_25830.svg')
+          saveBackMeetingDoc()
         })
       }
       return false
@@ -227,7 +238,8 @@ module.exports = {
 
       var div = UI.panes.byName('schedule').mintNew(undefined, newBase, function(ok, newInstance){
         if (ok) {
-          addInNewThing(newInstance, ns.meeting('schedulingPoll'))
+          var tool = makeToolNode(newInstance, ns.meeting('schedulingPoll'), 'Schedule poll', UI.icons.nodeBase + 'noun_346777.svg')
+          saveBackMeetingDoc()
         } else {
           complain('Error making new scheduler: ' + newInstance)
         }
@@ -256,8 +268,9 @@ module.exports = {
 		      kb.add(newInstance, ns.dc('author'), me, newPadDoc);
 	    }
 	    kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc); // linked list empty
+      var tool = makeToolNode(newInstance, ns.meeting('sharedNotes'), 'Shared Notes', UI.icons.iconBase + 'noun_79217.svg')
 
-      saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('sharedNotes'))
+      saveAppDocumentLinkAndAddNewThing(tool, newInstance, ns.meeting('sharedNotes'))
     }
 
     var makeAgenda = function(event, icon){
@@ -276,7 +289,7 @@ module.exports = {
       var newInstance = kb.sym(newBase + 'config.ttl#this');
       var stateStore = kb.sym(newBase + 'state.ttl');
 
-      kb.add(newInstance, ns.dc('title'), 'Actions', appDoc)
+      //kb.add(newInstance, ns.dc('title'), 'Actions', appDoc)
 
       kb.add(newInstance, ns.wf('issueClass'), ns.wf('Task'), appDoc)
       kb.add(newInstance, ns.wf('initialState'), ns.wf('Open'), appDoc)
@@ -287,16 +300,8 @@ module.exports = {
 
       // Flag its type in the chat itself as well as in the master meeting config file
       kb.add(newInstance, ns.rdf('type'), ns.wf('Tracker'), appDoc)
-      saveAppDocumentLinkAndAddNewThing(newInstance, ns.meeting('actions'))
-    }
-
-    var makeToolNode = function(target, pred, label, icon, clas){
-      var x = UI.widgets.newThing(meetingDoc)
-      kb.add(meeting, ns.meeting('tool'), x)
-      if (label) kb.add(x, ns.rdfs('label'), label)
-      if (icon) kb.add(x, ns.meeting('icon'), icon)
-      if (clas) kb.add(x, ns.rdf('type'), clas)
-      // kb.add(x, ns.meeeting('predicate'), pred)
+      var tool = makeToolNode(newInstance, ns.meeting('actions'), 'Actions', UI.icons.iconBase + 'noun_17020.svg')
+      saveAppDocumentLinkAndAddNewThing(tool, newInstance, ns.meeting('actions'))
     }
 
     var makeChat = function(event, icon){
@@ -309,20 +314,15 @@ module.exports = {
       }
       var messageStore = kb.sym(newBase + 'chat.ttl');
 
-      // kb.add(messageStore, ns.dc('title'), 'Chat', meetingDoc)
-
-      makeToolNode(messageStore, ns.meeting('chat'), 'Shared Chat',
-        kb.sym(UI.icons.iconBase + 'noun_346319.svg'), ns.meeting('Chat'))
-
-      // Flag its type in the chat itself as well as in the master meeting config file
       kb.add(messageStore, ns.rdf('type'), ns.meeting('Chat'), messageStore)
 
-      saveAppDocumentLinkAndAddNewThing(messageStore, ns.meeting('chat'))
+      var tool = makeToolNode(messageStore, ns.meeting('chat'), 'Chat',
+        UI.icons.iconBase + 'noun_346319.svg')
+      saveAppDocumentLinkAndAddNewThing(tool, messageStore, ns.meeting('chat'))
     }
 
     var makeVideoCall = function(event, icon){
       selectTool(icon);
-
       var kb = UI.store
       var newInstance = $rdf.sym('https://appear.in/' + UI.utils.gen_uuid())
 
@@ -331,8 +331,8 @@ module.exports = {
         return // already got one
       }
       kb.add(newInstance, ns.rdf('type'), ns.meeting('VideoCallPage'), meetingDoc);
-      kb.add(newInstance, ns.dc('title'), 'Video call', meetingDoc)
-      addInNewThing(newInstance, ns.meeting('videoCallPage'))
+      var tool = makeToolNode(newInstance, ns.meeting('videoCallPage'), 'Video call', UI.icons.iconBase + 'noun_260227.svg')
+      saveBackMeetingDoc()
     }
 
     var makeAttachment = function(event, icon){
@@ -430,26 +430,27 @@ module.exports = {
 
 
     var renderTab = function(div, item){
-      if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
-        var target = kb.any(subject, ns.meeting('target'))
-        var label = kb.any(subject, ns.rdfs('label'))
+      if (kb.holds(item, ns.rdf('type'), ns.meeting('Tool'))) {
+        var target = kb.any(item, ns.meeting('target'))
+        var label = kb.any(item, ns.rdfs('label'))
         label = label ? label.value : UI.utils.label(item)
-        // var view = kb.any(subject, ns.meeting('view'))
-        var icon = kb.any(subject, ns.meeting('icon'))
+        var icon = kb.any(item, ns.meeting('icon'))
         if (icon){
           var img = bottomTR.appendChild(dom.createElement('img'))
           var visible = false; // the inividual tools tools
           img.setAttribute('src', icon.uri)
           img.setAttribute('style', 'max-width: 3em; max-height: 3em;') // @
           img.setAttribute('title', label)
+        } else {
+          div.textContent = label
         }
       } else {
         div.textContent = UI.utils.label(item)
       }
     }
 
-    var tipDiv = function(div, text){
-      var d = div.appendChild(dom.createElement('div'))
+    var tipDiv = function(text){
+      var d = dom.createElement('div')
       var p = d.appendChild(dom.createElement('p'))
       p.setAttribute('style', 'margin: 0em; padding:3em; color: #888;')
       p.textContent = 'Tip: ' + text
@@ -459,16 +460,15 @@ module.exports = {
     var renderTabSettings = function(containerDiv, subject){
       containerDiv.innerHTML = ''
       containerDiv.appendChild(dom.createElement('h3')).textContent = 'Adjust this tab'
-      if (kb.holds(subject, ns.rdf('type'), ns/meeting('Tool'))){
+      if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))){
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
         UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
           UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
           containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })
-
       } else {
-        containerDiv.appendChild(dom.createElement('h4')).textContent = 'Not available'
+        containerDiv.appendChild(dom.createElement('h4')).textContent = '(No adjustments available)'
       }
     }
 
@@ -477,26 +477,30 @@ module.exports = {
       containerDiv.innerHTML = ''
       var complainIfBad = function(ok, message){
         if (!ok){
-          box.textContent = '' + message
+          containerDiv.textContent = '' + message
         }
       }
-      if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
-        var target = kb.any(subject, ns.meeting('target'))
-        var view = kb.any(subject, ns.meeting('view'))
-        if (view) {
-          pane = UI.panes.byName(view)
-        }
-        table = containerDiv.appendChild(dom.createElement('table'))
-        UI.outline.GotoSubject(target, true, pane, false, undefined, table)
-      } else if (subject.sameTerm(meeting)){ // self reference? force details form
+      var showDetails = function(){
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
         UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
           UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
-          containerDiv.appendChild(tipDiv(
+            containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })
-
+      }
+      if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
+        var target = kb.any(subject, ns.meeting('target'))
+        if (target.sameTerm(meeting)){ // self reference? force details form
+          showDetails()
+        } else {
+          var view = kb.any(subject, ns.meeting('view'))
+          var pane = view? UI.panes.byName(view) : null
+          table = containerDiv.appendChild(dom.createElement('table'))
+          UI.outline.GotoSubject(target, true, pane, false, undefined, table)
+        }
+      } else if (subject.sameTerm(meeting)){ // self reference? force details form
+        showDetails()
       } else if (subject.sameTerm(subject.doc()) &&
         !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
           !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))){
