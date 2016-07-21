@@ -463,7 +463,7 @@ module.exports = {
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))){
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
         UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
-          UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
+          UI.widgets.appendForm(document, containerDiv, {}, subject, form, meeting.doc(), complainIfBad)
           containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })

@@ -3,6 +3,7 @@
              @prefix : <http://www.w3.org/ns/ui#> .
     @prefix f: <#> .
     @prefix cal: <http://www.w3.org/2002/12/cal/ical#>.
+    @prefix meeting: <http://www.w3.org/ns/pim/meeting#>.
     @prefix ns: <http://www.w3.org/2006/vcard/ns#> .
     @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
@@ -26,6 +27,7 @@ f:main    a :Form;
         :size 40 .
 
   f:dateField     a :DateField;
+      :label "Date";
        :property cal:dtstart .
 
 
