@@ -106,7 +106,6 @@ module.exports = {
 
 
     var saveBackMeetingDoc = function(){
-      var ins = []
       updater.put(
         meetingDoc,
         kb.statementsMatching(undefined, undefined, undefined, meetingDoc),
@@ -141,13 +140,15 @@ module.exports = {
     }
 
     var makeToolNode = function(target, pred, label, iconURI){
+      kb.add(meeting, pred, target, meetingDoc)
       var x = UI.widgets.newThing(meetingDoc)
-      if (label) kb.add(x, ns.rdfs('label'), label)
-      if (iconURI) kb.add(x, ns.meeting('icon'), kb.sym(iconURI))
-      kb.add(x, ns.rdf('type'), ns.meeting('Tool'))
-      kb.add(x, ns.meeting('target'), target)
+      if (label) kb.add(x, ns.rdfs('label'), label, meetingDoc)
+      if (iconURI) kb.add(x, ns.meeting('icon'), kb.sym(iconURI), meetingDoc)
+      kb.add(x, ns.rdf('type'), ns.meeting('Tool'), meetingDoc)
+      kb.add(x, ns.meeting('target'), target, meetingDoc)
       var toolList = kb.the(meeting, ns.meeting('toolList'))
       toolList.elements.push(x)
+      return x
     }
 
 //////////////////////  DRAG and Drop
@@ -203,6 +204,7 @@ module.exports = {
           var target = $rdf.sym(u)
           console.log('Dropped on attachemnt ' + u)
           var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), UI.icons.iconBase + 'noun_25830.svg')
+          kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
           saveBackMeetingDoc()
         })
       }
@@ -332,6 +334,7 @@ module.exports = {
       }
       kb.add(newInstance, ns.rdf('type'), ns.meeting('VideoCallPage'), meetingDoc);
       var tool = makeToolNode(newInstance, ns.meeting('videoCallPage'), 'Video call', UI.icons.iconBase + 'noun_260227.svg')
+      kb.add(tool, ns.meeting('view'), 'iframe', meetingDoc)
       saveBackMeetingDoc()
     }
 
@@ -436,8 +439,7 @@ module.exports = {
         label = label ? label.value : UI.utils.label(item)
         var icon = kb.any(item, ns.meeting('icon'))
         if (icon){
-          var img = bottomTR.appendChild(dom.createElement('img'))
-          var visible = false; // the inividual tools tools
+          var img = div.appendChild(dom.createElement('img'))
           img.setAttribute('src', icon.uri)
           img.setAttribute('style', 'max-width: 3em; max-height: 3em;') // @
           img.setAttribute('title', label)
@@ -464,6 +466,21 @@ module.exports = {
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
         UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
           UI.widgets.appendForm(document, containerDiv, {}, subject, form, meeting.doc(), complainIfBad)
+          var delButton = UI.widgets.deleteButtonWithCheck(dom, containerDiv, 'tab', function () {
+            var toolList = kb.the(meeting, ns.meeting('toolList'))
+            for (var i=0; i < toolList.elements.length; i++){
+              if (toolList.elements[i].sameTerm(subject)){
+                toolList.elements.splice(i, 1)
+                break
+              }
+            }
+            var ds = kb.statementsMatching(subject).concat(kb.statementsMatching(undefined, undefined, subject))
+            kb.remove(ds) // Remove all links to and from the tab node
+            saveBackMeetingDoc()
+          })
+          delButton.setAttribute('class', '')
+          delButton.setAttribute('style', 'padding: 1em; font-size: 120%; background-color: red; color: white;')
+          delButton.textContent = 'Delete this tab'
           containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })
@@ -480,6 +497,12 @@ module.exports = {
           containerDiv.textContent = '' + message
         }
       }
+      var showIframe = function(target){
+        var iframe = containerDiv.appendChild(dom.createElement('iframe'))
+        iframe.setAttribute('src', target.uri)
+        // iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
+        iframe.setAttribute('style', 'border: none; margin: 0; padding: 0; height: 100%; width: 100%;')
+      }
       var showDetails = function(){
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
@@ -495,18 +518,22 @@ module.exports = {
           showDetails()
         } else {
           var view = kb.any(subject, ns.meeting('view'))
-          var pane = view? UI.panes.byName(view) : null
-          table = containerDiv.appendChild(dom.createElement('table'))
-          UI.outline.GotoSubject(target, true, pane, false, undefined, table)
+          view = view ? view.value : null
+          if (view === 'details'){
+            showDetails()
+          } else if (view === 'iframe'){
+            showIframe(target)
+          } else {
+            var pane = view? UI.panes.byName(view) : null
+            table = containerDiv.appendChild(dom.createElement('table'))
+            UI.outline.GotoSubject(target, true, pane, false, undefined, table)
+          }
         }
       } else if (subject.sameTerm(meeting)){ // self reference? force details form
         showDetails()
       } else if (subject.sameTerm(subject.doc()) &&
         !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
           !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))){
-        var iframe = containerDiv.appendChild(dom.createElement('iframe'))
-        iframe.setAttribute('src', subject.uri)
-        iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
 
       } else {
         table = containerDiv.appendChild(dom.createElement('table'))
