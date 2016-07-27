@@ -725,7 +725,7 @@ module.exports = {
           books.map(function (book) {
             var gs = book ? kb.each(book, ns.vcard('includesGroup')) : []
             var gs2 = gs.map(function (g) {return [ book, kb.any(g, ns.vcard('fn')), g] })
-            groups = groups.concat(groups)
+            groups = groups.concat(gs2)
           })
           groups.sort()
         }
@@ -1030,7 +1030,7 @@ module.exports = {
     //              Render a single contact Individual
 
     if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri]) { // https://timbl.rww.io/Apps/Contactator/individualForm.ttl
-      var individualFormDoc = kb.sym(tabulator.iconPrefix + 'js/panes/contact/individualForm.ttl')
+      var individualFormDoc = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl')
       // var individualFormDoc = kb.sym('https://timbl.rww.io/Apps/Contactator/individualForm.ttl')
       var individualForm = kb.sym(individualFormDoc.uri + '#form1')
 
@@ -1084,11 +1084,11 @@ module.exports = {
           .setAttribute('style', 'height: 1em') // spacer
 
         // Remaining properties from whatever ontollogy
-        tabulator.outline.appendPropertyTRs(div, plist, false,
+        UI.outline.appendPropertyTRs(div, plist, false,
           function (pred, inverse) {
             return !(pred.uri in predicateURIsDone)
           })
-        tabulator.outline.appendPropertyTRs(div, qlist, true,
+        UI.outline.appendPropertyTRs(div, qlist, true,
           function (pred, inverse) {
             return !(pred.uri in predicateURIsDone)
           })

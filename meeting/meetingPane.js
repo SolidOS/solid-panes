@@ -201,9 +201,9 @@ module.exports = {
       console.log('Dropped URI list (2): ' + uris)
       if (uris) {
         uris.map(function (u) {
-          var target = $rdf.sym(u)
-          console.log('Dropped on attachemnt ' + u)
-          var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), UI.icons.iconBase + 'noun_25830.svg')
+          var target = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
+          console.log('Dropped on attachemnt ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+          var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
           kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
           saveBackMeetingDoc()
         })
@@ -461,6 +461,7 @@ module.exports = {
 
     var renderTabSettings = function(containerDiv, subject){
       containerDiv.innerHTML = ''
+      containerDiv.style += "border-color: #eed;"
       containerDiv.appendChild(dom.createElement('h3')).textContent = 'Adjust this tab'
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))){
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
@@ -474,12 +475,15 @@ module.exports = {
                 break
               }
             }
-            var ds = kb.statementsMatching(subject).concat(kb.statementsMatching(undefined, undefined, subject))
+            var target = kb.any(subject, ns.meeting('target'))
+            var ds = kb.statementsMatching(subject).
+              concat(kb.statementsMatching(undefined, undefined, subject)).
+              concat(kb.statementsMatching(meeting, undefined, target))
             kb.remove(ds) // Remove all links to and from the tab node
             saveBackMeetingDoc()
           })
           delButton.setAttribute('class', '')
-          delButton.setAttribute('style', 'padding: 1em; font-size: 120%; background-color: red; color: white;')
+          delButton.setAttribute('style', 'margin: 1em; border-radius: 0.5em; padding: 1em; font-size: 120%; background-color: red; color: white;')
           delButton.textContent = 'Delete this tab'
           containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
