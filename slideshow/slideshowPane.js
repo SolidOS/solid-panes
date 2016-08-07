@@ -3,27 +3,7 @@
 */
 var UI = require('solid-ui')
 
-// todo: move these two
 
-// Stick a stylesheet link the document if not already there
-UI.widgets.addStyleSheet = function(dom, href) {
-  var links = dom.querySelectorAll('link');
-  for (i=0; i<links.length; i++){
-    if ((links[i].getAttribute('rel') ||'') === 'stylesheet'
-    && (links[i].getAttribute('href') ||'') === href ) return ;
-  }
-  var link = dom.createElement("link")
-  link.setAttribute("rel", "stylesheet")
-  link.setAttribute("type", "text/css")
-  link.setAttribute("href", href)
-  dom.getElementsByTagName("head")[0].appendChild(link)
-}
-
-UI.widgets.isImage = function(file){
-  var imageExtensions = {'jpg': 1, 'png':1, 'jpeg':1, 'gif':1}
-  return  (UI.ns.dct('Image') in UI.store.findTypeURIs(file)
-        || file.uri.split('.').slice(-1)[0] in imageExtensions) // @@cheating
-}
 
 // tabulator.loadScript("js/panes/slideshow/better-simple-slideshow/js/better-simple-slideshow.js");
 
@@ -55,7 +35,8 @@ module.exports =  {
   // and follow instructions there
   render: function(subject, dom) {
 
-    UI.widgets.addStyleSheet(dom, tabulator.scriptBase + 'js/panes/slideshow/better-simple-slideshow/css/simple-slideshow-styles.css')
+    var styleSheet = 'http://leemark.github.io/better-simple-slideshow/css/simple-slideshow-styles.css'
+    UI.widgets.addStyleSheet(dom, styleSheet)
 
     var kb = UI.store;
     var ns = UI.ns;

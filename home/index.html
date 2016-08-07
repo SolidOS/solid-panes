@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head><title>Your Solid stuff </title>
+<link type="text/css" rel="stylesheet" href="https://linkeddata.github.io/solid-app-set/style/tabbedtab.css" />
+<style>
+body { margin: 10%; }
+input { background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 120%; };
+</style>
+
+<script type="text/javascript" src="../../mashlib/dist/mashlib-prealpha.js"></script>
+<script type="text/javascript" >
+document.addEventListener('DOMContentLoaded', function () {
+
+  var UI = require('mashlib')
+
+  var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 150%; text-align: center;' //  ;
+  var kb = UI.store
+  var ns = UI.ns
+  var dom = document
+  var updater = kb.updater
+
+  var waitingForLogin = false
+
+  var uri = window.location.href
+  var base = uri.slice(0, uri.lastIndexOf('/') + 1)
+
+
+
+  // //////////////////////////////////// Getting logged in with a WebId
+
+  var setUser = function (webid) {
+    if (webid) {
+      tabulator.preferences.set('me', webid)
+      console.log('(SetUser: Logged in as ' + webid + ')')
+      me = kb.sym(webid)
+      UI.outline.GotoSubject(me, true, pane, true, undefined)
+
+    // @@ Here enable all kinds of stuff
+    } else {
+      tabulator.preferences.set('me', '')
+      console.log('(SetUser: Logged out)')
+      me = null
+    }
+  }
+
+  var me_uri = tabulator.preferences.get('me')
+  var me = me_uri ? kb.sym(me_uri) : null
+
+  var userTest = $rdf.sym('https://databox.me/')
+
+  UI.widgets.checkUser(userTest, setUser)
+
+  var pane = UI.panes.home
+  var target = me // @@ for now, in fact not relevant
+
+  // subject, expand, pane, solo, referrer, table
+
+})
+
+</script>
+
+</head>
+<body>
+<h1>Your stuff</h1>
+<p>This is a Solid web app for finding your stuff in a linked data world</p>
+
+<div class="TabulatorOutline" id="DummyUUID">
+    <table id="outline"></table>
+</div>
+<div class="TabulatorOutline" id='FormTarget'>
+</div>
+</body>
+</html>

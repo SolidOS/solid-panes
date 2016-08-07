@@ -538,7 +538,7 @@ module.exports = {
           context = { target: book, me: me, noun: 'address book',
           div: pane, dom: dom, statusRegion: statusBlock }
 
-          box.appendChild(UI.aclControl.ACLControlBox5(book, dom, 'book', kb, function (ok, body) {
+          box.appendChild(UI.aclControl.ACLControlBox5(book.dir(), dom, 'book', kb, function (ok, body) {
             if (!ok) box.innerHTML = 'ACL control box Failed: ' + body
           }))
 

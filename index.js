@@ -132,7 +132,9 @@ paneModule.register(require('./microblogPane/microblogPane.js'))
 // The sharing pane is fairly generic and administrative  201
 paneModule.register(require('./sharing/sharingPane.js'))
 
-// The internals pane is always the last as it is the least user-friendly
+// The internals pane is always (almost?) the last as it is the least user-friendly
 paneModule.register(require('./internalPane.js'))
+// The home pame is a 2016 experiment. Always there.
+paneModule.register(require('./home/homePane.js'))
 
 // ENDS

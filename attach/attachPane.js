@@ -6,9 +6,6 @@
 ** - Drag a document onto the pane to attach it @@
 **
 **
-** I am using in places single quotes strings like 'this'
-** where internationalizatio ("i18n") is not a problem, and double quoted
-** like "this" where th string is seen by the user and so I18n is an issue.
 */
 
 var UI = require('solid-ui')
@@ -18,7 +15,7 @@ module.exports = {
 
   name: 'attachments',
 
-  // Does the subject deserve an issue pane?
+  // Does the subject deserve an attachments pane?
   //
   //  In this case we will render any thing which is in any subclass of
   //  certain classes, or also the certain classes themselves, as a
@@ -77,10 +74,8 @@ module.exports = {
     //
     // Returns term for document or null
     var findStore = function (kb, subject) {
-      var docURI = UI.rdf.Util.uri.docpart(subject.uri)
-      if (kb.updater.editable(docURI, kb)) return kb.sym(docURI)
-      var store = kb.any(kb.sym(docURI), QU('annotationStore'))
-      // if (!store) complain("No store for "+docURI)
+      if (kb.updater.editable(subject.doc(), kb)) return subject.doc()
+      var store = kb.any(subject.doc(), QU('annotationStore'))
       return store
     }
 
@@ -134,7 +129,7 @@ module.exports = {
       var sortBy = getSortKey(subject)
       var u, x, key, uriHash = kb.findMemberURIs(subject)
       var pairs = [], subjects = []
-      for (u in uriHash) { // @ protect against methods?
+      for (u in uriHash) if (uriHash.hasOwnProperty(u)) {
         x = kb.sym(u)
         if (sortBy) {
           key = kb.any(x, sortBy)

@@ -88,21 +88,28 @@ module.exports = {
     topTR.setAttribute('style','height: 2em;') // spacer if notthing else
 
     var me = null; // @@ Put code to find out logged in person
-    var loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
-        // sayt.parent.removeChild(sayt);
-        if (webid) {
-            tabulator.preferences.set('me', webid.uri);
-            console.log("(Logged in as "+ webid+")")
-            me = webid;
-            topDiv.removeChild(loginOutButton);
-        } else {
-            tabulator.preferences.set('me', '');
-            console.log("(Logged out)")
-            me = null;
-        }
-    });
-    loginOutButton.setAttribute('style', 'margin: 0.5em 1em;');
-    topDiv.appendChild(loginOutButton);
+
+    UI.widgets.checkUser(subject.doc(), function(id){
+      var loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
+          // sayt.parent.removeChild(sayt);
+          if (webid) {
+              tabulator.preferences.set('me', webid.uri);
+              console.log("(Logged in as "+ webid+")")
+              me = webid;
+              // topDiv.removeChild(loginOutButton);
+          } else {
+              tabulator.preferences.set('me', '');
+              console.log("(Logged out)")
+              me = null;
+          }
+      });
+      loginOutButton.setAttribute('style', 'margin: 0.5em 1em;');
+      topDiv.appendChild(loginOutButton);
+
+    })
+
+
+
 
 
     var saveBackMeetingDoc = function(){
@@ -514,6 +521,13 @@ module.exports = {
           UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
             containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
+            me = tabulator.preferences.get('me')
+            me = me ? kb.sym(me) : null
+            if (me){
+              kb.add(meeting, ns.dc('author'), me, meetingDoc)
+            }
+          var context = { noun: 'meeting', me: me, statusArea: containerDiv, div: containerDiv, dom: dom}
+          UI.widgets.registrationControl(context, meeting, ns.meeting('Meeting'))
         })
       }
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
