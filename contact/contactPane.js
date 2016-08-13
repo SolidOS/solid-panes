@@ -1030,12 +1030,13 @@ module.exports = {
     //              Render a single contact Individual
 
     if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri]) { // https://timbl.rww.io/Apps/Contactator/individualForm.ttl
+
       var individualFormDoc = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl')
       // var individualFormDoc = kb.sym('https://timbl.rww.io/Apps/Contactator/individualForm.ttl')
       var individualForm = kb.sym(individualFormDoc.uri + '#form1')
 
-      UI.store.fetcher.nowOrWhenFetched(individualFormDoc.uri, subject, function drawContactPane (ok, body) {
-        if (!ok) return console.log('Failed to load form ' + individualFormDoc.uri + ' ' + body)
+      var toBeFetched = [ individualFormDoc, UI.ns.vcard('Type').doc()]
+      UI.store.fetcher.load(toBeFetched).then(function(xhrs){
         var predicateURIsDone = {}
         var donePredicate = function (pred) {
           predicateURIsDone[pred.uri] = true
@@ -1093,10 +1094,15 @@ module.exports = {
             return !(pred.uri in predicateURIsDone)
           })
 
-      }) // End nowOrWhenFetched tracker
+      }).catch(function(e){
+        console.log('Error: Failed to load form or ontology: ' + e)
+      }) // load.then
 
-      // Alas force ct for github.io
-      // was:  ,{ 'forceContentType': 'text/turtle'}
+/*
+      UI.store.fetcher.nowOrWhenFetched(individualFormDoc.uri, subject, function drawContactPane (ok, body) {
+        if (!ok) return console.log('Failed to load form ' + individualFormDoc.uri + ' ' + body)
+      }) // End nowOrWhenFetched tracker
+*/
 
       // /////////////////////////////////////////////////////////
 

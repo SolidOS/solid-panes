@@ -233,7 +233,33 @@ module.exports = {
 
     var makeGroup = function(event, icon){
       selectTool(icon);
+      var newBase = meetingBase + 'Group/'
+      var kb = UI.store
+      var newDetailsDoc = kb.sym(newBase + 'poll.ttl');
+      if (kb.holds(meeting, ns.meeting('particpants'))){
+        console.log("Ignored - already have set up your particpants");
+        return // already got one
+      }
+
+      var div = dom.createElement('div')
+      var context = {dom: dom, div: div}
+      var book
+      UI.widgets.findAppInstances(context, ns.vcard('AddressBook')).then(
+        function(context){
+          if (context.instances.length === 0) {
+            complain('You have no solid address book. It is really handy to have one to keep track of people and groups')
+          } else if (context.instances.length > 1) {
+            complain('You have more than one solid address book.  I need to be coded to handle that.')
+          } else { // addressbook
+            book = context.instances[0]
+            var tool = makeToolNode(book, ns.meeting('addressBook'), 'Particpants', UI.icons.nodeBase + 'noun_15695.svg') // group: noun_339237.svg
+            kb.add(tool, UI.ns.meeting('view'), 'contact', meetingDoc)
+            saveBackMeetingDoc()
+          }
+        }
+      )
     }
+
     var makePoll = function(event, icon){
       selectTool(icon);
 
@@ -372,7 +398,7 @@ module.exports = {
     ///////////////////////////////////
 
     var toolIcons = [
-      { icon: 'noun_339237.svg', maker: makeGroup, hint: 'Make a group of people', limit: 1, disabled: true},
+      { icon: 'noun_339237.svg', maker: makeGroup, hint: 'Make a group of people', limit: 1 },
       { icon: 'noun_346777.svg', maker: makePoll, hint: 'Make a poll to schedule the meeting'}, // When meet THIS or NEXT time
       { icon: 'noun_48218.svg', maker: makeAgenda, limit:1 , hint: 'Add an agenda list', disabled: true}, // When meet THIS or NEXT time
       { icon: 'noun_79217.svg', maker: makePad, hint: 'Add a shared notepad'},
@@ -527,7 +553,9 @@ module.exports = {
               kb.add(meeting, ns.dc('author'), me, meetingDoc)
             }
           var context = { noun: 'meeting', me: me, statusArea: containerDiv, div: containerDiv, dom: dom}
-          UI.widgets.registrationControl(context, meeting, ns.meeting('Meeting'))
+          UI.widgets.registrationControl(context, meeting, ns.meeting('Meeting')).then(function(context){
+            console.log("Registration control finsished.")
+          })
         })
       }
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {

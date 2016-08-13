@@ -687,7 +687,7 @@ if (statement){
           var myLang = 0; // Is there one I like?
           for (k=0; (k+j < max) && (plist[j+k].predicate.sameTerm(s.predicate)); k++) {
               if (k>0 && (sel(plist[j+k]).sameTerm(sel(plist[j+k-1])))) dups++;
-              if (sel(plist[j+k]).lang) {
+              if (sel(plist[j+k]).lang && typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference) {
                   langTagged +=1;
                   if (sel(plist[j+k]).lang.indexOf(tabulator.lb.LanguagePreference) >=0) myLang ++;
               }
@@ -707,7 +707,7 @@ if (statement){
 
           if (myLang > 0 && langTagged == dups+1) {
               for (k=j; k <= j+dups; k++) {
-                  if (sel(plist[k]).lang.indexOf(tabulator.lb.LanguagePreference) >=0) {
+                  if (typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference && sel(plist[k]).lang.indexOf(tabulator.lb.LanguagePreference) >=0) {
                       tr.appendChild(thisOutline.outline_objectTD(sel(plist[k]), defaultpropview, undefined, s))
                       break;
                   }

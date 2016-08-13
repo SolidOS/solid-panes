@@ -38,10 +38,10 @@ module.exports = {
       var context = {div: div, dom: dom, statusArea: div, me: me}
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private:'
-      UI.widgets.registrationList(context, { private: true})
-
-      div.appendChild(dom.createElement('h4')).textContent = 'Public:'
-      UI.widgets.registrationList(context, { public: true})
+      UI.widgets.registrationList(context, { private: true}).then(function(context){
+        div.appendChild(dom.createElement('h4')).textContent = 'Public:'
+        UI.widgets.registrationList(context, { public: true})
+      })
     }
     var thisPane = this
     var kb = UI.store
