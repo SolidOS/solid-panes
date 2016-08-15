@@ -1045,9 +1045,10 @@ module.exports = {
         donePredicate(ns.rdf('type'))
         donePredicate(ns.dc('title'))
         donePredicate(ns.dc('modified'))
+        donePredicate(ns.dc('created'))
 
         ;[ 'hasUID', 'fn', 'hasEmail', 'hasTelephone', 'hasName',
-          'hasAddress', 'note'].map(function (p) {
+          'hasAddress', 'note', 'hasPhoto', 'hasMember'].map(function (p) {
           donePredicate(ns.vcard(p))
         })
 

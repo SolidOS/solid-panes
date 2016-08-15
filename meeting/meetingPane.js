@@ -249,10 +249,11 @@ module.exports = {
           if (context.instances.length === 0) {
             complain('You have no solid address book. It is really handy to have one to keep track of people and groups')
           } else if (context.instances.length > 1) {
-            complain('You have more than one solid address book.  I need to be coded to handle that.')
+            var s = context.instances.map(function(x){return '' + x}).join(', ')
+            complain('You have more than one solid address book: ' + s + ' Not supported yet.')
           } else { // addressbook
             book = context.instances[0]
-            var tool = makeToolNode(book, ns.meeting('addressBook'), 'Particpants', UI.icons.nodeBase + 'noun_15695.svg') // group: noun_339237.svg
+            var tool = makeToolNode(book, ns.meeting('addressBook'), 'Particpants', UI.icons.iconBase + 'noun_15695.svg') // group: noun_339237.svg
             kb.add(tool, UI.ns.meeting('view'), 'contact', meetingDoc)
             saveBackMeetingDoc()
           }
