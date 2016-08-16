@@ -310,13 +310,13 @@ var TabulatorOutlinerObserver = {
     var transferDataSet = {data: null}
     var term = tabulator.Util.getTerm(td)
     switch (term.termType) {
-      case 'symbol':
+      case 'NamedNode':
         transferDataSet.data = this.URItoTransferDataSet(term.uri)
         break
-      case 'bnode':
+      case 'BlankNode':
         transferDataSet.data = this.URItoTransferDataSet(term.toNT())
         break
-      case 'literal':
+      case 'Literal':
         transferDataSet.data = this.URItoTransferDataSet(term.value)
         break
     }
