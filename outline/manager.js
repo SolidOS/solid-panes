@@ -24,6 +24,7 @@ module.exports = function(doc) {
   // no, that is done by the pane system.
   //
   this.document=doc;
+  this.outlineIcons = outlineIcons
   var outline = this; //Kenny: do we need this?
   var thisOutline = this;
   var selection=[]
@@ -331,7 +332,7 @@ if (statement){
                   obj.value.slice(0,7) == 'http://'))) {
           td.setAttribute('about', obj.toNT());
           td.appendChild(UI.utils.AJARImage(
-              outlineIcons.src.icon_expand, 'expand',undefined,myDocument)
+              (UI.icons.originalIconBase + 'tbl-expand-trans.png'), 'expand',undefined,myDocument)
               ).addEventListener('click', expandMouseDownListener)
       }
       td.setAttribute('class', theClass);      //this is how you find an object
@@ -427,7 +428,7 @@ if (statement){
       td.setAttribute('notSelectable','false');
 
       td.setAttribute('colspan', '2');
-      td.appendChild(UI.utils.AJARImage(outlineIcons.src.icon_collapse, 'collapse',undefined,myDocument)
+      td.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-collapse.png', 'collapse',undefined,myDocument)
           ).addEventListener('click', collapseMouseDownListener);
       td.appendChild(myDocument.createElement('strong'));
       tr.appendChild(td);
@@ -776,11 +777,11 @@ if (statement){
                       return function(display){
                           small.innerHTML="";
                           if (display=='none'){
-                              small.appendChild(UI.utils.AJARImage(outlineIcons.src.icon_more, 'more', 'See all',myDocument));
+                              small.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-more-trans.png', 'more', 'See all',myDocument));
                                   small.appendChild( myDocument.createTextNode((predDups-n) + ' more...'));
                               td_p.setAttribute('rowspan',n+1);
                           } else{
-                              small.appendChild(UI.utils.AJARImage(outlineIcons.src.icon_shrink, '(less)',undefined,myDocument));
+                              small.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-shrink.png', '(less)',undefined,myDocument));
                                   td_p.setAttribute('rowspan',predDups+1);
                           }
                           for (var i=0; i<showLaterArray.length; i++){
@@ -1136,11 +1137,11 @@ if (statement){
       for (; div.nodeType != 1; div = div.nextSibling) {}
       if (target.src.indexOf('collapse') >= 0) {
           div.setAttribute('class', 'collapse')
-          target.src = outlineIcons.src.icon_expand
+          target.src = (UI.icons.originalIconBase + 'tbl-expand-trans.png')
       } else {
           div.removeAttribute('class')
           target.scrollIntoView(true)
-          target.src = outlineIcons.src.icon_collapse
+          target.src = UI.icons.originalIconBase + 'tbl-collapse.png'
       }
   }
 */
@@ -1418,7 +1419,7 @@ if (statement){
   // select
   // visit/open a page
 
-  function expandMouseDownListener(e) { // For icon outlineIcons.src.icon_expand
+  function expandMouseDownListener(e) { // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
       var target = thisOutline.targetOf(e);
       var p = target.parentNode;
       var subject = UI.utils.getAbout(kb, target);
@@ -1435,7 +1436,7 @@ if (statement){
       }
   }
 
-  function collapseMouseDownListener(e) { // for icon outlineIcons.src.icon_collapse
+  function collapseMouseDownListener(e) { // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
       var target = thisOutline.targetOf(e);
       var subject = UI.utils.getAbout(kb, target);
       var pane = e.altKey? UI.panes.internalPane : undefined;

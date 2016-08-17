@@ -394,7 +394,8 @@ module.exports = {
                 $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), gix),
                 $rdf.st(group, ns.vcard('fn'), name, gix) ], function (uri, success, body) {
                 if (ok) {
-                  updater.put(doc, [], 'text/turtle', function (uri, ok, body) {
+                  updater.put(doc, [ $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc) ],
+                   'text/turtle', function (uri, ok, body) {
                     callback(ok, ok ? group : "Can't save new group file " + doc + body)
                   })
                 } else {
