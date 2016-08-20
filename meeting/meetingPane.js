@@ -89,25 +89,6 @@ module.exports = {
 
     var me = null; // @@ Put code to find out logged in person
 
-    UI.widgets.checkUser(subject.doc(), function(id){
-      var loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
-          // sayt.parent.removeChild(sayt);
-          if (webid) {
-              tabulator.preferences.set('me', webid.uri);
-              console.log("(Logged in as "+ webid+")")
-              me = webid;
-              // topDiv.removeChild(loginOutButton);
-          } else {
-              tabulator.preferences.set('me', '');
-              console.log("(Logged out)")
-              me = null;
-          }
-      });
-      loginOutButton.setAttribute('style', 'margin: 0.5em 1em;');
-      topDiv.appendChild(loginOutButton);
-
-    })
-
 
 
 
@@ -272,9 +253,12 @@ module.exports = {
         return // already got one
       }
 
-      var div = UI.panes.byName('schedule').mintNew(undefined, newBase, function(ok, newInstance){
+      var options = { useExisting: meeting, noIndexHTML: true} // Regard the meeting as being the schedulable event itself.
+
+      var div = UI.panes.byName('schedule').mintNew(options, function(ok, newInstance){
         if (ok) {
-          var tool = makeToolNode(newInstance, ns.meeting('schedulingPoll'), 'Schedule poll', UI.icons.nodeBase + 'noun_346777.svg')
+          var tool = makeToolNode(newInstance, ns.meeting('schedulingPoll'), 'Schedule poll', UI.icons.iconBase + 'noun_346777.svg')
+          kb.add(tool, UI.ns.meeting('view'), 'schedule', meetingDoc)
           saveBackMeetingDoc()
         } else {
           complain('Error making new scheduler: ' + newInstance)
@@ -413,18 +397,48 @@ module.exports = {
     var iconStyle = 'padding: 1em; width: 3em; height: 3em;'
     var star = bottomTR.appendChild(dom.createElement('img'))
     var visible = false; // the inividual tools tools
-    star.setAttribute('src', UI.icons.iconBase + 'noun_272948.svg')
-    star.setAttribute('style', iconStyle)
+    star.setAttribute('src', UI.icons.iconBase + 'noun_19460_green.svg') //  noun_272948.svg
+    star.setAttribute('style', iconStyle + 'opacity: 50%;')
     star.setAttribute('title', 'Add another tool to the meeting')
     var selectNewTool = function(event){
       visible = !visible
       star.setAttribute('style', iconStyle + (visible? 'background-color: yellow;': ''));
       styleTheIcons(visible? '' : 'display: none;')
     }
-    star.addEventListener('click', selectNewTool)
+    // star.addEventListener('click', selectNewTool)
     var resetIcons = function(){
       star.setAttribute('style', iconStyle)
     }
+
+
+    var loginOutButton
+    UI.widgets.checkUser(subject.doc(), function(id){
+      if (id) {
+        star.addEventListener('click', selectNewTool)
+        star.setAttribute('style', iconStyle)
+        return
+      }
+      loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
+          if (webid) {
+              tabulator.preferences.set('me', webid.uri);
+              console.log("(Logged in as "+ webid+")")
+              me = webid;
+              bottomTR.removeChild(loginOutButton)
+              // loginOutButton.setAttribute('',iconStyle) // make it match the icons
+              star.addEventListener('click', selectNewTool)
+              star.setAttribute('style', iconStyle)
+          } else {
+              tabulator.preferences.set('me', '');
+              console.log("(Logged out)")
+              me = null;
+          }
+      });
+      loginOutButton.setAttribute('style', 'margin: 0.5em 1em;');
+      bottomTR.appendChild(loginOutButton);
+
+    })
+
+
 
     var icon, iconArray = []
     for (var i=0; i< toolIcons.length; i++){
@@ -464,6 +478,8 @@ module.exports = {
       styleTheIcons('display: none;') // 'background-color: #ccc;'
       icon.setAttribute('style', iconStyle + 'background-color: yellow;')
     }
+
+    ////////////////////////////////
 
 
     var renderTab = function(div, item){
@@ -561,8 +577,8 @@ module.exports = {
       }
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
         var target = kb.any(subject, ns.meeting('target'))
-        if (target.sameTerm(meeting)){ // self reference? force details form
-          showDetails()
+        if (target.sameTerm(meeting) && !kb.any(subject, ns.meeting('view'))){ // self reference? force details form
+          showDetails() // Legacy meeting instances
         } else {
           var view = kb.any(subject, ns.meeting('view'))
           view = view ? view.value : null

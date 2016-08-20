@@ -13,8 +13,8 @@
 
 
 f:main    a :Form;
-                dc:title "Meeting Details";
-                :part f:titleField, f:locationField, f:dateField .
+                cal:summary "Meeting Details";
+                :part f:titleField, f:locationField, f:dateField, f:eventComment .
 
   f:titleField     a :SingleLineTextField;
        :maxLength 256;
@@ -30,6 +30,15 @@ f:main    a :Form;
   f:dateField     a :DateField;
       :label "Date";
        :property cal:dtstart .
+
+      f:eventComment
+           a    ui:MultiLineTextField;
+       #    ui:maxLength
+       #       "1048";
+       #    ui:size
+       #       "40".
+           ui:property
+              ical:comment.
 
 
 f:settings a :Form;
