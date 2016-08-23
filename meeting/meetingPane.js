@@ -532,9 +532,9 @@ module.exports = {
             kb.remove(ds) // Remove all links to and from the tab node
             saveBackMeetingDoc()
           })
-          delButton.setAttribute('class', '')
-          delButton.setAttribute('style', 'margin: 1em; border-radius: 0.5em; padding: 1em; font-size: 120%; background-color: red; color: white;')
-          delButton.textContent = 'Delete this tab'
+          // delButton.setAttribute('class', '')
+          // delButton.setAttribute('style', 'height: 2em; width: 2em; margin: 1em; border-radius: 0.5em; padding: 1em; font-size: 120%; background-color: red; color: white;')
+          // delButton.textContent = 'Delete this tab'
           containerDiv.appendChild(tipDiv(
             'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })

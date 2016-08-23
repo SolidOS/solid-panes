@@ -127,6 +127,8 @@ module.exports = {
     doNextTask()
   },
 
+  //                            Render the pane
+  //
   render: function (subject, dom) {
     var kb = UI.store
     var ns = UI.ns
@@ -288,9 +290,11 @@ module.exports = {
       var groupIndex = kb.any(book, ns.vcard('groupIndex'))
       var selectedGroups = {}
 
-      var title = kb.any(book, ns.dc('title'))
-      if (title && typeof window !== 'undefined' && window.title) {
-        window.title = title.value; // @@ only when the outermmost pane
+      var target = options.foreignGroup || book
+
+      var title = kb.any(target, ns.dc('title'))
+      if (title && typeof document !== 'undefined' && document.title) {
+        document.title = title.value; // @@ only when the outermmost pane
       }
       title = title ? title.value : classLabel
 
@@ -394,7 +398,8 @@ module.exports = {
                 $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), gix),
                 $rdf.st(group, ns.vcard('fn'), name, gix) ], function (uri, success, body) {
                 if (ok) {
-                  updater.put(doc, [ $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc) ],
+                  updater.put(doc,[ $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc),
+                                    $rdf.st(group, ns.vcard('fn'), name, doc) ],
                    'text/turtle', function (uri, ok, body) {
                     callback(ok, ok ? group : "Can't save new group file " + doc + body)
                   })
@@ -811,6 +816,7 @@ module.exports = {
             var name = nameFor(person)
             personLeft.textContent = name
             personRow.subject = person
+            UI.widgets.makeDraggable(personRow, person)
 
             var setPersonListener = function toggle (personLeft, person) {
               UI.widgets.deleteButtonWithCheck(dom, personRight, 'contact', function () {
@@ -879,6 +885,8 @@ module.exports = {
             if (!foundOne) {
               var groupRow = groupsMainTable.appendChild(dom.createElement('tr'))
               groupRow.subject = group
+              UI.widgets.makeDraggable(groupRow, group)
+
               groupRow.setAttribute('style', dataCellStyle)
               groupRow.textContent = name
               var foo = function toggle (groupRow, group, name) {
@@ -889,8 +897,8 @@ module.exports = {
                 groupRow.addEventListener('click', function (event) {
                   event.preventDefault()
                   var groupList = kb.sym(group.uri.split('#')[0])
-                  if (!event.altKey) {
-                    selectedGroups = {}; // If alt key pressed, accumulate multiple
+                  if (!event.metaKey) {
+                    selectedGroups = {}; // If Command key pressed, accumulate multiple
                   }
                   selectedGroups[group.uri] = ! selectedGroups[group.uri]
                   refreshGroupsSelected()
@@ -900,7 +908,7 @@ module.exports = {
                     if (!ok) return complainIfBad(ok, "Can't load group file: " + groupList + ': ' + message)
                     refreshNames()
 
-                    if (!event.altKey) { // If only one group has beeen selected show ACL
+                    if (!event.metaKey) { // If only one group has beeen selected show ACL
                       cardMain.innerHTML = ''
                       cardMain.appendChild(UI.aclControl.ACLControlBox5(group, dom, 'group', kb, function (ok, body) {
                         if (!ok) cardMain.innerHTML = 'Failed: ' + body
