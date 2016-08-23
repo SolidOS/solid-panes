@@ -52,13 +52,13 @@ LawPane.display = function(myDocument,obj){
 	var div = myDocument.createElement("div");
 	for (var i=0; i<obj.elements.length; i++) {
         switch(obj.elements[i].termType) {
-            case 'symbol':
+            case 'NamedNode':
                 var anchor = myDocument.createElement('a')
                 anchor.setAttribute('href', obj.elements[i].uri)
                 anchor.appendChild(myDocument.createTextNode(UI.utils.label(obj.elements[i])));
                 div.appendChild(anchor);
 
-            case 'literal':
+            case 'Literal':
             	if (obj.elements[i].value != undefined)
                 	div.appendChild(myDocument.createTextNode(obj.elements[i].value));
         }
@@ -143,7 +143,7 @@ LawPane.render = function(subject, myDocument) {
 	                stsFound.push(sts[k]);
 	            }
 	        }
-	        if (stsJust[j].object.termType == 'bnode'){
+	        if (stsJust[j].object.termType == 'BlankNode'){
             	var ruleNameSts = kb.statementsMatching(stsJust[j].object, ap_ruleName, undefined, subject);
             	var ruleNameFound =	ruleNameSts[0].object; // This would be the initial rule name
 

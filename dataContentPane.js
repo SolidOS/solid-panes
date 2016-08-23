@@ -85,14 +85,14 @@ module.exports = {
         function objectTree(obj) {
             var res;
             switch(obj.termType) {
-                case 'symbol':
+                case 'NamedNode':
                     var anchor = myDocument.createElement('a')
                     anchor.setAttribute('href', obj.uri)
                     anchor.addEventListener('click', UI.widgets.openHrefInOutlineMode, true);
                     anchor.appendChild(myDocument.createTextNode(UI.utils.label(obj)));
                     return anchor;
 
-                case 'literal':
+                case 'Literal':
 
                     if (!obj.datatype || !obj.datatype.uri) {
                         res = myDocument.createElement('div');
@@ -107,7 +107,7 @@ module.exports = {
                     };
                     return myDocument.createTextNode(obj.value); // placeholder - could be smarter,
 
-                case 'bnode':
+                case 'BlankNode':
                     if (obj.toNT() in doneBnodes) { // Break infinite recursion
                         referencedBnodes[(obj.toNT())] = true;
                         var anchor = myDocument.createElement('a')
@@ -139,7 +139,7 @@ module.exports = {
                     var res = UI.panes.dataContents.statementsAsTables(obj.statements, myDocument);
                     res.setAttribute('class', 'nestedFormula')
                     return res;
-                case 'variable':
+                case 'Variable':
                     var res = myDocument.createTextNode('?' + obj.uri);
                     return res;
 
@@ -165,7 +165,7 @@ module.exports = {
             var td_tree = myDocument.createElement('td')
             tr.appendChild(td_tree);
             var root = roots[i];
-            if (root.termType == 'bnode') {
+            if (root.termType == 'BlankNode') {
                 td_s.appendChild(myDocument.createTextNode(UI.utils.label(root))); // Don't recurse!
             }
             else {

@@ -152,7 +152,7 @@ module.exports = function UserInput(outline){
     //  Called when a selected cell is clicked again
     Click: function Click(e){
         var target=UI.utils.getTarget(e);
-        if (UI.utils.getTerm(target).termType != 'literal') return;
+        if (UI.utils.getTerm(target).termType != 'Literal') return;
         this.literalModification(target);
         //this prevents the generated inputbox to be clicked again
         e.preventDefault();
@@ -278,7 +278,7 @@ module.exports = function UserInput(outline){
         //ignore clicking trNode.firstChild (be careful for <div> or <span>)
         //if (e.type!='keypress'&&target!=tdNode && UI.utils.ancestor(target,'TD')!=tdNode) return;
 
-        if (obj.termType== 'literal'){
+        if (obj.termType== 'Literal'){
             tdNode.removeChild(tdNode.firstChild); //remove the text
 
             if (obj.value.match('\n')){//match a line feed and require <TEXTAREA>
@@ -377,7 +377,7 @@ module.exports = function UserInput(outline){
                     return;
                 }
                 switch (obj.termType){
-                    case 'literal':
+                    case 'Literal':
                         // generate path and nailing from current values
 
                         // TODO: DEFINE ERROR CALLBACK
@@ -403,7 +403,7 @@ module.exports = function UserInput(outline){
                         //obj.value=this.lastModified.value;
                         //UserInputFormula.statements.push(s);
                         break;
-                    case 'bnode': //a request refill with text
+                    case 'BlankNode': //a request refill with text
                         var newStat;
                         var textTerm=kb.literal(this.lastModified.value,"");
                         //<Feature about="labelChoice">
@@ -469,8 +469,8 @@ module.exports = function UserInput(outline){
             outline.replaceTD(outline.outline_objectTD(reqTerm,defaultpropview),upperTr.lastChild);
             this.lastModified=null;
             return;
-        }else if((s.object.termType=='bnode'&&!this.statIsInverse)||
-                  s.subject.termType=='bnode'&&this.statIsInverse){
+        }else if((s.object.termType=='BlankNode'&&!this.statIsInverse)||
+                  s.subject.termType=='BlankNode'&&this.statIsInverse){
             this.backOut();
             return;
         }
@@ -745,7 +745,7 @@ module.exports = function UserInput(outline){
             var subject=UI.utils.getAbout(kb,UI.utils.ancestor(selectedTd,'TABLE').parentNode);
             var subjectClass=kb.any(subject,rdf('type'));
             var object=selectedTd.parentNode.AJAR_statement.object;
-            var objectClass=(object.termType=='literal')?UI.ns.rdfs('Literal'):kb.any(object,rdf('type'));
+            var objectClass=(object.termType=='Literal')?UI.ns.rdfs('Literal'):kb.any(object,rdf('type'));
             //var sparqlText="SELECT ?pred WHERE{\n?pred "+rdf('type')+rdf('Property')+".\n"+
             //               "?pred "+UI.ns.rdfs('domain')+subjectClass+".\n"+
             //               "?pred "+UI.ns.rdfs('range')+objectClass+".\n}"; // \n is required? SPARQL parser bug?

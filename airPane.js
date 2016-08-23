@@ -257,14 +257,14 @@ airPane.render = function(subject, myDocument) {
                                 dump(obj.elements[i]);
                                 dump("\n");
 
-                                if (obj.elements[i].termType == 'symbol') {
+                                if (obj.elements[i].termType == 'NamedNode') {
                                     var anchor = myDocument.createElement('a');
                                     anchor.setAttribute('href', obj.elements[i].uri);
                                     anchor.appendChild(myDocument.createTextNode(UI.utils.label(obj.elements[i])));
                                     //anchor.appendChild(myDocument.createTextNode(obj.elements[i]));
                                     divDescription.appendChild(anchor);
                                 }
-                                else if (obj.elements[i].termType == 'literal') {
+                                else if (obj.elements[i].termType == 'Literal') {
                                     if (obj.elements[i].value != undefined)
                                         divDescription.appendChild(myDocument.createTextNode(obj.elements[i].value));
                                 }
@@ -321,7 +321,7 @@ airPane.render = function(subject, myDocument) {
                              //This is a hack to fix the rule appearing instead of the bnode containing the description
                             correctCurrentRule = "";
                             for (var i=0; i< currentRule.length; i++){
-                                if (currentRule[i].subject.termType == 'bnode'){
+                                if (currentRule[i].subject.termType == 'BlankNode'){
                                     correctCurrentRule = currentRule[i].subject;
                                     break;
                                 }
@@ -342,7 +342,7 @@ airPane.render = function(subject, myDocument) {
                                     divPremises.appendChild(statementsAsTables(currentRuleSubExpr[i].object.statements, myDocument));
                                     formulaFound = true;
                                 }
-                                else if (currentRuleSubExpr[i].object.termType == 'bnode'){
+                                else if (currentRuleSubExpr[i].object.termType == 'BlankNode'){
                                     bnodeFound = true;
 
                                 }
@@ -462,7 +462,7 @@ airPane.render = function(subject, myDocument) {
                     }
 
                     for (var j=0; j<stsJust.length; j++){
-                        if (stsJust[j].subject.termType == 'formula' && stsJust[j].object.termType == 'bnode'){
+                        if (stsJust[j].subject.termType == 'formula' && stsJust[j].object.termType == 'BlankNode'){
 
                             var ruleNameSts = UI.store.statementsMatching(stsJust[j].object, ap_ruleName, undefined, subject);
                             ruleNameFound =	ruleNameSts[0].object; // This would be the initial rule name from the
@@ -472,7 +472,7 @@ airPane.render = function(subject, myDocument) {
                                 for (var k=0; k<t1.length; k++){
                                     var t2 = UI.store.statementsMatching(t1[k].object, undefined, undefined, subject);
                                     for (var l=0; l<t2.length; l++){
-                                        if (t2[l].subject.termType == 'bnode' && t2[l].object.termType == 'formula'){
+                                        if (t2[l].subject.termType == 'BlankNode' && t2[l].object.termType == 'formula'){
                                             justificationSts = t2;
                                             divPremises.appendChild(myDocument.createElement('br'));
                                             //divPremises.appendChild(myDocument.createElement('br'));
@@ -619,7 +619,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
 
         var td_o = myDocument.createElement("td");
 	var a_o = null;
-	if (stsFound.object.termType == 'literal'){
+	if (stsFound.object.termType == 'Literal'){
 	  a_o = myDocument.createTextNode(stsFound.object.value);
 	} else {
 	  var a_o = myDocument.createElement('a');
@@ -714,13 +714,13 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
 	      if (firstLevel){
 		p = myDocument.createElement('p');
 		//Look up the outermost subject and object for information
-		if (st.subject.termType == 'symbol'){
+		if (st.subject.termType == 'NamedNode'){
 		  var doc_uri = Util.uri.docpart(st.subject.uri);
 		  if (divDescription.waitingFor.indexOf(doc_uri) < 0 &&
 		      typeof sf.requested[doc_uri]=="undefined")
 		    divDescription.waitingFor.push(doc_uri);
 		}
-		if (st.object.termType == 'symbol'){
+		if (st.object.termType == 'NamedNode'){
 		  var doc_uri = Util.uri.docpart(st.object.uri);
 		  if (divDescription.waitingFor.indexOf(doc_uri) < 0 &&
 		      typeof sf.requested[doc_uri]=="undefined")
@@ -741,14 +741,14 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
 		  dumpFormula(element, false);
 		  p.appendChild(myDocument.createTextNode(" }"));
 		  break;
-		case 'symbol':
+		case 'NamedNode':
 		  var anchor = myDocument.createElement('a');
 		  anchor.setAttribute('href', element.uri);
 		  anchor.appendChild(myDocument.createTextNode(UI.utils.label(element)));
 		  p.appendChild(anchor);
 		  p.appendChild(myDocument.createTextNode(" "));
 		  break;
-		case 'literal':
+		case 'Literal':
 		  //if (obj.elements[i].value != undefined)
 		  p.appendChild(myDocument.createTextNode(element.value));
 
@@ -1003,7 +1003,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
         }
 
         for (var j=0; j<stsJust.length; j++){
-            if (stsJust[j].subject.termType == 'formula' && stsJust[j].object.termType == 'bnode'){
+            if (stsJust[j].subject.termType == 'formula' && stsJust[j].object.termType == 'BlankNode'){
 
                 var ruleNameSts = kb.statementsMatching(stsJust[j].object, ap_ruleName, undefined, subject);
                 ruleNameFound =    ruleNameSts[0].object; // This would be the initial rule name from the
@@ -1013,7 +1013,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
                     for (var k=0; k<t1.length; k++){
                         var t2 = kb.statementsMatching(t1[k].object, undefined, undefined, subject);
                         for (var l=0; l<t2.length; l++){
-                            if (t2[l].subject.termType == 'bnode' && t2[l].object.termType == 'formula'){
+                            if (t2[l].subject.termType == 'BlankNode' && t2[l].object.termType == 'formula'){
                                 justificationSts = t2;
                                 divPremises.appendChild(myDocument.createElement('br'));
                                 divPremises.appendChild(myDocument.createElement('br'));
