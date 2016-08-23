@@ -50,7 +50,7 @@ module.exports  = { // Encapsulates all of the methods and classes
      ******************************/
     this.fetchSingle = function(subjects) {
         if(isEmpty(subjects)) return null;
-        else if(subjects[0].termType === 'literal' || subjects[0].termType === 'symbol')
+        else if(subjects[0].termType === 'Literal' || subjects[0].termType === 'NamedNode')
             return new DataContainer([subjects[0].toString()]);
         else return null;
     }
@@ -60,7 +60,7 @@ module.exports  = { // Encapsulates all of the methods and classes
         var dataContainers = new Array();
         for(var i = 0;i < subjects.length;i++)
             if(subjects[i] == null) continue;
-            else if(subjects[i].termType === 'literal' || subjects[i].termType === 'symbol')
+            else if(subjects[i].termType === 'Literal' || subjects[i].termType === 'NamedNode')
                 dataContainers.push(new DataContainer([subjects[i].toString()]));
         if(isEmpty(dataContainers)) return null;
         else return dataContainers;

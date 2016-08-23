@@ -43,13 +43,13 @@ module.exports = {
         outliner.appendPropertyTRs(div, plist, false, filter)
         plist = kb.statementsMatching(undefined, undefined, subject)
         outliner.appendPropertyTRs(div, plist, true, filter)
-        if ((subject.termType == 'literal') && (subject.value.slice(0,7) == 'http://'))
+        if ((subject.termType == 'Literal') && (subject.value.slice(0,7) == 'http://'))
             outliner.appendPropertyTRs(div,
                 [$rdf.st(kb.sym(subject.value), UI.ns.link('uri'), subject)],
                 true, filter)
-        if ((subject.termType == 'symbol' &&
+        if ((subject.termType == 'NamedNode' &&
              kb.updater.editable(UI.rdf.Util.uri.docpart(subject.uri), kb))
-             || (subject.termType == 'bnode'
+             || (subject.termType == 'BlankNode'
                 && kb.anyStatementMatching(subject)
                 && kb.anyStatementMatching(subject).why
                 && kb.anyStatementMatching(subject).why.uri
