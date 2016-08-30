@@ -551,8 +551,9 @@ module.exports = {
           //
           UI.widgets.registrationControl(
             context, book, ns.vcard('AddressBook'))
-            .then(function (box) {
-              pane.appendChild(box)
+            .then(function (context) {
+              console.log('Registration control finished.')
+                // pane.appendChild(box)
             }).catch(function (e) {UI.widgets.complain(context, e)})
 
           //  Output stats in line mode form
@@ -639,12 +640,17 @@ module.exports = {
                 function (ok, message) {
                   log('Loaded groups and name index.')
                   var reverseIndex = {}, groupless = []
+                  var groups = kb.each(book, VCARD('includesGroup'))
+                  log('' + groups.length + ' total groups. ')
+
                   for (var i = 0; i < groups.length; i++) {
                     var g = groups[i]
                     var a = kb.each(g, ns.vcard('hasMember'))
                     log(UI.utils.label(g) + ': ' + a.length + ' members')
                     for (var j = 0; j < a.length; j++) {
-                      reverseIndex[a[j].uri] = true
+                      kb.allAliases(a[j]).forEach(function(y){
+                        reverseIndex[y.uri] = g
+                      })
                     }
                   }
 
@@ -785,6 +791,17 @@ module.exports = {
           nextOne()
         }
 
+        var localNode = function(person, div){
+          var aliases = kb.allAliases(person)
+          var prefix = book.dir().uri
+          for (var i=0; i<aliases.length; i++){
+            if (aliases[i].uri.slice(0, prefix.length) == prefix){
+              return aliases[i]
+            }
+          }
+          throw "No local URI for " + person
+        }
+
         var refreshNames = function () {
           var cards = [], ng = 0
           for (var u in selectedGroups) {
@@ -827,23 +844,21 @@ module.exports = {
               personRow.addEventListener('click', function (event) {
                 event.preventDefault()
                 cardMain.innerHTML = 'loading...'
-                var cardURI = person.uri.split('#')[0]
-                UI.store.fetcher.nowOrWhenFetched(cardURI, undefined, function (ok, message) {
+                var local = localNode(person)
+                UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
                   cardMain.innerHTML = ''
-                  if (!ok) return complainIfBad(ok, "Can't load card: " + cardURI + ': ' + message)
-                  // dump("Loaded card " + cardURI + '\n')
-                  cardMain.appendChild(cardPane(dom, person, 'contact'))
+                  if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
+                  // dump("Loaded card " + local + '\n')
+                  cardMain.appendChild(cardPane(dom, local, 'contact'))
                   cardMain.appendChild(dom.createElement('br'))
-                  var anchor = cardMain.appendChild(dom.createElement('a'))
-                  anchor.setAttribute('href', person.uri)
-                  anchor.textContent = '->'
+
+                  var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local))// hoverHide
                 })
               })
             }
             setPersonListener(personRow, person)
           }
           searchFilterNames()
-
         }
 
         var refreshGroupsSelected = function () {
@@ -1036,30 +1051,13 @@ module.exports = {
     // end of AddressBook instance
     } // renderThreeColumnBrowser
 
-    //              Render a single contact Individual
-
-    if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri]) { // https://timbl.rww.io/Apps/Contactator/individualForm.ttl
-
+    var renderIndividual = function(subject){
       var individualFormDoc = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl')
       // var individualFormDoc = kb.sym('https://timbl.rww.io/Apps/Contactator/individualForm.ttl')
       var individualForm = kb.sym(individualFormDoc.uri + '#form1')
 
-      var toBeFetched = [ individualFormDoc, UI.ns.vcard('Type').doc()]
+      var toBeFetched = [ subject.doc(), individualFormDoc, UI.ns.vcard('Type').doc()]
       UI.store.fetcher.load(toBeFetched).then(function(xhrs){
-        var predicateURIsDone = {}
-        var donePredicate = function (pred) {
-          predicateURIsDone[pred.uri] = true
-        }
-
-        donePredicate(ns.rdf('type'))
-        donePredicate(ns.dc('title'))
-        donePredicate(ns.dc('modified'))
-        donePredicate(ns.dc('created'))
-
-        ;[ 'hasUID', 'fn', 'hasEmail', 'hasTelephone', 'hasName',
-          'hasAddress', 'note', 'hasPhoto', 'hasMember'].map(function (p) {
-          donePredicate(ns.vcard(p))
-        })
 
         var setPaneStyle = function () {
           var types = kb.findTypeURIs(subject)
@@ -1094,30 +1092,68 @@ module.exports = {
         div.appendChild(dom.createElement('tr'))
           .setAttribute('style', 'height: 1em') // spacer
 
-        // Remaining properties from whatever ontollogy
-        UI.outline.appendPropertyTRs(div, plist, false,
-          function (pred, inverse) {
-            return !(pred.uri in predicateURIsDone)
+        var lookUpId = function(dom, container, x){
+          var tr = table.appendChild(dom.createElement('tr'))
+          tr.setAttribute('style', 'margin-top: 0.1em solid #ccc;')
+          var nameTD = tr.appendChild(dom.createElement('td'))
+          var formTD = tr.appendChild(dom.createElement('td'))
+          nameTD.textContent = x.uri.split('/')[2]
+          kb.fetcher.load(x).then(function(xhr){
+            nameTD.textContent = x.uri.split('/')[2] + ' (' +
+              kb.statementsMatching(undefined, undefined, undefined, x.doc()).length + ')'
+          }).catch(function(e){
+            formTD.appendChild(UI.widgets.errorMessageBlock(dom, e, 'pink'))
           })
-        UI.outline.appendPropertyTRs(div, qlist, true,
-          function (pred, inverse) {
-            return !(pred.uri in predicateURIsDone)
-          })
+          var anchor = formTD.appendChild(UI.widgets.linkIcon(dom, x))
+        }
+
+        var table = div.appendChild(dom.createElement('table'))
+
+        var aliases = kb.allAliases(subject)
+        if (aliases.length > 1) {
+          for (var i=0; i <aliases.length; i++){
+            var x = aliases[i]
+            if (!x.sameTerm(subject)){
+              lookUpId(dom, table, x)
+              // UI.widgets.appendForm(dom, formTD, {}, x, individualForm, x.doc(), complainIfBad)
+            }
+          }
+        }
+
+        var pages = kb.each(subject, ns.vcard('url')) // vcard:url [ a vcard:HomePage; vcard:value <http://www.w3.org/People/Berners-Lee>],
+        pages.forEach(function(p){
+          var cla = kb.any(p, ns.rdf('type'))
+          var val = kb.any(p, ns.vcard('value'))
+          if (val) {
+            var tr = table.appendChild(dom.createElement('tr'))
+            tr.setAttribute('style', 'margin-top: 0.1em solid #ccc;')
+
+            var nameTD = tr.appendChild(dom.createElement('td'))
+            nameTD.textContent = UI.utils.label(cla)
+
+            var formTD = tr.appendChild(dom.createElement('td'))
+            var anchor = formTD.appendChild(dom.createElement('a'))
+            anchor.setAttribute('href', val.uri)
+            var span = anchor.appendChild(dom.createElement('span'))
+            span.textContent = val.uri
+          }
+        })
 
       }).catch(function(e){
         console.log('Error: Failed to load form or ontology: ' + e)
       }) // load.then
+    } // renderIndividual
 
-/*
-      UI.store.fetcher.nowOrWhenFetched(individualFormDoc.uri, subject, function drawContactPane (ok, body) {
-        if (!ok) return console.log('Failed to load form ' + individualFormDoc.uri + ' ' + body)
-      }) // End nowOrWhenFetched tracker
-*/
 
-      // /////////////////////////////////////////////////////////
+
+    //              Render a single contact Individual
+
+    if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri]
+      || t[ns.foaf('Person').uri]) {
+
+        renderIndividual(subject)
 
       //          Render a Group instance
-
     } else if (t[ns.vcard('Group').uri]) {
       // If we have a main address book, then render this group as a guest group withn it
       UI.widgets.findAppInstances(context, ns.vcard('AddressBook'))
