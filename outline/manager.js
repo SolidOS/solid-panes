@@ -2,7 +2,7 @@
    Outline Mode Manager
 */
 
-var YAHOO = require('./dragdrop.js')
+var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')
 var UserInput = require('./userInput.js')
 
