@@ -8,16 +8,16 @@ var UserInput = require('./userInput.js')
 
 
 module.exports = function(doc) {
-  var myDocument
+  var dom
   if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
     var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
                    .getService(Components.interfaces.nsIWindowMediator);
     var window = wm.getMostRecentWindow("navigator:browser");
     var gBrowser = window.getBrowser();
-    myDocument = doc || window.document;
+    dom = doc || window.document;
   } else {
       // window = document.window;
-      myDocument = doc;
+      dom = doc;
   }
 
   // tabulator.outline = this; // Allow panes to access outline.register()
@@ -35,7 +35,7 @@ module.exports = function(doc) {
   var kb = UI.store;
   var sf = UI.store.fetcher;
   var sourceWidget = tabulator.sourceWidget; // only set in extension
-  myDocument.outline = this;
+  dom.outline = this;
 
 
   //people like shortcuts for sure
@@ -58,7 +58,7 @@ module.exports = function(doc) {
   var outlineElement=this.outlineElement;
 
   this.init = function(){
-      var table=myDocument.getElementById('outline');
+      var table=dom.getElementById('outline');
       table.outline=this;
   }
 
@@ -138,7 +138,7 @@ module.exports = function(doc) {
   //  Represent an object in summary form as a table cell
 
   function appendRemoveIcon(node, subject, removeNode) {
-      var image = UI.utils.AJARImage(outlineIcons.src.icon_remove_node, 'remove',undefined, myDocument)
+      var image = UI.utils.AJARImage(outlineIcons.src.icon_remove_node, 'remove',undefined, dom)
       image.addEventListener('click', remove_nodeIconMouseDownListener)
       // image.setAttribute('align', 'right')  Causes icon to be moved down
       image.node = removeNode
@@ -206,7 +206,7 @@ module.exports = function(doc) {
           break;
       } //switch
       var img = UI.utils.AJARImage(icon, alt,
-                                         outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri),myDocument)
+                                         outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri),dom)
       img.setAttribute('uri', uri);
       addButtonCallbacks(img, docuri)
       node.appendChild(img)
@@ -298,8 +298,8 @@ module.exports = function(doc) {
 
 
   this.outline_objectTD = function outline_objectTD(obj, view, deleteNode, statement) {
-      // UI.log.info("@outline_objectTD, myDocument is now " + this.document.location);
-      var td = myDocument.createElement('td');
+      // UI.log.info("@outline_objectTD, dom is now " + this.document.location);
+      var td = dom.createElement('td');
       td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('notSelectable','false');
       var theClass = "obj";
@@ -332,7 +332,7 @@ if (statement){
                   obj.value.slice(0,7) == 'http://'))) {
           td.setAttribute('about', obj.toNT());
           td.appendChild(UI.utils.AJARImage(
-              (UI.icons.originalIconBase + 'tbl-expand-trans.png'), 'expand',undefined,myDocument)
+              (UI.icons.originalIconBase + 'tbl-expand-trans.png'), 'expand',undefined,dom)
               ).addEventListener('click', expandMouseDownListener)
       }
       td.setAttribute('class', theClass);      //this is how you find an object
@@ -365,11 +365,11 @@ if (statement){
           var reasons = kb.each(one_statement_formula,
      kb.sym("http://dig.csail.mit.edu/TAMI/2007/amord/tms#justification"));
           if(reasons.length){
-              var inquiry_span = myDocument.createElement('span');
+              var inquiry_span = dom.createElement('span');
               if(reasons.length>1)
                    inquiry_span.innerHTML = ' &times; ' + reasons.length;
               inquiry_span.setAttribute('class', 'inquiry');
-              inquiry_span.insertBefore(UI.utils.AJARImage(outlineIcons.src.icon_display_reasons, 'explain',undefined,myDocument), inquiry_span.firstChild);
+              inquiry_span.insertBefore(UI.utils.AJARImage(outlineIcons.src.icon_display_reasons, 'explain',undefined,dom), inquiry_span.firstChild);
         td.appendChild(inquiry_span);
           }
       }
@@ -379,7 +379,7 @@ if (statement){
 
   this.outline_predicateTD = function outline_predicateTD(predicate,newTr,inverse,internal){
 
-      var td_p = myDocument.createElement("TD")
+      var td_p = dom.createElement("TD")
               td_p.setAttribute('about', predicate.toNT())
       td_p.setAttribute('class', internal ? 'pred internal' : 'pred')
 
@@ -395,13 +395,13 @@ if (statement){
       lab = lab.slice(0,1).toUpperCase() + lab.slice(1)
       //if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) td_p.className='undetermined';
 
-      var labelTD = myDocument.createElement('TD')
+      var labelTD = dom.createElement('TD')
       labelTD.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       labelTD.setAttribute('notSelectable','true')
-      labelTD.appendChild(myDocument.createTextNode(lab))
+      labelTD.appendChild(dom.createTextNode(lab))
       td_p.appendChild(labelTD);
       labelTD.style.width='100%'
-      td_p.appendChild(termWidget.construct(myDocument)); //termWidget is global???
+      td_p.appendChild(termWidget.construct(dom)); //termWidget is global???
       for (var w in outlineIcons.termWidgets) {
           if(!newTr||!newTr.AJAR_statement) break; //case for TBD as predicate
                   //alert(Icon.termWidgets[w]+"   "+Icon.termWidgets[w].filter)
@@ -421,20 +421,20 @@ if (statement){
   } //outline_predicateTD
 
   function expandedHeaderTR(subject, requiredPane) {
-      var tr = myDocument.createElement('tr');
+      var tr = dom.createElement('tr');
       tr.setAttribute('class','hoverControl')
-      var td = myDocument.createElement('td');
+      var td = dom.createElement('td');
       td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('notSelectable','false');
 
       td.setAttribute('colspan', '2');
-      td.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-collapse.png', 'collapse',undefined,myDocument)
+      td.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-collapse.png', 'collapse',undefined,dom)
           ).addEventListener('click', collapseMouseDownListener);
-      td.appendChild(myDocument.createElement('strong'));
+      td.appendChild(dom.createElement('strong'));
       tr.appendChild(td);
 
       tr.firstChild.setAttribute('about', subject.toNT());
-      tr.firstChild.childNodes[1].appendChild(myDocument.createTextNode(UI.utils.label(subject)));
+      tr.firstChild.childNodes[1].appendChild(dom.createTextNode(UI.utils.label(subject)));
       tr.firstPane = null;
       var paneNumber = 0;
       var relevantPanes = [];
@@ -446,7 +446,7 @@ if (statement){
       };
       for (var i=0; i< UI.panes.list.length; i++) {
           var pane = UI.panes.list[i];
-          var lab = pane.label(subject, myDocument);
+          var lab = pane.label(subject, dom);
           if (!lab) continue;
 
           relevantPanes.push(pane);
@@ -466,7 +466,7 @@ if (statement){
       if (relevantPanes.length != 1) { // if only one, simplify interface
           for (var i=0; i<relevantPanes.length; i++) {
               var pane = relevantPanes[i];
-              var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i],myDocument);
+              var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i],dom);
               // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
               ico.style.maxWidth = '24px'
               ico.style.maxHeight = '24px'
@@ -488,8 +488,8 @@ if (statement){
                                       // If we just delete the node d, ffox doesn't refresh the display properly.
                                       //state = 'paneHidden';
                                       if (d.pane.requireQueryButton && t.parentNode.className /*outer table*/
-                                          && numberOfPanesRequiringQueryButton == 1 && myDocument.getElementById('queryButton'))
-                                          myDocument.getElementById('queryButton').setAttribute('style','display:none;');
+                                          && numberOfPanesRequiringQueryButton == 1 && dom.getElementById('queryButton'))
+                                          dom.getElementById('queryButton').setAttribute('style','display:none;');
                                   }
                               }
                           }
@@ -498,22 +498,22 @@ if (statement){
                           var paneDiv;
                           UI.log.info('outline: Rendering pane (2): '+pane.name)
                           if (UI.no_catch_pane_errors){ // for debugging
-                            paneDiv = pane.render(subject, myDocument);
+                            paneDiv = pane.render(subject, dom);
                           } else {
                             try {
-                                paneDiv = pane.render(subject, myDocument);
+                                paneDiv = pane.render(subject, dom);
                             }
                             catch(e) { // Easier debugging for pane developers
-                                paneDiv = myDocument.createElement("div")
+                                paneDiv = dom.createElement("div")
                                 paneDiv.setAttribute('class', 'exceptionPane');
-                                var pre = myDocument.createElement("pre")
+                                var pre = dom.createElement("pre")
                                 paneDiv.appendChild(pre);
-                                pre.appendChild(myDocument.createTextNode(UI.utils.stackString(e)));
+                                pre.appendChild(dom.createTextNode(UI.utils.stackString(e)));
                             }
 
                           }
-                          if (pane.requireQueryButton && myDocument.getElementById('queryButton'))
-                              myDocument.getElementById('queryButton').removeAttribute('style');
+                          if (pane.requireQueryButton && dom.getElementById('queryButton'))
+                              dom.getElementById('queryButton').removeAttribute('style');
                           var second = t.firstChild.nextSibling;
                           if (second) t.insertBefore(paneDiv, second);
                           else t.appendChild(paneDiv);
@@ -597,7 +597,7 @@ if (statement){
   function removeAndRefresh(d) {
       var table = d.parentNode
       var par = table.parentNode
-      var placeholder = myDocument.createElement('table')
+      var placeholder = dom.createElement('table')
       par.replaceChild(placeholder, table)
       table.removeChild(d);
       par.replaceChild(table, placeholder) // Attempt to
@@ -609,7 +609,7 @@ if (statement){
       // if (!pane) pane = UI.panes.defaultPane;
 
       if (!table) { // Create a new property table
-          var table = myDocument.createElement('table');
+          var table = dom.createElement('table');
           var tr1 = expandedHeaderTR(subject, pane);
           table.appendChild(tr1);
 
@@ -618,19 +618,19 @@ if (statement){
               var paneDiv;
               try {
                   UI.log.info('outline: Rendering pane (1): '+tr1.firstPane.name)
-                  paneDiv = tr1.firstPane.render(subject, myDocument);
-                  // paneDiv = tr1.firstPane.render(subject, myDocument, jq);
+                  paneDiv = tr1.firstPane.render(subject, dom);
+                  // paneDiv = tr1.firstPane.render(subject, dom, jq);
               }
               catch(e) { // Easier debugging for pane developers
-                  paneDiv = myDocument.createElement("div")
+                  paneDiv = dom.createElement("div")
                   paneDiv.setAttribute('class', 'exceptionPane');
-                  var pre = myDocument.createElement("pre")
+                  var pre = dom.createElement("pre")
                   paneDiv.appendChild(pre);
-                  pre.appendChild(myDocument.createTextNode(UI.utils.stackString(e)));
+                  pre.appendChild(dom.createTextNode(UI.utils.stackString(e)));
               }
 
-              if (tr1.firstPane.requireQueryButton && myDocument.getElementById('queryButton'))
-                  myDocument.getElementById('queryButton').removeAttribute('style');
+              if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton'))
+                  dom.getElementById('queryButton').removeAttribute('style');
               table.appendChild(paneDiv);
               paneDiv.pane = tr1.firstPane;
               paneDiv.paneButton = tr1.paneButton;
@@ -660,10 +660,10 @@ if (statement){
 
   ///////////// Property list
   function appendPropertyTRs(parent, plist, inverse, predicateFilter) {
-      //UI.log.info("@appendPropertyTRs, 'this' is %s, myDocument is %s, "+ // Gives "can't access dead object"
-      //                   "thisOutline.document is %s", this, myDocument.location, thisOutline.document.location);
-      //UI.log.info("@appendPropertyTRs, myDocument is now " + this.document.location);
-      //UI.log.info("@appendPropertyTRs, myDocument is now " + thisOutline.document.location);
+      //UI.log.info("@appendPropertyTRs, 'this' is %s, dom is %s, "+ // Gives "can't access dead object"
+      //                   "thisOutline.document is %s", this, dom.location, thisOutline.document.location);
+      //UI.log.info("@appendPropertyTRs, dom is now " + this.document.location);
+      //UI.log.info("@appendPropertyTRs, dom is now " + thisOutline.document.location);
       UI.log.debug("Property list length = " + plist.length)
       if (plist.length == 0) return "";
       var sel
@@ -695,7 +695,7 @@ if (statement){
           }
 
 
-          var tr = propertyTR(myDocument, s, inverse);
+          var tr = propertyTR(dom, s, inverse);
           parent.appendChild(tr);
           var td_p = tr.firstChild; // we need to kludge the rowspan later
 
@@ -743,7 +743,7 @@ if (statement){
                           displayed++;
                           s=plist[j+l];
                           defaultpropview = views.defaults[s.predicate.uri];
-                          var trObj=myDocument.createElement('tr');
+                          var trObj=dom.createElement('tr');
                           trObj.style.colspan='1';
                           trObj.appendChild(thisOutline.outline_objectTD(
                               sel(plist[j+l]),defaultpropview, undefined, s));
@@ -765,23 +765,23 @@ if (statement){
               } // end of if (predDups!=1)
 
               if (show<predDups){ //Add the x more <TR> here
-                  var moreTR=myDocument.createElement('tr');
-                  var moreTD=moreTR.appendChild(myDocument.createElement('td'));
+                  var moreTR=dom.createElement('tr');
+                  var moreTD=moreTR.appendChild(dom.createElement('td'));
                   moreTD.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
                   moreTD.setAttribute('notSelectable','false');
                   if (predDups>n){ //what is this for??
-                      var small=myDocument.createElement('a');
+                      var small=dom.createElement('a');
                       moreTD.appendChild(small);
 
                       var predToggle= (function(f){return f(td_p,k,dups,n);})(function(td_p,k,dups,n){
                       return function(display){
                           small.innerHTML="";
                           if (display=='none'){
-                              small.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-more-trans.png', 'more', 'See all',myDocument));
-                                  small.appendChild( myDocument.createTextNode((predDups-n) + ' more...'));
+                              small.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-more-trans.png', 'more', 'See all',dom));
+                                  small.appendChild( dom.createTextNode((predDups-n) + ' more...'));
                               td_p.setAttribute('rowspan',n+1);
                           } else{
-                              small.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-shrink.png', '(less)',undefined,myDocument));
+                              small.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-shrink.png', '(less)',undefined,dom));
                                   td_p.setAttribute('rowspan',predDups+1);
                           }
                           for (var i=0; i<showLaterArray.length; i++){
@@ -818,9 +818,9 @@ if (statement){
 **
 */
   termWidget={} // @@@@@@ global
-  termWidget.construct = function (myDocument) {
-      myDocument = myDocument||document;
-      var td = myDocument.createElement('TD')
+  termWidget.construct = function (dom) {
+      dom = dom||document;
+      var td = dom.createElement('TD')
       td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('class','iconTD')
       td.setAttribute('notSelectable','true')
@@ -831,7 +831,7 @@ if (statement){
       var iconTD = td.childNodes[1];
       if (!iconTD) return;
       var width = iconTD.style.width;
-      var img = UI.utils.AJARImage(icon.src,icon.alt,icon.tooltip,myDocument);
+      var img = UI.utils.AJARImage(icon.src,icon.alt,icon.tooltip,dom);
       width = parseInt(width);
       width = width + icon.width;
       iconTD.style.width = width+'px';
@@ -852,7 +852,7 @@ if (statement){
           var eltSrc = elt.src;
 
           // ignore first '?' and everything after it //Kenny doesn't know what this is for
-          try{var baseURI = myDocument.location.href.split('?')[0];}
+          try{var baseURI = dom.location.href.split('?')[0];}
           catch(e){ dump(e);var baseURI="";}
           var relativeIconSrc = UI.rdf.uri.join(icon.src,baseURI);
           if (eltSrc == relativeIconSrc) {
@@ -896,18 +896,18 @@ if (statement){
 
   function query_save() {
       queries.push(queries[0]);
-      var choices = myDocument.getElementById('queryChoices');
-      var next = myDocument.createElement('option');
-      var box = myDocument.createElement('input');
+      var choices = dom.getElementById('queryChoices');
+      var next = dom.createElement('option');
+      var box = dom.createElement('input');
       var index = queries.length-1;
       box.setAttribute('type','checkBox');
       box.setAttribute('value',index);
       choices.appendChild(box);
-      choices.appendChild(myDocument.createTextNode("Saved query #"+index));
-      choices.appendChild(myDocument.createElement('br'));
+      choices.appendChild(dom.createTextNode("Saved query #"+index));
+      choices.appendChild(dom.createElement('br'));
           next.setAttribute("value",index);
-          next.appendChild(myDocument.createTextNode("Saved query #"+index));
-          myDocument.getElementById("queryJump").appendChild(next);
+          next.appendChild(dom.createTextNode("Saved query #"+index));
+          dom.getElementById("queryJump").appendChild(next);
     }
 
 
@@ -935,7 +935,7 @@ if (statement){
 
   function AJAR_ClearTable() {
       resetQuery();
-      var div = myDocument.getElementById('results');
+      var div = dom.getElementById('results');
       UI.utils.emptyNode(div);
       return false;
   } //AJAR_ClearTable
@@ -1030,8 +1030,8 @@ if (statement){
   };
 
   this.showURI = function showURI(about){
-      if(about && myDocument.getElementById('UserURI')) {
-           myDocument.getElementById('UserURI').value =
+      if(about && dom.getElementById('UserURI')) {
+           dom.getElementById('UserURI').value =
                 (about.termType == 'NamedNode') ? about.uri : ''; // blank if no URI
        } else if(about && tabulator.isExtension) {
            var tabStatusBar = gBrowser.ownerDocument.getElementById("tabulator-display");
@@ -1202,7 +1202,7 @@ if (statement){
                if (selectedTd.nextSibling||selectedTd.lastChild.tagName=='strong')
                    setSelected(selectedTd.nextSibling,true);
                else{
-                   var newSelected=myDocument.evaluate('table/div/tr/td[2]',selectedTd,
+                   var newSelected=dom.evaluate('table/div/tr/td[2]',selectedTd,
                                                       null,XPathResult.FIRST_ORDERED_NODE_TYPE,null).singleNodeValue;
                    setSelected(newSelected,true);
                }
@@ -1233,8 +1233,8 @@ if (statement){
   this.OutlinerKeypressPanel=function OutlinerKeypressPanel(e){
       UI.log.info("Key "+e.keyCode+" pressed");
       function showURI(about){
-          if(about && myDocument.getElementById('UserURI')) {
-                  myDocument.getElementById('UserURI').value =
+          if(about && dom.getElementById('UserURI')) {
+                  dom.getElementById('UserURI').value =
                        (about.termType == 'NamedNode') ? about.uri : ''; // blank if no URI
           }
       }
@@ -1265,7 +1265,7 @@ if (statement){
                       outline.GotoSubject(object,true);
                       /* //deal with this later
                       deselectAll();
-                      var newTr=myDocument.getElementById('outline').lastChild;
+                      var newTr=dom.getElementById('outline').lastChild;
                       setSelected(newTr.firstChild.firstChild.childNodes[1].lastChild,true);
                       function setSelectedAfterward(uri){
                           deselectAll();
@@ -1285,7 +1285,7 @@ if (statement){
               //var newSelTd=thisOutline.UserInput.lastModified.parentNode.parentNode.nextSibling.lastChild;
               this.UserInput.Keypress(e);
               var notEnd=this.walk('down');//bug with input at the end
-              //myDocument.getElementById('docHTML').focus(); //have to set this or focus blurs
+              //dom.getElementById('docHTML').focus(); //have to set this or focus blurs
               e.stopPropagation();
               }
               return;
@@ -1356,7 +1356,7 @@ if (statement){
                   case 112: //p for Paste
                       if (e.ctrlKey){
                           thisOutline.UserInput.pasteFromClipboard(thisOutline.clipboardAddress,selectedTd);
-                          //myDocument.getElementById('docHTML').focus(); //have to set this or focus blurs
+                          //dom.getElementById('docHTML').focus(); //have to set this or focus blurs
                           //window.focus();
                           //e.stopPropagation();
                           break;
@@ -1612,7 +1612,7 @@ if (statement){
 
 
   function TabulatorMousedown(e) {
-      UI.log.info("@TabulatorMousedown, myDocument.location is now " + myDocument.location);
+      UI.log.info("@TabulatorMousedown, dom.location is now " + dom.location);
       var target = thisOutline.targetOf(e);
       if (!target) return;
       var tname = target.tagName;
@@ -1653,7 +1653,7 @@ if (statement){
       var already = options.already
       var immediate = options.immediate
 
-      UI.log.info("@outline_expand, myDocument is now " + myDocument.location);
+      UI.log.info("@outline_expand, dom is now " + dom.location);
       //remove callback to prevent unexpected repaint
       sf.removeCallback('done','expand');
       sf.removeCallback('fail','expand');
@@ -1738,7 +1738,7 @@ if (statement){
       }
       // Body of outline_expand
       UI.log.debug("outline_expand: dereferencing "+subject)
-      var status = myDocument.createElement("span")
+      var status = dom.createElement("span")
       p.appendChild(status)
       sf.addCallback('done', expand) // @@@@@@@ This can really mess up existing work
       sf.addCallback('fail', expand)  // Need to do if there s one a gentle resync of page with store
@@ -1788,7 +1788,7 @@ if (statement){
                   render()  // inital open, or else full if re-open
                   UI.log.debug('outline 1821')
               } else {
-                  var message = myDocument.createElement("pre");
+                  var message = dom.createElement("pre");
                   message.textContent = body;
                   message.setAttribute('style', 'background-color: #fee;');
                   p.appendChild(message);
@@ -1853,7 +1853,7 @@ if (statement){
           if (level.tagName == "TD") outer = level
       } //find outermost td
       UI.utils.emptyNode(outer).appendChild(propertyTable(subject));
-      myDocument.title = UI.utils.label("Tabulator: "+subject);
+      dom.title = UI.utils.label("Tabulator: "+subject);
       outer.setAttribute('about', subject.toNT());
   } //outline_refocus
 
@@ -1873,7 +1873,7 @@ if (statement){
       if (e.keyCode==13) outline.GotoFormURI(e);
   }
   this.GotoFormURI = function(e) {
-      GotoURI(myDocument.getElementById('UserURI').value);
+      GotoURI(dom.getElementById('UserURI').value);
   }
   function GotoURI(uri) {
           var subject = kb.sym(uri)
@@ -1895,11 +1895,11 @@ if (statement){
 
   this.GotoSubject = function(subject, expand, pane, solo, referrer, table) {
       UI.log.error("@@ outline.js test 50 UI.log.error: $rdf.log.error)"+$rdf.log.error);
-      if (!table) table = myDocument.getElementById('outline');
+      if (!table) table = dom.getElementById('outline');
       if (solo) UI.utils.emptyNode(table);
 
       function GotoSubject_default(){
-          var tr = myDocument.createElement("TR");
+          var tr = dom.createElement("TR");
           tr.style.verticalAlign="top";
           table.appendChild(tr);
           var td = thisOutline.outline_objectTD(subject, undefined, tr)
@@ -1926,7 +1926,7 @@ if (statement){
       if (!td) td = GotoSubject_default(); //the first tr is required
       if (expand) {
           outline_expand(td, subject, { 'pane': pane});
-          myDocument.title = UI.utils.label(subject);  // "Tabulator: "+  No need to advertize
+          dom.title = UI.utils.label(subject);  // "Tabulator: "+  No need to advertize
           tr=td.parentNode;
           UI.utils.getEyeFocus(tr,false,undefined,window);//instantly: false
       }
@@ -2013,7 +2013,7 @@ if (statement){
                   'decimal': 'text-align: ".";',
                   'double' : 'text-align: ".";',
                   };
-          rep = myDocument.createElement('span');
+          rep = dom.createElement('span');
           rep.textContent = obj.value;
           // Newlines have effect and overlong lines wrapped automatically
           var style = '';
@@ -2025,29 +2025,29 @@ if (statement){
           rep.setAttribute('style', style ? style : 'white-space: pre-wrap;');
 
       } else if (obj.termType == 'NamedNode' || obj.termType == 'BlankNode') {
-          rep = myDocument.createElement('span');
+          rep = dom.createElement('span');
           rep.setAttribute('about', obj.toNT());
           thisOutline.appendAccessIcons(kb, rep, obj);
 
           if (obj.termType == 'NamedNode') {
               if (obj.uri.slice(0,4) == 'tel:') {
                   var num = obj.uri.slice(4);
-                  var anchor = myDocument.createElement('a');
-                  rep.appendChild(myDocument.createTextNode(num));
+                  var anchor = dom.createElement('a');
+                  rep.appendChild(dom.createTextNode(num));
                   anchor.setAttribute('href', obj.uri);
                   anchor.appendChild(UI.utils.AJARImage(outlineIcons.src.icon_telephone,
-                                               'phone', 'phone '+num,myDocument))
+                                               'phone', 'phone '+num,dom))
                   rep.appendChild(anchor);
                   anchor.firstChild.setAttribute('class', 'phoneIcon');
               } else { // not tel:
-                  rep.appendChild(myDocument.createTextNode(UI.utils.label(obj)));
+                  rep.appendChild(dom.createTextNode(UI.utils.label(obj)));
               }
           } else {  // bnode
-              rep.appendChild(myDocument.createTextNode(UI.utils.label(obj)));
+              rep.appendChild(dom.createTextNode(UI.utils.label(obj)));
           }
       } else if (obj.termType=='collection'){
           // obj.elements is an array of the elements in the collection
-          rep = myDocument.createElement('table');
+          rep = dom.createElement('table');
           rep.setAttribute('about', obj.toNT());
   /* Not sure which looks best -- with or without. I think without
 
@@ -2057,8 +2057,8 @@ if (statement){
   */
           for (var i=0; i<obj.elements.length; i++){
               var elt = obj.elements[i];
-              var row = rep.appendChild(myDocument.createElement('tr'));
-              var numcell = row.appendChild(myDocument.createElement('td'));
+              var row = rep.appendChild(dom.createElement('tr'));
+              var numcell = row.appendChild(dom.createElement('td'));
               numcell.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
               numcell.setAttribute('notSelectable','false')
               numcell.setAttribute('about', obj.toNT());
@@ -2066,25 +2066,25 @@ if (statement){
               row.appendChild(thisOutline.outline_objectTD(elt));
           }
       } else if (obj.termType=='formula'){
-          rep = UI.panes.dataContentPane.statementsAsTables(obj.statements, myDocument);
+          rep = UI.panes.dataContentPane.statementsAsTables(obj.statements, dom);
           rep.setAttribute('class', 'nestedFormula')
 
       } else {
           UI.log.error("Object "+obj+" has unknown term type: " + obj.termType);
-          rep = myDocument.createTextNode("[unknownTermType:" + obj.termType +"]");
+          rep = dom.createTextNode("[unknownTermType:" + obj.termType +"]");
       } //boring defaults.
       UI.log.debug("contents: "+rep.innerHTML);
       return rep;
   }  //boring_default
 
   function VIEWAS_image(obj) {
-      img = UI.utils.AJARImage(obj.uri, UI.utils.label(obj), UI.utils.label(obj),myDocument);
+      img = UI.utils.AJARImage(obj.uri, UI.utils.label(obj), UI.utils.label(obj),dom);
       img.setAttribute('class', 'outlineImage')
       return img
   }
 
   function VIEWAS_mbox(obj) {
-      var anchor = myDocument.createElement('a');
+      var anchor = dom.createElement('a');
       // previous implementation assumed email address was Literal. fixed.
 
       // FOAF mboxs must NOT be literals -- must be mailto: URIs.
@@ -2094,7 +2094,7 @@ if (statement){
       var index = address.indexOf('mailto:');
       address = (index >= 0) ? address.slice(index + 7) : address;
       anchor.setAttribute('href', 'mailto:'+address);
-      anchor.appendChild(myDocument.createTextNode(address));
+      anchor.appendChild(dom.createTextNode(address));
       return anchor;
   }
   /* need to make unique calendar containers and names
@@ -2129,7 +2129,7 @@ if (statement){
    * it will be assigned 'block'
    */
   function toggle(eltname){
-          var elt = myDocument.getElementById(eltname);
+          var elt = dom.getElementById(eltname);
           elt.style.display = (elt.style.display=='none')?'block':'none'
   }
   /* Example of calendar Id: cal1
@@ -2144,11 +2144,11 @@ if (statement){
       var cal = prefix + uni(prefix);
 
       var containerId = cal + 'Container';
-      var table = myDocument.createElement('table');
+      var table = dom.createElement('table');
 
 
       // create link to hide/show calendar
-      var a = myDocument.createElement('a');
+      var a = dom.createElement('a');
       // a.appendChild(document.createTextNode('[toggle]'))
       a.innerHTML="<small>mm-dd: " + obj.value + "[toggle]</small>";
       //a.setAttribute('href',":toggle('"+containerId+"')");
@@ -2162,8 +2162,8 @@ if (statement){
 
       // hack: calendar will be appended to divCal at first, but will
       // be moved to new location
-      myDocument.getElementById('divCal').appendChild(table);
-      var div = table.appendChild(myDocument.createElement('DIV'));
+      dom.getElementById('divCal').appendChild(table);
+      var div = table.appendChild(dom.createElement('DIV'));
       div.setAttribute('id', containerId);
       // default hide calendar
       div.style.display = 'none';
@@ -2178,15 +2178,15 @@ if (statement){
   }
   // test writing something to calendar cell
   function VIEWAS_aim_IMme(obj) {
-      var anchor = myDocument.createElement('a');
+      var anchor = dom.createElement('a');
       anchor.setAttribute('href', "aim:goim?screenname=" + obj.value + "&message=hello");
       anchor.setAttribute('title', "IM me!");
-      anchor.appendChild(myDocument.createTextNode(obj.value));
+      anchor.appendChild(dom.createTextNode(obj.value));
       return anchor;
   } //aim_IMme
   this.createTabURI = function() {
-      myDocument.getElementById('UserURI').value=
-        myDocument.URL+"?uri="+myDocument.getElementById('UserURI').value;
+      dom.getElementById('UserURI').value=
+        dom.URL+"?uri="+dom.getElementById('UserURI').value;
   }
 
   var keyPressHandler = function(e){
@@ -2219,7 +2219,7 @@ if (statement){
   this.outline_expand = outline_expand;
 
   if(tabulator.isExtension) {
-      // dump('myDocument.getElementById("tabulator-display") = '+myDocument.getElementById("tabulator-display")+"\n");
+      // dump('dom.getElementById("tabulator-display") = '+dom.getElementById("tabulator-display")+"\n");
       window.addEventListener('unload',function() {
               var tabStatusBar = gBrowser.ownerDocument.getElementById("tabulator-display");
               tabStatusBar.label = "";
