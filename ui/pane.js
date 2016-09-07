@@ -68,8 +68,8 @@ module.exports = {
 
         var t = kb.findTypeURIs(subject);
 
-        var me_uri = tabulator.preferences.get('me');
-        var me = me_uri? kb.sym(me_uri) : null;
+        // var me_uri = tabulator.preferences.get('me');
+        // var me = me_uri? kb.sym(me_uri) : null;
 
         var store = null;
         if (subject.uri) {
@@ -108,7 +108,7 @@ module.exports = {
                     var sts = kb.statementsMatching(subject, pred);
                     if (sts.length) {
                         for (var i=0; i<sts.length; i++) {
-                            tabulator.outline.appendPropertyTRs(box,  [ sts[i] ]);
+                            UI.outline.appendPropertyTRs(box,  [ sts[i] ]);
                             var form = sts[i].object;
                             var cell = dom.createElement('td');
                             box.lastChild.appendChild(cell);
@@ -116,7 +116,7 @@ module.exports = {
                                 cell.appendChild(UI.widgets.newButton(
                                     dom, kb, null, null, subject, form, store, function(ok,body){
                                     if (ok) {
-                                        // tabulator.outline.GotoSubject(newThing@@, true, undefined, true, undefined);
+                                        // UI.outline.GotoSubject(newThing@@, true, undefined, true, undefined);
                                         // rerender(box);   // Deleted forms at the moment
                                     }
                                     else complain("Sorry, failed to save your change:\n"+body);

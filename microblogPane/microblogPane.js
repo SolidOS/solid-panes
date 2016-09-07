@@ -392,7 +392,7 @@ module.exports = {
             doc.getElementById("notify-container").appendChild(xmsg);
             setTimeout(function() {
                 doc.getElementById('notify-container').removeChild(xmsg);
-                delete xmsg;
+                // delete xmsg;
             },
             4000);
         };
@@ -440,7 +440,7 @@ module.exports = {
                 doc.getElementById("notify-container").appendChild(xmsg);
                 setTimeout(function() {
                     doc.getElementById('notify-container').removeChild(xmsg);
-                    delete xmsg;
+                    // delete xmsg;
                 },
                 4000);
             };

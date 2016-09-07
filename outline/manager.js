@@ -420,7 +420,7 @@ if (statement){
       return td_p;
   } //outline_predicateTD
 
-  function expandedHeaderTR(subject, requiredPane) {
+  function expandedHeaderTR(subject, requiredPane, options) {
       var tr = dom.createElement('tr');
       tr.setAttribute('class','hoverControl')
       var td = dom.createElement('td');
@@ -498,10 +498,10 @@ if (statement){
                           var paneDiv;
                           UI.log.info('outline: Rendering pane (2): '+pane.name)
                           if (UI.no_catch_pane_errors){ // for debugging
-                            paneDiv = pane.render(subject, dom);
+                            paneDiv = pane.render(subject, dom, options);
                           } else {
                             try {
-                                paneDiv = pane.render(subject, dom);
+                                paneDiv = pane.render(subject, dom, options);
                             }
                             catch(e) { // Easier debugging for pane developers
                                 paneDiv = dom.createElement("div")
@@ -603,14 +603,14 @@ if (statement){
       par.replaceChild(table, placeholder) // Attempt to
   }
 
-  var propertyTable = this.propertyTable = function propertyTable(subject, table, pane) {
+  var propertyTable = this.propertyTable = function propertyTable(subject, table, pane, options) {
       UI.log.debug("Property table for: "+ subject)
       subject = kb.canon(subject)
       // if (!pane) pane = UI.panes.defaultPane;
 
       if (!table) { // Create a new property table
           var table = dom.createElement('table');
-          var tr1 = expandedHeaderTR(subject, pane);
+          var tr1 = expandedHeaderTR(subject, pane, options);
           table.appendChild(tr1);
 
           if (tr1.firstPane) {
@@ -618,8 +618,7 @@ if (statement){
               var paneDiv;
               try {
                   UI.log.info('outline: Rendering pane (1): '+tr1.firstPane.name)
-                  paneDiv = tr1.firstPane.render(subject, dom);
-                  // paneDiv = tr1.firstPane.render(subject, dom, jq);
+                  paneDiv = tr1.firstPane.render(subject, dom, options);
               }
               catch(e) { // Easier debugging for pane developers
                   paneDiv = dom.createElement("div")
@@ -1670,7 +1669,7 @@ if (statement){
           var newTable
           UI.log.info('@@ REPAINTING ')
           if (!already) { // first expand
-              newTable = propertyTable(subject, undefined, pane)
+              newTable = propertyTable(subject, undefined, pane, options)
           } else {
 
               UI.log.info(" ... p is  " + p);
@@ -1679,7 +1678,7 @@ if (statement){
                   UI.log.info(" ... checking node "+newTable);
                   if (newTable.nodeName == 'table') break
               }
-              newTable = propertyTable(subject, newTable, pane)
+              newTable = propertyTable(subject, newTable, pane, options)
           }
           already = true
           if (UI.utils.ancestor(p, 'TABLE') && UI.utils.ancestor(p, 'TABLE').style.backgroundColor=='white') {
@@ -1925,7 +1924,7 @@ if (statement){
       var td = GotoSubject_default();
       if (!td) td = GotoSubject_default(); //the first tr is required
       if (expand) {
-          outline_expand(td, subject, { 'pane': pane});
+          outline_expand(td, subject, { 'pane': pane, solo: solo});
           dom.title = UI.utils.label(subject);  // "Tabulator: "+  No need to advertize
           tr=td.parentNode;
           UI.utils.getEyeFocus(tr,false,undefined,window);//instantly: false

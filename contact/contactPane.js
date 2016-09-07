@@ -129,7 +129,8 @@ module.exports = {
 
   //                            Render the pane
   //
-  render: function (subject, dom) {
+  render: function (subject, dom, paneOptions) {
+    paneOptions == paneOptions || {}
     var kb = UI.store
     var ns = UI.ns
     var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
@@ -292,8 +293,8 @@ module.exports = {
 
       var target = options.foreignGroup || book
 
-      var title = kb.any(target, ns.dc('title'))
-      if (title && typeof document !== 'undefined' && document.title) {
+      var title = kb.any(target, ns.dc('title')) || kb.any(target, ns.vcard('fn'))
+      if (paneOptions.solo && title && typeof document !== 'undefined') {
         document.title = title.value; // @@ only when the outermmost pane
       }
       title = title ? title.value : classLabel

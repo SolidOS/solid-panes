@@ -43,7 +43,7 @@ f:main    a :Form;
 
 f:settings a :Form;
     dc:title "Tab settings";
-    :part f:labelField, f:targetField .
+    :part f:labelField, f:targetField, f:viewField.
 
     f:labelField     a :SingleLineTextField;
          :maxLength 128;
@@ -51,10 +51,16 @@ f:settings a :Form;
          :label "Label on tab";
          :size 40 .
 
-         f:targetField     a :NamedNodeURIField;
-         :maxLength 1024;  # Longer?
-         :property meeting:target;
-         :label "URL of resource";
-         :size 80 .
+   f:targetField     a :NamedNodeURIField;
+     :maxLength 1024;  # Longer?
+     :property meeting:target;
+     :label "URL of resource";
+     :size 80 .
+
+   f:viewField     a :SingleLineTextField;
+        :maxLength 128;
+        :property meeting:view;
+        :label "View mode (experts only)";
+        :size 40 .
 
 #
