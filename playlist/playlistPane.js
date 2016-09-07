@@ -1,6 +1,7 @@
-/*   Image Pane
+/*   Playlist Pane
 **
-**  This outline pane contains the document contents for an Image document
+**  This pane allows playlists and playlists slots to be viewed
+**  seeAlso: http://smiy.sourceforge.net/pbo/spec/playbackontology.html
 */
 var UI = require('solid-ui')
 
