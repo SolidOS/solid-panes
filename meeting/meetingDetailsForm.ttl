@@ -10,7 +10,7 @@
     @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
     @prefix te: <http://purl.org/dc/terms/> .
     @prefix dc: <http://purl.org/dc/elements/1.1/>.
-
+    @prefix ui: <http://www.w3.org/ns/ui#>.
 
 f:main    a :Form;
                 cal:summary "Meeting Details";
@@ -38,7 +38,7 @@ f:main    a :Form;
        #    ui:size
        #       "40".
            ui:property
-              ical:comment.
+              cal:comment.
 
 
 f:settings a :Form;

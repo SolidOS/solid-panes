@@ -515,7 +515,8 @@ module.exports = {
       containerDiv.appendChild(dom.createElement('h3')).textContent = 'Adjust this tab'
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))){
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
-        UI.store.fetcher.nowOrWhenFetched(form, function(xhr){
+        UI.store.fetcher.nowOrWhenFetched(form, function(ok, message){
+          if (!ok) complainIfBad(ok, message) 
           UI.widgets.appendForm(document, containerDiv, {}, subject, form, meeting.doc(), complainIfBad)
           var delButton = UI.widgets.deleteButtonWithCheck(dom, containerDiv, 'tab', function () {
             var toolList = kb.the(meeting, ns.meeting('toolList'))
