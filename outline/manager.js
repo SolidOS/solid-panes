@@ -943,7 +943,10 @@ if (statement){
       UI.log.debug("Button callbacks for " + fireOn + " added")
       var makeIconCallback = function (icon) {
           return function IconCallback(req) {
-              if (req.indexOf('#') >= 0) alert('Should have no hash in '+req)
+              if (req.indexOf('#') >= 0) {
+                console.log("@@ makeIconCallback: Not expecting # in URI whose state changed: " + req)
+                //alert('Should have no hash in '+req)
+              }
               if (!target) {
                   return false
               }
