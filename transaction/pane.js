@@ -434,96 +434,105 @@ module.exports = {
         var yearTotal = {}
         var yearCategoryTotal = {}
         var trans = kb.each(undefined, TRIP('trip'), subject)
-        trans.map(function (t) {
-          var date = kb.the(t, ns.qu('date'))
-          var year = date ? ('' + date.value).slice(0, 4) : '????'
-          var ty = kb.the(t, ns.rdf('type')); // @@ find most specific type
-          // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')))
-          if (!ty) ty = UI.ns.qu('ErrorNoType')
-          if (ty && ty.uri) {
-            var tyuri = ty.uri
-            if (!yearTotal[year]) yearTotal[year] = 0.0
-            if (!yearCategoryTotal[year]) yearCategoryTotal[year] = {}
-            if (!total[tyuri]) total[tyuri] = 0.0
-            if (!yearCategoryTotal[year][tyuri]) yearCategoryTotal[year][tyuri] = 0.0
+        var bankStatements = trans.map(function(t){return t.doc()})
+        kb.fetcher.load(bankStatements).then(function(){
 
-            var lit = kb.any(t, UI.ns.qu('in_USD'))
-            if (!lit) {
-              complain('@@ No amount in USD: ' + lit + ' for ' + t)
+          trans.map(function (t) {
+
+            var date = kb.the(t, ns.qu('date'))
+            var year = date ? ('' + date.value).slice(0, 4) : '????'
+            var ty = kb.the(t, ns.rdf('type')); // @@ find most specific type
+            // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')))
+            if (!ty) ty = UI.ns.qu('ErrorNoType')
+            if (ty && ty.uri) {
+              var tyuri = ty.uri
+              if (!yearTotal[year]) yearTotal[year] = 0.0
+              if (!yearCategoryTotal[year]) yearCategoryTotal[year] = {}
+              if (!total[tyuri]) total[tyuri] = 0.0
+              if (!yearCategoryTotal[year][tyuri]) yearCategoryTotal[year][tyuri] = 0.0
+
+              var lit = kb.any(t, UI.ns.qu('in_USD'))
+              if (!lit) {
+                complain('@@ No amount in USD: ' + lit + ' for ' + t)
+              }
+              if (lit) {
+                var amount = parseFloat(lit.value)
+                total[tyuri] += amount
+                yearCategoryTotal[year][tyuri] += amount
+                yearTotal[year] += amount
+              }
             }
-            if (lit) {
-              var amount = parseFloat(lit.value)
-              total[tyuri] += amount
-              yearCategoryTotal[year][tyuri] += amount
-              yearTotal[year] += amount
+
+          })
+
+          var types = []
+          var grandTotal = 0.0
+          var years = [], i
+
+          for (var y in yearCategoryTotal) {
+            if (yearCategoryTotal.hasOwnProperty(y)) {
+              years.push(y)
             }
           }
-        })
+          years.sort()
+          var ny = years.length, cell
 
-        var types = []
-        var grandTotal = 0.0
-        var years = [], i
+          var table = div.appendChild(dom.createElement('table'))
+          table.setAttribute('style', 'font-size: 120%; margin-left:auto; margin-right:1em; margin-top: 1em; border: 0.05em solid gray; padding: 1em;')
 
-        for (var y in yearCategoryTotal) {
-          if (yearCategoryTotal.hasOwnProperty(y)) {
-            years.push(y)
-          }
-        }
-        years.sort()
-        var ny = years.length, cell
-
-        var table = div.appendChild(dom.createElement('table'))
-        table.setAttribute('style', 'font-size: 120%; margin-left:auto; margin-right:1em; margin-top: 1em; border: 0.05em solid gray; padding: 1em;')
-
-        if (ny > 1) {
-          var header = table.appendChild(dom.createElement('tr'))
-          header.appendChild(headerCell(''))
-          for (i = 0; i < ny; i++) {
-            header.appendChild(headerCell(years[i]))
-          }
-          header.appendChild(headerCell('total'))
-        }
-
-        for (var uri in total) if (total.hasOwnProperty(uri)) {
-            types.push(uri)
-            grandTotal += total[uri]
-        }
-        types.sort()
-        var row, label, z
-        for (var j = 0; j < types.length; j++) {
-          var cat = kb.sym(types[j])
-          row = table.appendChild(dom.createElement('tr'))
-          label = row.appendChild(dom.createElement('td'))
-          label.textContent = UI.utils.label(cat)
           if (ny > 1) {
+            var header = table.appendChild(dom.createElement('tr'))
+            header.appendChild(headerCell(''))
             for (i = 0; i < ny; i++) {
-              z = yearCategoryTotal[years[i]][types[j]]
-              cell = row.appendChild(numericCell(z, true))
+              header.appendChild(headerCell(years[i]))
             }
+            header.appendChild(headerCell('total'))
           }
-          row.appendChild(numericCell(total[types[j]], true))
-        }
 
-        // Trailing totals
-        if (types.length > 1) {
-          row = table.appendChild(dom.createElement('tr'))
-          row.appendChild(headerCell('total'))
-          if (ny > 1) {
-            for (i = 0; i < ny; i++) {
-              z = yearTotal[years[i]]
-              cell = row.appendChild(numericCell(z ? d2(z) : ''))
-            }
+          for (var uri in total) if (total.hasOwnProperty(uri)) {
+              types.push(uri)
+              grandTotal += total[uri]
           }
-          cell = row.appendChild(numericCell(grandTotal))
-          cell.setAttribute('style', 'font-weight: bold; text-align: right;')
-        }
+          types.sort()
+          var row, label, z
+          for (var j = 0; j < types.length; j++) {
+            var cat = kb.sym(types[j])
+            row = table.appendChild(dom.createElement('tr'))
+            label = row.appendChild(dom.createElement('td'))
+            label.textContent = UI.utils.label(cat)
+            if (ny > 1) {
+              for (i = 0; i < ny; i++) {
+                z = yearCategoryTotal[years[i]][types[j]]
+                cell = row.appendChild(numericCell(z, true))
+              }
+            }
+            row.appendChild(numericCell(total[types[j]], true))
+          }
+
+          // Trailing totals
+          if (types.length > 1) {
+            row = table.appendChild(dom.createElement('tr'))
+            row.appendChild(headerCell('total'))
+            if (ny > 1) {
+              for (i = 0; i < ny; i++) {
+                z = yearTotal[years[i]]
+                cell = row.appendChild(numericCell(z ? d2(z) : ''))
+              }
+            }
+            cell = row.appendChild(numericCell(grandTotal))
+            cell.setAttribute('style', 'font-weight: bold; text-align: right;')
+          }
+
+          var tab = transactionTable(dom, trans)
+          tab.setAttribute('style', 'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;')
+          div.appendChild(tab)
+
+
+
+        }).catch(function(e){complain('Error loading transactions: ' + e)})
 
       }
 
-      var trans = kb.each(undefined, TRIP('trip'), subject)
-      var tab = transactionTable(dom, trans)
-      tab.setAttribute('style', 'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;')
-      div.appendChild(tab)
       calculations()
 
     } // if
