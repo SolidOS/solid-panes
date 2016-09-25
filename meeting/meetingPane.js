@@ -1,4 +1,4 @@
-/*   Meeting materials Pane
+/*   Meeting materials and tools Pane
 **
 **  Putting together some of the tools we have to manage a Meeting
 */
@@ -112,8 +112,9 @@ module.exports = {
     var saveAppDocumentLinkAndAddNewThing = function(tool, thing, pred){
       var appDoc = thing.doc()
       if (pred) {
-        kb.add(meeting, pred, thing, appDoc) // Link back to meeting
+        kb.add(meeting, pred, thing, appDoc) // Specific Link back to meeting
       }
+      kb.add(thing, ns.meeting('parentMeeting'), meeting, appDoc) // Generic link back to meeting
       updater.put(
         appDoc,
         kb.statementsMatching(undefined, undefined, undefined, appDoc),
@@ -184,7 +185,7 @@ module.exports = {
       } else {
         // ... however, if we're IE, we don't have the .types property, so we'll just get the Text value
         uris = [ e.dataTransfer.getData('Text') ]
-        console.log('@@ WARNING non-standrad drop event: ' + uris[0])
+        console.log('@@ WARNING non-standard drop event: ' + uris[0])
       }
       console.log('Dropped URI list (2): ' + uris)
       if (uris) {
@@ -516,7 +517,7 @@ module.exports = {
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))){
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
         UI.store.fetcher.nowOrWhenFetched(form, function(ok, message){
-          if (!ok) complainIfBad(ok, message) 
+          if (!ok) return complainIfBad(ok, message)
           UI.widgets.appendForm(document, containerDiv, {}, subject, form, meeting.doc(), complainIfBad)
           var delButton = UI.widgets.deleteButtonWithCheck(dom, containerDiv, 'tab', function () {
             var toolList = kb.the(meeting, ns.meeting('toolList'))
@@ -574,6 +575,9 @@ module.exports = {
           UI.widgets.registrationControl(context, meeting, ns.meeting('Meeting')).then(function(context){
             console.log("Registration control finsished.")
           })
+          var options = {}
+          UI.pad.manageParticipation(dom, containerDiv, meetingDoc, meeting, me, options)
+
         })
       }
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {

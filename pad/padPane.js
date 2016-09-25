@@ -22,7 +22,7 @@ module.exports = {
   },
 
   // and follow instructions there
-  render: function(subject, dom) {
+  render: function(subject, dom, paneOptions) {
 
     // Utility functions
 
@@ -366,23 +366,6 @@ module.exports = {
     ///////////////  Update on incoming changes
 
 
-    // Manage participation in this session
-    //
-    //  This is more general tham the pad.
-    //
-    var manageParticipation = function(subject) {
-        if (!me) throw "Unknown user";
-        var parps = kb.each(subject, ns.wf('participation')).filter(function(pn){
-            kb.hold(pn, ns.dc('author'), me)});
-        if (parps.length > 1) throw "Multiple participations";
-        if (!parps.length) {
-            participation = UI.widgets.newThing(padDoc);
-        }
-
-    }
-
-
-
 
     /////////////////////////
 
@@ -391,13 +374,16 @@ module.exports = {
 
         whoAmI(); // Set 'me'  even if on a plane
 
-        var title = kb.any(subject, ns.dc('title'))
-        if (typeof window  !== 'undefined' && title) {
+        var title = kb.any(subject, ns.dc('title')) ||  kb.any(subject, ns.vcard('fn'))
+        if (paneOptions.solo && typeof window  !== 'undefined' && title) {
             window.document.title = title.value;
         }
         options.exists = exists;
         padEle = (UI.pad.notepad(dom, padDoc, subject, me, options));
         naviMain.appendChild(padEle);
+
+        var partipationTarget = kb.any(subject, ns.meeting('parentMeeting')) || subject
+        UI.pad.manageParticipation(dom, naviMiddle2, padDoc, partipationTarget, me, options)
 
         var initiated = UI.store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync);
     };
@@ -453,9 +439,6 @@ module.exports = {
     var PAD = $rdf.Namespace('http://www.w3.org/ns/pim/pad#');
 
 
-    //window.document.title = "Pad";
-
-    //var subject = kb.sym(subject_uri);
     var thisInstance = subject
     var padDoc = subject.doc()
 
