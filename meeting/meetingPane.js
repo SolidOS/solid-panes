@@ -421,9 +421,9 @@ module.exports = {
       }
       loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
           if (webid) {
-              tabulator.preferences.set('me', webid.uri);
+              tabulator.preferences.set('me', webid);
               console.log("(Logged in as "+ webid+")")
-              me = webid;
+              me = kb.sym(webid);
               bottomTR.removeChild(loginOutButton)
               // loginOutButton.setAttribute('',iconStyle) // make it match the icons
               star.addEventListener('click', selectNewTool)
