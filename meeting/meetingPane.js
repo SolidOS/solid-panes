@@ -22,10 +22,11 @@ module.exports = {
   //
   //  returns: A promise of a meeting object
   //
-  mint: function(base, context){
+  mintNew: function(options){
     return new Promise(function(resolve, reject){
       var kb = UI.store, ns = UI.ns
-      var meeting = kb.sym(base + 'index.ttl#this')
+      options.newInstance =   options.newInstance  || kb.sym(options.newBase + 'index.ttl#this')
+      var meeting = options.newInstance
       var meetingDoc = meeting.doc()
 
       var me = tabulator.preferences.get('me')
@@ -47,9 +48,9 @@ module.exports = {
         'text/turtle',
         function(uri2, ok, message) {
           if (ok){
-            resolve(meeting)
+            resolve(options)
           } else {
-              reject('Error writing meeting configuration: ' + err)
+              reject('Error writing meeting configuration: ' + message)
           }
         })
     })
@@ -83,7 +84,10 @@ module.exports = {
     var topTR = table.appendChild(dom.createElement('tr'))
     var topDiv = topTR.appendChild(dom.createElement('div'))
     var mainTR = table.appendChild(dom.createElement('tr'))
-    var bottomTR = table.appendChild(dom.createElement('tr'))
+
+    var toolBar0 = table.appendChild(dom.createElement('td'))
+    var toolBar1 = toolBar0.appendChild(dom.createElement('table'))
+    var toolBar = toolBar1.appendChild(dom.createElement('tr'))
 
     topTR.setAttribute('style','height: 2em;') // spacer if notthing else
 
@@ -140,81 +144,26 @@ module.exports = {
       return x
     }
 
+
+
 //////////////////////  DRAG and Drop
 
-    var dragoverListener = function (e) {
-      e.preventDefault() // Neeed else drop does not work [sic]
-      e.dataTransfer.dropEffect = 'copy'
-    // console.log('dragover event') // millions of them
+    // When a set of URIs are dropped on
+    var droppedURIHandler = function(uris){
+      uris.map(function (u) {
+        var target = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
+        console.log('Dropped on attachemnt ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+        var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
+        kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
+      })
+      saveBackMeetingDoc()
     }
 
-    var dragenterListener = function (e) {
-      console.log('dragenter event dropEffect: ' + e.dataTransfer.dropEffect)
-      this.style.backgroundColor = '#ccc'
-      e.dataTransfer.dropEffect = 'link'
-      console.log('dragenter event dropEffect 2: ' + e.dataTransfer.dropEffect)
-    }
-    var dragleaveListener = function (e) {
-      console.log('dragleave event dropEffect: ' + e.dataTransfer.dropEffect)
-      this.style.backgroundColor = 'white'
-    }
-
-
-    var dropListener = function (e) {
-      if (e.preventDefault) e.preventDefault() // stops the browser from redirecting off to the text.
-      console.log('Drop event. dropEffect: ' + e.dataTransfer.dropEffect)
-      console.log('Drop event. types: ' + (e.dataTransfer.types ? e.dataTransfer.types.join(', ') : 'NOPE'))
-
-      var uris = null
-      var text
-      var thisEle = this
-      if (e.dataTransfer.types) {
-        for (var t = 0; t < e.dataTransfer.types.length; t++) {
-          var type = e.dataTransfer.types[t]
-          if (type === 'text/uri-list') {
-            uris = e.dataTransfer.getData(type).split('\n') // @ ignore those starting with #
-            console.log('Dropped text/uri-list: ' + uris)
-          } else if (type === 'text/plain') {
-            text = e.dataTransfer.getData(type)
-          }
-        }
-        if (uris === null && text && text.slice(0, 4) === 'http') {
-          uris = text
-          console.log("Waring: Poor man's drop: using text for URI") // chrome disables text/uri-list??
-        }
-      } else {
-        // ... however, if we're IE, we don't have the .types property, so we'll just get the Text value
-        uris = [ e.dataTransfer.getData('Text') ]
-        console.log('@@ WARNING non-standard drop event: ' + uris[0])
-      }
-      console.log('Dropped URI list (2): ' + uris)
-      if (uris) {
-        uris.map(function (u) {
-          var target = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
-          console.log('Dropped on attachemnt ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
-          var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
-          kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
-          saveBackMeetingDoc()
-        })
-      }
-      return false
-    } // dropListener
-
-    var addTargetListeners = function(ele){
-      if (!ele){
-        console.log("@@@ addTargetListeners: ele " + ele)
-      }
-      ele.addEventListener('dragover', dragoverListener)
-      ele.addEventListener('dragenter', dragenterListener)
-      ele.addEventListener('dragleave', dragleaveListener)
-      ele.addEventListener('drop', dropListener)
-    }
 
 /////////////////////////
 
 
-    var makeGroup = function(event, icon){
-      selectTool(icon);
+    var makeGroup = function(toolObject){
       var newBase = meetingBase + 'Group/'
       var kb = UI.store
       var newDetailsDoc = kb.sym(newBase + 'poll.ttl');
@@ -243,63 +192,75 @@ module.exports = {
       )
     }
 
-    var makePoll = function(event, icon){
-      selectTool(icon);
+    var makePoll = function(toolObject){
 
-      var newBase = meetingBase + 'Schedule/'
-      var kb = UI.store
-      var newDetailsDoc = kb.sym(newBase + 'poll.ttl');
-      if (kb.holds(meeting, ns.meeting('schedulingPoll'))){
-        console.log("Ignored - already have a scheduling poll");
-        return // already got one
-      }
+      var newPaneOptions = {
+         useExisting: meeting, // Regard the meeting as being the schedulable event itself.
+         newInstance: meeting,
+         predicate: ns.meeting('schedulingPoll'),
+         newBase: meetingBase + 'Schedule/',
+         tabTitle: 'Schedule poll',
+         noIndexHTML: true}
 
-      var options = { useExisting: meeting, noIndexHTML: true} // Regard the meeting as being the schedulable event itself.
-
-      var div = UI.panes.byName('schedule').mintNew(options, function(ok, newInstance){
-        if (ok) {
-          var tool = makeToolNode(newInstance, ns.meeting('schedulingPoll'), 'Schedule poll', UI.icons.iconBase + 'noun_346777.svg')
-          kb.add(tool, UI.ns.meeting('view'), 'schedule', meetingDoc)
-          saveBackMeetingDoc()
-        } else {
-          complain('Error making new scheduler: ' + newInstance)
-        }
-      })
+       return makeNewPaneTool(toolObject, options)
     }
 
     //   Make Pad for notes of meeting
 
-    var makePad = function(event, icon){
-      selectTool(icon);
-      var newBase = meetingBase + 'SharedNotes/'
+    var makePad = function(toolObject){
+      var options = {
+        newBase: meetingBase + 'SharedNotes/',
+        predicate: UI.ns.meeting('sharedNotes'),
+        tabTitle: 'Shared Notes',
+        pane: UI.panes.pad }
+      return makeNewPaneTool(toolObject, options)
+    }
+
+    //   Make Sub-meeting of meeting
+
+    var makeMeeting = function(toolObject){
+
+      UI.widgets.askName(dom, kb, parameterCell,  ns.foaf('name'), UI.ns.meeting('Meeting'))
+      .then(function(name){
+        if (!name){
+          return resetTools()
+        }
+        var options = {
+          newBase: meetingBase + name + '/', //@@@ sanitize
+          predicate: UI.ns.meeting('subMeeting'),
+          tabTitle: name,
+          pane: UI.panes.meeting }
+        return makeNewPaneTool(toolObject, options)
+      }).catch(function(e){
+        complain('Error making new sub-meeting: ' + e)
+      })
+    }
+
+    var makeNewPaneTool = function(toolObject, options) {
       var kb = UI.store
-
-      if (kb.holds(meeting, ns.meeting('sharedNotes'))){
-        console.log("Ignored - already have a shared notepad");
-        return // already got one
+      if (toolObject.limit && toolObject.limit === 1 && kb.holds(meeting, options.predicate)){
+        complain("Ignored - already have " + UI.utils.label(options.predicate));
+        return
       }
-
-      var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
-      var newPadDoc = newInstance.doc()
-
-      kb.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc);
-      kb.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
-	    kb.add(newInstance, ns.dc('created'), new Date(), newPadDoc);
-	    if (me) {
-		      kb.add(newInstance, ns.dc('author'), me, newPadDoc);
-	    }
-	    kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc); // linked list empty
-      var tool = makeToolNode(newInstance, ns.meeting('sharedNotes'), 'Shared Notes', UI.icons.iconBase + 'noun_79217.svg')
-
-      saveAppDocumentLinkAndAddNewThing(tool, newInstance, ns.meeting('sharedNotes'))
+      if (!me) throw "Username nor defined for new pane"
+      var newPaneOptions = {
+        me: me,
+        newInstance: kb.sym(options.newBase + 'index.ttl#this'),
+      }
+      options.pane.mintNew(newPaneOptions).then(function(newPaneOptions){
+        var tool = makeToolNode(newPaneOptions.newInstance, options.predicate, options.tabTitle, options.pane.icon)
+        //saveAppDocumentLinkAndAddNewThing(tool, newInstance, ns.meeting('sharedNotes'))
+        saveBackMeetingDoc()
+      }).catch(function(err){
+        complain(err)
+      })
     }
 
-    var makeAgenda = function(event, icon){
-      selectTool(icon);
+    var makeAgenda = function(toolObject){
+      // selectTool(icon);
     }
 
-    var makeActions = function(event, icon){
-      selectTool(icon);
+    var makeActions = function(toolObject){
       var newBase = meetingBase + 'Actions/'
       var kb = UI.store
       if (kb.holds(meeting, ns.meeting('actions'))){
@@ -325,10 +286,9 @@ module.exports = {
       saveAppDocumentLinkAndAddNewThing(tool, newInstance, ns.meeting('actions'))
     }
 
-    var makeChat = function(event, icon){
+    var makeChat = function(toolObject){
       var newBase = meetingBase + 'Chat/'
       var kb = UI.store
-      selectTool(icon);
       if (kb.holds(meeting, ns.meeting('chat'))){
         console.log("Ignored - already have chat");
         return // already got one
@@ -342,8 +302,7 @@ module.exports = {
       saveAppDocumentLinkAndAddNewThing(tool, messageStore, ns.meeting('chat'))
     }
 
-    var makeVideoCall = function(event, icon){
-      selectTool(icon);
+    var makeVideoCall = function(toolObject){
       var kb = UI.store
       var newInstance = $rdf.sym('https://appear.in/' + UI.utils.gen_uuid())
 
@@ -357,28 +316,49 @@ module.exports = {
       saveBackMeetingDoc()
     }
 
-    var makeAttachment = function(event, icon){
-      selectTool(icon);
+    var makeAttachment = function(toolObject){
+      UI.widgets.askName(dom, kb, parameterCell,  ns.log('uri'), UI.ns.rdf('Resource'))
+      .then(function(uri){
+        if (!uri){
+          return resetTools()
+        }
+        var kb = UI.store, ns = UI.ns
+        var target = kb.sym(uri)
+        var tool = makeToolNode(target, ns.wf('attachment'), UI.utils.label(target), null)
+        kb.add(tool, ns.meeting('view'), 'iframe', meetingDoc)
+        saveBackMeetingDoc()
+      }).catch(function(e){
+        complain('Error making new sub-meeting: ' + e)
+      })
     }
 
-    var makeMeeting = function(event, icon){ // @@@ make option of continuing series
-      selectTool(icon);
+    var makeSharing = function(toolObject){
+      var kb = UI.store, ns = UI.ns
+      var target = meeting.dir()
+      var tool = makeToolNode(target, ns.wf('sharingControl'), 'Sharing', UI.icons.iconBase + 'noun_123691.svg')
+      kb.add(tool, ns.meeting('view'), 'sharing', meetingDoc)
+      saveBackMeetingDoc()
+    }
+
+
+    var makeNewMeeting = function(){ // @@@ make option of continuing series
       var appDetails = { noun: 'meeting'}
       var gotWS = function(ws, base){
-        thisPane.mint(base, {}).then(function(newInstance){
-          bottomTR.removeChild(mintUI)
-          var p = bottomTR.appendChild(dom.createElement('p'))
+        thisPane.mintNew({newBase: base}).then(function(options){
+          var newInstance = options.newInstance
+          parameterCell.removeChild(mintUI)
+          var p = parameterCell.appendChild(dom.createElement('p'))
           p.setAttribute('style', 'font-size: 140%;')
           p.innerHTML =
-            "Your <a target='newMeeting' href='" + newInstance.uri + "'><b>new meeting</b></a> is ready to be set up. " +
-            "<br/><br/><a target='newMeeting' href='" + newInstance.uri + "'>Go to your new meeting.</a>"
+            "Your <a target='_blank' href='" + newInstance.uri + "'><b>new meeting</b></a> is ready to be set up. " +
+            "<br/><br/><a target='_blank' href='" + newInstance.uri + "'>Go to your new meeting.</a>"
         }).catch(function(err){
-          bottomTR.removeChild(mintUI)
-          bottomTR.appendChild(UI.widgets.errorMessageBlock(dom, err))
+          parameterCell.removeChild(mintUI)
+          parameterCell.appendChild(UI.widgets.errorMessageBlock(dom, err))
         })
       }
       var mintUI = UI.widgets.selectWorkspace(dom, appDetails, gotWS)
-      bottomTR.appendChild(mintUI)
+      parameterCell.appendChild(mintUI)
     }
 
     ///////////////////////////////////
@@ -391,12 +371,15 @@ module.exports = {
       { icon: 'noun_346319.svg', maker: makeChat, limit:1, hint: 'Add a chat channel for the meeting'},
       { icon: 'noun_17020.svg', maker: makeActions, limit: 1, hint: 'Add a list of action items'}, // When meet THIS or NEXT time
       { icon: 'noun_260227.svg', maker: makeVideoCall, limit: 1, hint: 'Add a video call for the meeting'},
-      { icon: 'noun_25830.svg', maker: makeAttachment, hint: 'Attach meeting materials', disabled: true},
-      { icon: 'noun_66617.svg', maker: makeMeeting, hint: 'Make a new separate meeting', disabled: false}
+      { icon: 'noun_25830.svg', maker: makeAttachment, hint: 'Attach meeting materials', disabled: false},
+      { icon: 'noun_123691.svg', maker: makeSharing, limit: 1, hint: 'Control Sharing', disabled: false},
+      { icon: 'noun_66617.svg', maker: makeMeeting, hint: 'Make a sub meeting', disabled: false}
     ] // 'noun_66617.svg'
 
     var iconStyle = 'padding: 1em; width: 3em; height: 3em;'
-    var star = bottomTR.appendChild(dom.createElement('img'))
+    var iconCell = toolBar.appendChild(dom.createElement('td'))
+    var parameterCell = toolBar.appendChild(dom.createElement('td'))
+    var star = iconCell.appendChild(dom.createElement('img'))
     var visible = false; // the inividual tools tools
     star.setAttribute('src', UI.icons.iconBase + 'noun_19460_green.svg') //  noun_272948.svg
     star.setAttribute('style', iconStyle + 'opacity: 50%;')
@@ -424,7 +407,7 @@ module.exports = {
               tabulator.preferences.set('me', webid);
               console.log("(Logged in as "+ webid+")")
               me = kb.sym(webid);
-              bottomTR.removeChild(loginOutButton)
+              parameterCell.removeChild(loginOutButton)
               // loginOutButton.setAttribute('',iconStyle) // make it match the icons
               star.addEventListener('click', selectNewTool)
               star.setAttribute('style', iconStyle)
@@ -435,7 +418,7 @@ module.exports = {
           }
       });
       loginOutButton.setAttribute('style', 'margin: 0.5em 1em;');
-      bottomTR.appendChild(loginOutButton);
+      parameterCell.appendChild(loginOutButton);
 
     })
 
@@ -444,17 +427,17 @@ module.exports = {
     var icon, iconArray = []
     for (var i=0; i< toolIcons.length; i++){
       var foo = function() {
-        var tool = toolIcons[i]
-        var icon = bottomTR.appendChild(dom.createElement('img'))
-        icon.setAttribute('src', UI.icons.iconBase + tool.icon)
-        icon.setAttribute('title', tool.hint)
+        var toolObject = toolIcons[i]
+        var icon = iconCell.appendChild(dom.createElement('img'))
+        icon.setAttribute('src', UI.icons.iconBase + toolObject.icon)
         icon.setAttribute('style', iconStyle + "display: none;")
         iconArray.push(icon)
-        icon.tool = tool
-        var maker = toolIcons[i].maker
-        if (!tool.disabled){
+        icon.tool = toolObject
+        var maker = toolObject.maker
+        if (!toolObject.disabled){
           icon.addEventListener('click', function(e){
-              maker(e, icon)
+              selectTool(icon);
+              maker(toolObject)
           })
         }
       }
@@ -492,7 +475,7 @@ module.exports = {
         if (icon){
           var img = div.appendChild(dom.createElement('img'))
           img.setAttribute('src', icon.uri)
-          img.setAttribute('style', 'max-width: 3em; max-height: 3em;') // @
+          img.setAttribute('style', 'max-width: 1.5em; max-height: 1.5em;') // @
           img.setAttribute('title', label)
         } else {
           div.textContent = label
@@ -578,8 +561,24 @@ module.exports = {
           var options = {}
           UI.pad.manageParticipation(dom, containerDiv, meetingDoc, meeting, me, options)
 
+          var imageStyle = 'height: 2em; width: 2em; margin:0.5em;'
+          detailsBottom = containerDiv.appendChild(dom.createElement('div'))
+          var spawn = detailsBottom.appendChild(dom.createElement('img'))
+          spawn.setAttribute('src', UI.icons.iconBase + 'noun_145978.svg')
+          spawn.setAttribute('title', 'Make a fresh new meeting')
+          spawn.addEventListener('click', makeNewMeeting)
+          spawn.setAttribute('style', imageStyle)
+
+          var forka = detailsBottom.appendChild(dom.createElement('a'))
+          forka.setAttribute('href', 'https://github.com/linkeddata/solid-app-set') // @@ Move when code moves
+          forka.setAttribute('target', '_blank') // @@ Move when code moves
+          var fork = forka.appendChild(dom.createElement('img'))
+          fork.setAttribute('src', UI.icons.iconBase + 'noun_368567.svg')
+          fork.setAttribute('title', 'Fork me on github')
+          fork.setAttribute('style', imageStyle + 'opacity: 50%;')
         })
       }
+
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
         var target = kb.any(subject, ns.meeting('target'))
         if (target.sameTerm(meeting) && !kb.any(subject, ns.meeting('view'))){ // self reference? force details form
@@ -620,9 +619,9 @@ module.exports = {
     var tabs = mainTR.appendChild(UI.tabs.tabWidget(options));
 
     UI.aclControl.preventBrowserDropEvents(dom)
-    addTargetListeners(tabs.tabContainer)
-    addTargetListeners(bottomTR)
 
+    UI.widgets.makeDropTarget(tabs.tabContainer, droppedURIHandler)
+    UI.widgets.makeDropTarget(iconCell, droppedURIHandler)
 
     return div
   }

@@ -66,6 +66,10 @@ module.exports = {
       }
       else console.log('Sorry, failed to save your change:\n' + body, 'background-color: pink;')
     }
+    var complain = function(message){
+      console.warn(message)
+      div.appendChild(UI.widgets.errorMessageBlock(dom, message))
+    }
 
     var getOption = function (tracker, option) { // eg 'allowSubIssues'
       var opt = kb.any(tracker, ns.ui(option))
@@ -431,7 +435,6 @@ module.exports = {
             donePredicate(p) // Check that one off
           }
         })
-
       }
 
       //   Comment/discussion area
@@ -453,6 +456,11 @@ module.exports = {
         }
       })
       donePredicate(ns.wf('message'))
+
+      // Draggable attachment list
+      var a = UI.widgets.attachmentList(dom, subject, div)
+      donePredicate(ns.wf('attachment'))
+
 
       // Remaining properties
       var plist = kb.statementsMatching(subject)

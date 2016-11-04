@@ -216,14 +216,6 @@ module.exports = {
       return table
     }
 
-    //  Work out what type - first load ontology
-    /*
-    kb.fetcher.load([UI.ns.qu().doc()]).then(function(xhrs){
-
-    }).catch(function(e){
-      complain('Error loading ontology etc: ' + e)
-    })
-    */
 
     //              Render a single transaction
 
@@ -366,35 +358,36 @@ module.exports = {
                 return is}},
               store, complainIfBad))
 
-        })
+
+          div.appendChild(dom.createElement('br'))
+
+          // Add in simple comments about the transaction
+
+          var outliner = UI.panes.getOutliner(dom)
+
+          donePredicate(ns.rdfs('comment')) // Done above
+
+          var a = UI.widgets.attachmentList(dom, subject, div)
+          donePredicate(ns.wf('attachment'))
+
+          div.appendChild(dom.createElement('tr'))
+            .setAttribute('style', 'height: 1em') // spacer
+
+          // Remaining properties
+          outliner.appendPropertyTRs(div, plist, false,
+            function (pred, inverse) {
+              return !(pred.uri in predicateURIsDone)
+            })
+          outliner.appendPropertyTRs(div, qlist, true,
+            function (pred, inverse) {
+              return !(pred.uri in predicateURIsDone)
+            })
+
+
+
+        }) // fetch
       }
 
-      div.appendChild(dom.createElement('br'))
-
-      // Add in simple comments about the transaction
-
-      var outliner = UI.panes.getOutliner(dom)
-
-      donePredicate(ns.rdfs('comment')) // Done above
-      /*            outliner.appendPropertyTRs(div, plist, false,
-                      function(pred, inverse) {
-                          if (!inverse && pred.uri ==
-                              "http://www.w3.org/2000/01/rdf-schema#comment") return true
-                          return false
-                      })
-      */
-      div.appendChild(dom.createElement('tr'))
-        .setAttribute('style', 'height: 1em') // spacer
-
-      // Remaining properties
-      outliner.appendPropertyTRs(div, plist, false,
-        function (pred, inverse) {
-          return !(pred.uri in predicateURIsDone)
-        })
-      outliner.appendPropertyTRs(div, qlist, true,
-        function (pred, inverse) {
-          return !(pred.uri in predicateURIsDone)
-        })
 
         // end of render tranasaction instance
 
@@ -527,6 +520,7 @@ module.exports = {
           tab.setAttribute('style', 'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;')
           div.appendChild(tab)
 
+          UI.widgets.attachmentList(dom, subject, div)
 
 
         }).catch(function(e){complain('Error loading transactions: ' + e)})
@@ -534,6 +528,8 @@ module.exports = {
       }
 
       calculations()
+
+
 
     } // if
 

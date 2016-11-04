@@ -1662,7 +1662,6 @@ if (statement){
 
       var subject = kb.canon(subject1)
       var requTerm = subject.uri?kb.sym(UI.rdf.uri.docpart(subject.uri)):subject
-      var subj_uri = subject.uri;  // || subject.value;  // Normally .uri but in internals pane, for the URI of something, .value
       var already = !!already
 
       function render() {
@@ -1718,7 +1717,6 @@ if (statement){
 
           var relevant = function() {  // Is the loading of this URI relevam to the display of subject?
               if (!cursubj.uri) return true;  // bnode should expand()
-              //doc = cursubj.uri?kb.sym(UI.rdf.uri.docpart(cursubj.uri)):cursubj
               var as = kb.uris(cursubj)
               if (!as) return false;
               for (var i=0; i<as.length; i++) {  // canon'l uri or any alias
@@ -1739,28 +1737,15 @@ if (statement){
           return true
       }
       // Body of outline_expand
+
+      if (options.solo){
+        dom.title = UI.utils.label(subject)
+      }
       UI.log.debug("outline_expand: dereferencing "+subject)
       var status = dom.createElement("span")
       p.appendChild(status)
       sf.addCallback('done', expand) // @@@@@@@ This can really mess up existing work
       sf.addCallback('fail', expand)  // Need to do if there s one a gentle resync of page with store
-      /*
-      sf.addCallback('request', function (u) {
-                         if (u != subj_uri) { return true }
-                         status.textContent=" requested..."
-                         return false
-                     })
-      sf.addCallback('recv', function (u) {
-                         if (u != subj_uri) { return true }
-                         status.textContent=" receiving..."
-                         return false
-                     })
-      sf.addCallback('load', function (u) {
-                         if (u != subj_uri) { return true }
-                         status.textContent=" parsing..."
-                         return false
-                     })
-      */ //these are not working as we have a pre-render();
 
       var returnConditions=[]; //this is quite a general way to do cut and paste programming
                                //I might make a class for this
@@ -1778,22 +1763,21 @@ if (statement){
               return;
           }
       }
-      // dump('outline_expand 1773 subj_uri ' + subj_uri + ' type ' + typeof subj_uri + '\n');
-      if (subj_uri && !immediate) {
-          var doc = UI.rdf.uri.docpart(subj_uri);
-          //dump('@@@@ Fetching before expanding ' + subj_uri + ' type ' + typeof subj_uri + '\n');
-          if (subject.termType == 'BlankNode') alert('@@@@@ bnode ' + subj_uri)
+      if (subject.uri && !immediate) {
           // Wait till at least the main URI is loaded before expanding:
-          sf.nowOrWhenFetched(doc, undefined, function(ok, body) {
+          sf.nowOrWhenFetched(subject.doc(), undefined, function(ok, body) {
               if (ok) {
                   sf.lookUpThing(subject);
                   render()  // inital open, or else full if re-open
-                  UI.log.debug('outline 1821')
+                  if (options.solo){ // Update window title with new information
+                    dom.title = UI.utils.label(subject)
+                  }
               } else {
                   var message = dom.createElement("pre");
                   message.textContent = body;
                   message.setAttribute('style', 'background-color: #fee;');
-                  p.appendChild(message);
+                  message.textContent = 'Unable to fetch ' + subject.doc() + ': '  + message;
+                  p.appendChild(message)
               }
           });
       } else {
@@ -1855,7 +1839,7 @@ if (statement){
           if (level.tagName == "TD") outer = level
       } //find outermost td
       UI.utils.emptyNode(outer).appendChild(propertyTable(subject));
-      dom.title = UI.utils.label("Tabulator: "+subject);
+      dom.title = UI.utils.label(subject);
       outer.setAttribute('about', subject.toNT());
   } //outline_refocus
 
@@ -1926,9 +1910,11 @@ if (statement){
 
       var td = GotoSubject_default();
       if (!td) td = GotoSubject_default(); //the first tr is required
+
+      if (solo) dom.title = UI.utils.label(subject);  // "Tabulator: "+  No need to advertize
+
       if (expand) {
           outline_expand(td, subject, { 'pane': pane, solo: solo});
-          dom.title = UI.utils.label(subject);  // "Tabulator: "+  No need to advertize
           tr=td.parentNode;
           UI.utils.getEyeFocus(tr,false,undefined,window);//instantly: false
       }

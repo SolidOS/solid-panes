@@ -413,19 +413,17 @@ module.exports = {
             callback(false, 'Error loading people index!' + gix.uri + ': ' + message + '\n')
           }
         })
-
       }
 
       // Form to get the name of a new thing before we create it
-      var getNameForm = function (dom, kb, classLabel, selectedGroups, gotNameCallback) {
+      var getNameForm = function (dom, kb, classLabel, gotNameCallback) {
         var form = dom.createElement('div') // form is broken as HTML behaviour can resurface on js error
 
         UI.store.fetcher.removeCallback('done', 'expand'); // @@ experimental -- does this kill the re-paint? no
         UI.store.fetcher.removeCallback('fail', 'expand'); // @@ ??
 
         // classLabel = UI.utils.label(ns.vcard('Individual'))
-        form.innerHTML = '<h2>Add new ' +
-          classLabel + '</h2><p>name of new ' + classLabel + ':</p>'
+        form.innerHTML = '<p>Name of new ' + classLabel + ':</p>'
         var namefield = dom.createElement('input')
         namefield.setAttribute('type', 'text')
         namefield.setAttribute('size', '100')
@@ -435,7 +433,7 @@ module.exports = {
         var gotName = function () {
           namefield.setAttribute('class', 'pendingedit')
           namefield.disabled = true
-          gotNameCallback(true, book, namefield.value, selectedGroups)
+          gotNameCallback(true, namefield.value)
         }
 
         namefield.addEventListener('keyup', function (e) {
@@ -982,10 +980,10 @@ module.exports = {
           // Just a heads up, actually used later.
           })
           // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
-          cardMain.appendChild(getNameForm(dom, kb, 'Contact', selectedGroups,
-            function (ok, subject, name, selectedGroups) {
+          cardMain.appendChild(getNameForm(dom, kb, 'Contact',
+            function (ok, name) {
               if (!ok) return // cancelled by user
-              createNewContact(subject, name, selectedGroups, function (success, body) {
+              createNewContact(book, name, selectedGroups, function (success, body) {
                 if (!success) {
                   console.log("Error: can't save new contact:" + body)
                 } else {
@@ -1012,9 +1010,9 @@ module.exports = {
               dump('Error: Group index has NOT been loaded' + message + '\n')
             }
           })
-          // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
-          cardMain.appendChild(getNameForm(dom, kb, 'Group', selectedGroups,
-            function (ok, book, name, selectedGroups) {
+
+          cardMain.appendChild(getNameForm(dom, kb, 'Group',
+            function (ok, name) {
               if (!ok) return // cancelled by user
               saveNewGroup(book, name, function (success, body) {
                 if (!success) {

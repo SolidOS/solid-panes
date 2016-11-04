@@ -49,14 +49,30 @@ module.exports = {
 
     render: function(subject, myDocument) {
         var div = myDocument.createElement("div")
+        var kb = UI.store
 
         //  @@ When we can, use CSP to turn off scripts within the iframe
         div.setAttribute('class', 'docView')
         var iframe = myDocument.createElement("IFRAME")
         iframe.setAttribute('src', subject.uri)    // allow-same-origin
         iframe.setAttribute('class', 'doc')
-        iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
+
+        var cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+        var ct = cts? cts[0] : null
+        if (ct){
+          console.log('humanReadablePane: c-t:' + ct)
+        } else {
+          console.log('humanReadablePane: unknown content-type?')
+        }
+
+        // @@ NOte beflow - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
         // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
+        // You can;'t have any sandbox and allow plugins.
+        // We could sandbox only HTML files I suppose.
+        // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
+
+        // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
+
         iframe.setAttribute('style', 'resize = both; height: 120em; width:80em;')
 //        iframe.setAttribute('height', '480')
 //        iframe.setAttribute('width', '640')

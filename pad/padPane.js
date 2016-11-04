@@ -21,6 +21,33 @@ module.exports = {
     return null; // No under other circumstances
   },
 
+  mintNew: function(newPaneOptions){
+    var kb = UI.store, ns = UI.ns, updater = kb.updater
+    var newInstance = newPaneOptions.newInstance | kb.sym(newPaneOptions.newBase.uri + 'index.ttl#this')
+    //var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
+    var newPadDoc = newInstance.doc()
+
+    kb.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc);
+    kb.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
+    kb.add(newInstance, ns.dc('created'), new Date(), newPadDoc);
+    if (newPaneOptions.me) {
+        kb.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc);
+    }
+    kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc); // linked list empty
+    return new Promise(function(resolve, reject){
+      updater.put(
+        newPadDoc,
+        kb.statementsMatching(undefined, undefined, undefined, newPadDoc),
+        'text/turtle',
+        function(uri2, ok, message) {
+          if (ok) {
+              resolve(newInstance)
+          } else {
+              reject(new Error("FAILED to save new tool at: "+ thing +' : ' + message));
+          };
+      })
+    })
+  },
   // and follow instructions there
   render: function(subject, dom, paneOptions) {
 

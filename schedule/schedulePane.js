@@ -21,247 +21,244 @@ module.exports = {
 
 //////////////////////// Mint a new Schedule poll
 
-  mintNew: function (options, callbackOkMessage) {
+  mintNew: function (options) {
 
-    var ns = UI.ns
-    var newBase = options.newBase
-    var thisInstance = options.useExisting
+    return new Promise(function(resolve, reject){
 
-    var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-    var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+      var ns = UI.ns
+      var newBase = options.newBase
+      var thisInstance = options.useExisting
 
-    var complainIfBad = function(ok, body){
-      if (ok) return;
-      console.log("Error in Schedule Pane: Error constructing new scheduler: " + body)
-    }
+      var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
+      var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
+      var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
+      var FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
 
-    var webOperation = function (method, uri, options, callback) {
-      var xhr = $rdf.Util.XMLHTTPFactory()
-      uri = UI.store.fetcher.proxyIfNecessary(uri)
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4) {
-          var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-          callback(uri, success, xhr.responseText, xhr)
-        }
-      }
-      xhr.open(method, uri, true)
-      if (options.contentType) {
-        xhr.setRequestHeader('Content-type', options.contentType)
-      }
-      xhr.send(options.data ? options.data : undefined)
-    }
-
-    var webCopy = function (here, there, content_type, callback) {
-      webOperation('GET', here, {}, function (uri, success, body, xhr) {
-        if (success) {
-          webOperation('PUT', there, { data: xhr.responseText, contentType: content_type}, callback)
-        } else {
-          callback(uri, success, '(on read) ' + body, xhr)
-        }
-      })
-    }
-
-    // ////////////////////// Accesss control
-
-    // Two variations of ACL for this app, public read and public read/write
-    // In all cases owner has read write control
-
-    var genACLtext = function (docURI, aclURI, allWrite) {
-      var g = $rdf.graph(), auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
-      var a = g.sym(aclURI + '#a1'), acl = g.sym(aclURI), doc = g.sym(docURI)
-      g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
-      g.add(a, auth('accessTo'), doc, acl)
-      g.add(a, auth('agent'), me, acl)
-      g.add(a, auth('mode'), auth('Read'), acl)
-      g.add(a, auth('mode'), auth('Write'), acl)
-      g.add(a, auth('mode'), auth('Control'), acl)
-
-      a = g.sym(aclURI + '#a2')
-      g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
-      g.add(a, auth('accessTo'), doc, acl)
-      g.add(a, auth('agentClass'), ns.foaf('Agent'), acl)
-      g.add(a, auth('mode'), auth('Read'), acl)
-      if (allWrite) {
-        g.add(a, auth('mode'), auth('Write'), acl)
-      }
-      return $rdf.serialize(acl, g, aclURI, 'text/turtle')
-    }
-
-/*
-    var setACL3 = function (docURI, allWrite, callback) {
-      var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-      return UI.acl.setACL(docURI, aclText, callback)
-    }
-    */
-
-    var setACL2 = function (docURI, allWrite, callback) {
-     var aclDoc = kb.any(kb.sym(docURI),
-       kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
-     if (aclDoc) { // Great we already know where it is
-       var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-       webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
-     } else {
-       fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
-         if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
-         var aclDoc = kb.any(kb.sym(docURI),
-           kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
-         if (!aclDoc) {
-           // complainIfBad(false, "No Link rel=ACL header for " + docURI)
-           callback(false, 'No Link rel=ACL header for ' + docURI)
-         } else {
-           var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-           webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
-         }
-       })
-     }
-   }
-
-    // Body of mintNew
-
-    var kb = UI.store
-    var fetcher = kb.fetcher
-    var updater = kb.updater
-
-    var me = tabulator.preferences.get('me')
-    me = me ? kb.sym(me) : null
-    if (!me) {
-      console.log('MUST BE LOGGED IN')
-      alert('NOT LOGGED IN')
-      return
-    }
-
-    var base = thisInstance.dir().uri
-    var newDetailsDoc, newInstance, newResultsDoc, newIndexDoc
-
-    if (options.useExisting){
-      newInstance = options.useExisting
-      newBase = thisInstance.dir().uri
-      newDetailsDoc = newInstance.doc()
-      newIndexDoc = null
-      if (options.newBase) throw "mint new scheduler: Illegal - have both new base and existing event"
-    } else {
-      newDetailsDoc = kb.sym(newBase + 'details.ttl')
-      newIndexDoc = kb.sym(newBase + 'index.html')
-      newInstance = kb.sym(newDetailsDoc.uri + '#event')
-    }
-    var newResultsDoc = kb.sym(newBase + 'results.ttl')
-
-
-    var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html'}
-
-    //   { local: 'forms.ttl', contentType: 'text/turtle'}
-    //            { local: 'schedule.js', contentType: 'application/javascript'} ,
-    //            { local: 'mashlib.js', contentType: 'application/javascript'} , //  @@ centrialize after testing?
-    ]
-
-
-    var agenda = []
-
-    var f, fi, fn; //   @@ This needs some form of visible progress bar
-    for (f = 0; f < toBeCopied.length; f++) {
-      var item = toBeCopied[f]
-      var fun = function copyItem (item) {
-        agenda.push(function () {
-          var newURI = newBase + item.local
-          console.log('Copying ' + base + item.local + ' to ' + newURI)
-          fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
-          .then(function(xhr){
-
-            xhr.resource = kb.sym(newURI);
-            kb.fetcher.parseLinkHeader(xhr, kb.bnode()); // Dont save the whole headers, just the links
-
-            var setThatACL = function () {
-              setACL2(newURI, false, function (ok, message) {
-                if (!ok) {
-                  complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
-                  console.log('FAILED to set ACL ' + newURI + ' : ' + message)
-                } else {
-                  agenda.shift()() // beware too much nesting
-                }
-              })
-            }
-            if (!me) {
-              console.log('Waiting to find out id user users to access ' + xhr.resource)
-              UI.widgets.checkUser(xhr.resource, function (webid) {
-                me = kb.sym(webid)
-                console.log('Got user id: ' + me)
-                setThatACL()
-              })
-            } else {
-              setThatACL()
-            }
-          })
-          .catch(function(e){
-            complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + e)
-            console.log('FAILED to copy ' + base + item.local + ' : ' + e)
-          });
-        }) // agenda.push
-      }
-      fun(item)
-    }
-
-    agenda.push(function createDetailsFile () {
-      kb.add(newInstance, ns.rdf('type'), SCHED('SchedulableEvent'), newDetailsDoc)
-      if (me) {
-        kb.add(newInstance, DC('author'), me, newDetailsDoc)
+      var complainIfBad = function(ok, body){
+        if (ok) return;
+        console.log("Error in Schedule Pane: Error constructing new scheduler: " + body)
+        reject(new Error(body))
       }
 
-      kb.add(newInstance, DC('created'), new Date(), newDetailsDoc)
-      kb.add(newInstance, SCHED('resultsDocument'), newDetailsDoc)
-
-      updater.put(
-        newDetailsDoc,
-        kb.statementsMatching(undefined, undefined, undefined, newDetailsDoc),
-        'text/turtle',
-        function (uri2, ok, message) {
-          if (ok) {
-            agenda.shift()()
-          } else {
-            complainIfBad(ok, 'FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
-            console.log('FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
+      var webOperation = function (method, uri, options, callback) {
+        var xhr = $rdf.Util.XMLHTTPFactory()
+        uri = UI.store.fetcher.proxyIfNecessary(uri)
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState == 4) {
+            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
+            callback(uri, success, xhr.responseText, xhr)
           }
         }
-      )
-    })
+        xhr.open(method, uri, true)
+        if (options.contentType) {
+          xhr.setRequestHeader('Content-type', options.contentType)
+        }
+        xhr.send(options.data ? options.data : undefined)
+      }
 
-    agenda.push(function () {
-      webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle'}, function (ok, body) {
-        complainIfBad(ok, 'Failed to initialize empty results file: ' + body)
-        if (ok) agenda.shift()()
-      })
-    })
+      var webCopy = function (here, there, content_type, callback) {
+        webOperation('GET', here, {}, function (uri, success, body, xhr) {
+          if (success) {
+            webOperation('PUT', there, { data: xhr.responseText, contentType: content_type}, callback)
+          } else {
+            callback(uri, success, '(on read) ' + body, xhr)
+          }
+        })
+      }
 
-    agenda.push(function () {
-      setACL2(newResultsDoc.uri, true, function (ok, body) {
-        complainIfBad(ok, 'Failed to set Read-Write ACL on results file: ' + body)
-        if (ok) agenda.shift()()
-      })
-    })
+      // ////////////////////// Accesss control
 
-    agenda.push(function () {
-      setACL2(newDetailsDoc.uri, false, function (ok, body) {
-        complainIfBad(ok, 'Failed to set read ACL on configuration file: ' + body)
-        if (ok) agenda.shift()()
-      })
-    })
+      // Two variations of ACL for this app, public read and public read/write
+      // In all cases owner has read write control
 
-    agenda.push(function () { // give the user links to the new app
-      console.log("Finished minting new scheduler")
-      callbackOkMessage(true, newInstance)
-      /*
-      var p = div.appendChild(dom.createElement('p'))
-      p.setAttribute('style', 'font-size: 140%;')
-      p.innerHTML =
-        "Your <a href='" + newIndexDoc.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
-        "<br/><br/><a href='" + newIndexDoc.uri + "'>Say when you what days work for you.</a>"
+      var genACLtext = function (docURI, aclURI, allWrite) {
+        var g = $rdf.graph(), auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
+        var a = g.sym(aclURI + '#a1'), acl = g.sym(aclURI), doc = g.sym(docURI)
+        g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
+        g.add(a, auth('accessTo'), doc, acl)
+        g.add(a, auth('agent'), me, acl)
+        g.add(a, auth('mode'), auth('Read'), acl)
+        g.add(a, auth('mode'), auth('Write'), acl)
+        g.add(a, auth('mode'), auth('Control'), acl)
+
+        a = g.sym(aclURI + '#a2')
+        g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
+        g.add(a, auth('accessTo'), doc, acl)
+        g.add(a, auth('agentClass'), ns.foaf('Agent'), acl)
+        g.add(a, auth('mode'), auth('Read'), acl)
+        if (allWrite) {
+          g.add(a, auth('mode'), auth('Write'), acl)
+        }
+        return $rdf.serialize(acl, g, aclURI, 'text/turtle')
+      }
+
+  /*
+      var setACL3 = function (docURI, allWrite, callback) {
+        var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+        return UI.acl.setACL(docURI, aclText, callback)
+      }
       */
-    })
 
-    agenda.shift()()
-  // Created new data files.
-  },
+      var setACL2 = function (docURI, allWrite, callback) {
+       var aclDoc = kb.any(kb.sym(docURI),
+         kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
+       if (aclDoc) { // Great we already know where it is
+         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+         webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
+       } else {
+         fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
+           if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
+           var aclDoc = kb.any(kb.sym(docURI),
+             kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
+           if (!aclDoc) {
+             // complainIfBad(false, "No Link rel=ACL header for " + docURI)
+             callback(false, 'No Link rel=ACL header for ' + docURI)
+           } else {
+             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+             webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
+           }
+         })
+       }
+     }
+
+      // Body of mintNew
+
+      var kb = UI.store
+      var fetcher = kb.fetcher
+      var updater = kb.updater
+
+      var me = tabulator.preferences.get('me')
+      me = me ? kb.sym(me) : null
+      if (!me) {
+        console.log('MUST BE LOGGED IN')
+        alert('NOT LOGGED IN')
+        return
+      }
+
+      var base = thisInstance.dir().uri
+      var newDetailsDoc, newInstance, newResultsDoc, newIndexDoc
+
+      if (options.useExisting){
+        newInstance = options.useExisting
+        newBase = thisInstance.dir().uri
+        newDetailsDoc = newInstance.doc()
+        newIndexDoc = null
+        if (options.newBase) throw "mint new scheduler: Illegal - have both new base and existing event"
+      } else {
+        newDetailsDoc = kb.sym(newBase + 'details.ttl')
+        newIndexDoc = kb.sym(newBase + 'index.html')
+        newInstance = kb.sym(newDetailsDoc.uri + '#event')
+      }
+      var newResultsDoc = kb.sym(newBase + 'results.ttl')
+
+
+      var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html'}
+
+      //   { local: 'forms.ttl', contentType: 'text/turtle'}
+      //            { local: 'schedule.js', contentType: 'application/javascript'} ,
+      //            { local: 'mashlib.js', contentType: 'application/javascript'} , //  @@ centrialize after testing?
+      ]
+
+
+      var agenda = []
+
+      var f, fi, fn; //   @@ This needs some form of visible progress bar
+      for (f = 0; f < toBeCopied.length; f++) {
+        var item = toBeCopied[f]
+        var fun = function copyItem (item) {
+          agenda.push(function () {
+            var newURI = newBase + item.local
+            console.log('Copying ' + base + item.local + ' to ' + newURI)
+            fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
+            .then(function(xhr){
+
+              xhr.resource = kb.sym(newURI);
+              kb.fetcher.parseLinkHeader(xhr, kb.bnode()); // Dont save the whole headers, just the links
+
+              var setThatACL = function () {
+                setACL2(newURI, false, function (ok, message) {
+                  if (!ok) {
+                    complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
+                    console.log('FAILED to set ACL ' + newURI + ' : ' + message)
+                  } else {
+                    agenda.shift()() // beware too much nesting
+                  }
+                })
+              }
+              if (!me) {
+                console.log('Waiting to find out id user users to access ' + xhr.resource)
+                UI.widgets.checkUser(xhr.resource, function (webid) {
+                  me = kb.sym(webid)
+                  console.log('Got user id: ' + me)
+                  setThatACL()
+                })
+              } else {
+                setThatACL()
+              }
+            })
+            .catch(function(e){
+              complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + e)
+              console.log('FAILED to copy ' + base + item.local + ' : ' + e)
+            });
+          }) // agenda.push
+        }
+        fun(item)
+      }
+
+      agenda.push(function createDetailsFile () {
+        kb.add(newInstance, ns.rdf('type'), SCHED('SchedulableEvent'), newDetailsDoc)
+        if (me) {
+          kb.add(newInstance, DC('author'), me, newDetailsDoc)
+        }
+
+        kb.add(newInstance, DC('created'), new Date(), newDetailsDoc)
+        kb.add(newInstance, SCHED('resultsDocument'), newDetailsDoc)
+
+        updater.put(
+          newDetailsDoc,
+          kb.statementsMatching(undefined, undefined, undefined, newDetailsDoc),
+          'text/turtle',
+          function (uri2, ok, message) {
+            if (ok) {
+              agenda.shift()()
+            } else {
+              complainIfBad(ok, 'FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
+              console.log('FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
+            }
+          }
+        )
+      })
+
+      agenda.push(function () {
+        webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle'}, function (ok, body) {
+          complainIfBad(ok, 'Failed to initialize empty results file: ' + body)
+          if (ok) agenda.shift()()
+        })
+      })
+
+      agenda.push(function () {
+        setACL2(newResultsDoc.uri, true, function (ok, body) {
+          complainIfBad(ok, 'Failed to set Read-Write ACL on results file: ' + body)
+          if (ok) agenda.shift()()
+        })
+      })
+
+      agenda.push(function () {
+        setACL2(newDetailsDoc.uri, false, function (ok, body) {
+          complainIfBad(ok, 'Failed to set read ACL on configuration file: ' + body)
+          if (ok) agenda.shift()()
+        })
+      })
+
+      agenda.push(function () { // give the user links to the new app
+        console.log("Finished minting new scheduler")
+        resolve(options)
+      })
+
+      agenda.shift()()
+    // Created new data files.
+    }) // promise
+  }, // mintNew
 
   /////////////////////////////////////// Render one meeting schedule poll
 
@@ -371,17 +368,15 @@ module.exports = {
 
     var initializeNewInstanceAtBase = function (thisInstance, newBase) {
       var options = {thisInstance: thisInstance, newBase: newBase}
-      this.mintNew(options, function(ok, result){
-        if (ok){
-          var p = div.appendChild(dom.createElement('p'))
-          p.setAttribute('style', 'font-size: 140%;')
-          p.innerHTML =
-            "Your <a href='" + result.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
-            "<br/><br/><a href='" + result.uri + "'>Say when you what days work for you.</a>"
-        }else {
-          complainIfBad(ok, result)
-        }
-      })
+      this.mintNew(options).then(function(options){
+        var p = div.appendChild(dom.createElement('p'))
+        p.setAttribute('style', 'font-size: 140%;')
+        p.innerHTML =
+          "Your <a href='" + result.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
+          "<br/><br/><a href='" + result.uri + "'>Say when you what days work for you.</a>"
+      }).catch(function(error){
+        complainIfBad(false, result)
+      });
     }
 
 
