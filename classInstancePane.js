@@ -4,11 +4,46 @@
 */
 
 var UI = require('solid-ui')
+//var Solid = require('solid-client')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
 
   name: 'classInstance',
+
+  // Create a new folder in a Solid system,
+  //
+  mintNew: function(newPaneOptions){
+    var kb = UI.store, ns = UI.ns, updater = kb.updater
+    var newInstance = newPaneOptions.newInstance
+    var u = newInstance.uri
+    if (!u.endsWith('/')) throw new Error('URI of new folder must end in "/" :' + u)
+    u = u.slice(0,-1) // chop off trailer
+
+    var parentURI = newInstance.dir().uri // ends in /
+    var slash = u.lastIndexOf('/')
+    var folderName = u.slice(slash + 1)
+
+    // @@@@ kludge until we can get the solid-client version working
+    return new Promise(function(resolve, reject){
+      kb.fetcher.webOperation('PUT', newInstance.uri + '.dummy').then(function(xhr){
+        console.log('New folder created: ' + newInstance.uri)
+        resolve(newPaneOptions)
+      }).catch(function(e){
+        reject(e)
+      })
+
+    }) // Promise
+
+    return new Promise(function(resolve, reject){
+      UI.solid.web.createContainer(parentURI, folderName).then(function(xhr){
+        console.log('New container created: ' + newInstance.uri)
+        resolve(newPaneOptions)
+      }).catch(function(e){
+        reject(e)
+      })
+    })
+  },
 
   label: function (subject) {
     var n = UI.store.each(

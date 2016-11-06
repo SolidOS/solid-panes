@@ -37,8 +37,9 @@ module.exports = {
     return null // No under other circumstances
   },
 
-  mintNew: function (newBase, context) {
+  mintNew: function (context) {
     var dom = context.dom, me = context.me, div = context.div
+    var newBase = context.newBase
     var appInstanceNoun = 'address book'
 
     var complain = function (message) {
