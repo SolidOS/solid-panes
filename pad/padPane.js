@@ -2,6 +2,7 @@
 **
 */
 var UI = require('solid-ui')
+var ns = UI.ns
 
 module.exports = {
 
@@ -13,7 +14,6 @@ module.exports = {
   // Does the subject deserve an pad pane?
   label: function(subject) {
     var kb = UI.store;
-    var ns = UI.ns;
     var t = kb.findTypeURIs(subject);
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
       return "pad";
@@ -21,9 +21,10 @@ module.exports = {
     return null; // No under other circumstances
   },
 
+  mintClass: ns.pad('Notepad'),
   mintNew: function(newPaneOptions){
     var kb = UI.store, ns = UI.ns, updater = kb.updater
-    var newInstance = newPaneOptions.newInstance | kb.sym(newPaneOptions.newBase.uri + 'index.ttl#this')
+    var newInstance = newPaneOptions.newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase + 'index.ttl#this')
     //var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
     var newPadDoc = newInstance.doc()
 
@@ -33,7 +34,13 @@ module.exports = {
     if (newPaneOptions.me) {
         kb.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc);
     }
-    kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc); // linked list empty
+    // kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc); // linked list empty @@
+    var chunk = kb.sym(newInstance.uri + '_line0')
+    kb.add(newInstance, ns.pad('next'), chunk, newPadDoc) // Linked list has one entry
+    kb.add(chunk, ns.pad('next'), newInstance, newPadDoc)
+    kb.add(chunk, ns.dc('author'), newPaneOptions.me, newPadDoc)
+    kb.add(chunk, ns.sioc('content'), '', newPadDoc)
+
     return new Promise(function(resolve, reject){
       updater.put(
         newPadDoc,
@@ -41,9 +48,9 @@ module.exports = {
         'text/turtle',
         function(uri2, ok, message) {
           if (ok) {
-              resolve(newInstance)
+              resolve(newPaneOptions)
           } else {
-              reject(new Error("FAILED to save new tool at: "+ thing +' : ' + message));
+              reject(new Error("FAILED to save new tool at: "+ uri2 +' : ' + message));
           };
       })
     })

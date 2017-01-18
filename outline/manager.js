@@ -1763,7 +1763,9 @@ if (statement){
               return;
           }
       }
-      if (subject.uri && !immediate) {
+      if (subject.uri && !immediate && !UI.widgets.isAudio(subject) &&
+        !UI.widgets.isVideo(subject) && // Never parse videos as data
+          !kb.holds(subject, UI.ns.rdf('type'), $rdf.Util.mediaTypeClass('application/pdf'))) {  // or PDF
           // Wait till at least the main URI is loaded before expanding:
           sf.nowOrWhenFetched(subject.doc(), undefined, function(ok, body) {
               if (ok) {
@@ -1776,7 +1778,7 @@ if (statement){
                   var message = dom.createElement("pre");
                   message.textContent = body;
                   message.setAttribute('style', 'background-color: #fee;');
-                  message.textContent = 'Unable to fetch ' + subject.doc() + ': '  + message;
+                  message.textContent = 'Unable to fetch ' + subject.doc() + ': '  + body;
                   p.appendChild(message)
               }
           });

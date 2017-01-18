@@ -22,6 +22,9 @@ module.exports = {
   //
   //  returns: A promise of a meeting object
   //
+
+  mintClass: UI.ns.meeting('Meeting'),
+
   mintNew: function (options) {
     return new Promise(function (resolve, reject) {
       var kb = UI.store, ns = UI.ns
@@ -40,7 +43,7 @@ module.exports = {
       var toolList = new $rdf.Collection()
       kb.add(meeting, ns.meeting('toolList'), toolList , meetingDoc)
 
-      toolList.elements.push(meeting) // Add the meeting itself - see showMain()
+      toolList.elements.push(meeting) // Add the meeting itself - see renderMain()
 
       kb.updater.put(
         meetingDoc,
@@ -129,7 +132,9 @@ module.exports = {
     }
 
     var makeToolNode = function (target, pred, label, iconURI) {
-      kb.add(meeting, pred, target, meetingDoc)
+      if (pred) {
+        kb.add(meeting, pred, target, meetingDoc)
+      }
       var x = UI.widgets.newThing(meetingDoc)
       if (label) kb.add(x, ns.rdfs('label'), label, meetingDoc)
       if (iconURI) kb.add(x, ns.meeting('icon'), kb.sym(iconURI), meetingDoc)
@@ -142,13 +147,45 @@ module.exports = {
 
     // ////////////////////  DRAG and Drop
 
+    var handleDroppedURI = function (uri) {
+      kb.fetcher.nowOrWhenFetched(uri, function (ok, mess) {
+        if (!ok) {
+          console.log('Error looking up dropped thing ' + uri + ': ' + mess)
+        } else {
+          var types = kb.findTypeURIs(obj)
+          var obj = kb.sym(uri)
+          for (ty in types) {
+            console.log('    drop object type includes: ' + ty)
+          }
+          if (ns.vcard('Individual').uri in types || ns.foaf('Person').uri in types || ns.foaf('Agent').uri in types) {
+            var pref = kb.any(obj, ns.foaf('preferredURI'))
+            obj = pref ? kb.sym(pref) : obj
+            makeParticipantsGroup().then(function (options) {
+              kb.add(options.newInstance, UI.ns.vcard('member'), obj, options.newInstance.doc())
+            }).catch(function (err) {
+              complain(err)
+            })
+            return
+          }
+          console.log('    Triage fails for ' + uri)
+          console.log('Default: assume web page attachement ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+          var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
+          kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
+        }
+      })
+    }
+
     // When a set of URIs are dropped on
     var droppedURIHandler = function (uris) {
       uris.map(function (u) {
         var target = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
-        console.log('Dropped on attachemnt ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
-        var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
-        kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
+        console.log('Dropped on thing ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+        if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
+          var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
+          kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
+          return
+        }
+        handleDroppedURI(u)
       })
       saveBackMeetingDoc()
     }
@@ -167,13 +204,13 @@ module.exports = {
             var data = e.target.result
             console.log(' File read byteLength : ' + data.byteLength)
             var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
-            var destURI = meeting.dir().uri +  folderName + '/' + theFile.name
+            var destURI = meeting.dir().uri + folderName + '/' + theFile.name
             UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type}).then(function (xhr) {
               console.log(' Upload: put OK: ' + destURI)
-              if (theFile.type.startsWith('image/')){
-                makePicturesFolder() // If necessary
+              if (theFile.type.startsWith('image/')) {
+                makePicturesFolder(folderName) // If necessary
               } else {
-                makeMaterialsFolder()
+                makeMaterialsFolder(folderName)
               }
             }).catch(function (status) {
               console.log(' Upload: FAIL ' + destURI + ', Error: ' + status)
@@ -184,18 +221,31 @@ module.exports = {
       }
     }
 
-    // ///////////////////////
+    // //////////////////////////////////////////////////////  end of drag drop
 
     var makeGroup = function (toolObject) {
       var newBase = meetingBase + 'Group/'
       var kb = UI.store
-      if (kb.holds(meeting, ns.meeting('particpants'))) {
-        console.log('Ignored - already have set up your particpants')
-        return // already got one
+      var group = kb.any(meeting, ns.meeting('particpants'))
+      if (!group) {
+        group = $rdf.sym(newBase + 'index.ttl#this')
+      }
+      console.log('Participant group: ' + group)
+
+      var tool = makeToolNode(group, ns.meeting('particpants'), 'Particpants', UI.icons.iconBase + 'noun_339237.svg') // group: noun_339237.svg  'noun_15695.svg'
+      kb.add(tool, UI.ns.meeting('view'), 'peoplePicker', meetingDoc)
+      saveBackMeetingDoc()
+    }
+
+    var makeAddressBook = function (toolObject) {
+      var newBase = meetingBase + 'Group/'
+      var kb = UI.store
+      var group = kb.any(meeting, ns.meeting('addressBook'))
+      if (!group) {
+        group = $rdf.sym(newBase + 'index.ttl#this')
       }
 
-      // @@ Now we should have a people-picker to chose a new or existing group
-
+      // Create a tab for the addressbook
       var div = dom.createElement('div')
       var context = {dom: dom, div: div}
       var book
@@ -208,7 +258,7 @@ module.exports = {
             complain('You have more than one solid address book: ' + s + ' Not supported yet.')
           } else { // addressbook
             book = context.instances[0]
-            var tool = makeToolNode(book, ns.meeting('addressBook'), 'Particpants', UI.icons.iconBase + 'noun_15695.svg') // group: noun_339237.svg
+            var tool = makeToolNode(book, ns.meeting('addressBook'), 'Address Book', UI.icons.iconBase + 'noun_15695.svg') // group: noun_339237.svg
             kb.add(tool, UI.ns.meeting('view'), 'contact', meetingDoc)
             saveBackMeetingDoc()
           }
@@ -224,27 +274,27 @@ module.exports = {
         predicate: ns.meeting('schedulingPoll'),
         newBase: meetingBase + 'Schedule/',
         tabTitle: 'Schedule poll',
-        noIndexHTML: true}
+      noIndexHTML: true}
 
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
-    var makePicturesFolder = function () {
+    var makePicturesFolder = function (folderName) {
       var toolObject = {
         icon: 'noun_598334.svg', // Slideshow @@ find a "picture" icon?
         limit: 1
       }
       var newPaneOptions = {
-        newInstance: kb.sym(meeting.dir().uri + 'Pictures/'),
+        newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
         pane: UI.panes.classInstance,
         predicate: ns.meeting('pictures'),
-        tabTitle: 'Pictures',
-        noIndexHTML: true}
+        tabTitle: folderName,
+      noIndexHTML: true}
 
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
-    var makeMaterialsFolder = function () {
+    var makeMaterialsFolder = function (folderName) {
       var toolObject = {
         icon: 'noun_681601.svg', // Document
         limit: 1
@@ -252,11 +302,28 @@ module.exports = {
       var newPaneOptions = {
         newInstance: kb.sym(meeting.dir().uri + 'Files/'),
         pane: UI.panes.classInstance,
-        predicate: ns.meeting('uploadFolder'),
-        tabTitle: 'Uploaded',
-        noIndexHTML: true}
+        predicate: ns.meeting('materialsFolder'),
+        tabTitle: 'Materials',
+      noIndexHTML: true}
 
       return makeNewPaneTool(toolObject, newPaneOptions)
+    }
+
+    var makeParticipantsGroup = function () {
+      var toolObject = {
+        icon: 'noun_339237.svg', // Group of people
+        limit: 1
+      }
+      var newPaneOptions = {
+        newInstance: kb.sym(meeting.dir().uri + 'Attendees/index.ttl#this'),
+        pane: UI.panes.contact,
+        predicate: ns.meeting('attendeeGroup'),
+        tabTitle: 'Attendees',
+        instanceClass: ns.vcard('Group'),
+        instanceName: UI.utils.label(subject) + ' attendees',
+      noIndexHTML: true}
+
+      return makeNewPaneTool(toolObject, newPaneOptions) // @@@ makeNewPaneTool ??
     }
 
     //   Make Pad for notes of meeting
@@ -267,7 +334,7 @@ module.exports = {
         predicate: UI.ns.meeting('sharedNotes'),
         pane: UI.panes.poll,
         tabTitle: 'Shared Notes',
-        pane: UI.panes.pad }
+      pane: UI.panes.pad }
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
@@ -279,33 +346,45 @@ module.exports = {
           if (!name) {
             return resetTools()
           }
+          var URIsegment = encodeURIComponent(name)
           var options = {
-            newBase: meetingBase + name + '/', // @@@ sanitize
+            newBase: meetingBase + URIsegment + '/', // @@@ sanitize
             predicate: UI.ns.meeting('subMeeting'),
             tabTitle: name,
-            pane: UI.panes.meeting }
+          pane: UI.panes.meeting }
           return makeNewPaneTool(toolObject, options)
         }).catch(function (e) {
-          complain('Error making new sub-meeting: ' + e)
+        complain('Error making new sub-meeting: ' + e)
       })
     }
 
+    // Returns promise of newPaneOptions
     var makeNewPaneTool = function (toolObject, options) {
-      var kb = UI.store
-      if (toolObject.limit && toolObject.limit === 1 && kb.holds(meeting, options.predicate)) {
-        complain('Ignored - already have ' + UI.utils.label(options.predicate))
-        return
-      }
-      if (!me) throw new Error('Username nor defined for new tool')
-      var newPaneOptions = {
-        me: me,
-        newInstance: options.newInstance || kb.sym(options.newBase + 'index.ttl#this')
-      }
-      options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
-        makeToolNode(newPaneOptions.newInstance, options.predicate, options.tabTitle, options.pane.icon)
-        saveBackMeetingDoc()
-      }).catch(function (err) {
-        complain(err)
+      return new Promise(function (resolve, reject) {
+        var kb = UI.store
+        if (toolObject.limit && toolObject.limit === 1 && kb.holds(meeting, options.predicate)) {
+          complain('Ignored - already have ' + UI.utils.label(options.predicate))
+          resolve(null)
+          return
+        }
+        if (!me) reject(new Error('Username nor defined for new tool'))
+        var newPaneOptions = {
+          me: me,
+          newInstance: options.newInstance || kb.sym(options.newBase + 'index.ttl#this'),
+          instanceClass: options.instanceClass
+        }
+        options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
+          makeToolNode(newPaneOptions.newInstance, options.predicate, options.tabTitle, options.pane.icon)
+          saveBackMeetingDoc()
+          kb.fetcher.putBack(meetingDoc, {contentType: 'text/turtle'}).then(function (xhr) {
+            resolve(newPaneOptions)
+          }).catch(function (err) {
+            reject(err)
+          })
+        }).catch(function (err) {
+          complain(err)
+          reject(err)
+        })
       })
     }
 
@@ -381,8 +460,8 @@ module.exports = {
           kb.add(tool, ns.meeting('view'), 'iframe', meetingDoc)
           saveBackMeetingDoc()
         }).catch(function (e) {
-          complain('Error making new sub-meeting: ' + e)
-        })
+        complain('Error making new sub-meeting: ' + e)
+      })
     }
 
     var makeSharing = function (toolObject) {
@@ -417,7 +496,7 @@ module.exports = {
       parameterCell.appendChild(mintUI)
     }
 
-    // /////////////////////////////////
+    // //////////////////////////////////////////////////////////// end of new tab creation functions
 
     var toolIcons = [
       {icon: 'noun_339237.svg', maker: makeGroup, hint: 'Make a group of people', limit: 1},
@@ -530,8 +609,9 @@ module.exports = {
           img.setAttribute('style', 'max-width: 1.5em; max-height: 1.5em;') // @
           img.setAttribute('title', label)
         }
-        var span = div.appendChild(dom.createElement('span'))
-        span.textContent = label
+        var s = div.appendChild(dom.createElement('div'))
+        s.textContent = label
+        s.setAttribute('style', 'margin-left: 0.7em')
       } else {
         div.textContent = UI.utils.label(item)
       }
@@ -579,7 +659,7 @@ module.exports = {
       }
     }
 
-    var showMain = function (containerDiv, subject) {
+    var renderMain = function (containerDiv, subject) {
       var pane = null
       var table
       containerDiv.innerHTML = ''
@@ -594,7 +674,30 @@ module.exports = {
         // iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
         iframe.setAttribute('style', 'border: none; margin: 0; padding: 0; height: 100%; width: 100%;')
       }
-      var showDetails = function () {
+      var selectedGroup = null;
+      var renderPeoplePicker = function () {
+        context = {div: containerDiv, dom: dom}
+        containerDiv.appendChild(dom.createElement('h4')).textContent = 'Meeting Participants'
+        var groupPickedCb = function (group) {
+          var toIns = [ $rdf.st(meeting, ns.meeting('particpantGroup'), group, meeting.doc())]
+          kb.updater.update([], del, {}, function(ok, message){
+            if (ok){
+              selectedGroup = group
+            } else {
+              complain('Cant save participants group: ' + err)
+            }
+          })
+        }
+        selectedgroup = kb.any(meeting, ns.meeting('particpantGroup'))
+
+        UI.widgets.loadTypeIndexes(context).then(function (context) {
+          // Assumes that the type index has an entry for addressbook
+          var options = { defaultNewGroupName: 'Meeting Participants', selectedgroup: selectedgroup}
+          var picker = new UI.widgets.PeoplePicker(context.div, context.index.private[0], groupPickedCb)
+          picker.render()
+        })
+      }
+      var renderDetails = function () {
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
         UI.store.fetcher.nowOrWhenFetched(form, function (xhr) {
@@ -634,12 +737,14 @@ module.exports = {
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
         var target = kb.any(subject, ns.meeting('target'))
         if (target.sameTerm(meeting) && !kb.any(subject, ns.meeting('view'))) { // self reference? force details form
-          showDetails() // Legacy meeting instances
+          renderDetails() // Legacy meeting instances
         } else {
           var view = kb.any(subject, ns.meeting('view'))
           view = view ? view.value : null
           if (view === 'details') {
-            showDetails()
+            renderDetails()
+          } else if (view === 'peoplePicker') {
+            renderPeoplePicker()
           } else if (view === 'iframe') {
             showIframe(target)
           } else {
@@ -649,7 +754,7 @@ module.exports = {
           }
         }
       } else if (subject.sameTerm(meeting)) { // self reference? force details form
-        showDetails()
+        renderDetails()
       } else if (subject.sameTerm(subject.doc()) &&
         !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
         !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))) {
@@ -664,7 +769,7 @@ module.exports = {
     options.subject = subject
     options.ordered = true
     options.orientation = 1 // tabs on LHS
-    options.showMain = showMain
+    options.renderMain = renderMain
     options.renderTab = renderTab
     options.renderTabSettings = renderTabSettings
     var tabs = mainTR.appendChild(UI.tabs.tabWidget(options))

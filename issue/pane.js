@@ -458,7 +458,10 @@ module.exports = {
       donePredicate(ns.wf('message'))
 
       // Draggable attachment list
-      var a = UI.widgets.attachmentList(dom, subject, div)
+      var a = UI.widgets.attachmentList(dom, subject, div, {
+        promptIcon: UI.icons.iconBase + 'noun_25830.svg',
+        predicate: ns.wf('attachment')
+      })
       donePredicate(ns.wf('attachment'))
 
 

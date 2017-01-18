@@ -14,6 +14,7 @@ to change its state according to an ontology, comment on it, etc.
 */
 
 var UI = require('solid-ui')
+var mime = require('mime-types')
 
 if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
   console = {}
@@ -37,95 +38,112 @@ module.exports = {
     return null // No under other circumstances
   },
 
+  mintClass: UI.ns.vcard('AddressBook'),
+
   mintNew: function (context) {
-    var dom = context.dom, me = context.me, div = context.div
-    var newBase = context.newBase
-    var appInstanceNoun = 'address book'
+    return new Promise(function(resolve, reject){
+      var dom = context.dom, me = context.me, div = context.div
+      var ns = UI.ns
+      var newBase = context.newBase
+      var instanceClass = context.instanceClass || ns.vcard('AddressBook')
 
-    var complain = function (message) {
-      div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
-    }
+      if (instanceClass.sameTerm(ns.vcard('Group'))){
+        // Make a group not an address book
+        var g = context.newInstance || kb.sym(context.newBase + 'index.ttl#this')
+        var doc = g.doc()
+        kb.add(g, ns.rdf('type'), ns.vcard('Group'), doc)
+        kb.add(g, ns.vcard('fn'), context.instanceName || 'untitled group', doc) // @@ write doc back
+        resolve(context)
+      }
+      var appInstanceNoun = 'address book'
 
-    var bookContents = '@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.\n\
-@prefix ab: <http://www.w3.org/ns/pim/ab#>.\n\
-@prefix dc: <http://purl.org/dc/elements/1.1/>.\n\
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#>.\n\
-\n\
-<#this> a vcard:AddressBook;\n\
-    dc:title "New address Book";\n\
-    vcard:nameEmailIndex <people.ttl>;\n\
-    vcard:groupIndex <groups.ttl>. \n\n'
+      var complain = function (message) {
+        div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
+      }
 
-    bookContents += '<#this> <http://www.w3.org/ns/auth/acl#owner> <' + me.uri + '>.\n\n'
+      var bookContents = '@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.\n\
+  @prefix ab: <http://www.w3.org/ns/pim/ab#>.\n\
+  @prefix dc: <http://purl.org/dc/elements/1.1/>.\n\
+  @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.\n\
+  \n\
+  <#this> a vcard:AddressBook;\n\
+      dc:title "New address Book";\n\
+      vcard:nameEmailIndex <people.ttl>;\n\
+      vcard:groupIndex <groups.ttl>. \n\n'
 
-    var toBeWritten = [
-      { to: 'index.html', contentType: 'text/html' },
-      { to: 'book.ttl', content: bookContents, contentType: 'text/turtle' },
-      { to: 'groups.ttl', content: '', contentType: 'text/turtle' },
-      { to: 'people.ttl', content: '', contentType: 'text/turtle'},
-      { to: '', existing: true, aclOptions: { defaultForNew: true}},
-    ]
+      bookContents += '<#this> <http://www.w3.org/ns/auth/acl#owner> <' + me.uri + '>.\n\n'
 
-    var newAppPointer = newBase + 'index.html'; // @@ assuming we can't trust server with bare dir
+      var toBeWritten = [
+  //      { to: 'index.html', contentType: 'text/html' },
+        { to: 'index.ttl', content: bookContents, contentType: 'text/turtle' },
+        { to: 'groups.ttl', content: '', contentType: 'text/turtle' },
+        { to: 'people.ttl', content: '', contentType: 'text/turtle'},
+        { to: '', existing: true, aclOptions: { defaultForNew: true}},
+      ]
 
-    var offline = UI.widgets.offlineTestID()
-    if (offline) {
-      toBeWritten.push({to: 'local.html', from: 'local.html', contentType: 'text/html' })
-      newAppPointer = newBase + 'local.html' // kludge for testing
-    }
+      var newAppPointer = newBase + 'index.html'; // @@ assuming we can't trust server with bare dir
 
-    // @@ Ask user abut ACLs?
+      var offline = UI.widgets.offlineTestID()
+      if (offline) {
+        toBeWritten.push({to: 'local.html', from: 'local.html', contentType: 'text/html' })
+        newAppPointer = newBase + 'local.html' // kludge for testing
+      }
 
-    //
-    //   @@ Add header to PUT     If-None-Match: *       to prevent overwrite
-    //
+      // @@ Ask user abut ACLs?
 
-    var claimSuccess = function (uri, appInstanceNoun) { // @@ delete or grey other stuff
-      console.log('Files created. App ready at ' + uri)
-      var p = div.appendChild(dom.createElement('p'))
-      p.setAttribute('style', 'font-size: 140%;')
-      p.innerHTML =
-        "Your <a href='" + uri + "'><b>new " + appInstanceNoun + '</b></a> is ready. ' +
-        "<br/><br/><a href='" + uri + "'>Go to new " + appInstanceNoun + '</a>'
-    }
+      //
+      //   @@ Add header to PUT     If-None-Match: *       to prevent overwrite
+      //
 
-    var doNextTask = function () {
-      if (toBeWritten.length === 0) {
-        claimSuccess(newAppPointer, appInstanceNoun)
-      } else {
-        var task = toBeWritten.shift()
-        console.log('Creating new file ' + task.to + ' in new instance ')
-        var dest = $rdf.uri.join(task.to, newBase) //
-        var aclOptions = task.aclOptions || {}
-        var checkOKSetACL = function (uri, ok) {
-          if (ok) {
-            UI.widgets.setACLUserPublic(dest, me, aclOptions, function () {
-              if (ok) {
-                doNextTask()
-              } else {
-                complain('Error setting access permisssions for ' + task.to)
-              }
-            })
+      var claimSuccess = function (uri, appInstanceNoun) { // @@ delete or grey other stuff
+        console.log('Files created. App ready at ' + uri)
+        var p = div.appendChild(dom.createElement('p'))
+        p.setAttribute('style', 'font-size: 140%;')
+        p.innerHTML =
+          "Your <a href='" + uri + "'><b>new " + appInstanceNoun + '</b></a> is ready. ' +
+          "<br/><br/><a href='" + uri + "'>Go to new " + appInstanceNoun + '</a>'
+        resolve(context)
+      }
+
+      var doNextTask = function () {
+        if (toBeWritten.length === 0) {
+          claimSuccess(newAppPointer, appInstanceNoun)
+        } else {
+          var task = toBeWritten.shift()
+          console.log('Creating new file ' + task.to + ' in new instance ')
+          var dest = $rdf.uri.join(task.to, newBase) //
+          var aclOptions = task.aclOptions || {}
+          var checkOKSetACL = function (uri, ok) {
+            if (ok) {
+              UI.widgets.setACLUserPublic(dest, me, aclOptions, function () {
+                if (ok) {
+                  doNextTask()
+                } else {
+                  complain('Error setting access permisssions for ' + task.to)
+                  reject(new Error('Error setting access permisssions for ' + task.to))
+                }
+              })
+            } else {
+              complain('Error writing new file ' + task.to)
+              reject(new Error('Error writing new file ' + task.to))
+            }
+          }
+
+          if ('content' in task) {
+            UI.widgets.webOperation('PUT', dest,
+              { data: task.content, saveMetadata: true, contentType: task.contentType},
+              checkOKSetACL)
+          } else if ('existing' in task) {
+            checkOKSetACL(true, dest)
           } else {
-            complain('Error writing new file ' + task.to)
+            reject(new Error('copy not expected buiding new app'))
+            // var from = task.from || task.to // default source to be same as dest
+            // UI.widgets.webCopy(base + from, dest, task.contentType, checkOKSetACL)
           }
         }
-
-        if ('content' in task) {
-          UI.widgets.webOperation('PUT', dest,
-            { data: task.content, saveMetadata: true, contentType: task.contentType},
-            checkOKSetACL)
-        } else if ('existing' in task) {
-          checkOKSetACL(true, dest)
-        } else {
-          throw 'copy not expected'
-          // var from = task.from || task.to // default source to be same as dest
-          // UI.widgets.webCopy(base + from, dest, task.contentType, checkOKSetACL)
-        }
       }
-    }
-
-    doNextTask()
+      doNextTask()
+    })
   },
 
   //                            Render the pane
@@ -138,6 +156,10 @@ module.exports = {
     var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
     var div = dom.createElement('div')
     var cardDoc = subject.doc()
+
+    UI.aclControl.preventBrowserDropEvents(dom) // protect drag and drop
+
+    var buttonStyle = 'font-size: 100%; margin: 0.8em; padding:0.5em;'
 
     div.setAttribute('class', 'contactPane')
 
@@ -210,6 +232,7 @@ module.exports = {
       if (tableDiv.refresh) { // Refresh function
         var refreshButton = dom.createElement('button')
         refreshButton.textContent = 'refresh'
+        refreshButton.style = buttonStyle
         refreshButton.addEventListener('click', function (e) {
           var nameEmailIndex = kb.any(subject, ns.vcard('nameEmailIndex'))
           UI.store.fetcher.unload(nameEmailIndex)
@@ -320,9 +343,8 @@ module.exports = {
         var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
 
         var uuid = gen_uuid()
-        var x = book.uri.split('#')[0]
-        var doc = kb.sym(x.slice(0, x.lastIndexOf('/') + 1) + 'Person/' + uuid + '.ttl')
-        var person = kb.sym(doc.uri + '#this')
+        var person = kb.sym(book.dir().uri + 'Person/' + uuid + '/index.ttl#this')
+        var doc = person.doc()
 
         // Sets of statements to different files
         var agenda = [ // Patch the main index to add the person
@@ -448,6 +470,7 @@ module.exports = {
 
         var cancel = form.appendChild(dom.createElement('button'))
         cancel.setAttribute('type', 'button')
+        cancel.style = buttonStyle
         cancel.innerHTML = 'Cancel'
         cancel.addEventListener('click', function (e) {
           form.parentNode.removeChild(form)
@@ -557,9 +580,10 @@ module.exports = {
             }).catch(function (e) {UI.widgets.complain(context, e)})
 
           //  Output stats in line mode form
-          var p = MainRow.appendChild(dom.createElement('pre'))
+          var logSpace = MainRow.appendChild(dom.createElement('pre'))
           var log = function (message) {
-            p.textContent += message + '\n'
+            console.log(message)
+            logSpace.textContent += message + '\n'
           }
 
           var stats = function () {
@@ -574,12 +598,9 @@ module.exports = {
             log('' + gg.length + ' selected groups. ')
           }
 
-          var statButton = pane.appendChild(dom.createElement('button'))
-          statButton.textContent = 'Statistics'
-          statButton.addEventListener('click', stats)
-
           var loadIndexButton = pane.appendChild(dom.createElement('button'))
           loadIndexButton.textContent = 'Load main index'
+          loadIndexButton.style = buttonStyle
           loadIndexButton.addEventListener('click', function (e) {
             loadIndexButton.setAttribute('style', 'background-color: #ffc;')
 
@@ -595,9 +616,15 @@ module.exports = {
             })
           })
 
-          var check = MainRow.appendChild(dom.createElement('button'))
-          check.textContent = 'Check inidividual card access of selected groups'
-          check.addEventListener('click', function (event) {
+          var statButton = pane.appendChild(dom.createElement('button'))
+          statButton.textContent = 'Statistics'
+          statButton.style = buttonStyle
+          statButton.addEventListener('click', stats)
+
+          var checkAccessButton = MainRow.appendChild(dom.createElement('button'))
+          checkAccessButton.textContent = 'Check inidividual card access of selected groups'
+          checkAccessButton.style = buttonStyle
+          checkAccessButton.addEventListener('click', function (event) {
 
             var gg = [], g
             for (g in selectedGroups) {
@@ -625,9 +652,448 @@ module.exports = {
             }
           })
 
+          /////////////////////////////////////////////////////////////////////////////
+          //
+          //      DUPLICATES CHECK
+
+          var checkDuplicates = MainRow.appendChild(dom.createElement('button'))
+          checkDuplicates.textContent = 'Find duplicate cards'
+          checkDuplicates.style = buttonStyle
+          checkDuplicates.addEventListener('click', function (event) {
+
+            var stats = {} // global god context
+
+            stats.book = book
+            stats.nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
+            log('Loading name index...')
+
+
+            UI.store.fetcher.nowOrWhenFetched(stats.nameEmailIndex, undefined,
+              function (ok, message) {
+                log('Loaded name index.')
+
+                stats.cards = []
+                stats.duplicates = []
+                stats.definitive = []
+                stats.nameless = []
+
+                stats.exactDuplicates = []
+                stats.nameOnlyDuplicates = []
+
+                stats.uniquesSet = []
+                stats.groupProblems = []
+
+                // Erase one card and all its files  -> (err)
+                //
+                var eraseOne = function(card){
+                  return new Promise(function(resolve, reject){
+                    var removeFromMainIndex = function(){
+                      var indexBit = kb.connectedStatements(card, stats.nameEmailIndex)
+                      log('Bits of the name index file:' + indexBit)
+                      log('Patching main index file...')
+                      kb.updater.update(indexBit, [], function (uri, ok, body){
+                        if (ok){
+                          log('Success')
+                          resolve(null)
+                        } else {
+                          log('Error patching index file! ' + body)
+                          reject('Error patching index file! ' + body)
+                        }
+                      })
+                    }
+                  })
+
+                  var filesToDelete = [ card.doc()]
+                  var photo = kb.any(card, ns.vcard('hasPhoto'))
+                  if (photo) filesToDelete.push(photo)
+                  filesToDelete.push(card.dir()) // the folder last
+                  log('Files to delete: ' + filesToDelete)
+                  if (!confirm('DELETE card ' + card.dir() + ' for ' + name + ', with ' + desc.length + 'statements?')){
+                    return resolve('Cancelled by user')
+                  }
+
+                  var deleteOneFile = function(){
+                    var resource = filesToDelete.shift()
+                    if (!resource) {
+                      log('All deleted')
+                      removeFromMainIndex()
+                      return
+                    }
+                    log('Deleting ... ' + resource)
+                    kb.fetcher.webOperation('DELETE', resource).then(function(xhr){
+                      log('Deleted ok: ' + resource)
+                      deleteOneFile()
+                    }).catch(function(e){
+                      var err = '*** ERROR deleteing ' + resource + ': ' + e
+                      log(err)
+                      if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card DELETE errors?')){
+                        removeFromMainIndex()
+                      } else {
+                        reject(err)
+                      }
+                    })
+                  }
+                  deleteOneFile()
+                } // erase one
+
+                //   Check actual recorrds to see which are exact matches - slow
+                stats.nameDupLog = kb.sym(book.dir().uri + "dedup-nameDupLog.ttl")
+                stats.exactDupLog = kb.sym(book.dir().uri + "dedup-exactDupLog.ttl")
+
+                var checkOne = function(card){
+                  return new Promise(function(resolve, reject){
+                    var name = kb.anyValue(card, ns.vcard('fn'))
+                    var other = definitive[name]
+                    kb.fetcher.load([card, other]).then(function(xhrs){
+                      var exclude = {}
+                      exclude[ns.vcard('hasUID').uri] = true
+                      exclude[ns.dc('created').uri] = true
+                      exclude[ns.dc('modified').uri] = true
+                      var filtered = function(x){
+                        return kb.statementsMatching(null, null, null, x.doc()).filter(function(st){
+                          return !exclude[st.predicate.uri]
+                        })
+                      }
+                      var desc = filtered(card)
+                      var desc2 = filtered(other)
+                      // var desc = connectedStatements(card, card.doc(), exclude)
+                      // var desc2 = connectedStatements(other, other.doc(), exclude)
+                      if (desc.length !== desc2.length){
+                        log('CARDS to NOT match lengths ')
+                        stats.nameOnlyDuplicates.push(card)
+                        return resolve(false)
+                      }
+                      if (!desc.length){
+                        log('@@@@@@  Zero length ')
+                        stats.nameOnlyDuplicates.push(card)
+                        return resolve(false)
+                      }
+                      ////////// Compare the two
+                      // Cheat: serialize and compare
+                      // var cardText = $rdf.serialize(card.doc(), kb, card.doc().uri, 'text/turtle')
+                      // var otherText = $rdf.serialize(other.doc(), kb, other.doc().uri, 'text/turtle')
+                      var cardText = (new $rdf.Serializer(kb)).setBase(card.doc().uri).statementsToN3(desc)
+                      var otherText = (new $rdf.Serializer(kb)).setBase(other.doc().uri).statementsToN3(desc2)
+/*
+                      log('Name: ' + name + ', statements: ' + desc.length)
+                      log('___________________________________________')
+                      log('KEEPING: ' + other.doc() + '\n' + cardText);
+                      log('___________________________________________')
+                      log('DELETING: '+ card.doc() + '\n' + otherText);
+                      log('___________________________________________')
+*/
+                      if (cardText !== otherText){
+                        log("Texts differ")
+                        stats.nameOnlyDuplicates.push(card)
+                        return resolve(false)
+                      }
+                      var cardGroups = kb.each(null, ns.vcard('hasMember'), card)
+                      var otherGroups = kb.each(null, ns.vcard('hasMember'), other)
+                      for (var j=0; j< cardGroups.length; j++){
+                        var found = false
+                        for (var k=0; k < otherGroups.length; k++){
+                          if (otherGroups[k].sameTerm(cardGroups[j])) found = true;
+                        }
+                        if (!found){
+                          log('This one groups: ' + cardGroups)
+                          log('Other one groups: ' + otherGroups)
+                          log('Cant delete this one because it has a group, ' + cardGroups[j] + ', which the other does not.')
+                          stats.nameOnlyDuplicates.push(card)
+                          return resolve(false)
+                        }
+                      }
+                      console.log('Group check done -- exact duplicate: ' + card)
+                      stats.exactDuplicates.push(card)
+                      resolve(true)
+
+                    }).catch(function(e){
+                      log('Cant load a card! ' + [card, other] + ': ' + e)
+                      stats.nameOnlyDuplicates.push(card)
+                      resolve(false)
+                      //if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card READ errors?')){
+                      //  removeFromMainIndex()
+                      // }
+                    })
+                  })
+                } // checkOne
+
+                stats.nameOnlyErrors = []
+                stats.nameLessZeroData = []
+                stats.nameLessIndex = []
+                stats.namelessUniques = []
+                stats.nameOnlyDuplicatesGroupDiff = []
+
+                var checkOneNameless = function(card){
+                  return new Promise(function(resolve, reject){
+                    kb.fetcher.load(card).then(function(xhr){
+                      log(' Nameless check ' + card)
+                      var exclude = {}
+                      exclude[ns.vcard('hasUID').uri] = true
+                      exclude[ns.dc('created').uri] = true
+                      exclude[ns.dc('modified').uri] = true
+                      var filtered = function(x){
+                        return kb.statementsMatching(null, null, null, x.doc()).filter(function(st){
+                          return !exclude[st.predicate.uri]
+                        })
+                      }
+
+                      var desc = filtered(card)
+                      // var desc = connectedStatements(card, card.doc(), exclude)
+                      // var desc2 = connectedStatements(other, other.doc(), exclude)
+                      if (!desc.length){
+                        log('  Zero length ' + card)
+                        stats.nameLessZeroData.push(card)
+                        return resolve(false)
+                      }
+                      ////////// Compare the two
+                      // Cheat: serialize and compare
+                      // var cardText = $rdf.serialize(card.doc(), kb, card.doc().uri, 'text/turtle')
+                      // var otherText = $rdf.serialize(other.doc(), kb, other.doc().uri, 'text/turtle')
+                      var cardText = (new $rdf.Serializer(kb)).setBase(card.doc().uri).statementsToN3(desc)
+                      var other = stats.nameLessIndex[cardText]
+                      if (other){
+                        log('  Matches with ' + other)
+                        var cardGroups = kb.each(null, ns.vcard('hasMember'), card)
+                        var otherGroups = kb.each(null, ns.vcard('hasMember'), other)
+                        for (var j=0; j< cardGroups.length; j++){
+                          var found = false
+                          for (var k=0; k < otherGroups.length; k++){
+                            if (otherGroups[k].sameTerm(cardGroups[j])) found = true;
+                          }
+                          if (!found){
+                            log('This one groups: ' + cardGroups)
+                            log('Other one groups: ' + otherGroups)
+                            log('Cant skip this one because it has a group, ' + cardGroups[j] + ', which the other does not.')
+                            stats.nameOnlyDuplicatesGroupDiff.push(card)
+                            return resolve(false)
+                          }
+                        }
+                        console.log('Group check done -- exact duplicate: ' + card)
+                      } else {
+                        log('First nameless like: ' + card.doc());
+                        log('___________________________________________')
+                        log(cardText)
+                        log('___________________________________________')
+                         stats.nameLessIndex[cardText] = card
+                         stats.namelessUniques.push(card)
+                      }
+                      resolve(true)
+
+                    }).catch(function(e){
+                      log('Cant load a nameless card! ' + other + ': ' + e)
+                      stats.nameOnlyErrors.push(card)
+                      resolve(false)
+                    })
+                  })
+                } // checkOneNameless
+
+                var duplicatesToCheck = stats.duplicates.slice() // copy
+                var checkAll = function(){
+                  return new Promise(function(resolve, reject){
+                    var x = duplicatesToCheck.shift()
+                    if (!x) return resolve(true)
+                    checkOne(x).then(function(exact){
+                      var logg = exact? exactDupLog : nameDupLog
+                      var klass = exact ? 'ExactDuplicate' : 'NameOnlyDuplicate'
+                      kb.updater.update([], $rdf.st(x, ns.rdf('type'), ns.vcard(klass), logg),
+                        function(uri, ok, error_body){
+                          if (ok) {
+                            checkAll() // loop
+                          } else {
+                            log('Stop: log write failure ' +  error_body)
+                          }
+                        })
+                      })
+                  })
+                }
+
+                var checkAllNameless = function(){
+                  stats.namelessToCheck = stats.namelessToCheck  || stats.nameless.slice()
+                  log('Nameless check left: ' + stats.namelessToCheck.length)
+                  return new Promise(function(resolve, reject){
+                    var x = stats.namelessToCheck.shift()
+                    if (!x) {
+                      log('namelessUniques: ' + stats.namelessUniques.length)
+                      log('namelessUniques: ' + stats.namelessUniques)
+                      if (confirm("Add all " + stats.namelessUniques.length + " nameless cards to the rescued set?")){
+                        stats.uniques = stats.uniques.concat(stats.namelessUniques)
+                        for (var k=0; k < stats.namelessUniques.length; k++){
+                          stats.uniqueSet[stats.namelessUniques[k].uri] = true
+                        }
+                      }
+                      return resolve(true)
+                    }
+                    checkOneNameless(x).then(function(exact){
+                      log('    Namelessc check returns ' + exact)
+                      checkAllNameless() // loop
+                      })
+                  })
+                }
+
+
+                var checkGroupMembers = function(){
+                  return new Promise(function(resolve, reject){
+                    var i, inUniques = 0
+                    log('Groups loaded')
+                    for (i=0; i < stats.uniques.length; i++){
+                      stats.uniquesSet[stats.uniques[i].uri] = true
+                    }
+                    stats.groupMembers = kb.statementsMatching(null, ns.vcard('hasMember')).map(st => st.object)
+                    log('  Naive group members ' + stats.groupMembers.length)
+                    stats.groupMemberSet = []
+                    for (var j=0; j < stats.groupMembers.length; j++){
+                      stats.groupMemberSet[stats.groupMembers[j].uri] = stats.groupMembers[j]
+                    }
+                    stats.groupMembers2 = []
+                    for (var g in stats.groupMemberSet){
+                      stats.groupMembers2.push(stats.groupMemberSet[g])
+                    }
+                    log('  Compact group members ' + stats.groupMembers2.length)
+
+                    if (false){ // Don't inspect as seems groups membership is complete
+                      for (i=0; i< stats.groupMembers.length; i++){
+                        var card = stats.groupMembers[i]
+                        if (stats.uniquesSet[card.uri]) {
+                          inUniques += 1
+                        } else {
+                          log('  Not in uniques: ' + card)
+                          stats.groupProblems.push(card)
+                          if (stats.duplicateSet[card.uri]){
+                            log('    ** IN duplicates alas:' + card)
+                          } else {
+                            log('   **** WTF?')
+                          }
+                        }
+                      }
+                      log('Problem cards: ' + stats.groupProblems.length)
+                    } // if
+                    resolve(true)
+                  })
+                } //  checkGroupMembers
+
+                var scanForDuplicates = function(){
+                  return new Promise(function(resolve, reject){
+                    stats.cards = kb.each(undefined, VCARD('inAddressBook'), stats.book)
+                    log('' + stats.cards.length + ' total cards')
+
+
+                    var c, card, name, count = 0
+                    for (c = 0; c < stats.cards.length; c++) {
+                      card = stats.cards[c]
+                      name = kb.anyValue(card, ns.vcard('fn'))
+                      if (!name) {
+                        stats.nameless.push(card)
+                        continue
+                      }
+                      if (stats.definitive[name] == card) {
+                          // pass
+                      } else if (stats.definitive[name]){
+                        var n = stats.duplicates.length
+                        if ((n < 100 ) || (n < 1000 && (n % 10 === 0)) || (n % 100 === 0)) {
+                          // log('' + n + ') Possible duplicate ' + card + ' of: ' + definitive[name])
+                        }
+                        stats.duplicates.push(card)
+                      } else {
+                        stats.definitive[name] = card
+                      }
+                    }
+
+                    stats.duplicateSet = []
+                    for (var i=0; i < stats.duplicates.length; i++){
+                      stats.duplicateSet[stats.duplicates[i].uri] = stats.duplicates[i]
+                    }
+                    stats.namelessSet = []
+                    for (i=0; i < stats.nameless.length; i++){
+                      stats.namelessSet[stats.nameless[i].uri] = stats.nameless[i]
+                    }
+                    stats.uniques = []
+                    stats.uniqueSet = []
+                    for (i=0; i< stats.cards.length; i++){
+                      var uri = stats.cards[i].uri
+                      if (!stats.duplicateSet[uri] && !stats.namelessSet[uri]){
+                          stats.uniques.push(stats.cards[i])
+                          stats.uniqueSet[uri] = stats.cards[i]
+                      }
+                    }
+                    log('Uniques: ' + stats.uniques.length)
+
+                    log('' + stats.nameless.length + ' nameless cards.')
+                    log('' + stats.duplicates.length + ' name-duplicate cards, leaving ' + (stats.cards.length - stats.duplicates.length))
+                    resolve(true)
+                  })
+                }
+
+
+                // Save a new clean version
+                var saveCleanPeople = function(){
+                  return new Promise(function(resolve, reject){
+                    var cleanPeople = kb.sym(stats.book.dir().uri + 'clean-people.ttl')
+                    var sts = []
+                    for (i=0; i < stats.uniques.length; i++){
+                      sts = sts.concat(kb.connectedStatements(stats.uniques[i], stats.nameEmailIndex))
+                    }
+                    var sz = (new $rdf.Serializer(kb)).setBase(stats.nameEmailIndex.uri)
+                    log('Serializing index of uniques...')
+                    var data = sz.statementsToN3(sts)
+                    kb.fetcher.webOperation('PUT', cleanPeople, { data: data, contentType: 'text/turtle'})
+                    .then(function(xhr){
+                      log("Done uniques log " + cleanPeople)
+                      resolve(true)
+                    }).catch(function(e){
+                      log("Error saving uniques: " + e)
+                      reject("Error saving uniques: " + e)
+                    })
+                  })
+                }
+
+                var saveCleanGroup = function(g){
+                  return new Promise(function(resolve, reject){
+                    var s = g.uri.replace('/Group/', '/NewGroup/')
+                    var cleanGroup = kb.sym(s)
+                    var sts = []
+                    for (i=0; i < stats.uniques.length; i++){
+                      sts = sts.concat(kb.connectedStatements(stats.uniques[i], g.doc()))
+                    }
+                    var sz = (new $rdf.Serializer(kb)).setBase(g.uri)
+                    log('   Regenerating group of uniques...' + cleanGroup)
+                    var data = sz.statementsToN3(sts)
+                    kb.fetcher.webOperation('PUT', cleanGroup, { data})
+                    .then(function(xhr){
+                      log("     Done uniques group " + cleanGroup)
+                      resolve(true)
+                    }).catch(function(e){
+                      log("Error saving : " + e)
+                      reject(e)
+                    })
+                  })
+                }
+
+                var saveAllGroups = function(){
+                  log('Saving ALL GROUPS')
+                  return Promise.all(stats.groupObjects.map(saveCleanGroup))
+                }
+
+                stats.groupObjects = groups.map(gstr => gstr[2])
+                log('Loading ' + stats.groupObjects.length + ' groups... ')
+                kb.fetcher.load(stats.groupObjects)
+                .then(scanForDuplicates)
+                .then(checkGroupMembers)
+                .then(checkAllNameless)
+                .then((resolve, reject) => { if (confirm("Write new clean versions?")) resolve(true); else reject() })
+                .then(saveCleanPeople)
+                .then(saveAllGroups)
+                .then(function(resolve, reject){
+                  log("Done!")
+                })
+              })
+          })
+
           var checkGroupless = MainRow.appendChild(dom.createElement('button'))
+          checkGroupless.style = buttonStyle
           checkGroupless.textContent = 'Find inidividuals with no group'
           checkGroupless.addEventListener('click', function (event) {
+
+
             log('Loading groups...')
             selectAllGroups(selectedGroups, groupsMainTable, function (ok, message) {
               if (!ok) {
@@ -665,6 +1131,7 @@ module.exports = {
                   }
                   log('' + groupless.length + ' groupless cards.')
                 })
+
             })
           })
 
@@ -1051,13 +1518,109 @@ module.exports = {
     // end of AddressBook instance
     } // renderThreeColumnBrowser
 
+    // Render Individual card
+
     var renderIndividual = function(subject){
+
+      var mainImage
+      // ////////////////////  DRAG and Drop
+      var card = subject
+
+      var handleDroppedURI = function (uri) {
+        kb.fetcher.nowOrWhenFetched(uri, function (ok, mess) {
+          if (!ok) {
+            console.log('Error looking up dropped thing ' + uri + ': ' + mess)
+          } else {
+            var types = kb.findTypeURIs(obj)
+            var obj = kb.sym(uri)
+            for (ty in types) {
+              console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
+            }
+            console.log('Default: assume web page  ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+            kb.add(card, UI.ns.vcard('url'), kb.sym(u), card.doc())
+            // @@ refresh UI
+          }
+        })
+      }
+
+      // When a set of URIs are dropped on
+      var droppedURIHandler = function (uris) {
+        uris.map(function (u) {
+          var target = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
+          console.log('Dropped on thing ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+          if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
+            var target = kb.sym(u)
+            kb.add(subject, UI.ns.vcard('url'), target, subject.doc())
+            kb.fetcher.putBack(subject.doc()).then(function(xhr){
+              // @@@ Refresh UI
+              // mainImage.setAttribute('src', pic.uri)
+              // UI.widgets.setImage(mainImage, subject)// try again
+            })
+            return
+          }
+          handleDroppedURI(u)
+        })
+      }
+
+      // Drop an image file to set up the mugshot
+      var droppedFileHandler = function (files) {
+        for (var i = 0, f; f = files[i]; i++) {
+          console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
+            ' size: ' + f.size + ' bytes, last modified: ' +
+            (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
+          ); // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
+
+          // @@ Add: progress bar(s)
+          var reader = new FileReader()
+          reader.onload = (function (theFile) {
+            return function (e) {
+              var data = e.target.result
+              console.log(' File read byteLength : ' + data.byteLength)
+              // var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
+              var filename = theFile.name
+              var extension = mime.extension(theFile.type)
+              if (theFile.type !== mime.lookup(theFile.name)){
+                filename += '_.' + extension
+                console.log("MIME TYPE MISMATCH -- adding extension: " + filename)
+              }
+              var photos = kb.any(subject, ns.vcard('hasPhoto'))
+              var n, pic
+              for (n = 0; ; n++) {
+                pic = kb.sym(card.dir().uri + filename)
+                if (!kb.holds(subject, ns.vcard('hasPhoto') , pic)){
+                  break
+                }
+                filename = 'image' + n + extension
+              }
+              kb.add(subject, ns.vcard('hasPhoto') , pic, subject.doc())
+              kb.fetcher.webOperation('PUT', pic, { data: data, contentType: theFile.type}).then(function (xhr) {
+                console.log(' Upload: put OK: ' + pic)
+                kb.fetcher.putBack(subject.doc()).then(function(xhr){
+                  mainImage.setAttribute('src', pic.uri)
+                  // UI.widgets.setImage(mainImage, subject)// try again
+                })
+              }).catch(function (status) {
+                console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
+              })
+            }
+          })(f)
+          reader.readAsArrayBuffer(f)
+        }
+      }
+      ////////// End of drag and drop
+
       var individualFormDoc = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl')
       // var individualFormDoc = kb.sym('https://timbl.rww.io/Apps/Contactator/individualForm.ttl')
       var individualForm = kb.sym(individualFormDoc.uri + '#form1')
 
       var toBeFetched = [ subject.doc(), individualFormDoc, UI.ns.vcard('Type').doc()]
-      UI.store.fetcher.load(toBeFetched).then(function(xhrs){
+      UI.store.fetcher.load(toBeFetched)
+
+      .catch(function(e){
+        console.log('Error: Failed to load form or ontology: ' + e)
+      }) // load.then
+
+      .then(function(xhrs){
 
         var setPaneStyle = function () {
           var types = kb.findTypeURIs(subject)
@@ -1075,9 +1638,10 @@ module.exports = {
 
         UI.widgets.checkUserSetMe(cardDoc)
 
-        var img = div.appendChild(dom.createElement('img'))
-        img.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
-        UI.widgets.setImage(img, subject)
+        mainImage = div.appendChild(dom.createElement('img'))
+        mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
+        UI.widgets.setImage(mainImage, subject)
+        UI.widgets.makeDropTarget(mainImage, droppedURIHandler, droppedFileHandler)
 
         UI.widgets.appendForm(dom, div, {}, subject, individualForm, cardDoc, complainIfBad)
 
@@ -1120,6 +1684,13 @@ module.exports = {
           }
         }
 
+        var attachementControl = UI.widgets.attachmentList(dom, subject, div, {
+          promptIcon: UI.icons.iconBase +  'noun_681601.svg',
+          predicate:  UI.ns.vcard('url')
+        });
+
+        var hr = div.appendChild(dom.createElement('hr'))
+
         var pages = kb.each(subject, ns.vcard('url')) // vcard:url [ a vcard:HomePage; vcard:value <http://www.w3.org/People/Berners-Lee>],
         pages.forEach(function(p){
           var cla = kb.any(p, ns.rdf('type'))
@@ -1139,9 +1710,12 @@ module.exports = {
           }
         })
 
-      }).catch(function(e){
+      })
+/*
+      .catch(function(e){
         console.log('Error: Failed to load form or ontology: ' + e)
       }) // load.then
+*/
     } // renderIndividual
 
 
