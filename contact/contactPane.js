@@ -15,6 +15,7 @@ to change its state according to an ontology, comment on it, etc.
 
 var UI = require('solid-ui')
 var mime = require('mime-types')
+var toolsPane = require('./toolsPane')
 
 if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
   console = {}
@@ -43,8 +44,9 @@ module.exports = {
   mintNew: function (context) {
     return new Promise(function(resolve, reject){
       var dom = context.dom, me = context.me, div = context.div
+      var kb = UI.store
       var ns = UI.ns
-      var newBase = context.newBase
+      var newBase = context.newBase || context.newInstance.dir().uri
       var instanceClass = context.instanceClass || ns.vcard('AddressBook')
 
       if (instanceClass.sameTerm(ns.vcard('Group'))){
@@ -53,7 +55,7 @@ module.exports = {
         var doc = g.doc()
         kb.add(g, ns.rdf('type'), ns.vcard('Group'), doc)
         kb.add(g, ns.vcard('fn'), context.instanceName || 'untitled group', doc) // @@ write doc back
-        resolve(context)
+        return resolve(context)
       }
       var appInstanceNoun = 'address book'
 
@@ -487,694 +489,326 @@ module.exports = {
         return form
       }
 
-      // //////////////////////////// Three-column Contact Browser
+      // organization-name is a hack for Mac records with no FN which is mandatory.
+      var nameFor = function (x) {
+        var name = kb.any(x, ns.vcard('fn')) ||
+          kb.any(x, ns.foaf('name')) || kb.any(x, ns.vcard('organization-name'))
+        return name ? name.value : '???'
+      }
 
-      UI.store.fetcher.nowOrWhenFetched(groupIndex.uri, book, function (ok, body) {
-        if (!ok) return console.log('Cannot load group index: ' + body)
-
-        // organization-name is a hack for Mac records with no FN which is mandatory.
-        var nameFor = function (x) {
-          var name = kb.any(x, ns.vcard('fn')) ||
-            kb.any(x, ns.foaf('name')) || kb.any(x, ns.vcard('organization-name'))
-          return name ? name.value : '???'
+      var filterName = function (name) {
+        var filter = searchInput.value.trim().toLowerCase()
+        if (filter.length === 0) return true
+        var parts = filter.split(' ') // Each name part must be somewhere
+        for (var j = 0; j < parts.length; j++) {
+          var word = parts[j]
+          if (name.toLowerCase().indexOf(word) < 0) return false
         }
+        return true
+      }
 
-        var filterName = function (name) {
-          var filter = searchInput.value.trim().toLowerCase()
-          if (filter.length === 0) return true
-          var parts = filter.split(' ') // Each name part must be somewhere
-          for (var j = 0; j < parts.length; j++) {
-            var word = parts[j]
-            if (name.toLowerCase().indexOf(word) < 0) return false
-          }
-          return true
+      var searchFilterNames = function () {
+        for (var i = 0; i < peopleMainTable.children.length; i++) {
+          var row = peopleMainTable.children[i]
+          row.setAttribute('style',
+            filterName(nameFor(row.subject)) ? '' : 'display: none;')
         }
+      }
 
-        var searchFilterNames = function () {
-          for (var i = 0; i < peopleMainTable.children.length; i++) {
-            var row = peopleMainTable.children[i]
-            row.setAttribute('style',
-              filterName(nameFor(row.subject)) ? '' : 'display: none;')
-          }
-        }
+      var selectAllGroups = function (selectedGroups, groupsMainTable, callback) {
+        var todo = groupsMainTable.children.length
+        var badness = []
+        for (var k = 0; k < groupsMainTable.children.length; k++) {
+          var groupRow = groupsMainTable.children[k]
+          var group = groupRow.subject
 
-        var selectAllGroups = function (selectedGroups, groupsMainTable, callback) {
-          var todo = groupsMainTable.children.length
-          var badness = []
-          for (var k = 0; k < groupsMainTable.children.length; k++) {
-            var groupRow = groupsMainTable.children[k]
-            var group = groupRow.subject
+          var groupList = kb.sym(group.uri.split('#')[0])
+          selectedGroups[group.uri] = true
 
-            var groupList = kb.sym(group.uri.split('#')[0])
-            selectedGroups[group.uri] = true
-
-            kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
-              if (!ok) {
-                var msg = "Can't load group file: " + groupList + ': ' + message
-                badness.push(msg)
-                return complainIfBad(ok, msg)
-              }
-              groupRow.setAttribute('style', 'background-color: #cce;')
-              refreshNames(); // @@ every time??
-              todo -= 1
-              if (!todo) {
-                if (callback) callback(badness.length === 0, badness)
-              }
-            })
-          } // for each row
-        }
-
-        var toolsPane = function (selectedGroups, groupsMainTable) {
-          var kb = UI.store, ns = UI.ns
-          var updater = UI.store.updater
-          var ACL = UI.ns.acl, VCARD = UI.ns.vcard
-          var doc = $rdf.sym(book.uri.split('#')[0]) // The ACL is actually to the doc describing the thing
-
-          var pane = dom.createElement('div')
-          var table = pane.appendChild(dom.createElement('table'))
-          table.setAttribute('style', 'font-size:120%; margin: 1em; border: 0.1em #ccc ;')
-          var headerRow = table.appendChild(dom.createElement('tr'))
-          headerRow.textContent = UI.utils.label(book) + ' - tools'
-          headerRow.setAttribute('style', 'min-width: 20em; padding: 1em; font-size: 150%; border-bottom: 0.1em solid red; margin-bottom: 2em;')
-
-          var statusRow = table.appendChild(dom.createElement('tr'))
-          var statusBlock = statusRow.appendChild(dom.createElement('div'))
-          statusBlock.setAttribute('style', 'padding: 2em;')
-          var MainRow = table.appendChild(dom.createElement('tr'))
-          var box = MainRow.appendChild(dom.createElement('table'))
-          var bottomRow = table.appendChild(dom.createElement('tr'))
-
-          context = { target: book, me: me, noun: 'address book',
-          div: pane, dom: dom, statusRegion: statusBlock }
-
-          box.appendChild(UI.aclControl.ACLControlBox5(book.dir(), dom, 'book', kb, function (ok, body) {
-            if (!ok) box.innerHTML = 'ACL control box Failed: ' + body
-          }))
-
-          //
-          UI.widgets.registrationControl(
-            context, book, ns.vcard('AddressBook'))
-            .then(function (context) {
-              console.log('Registration control finished.')
-                // pane.appendChild(box)
-            }).catch(function (e) {UI.widgets.complain(context, e)})
-
-          //  Output stats in line mode form
-          var logSpace = MainRow.appendChild(dom.createElement('pre'))
-          var log = function (message) {
-            console.log(message)
-            logSpace.textContent += message + '\n'
-          }
-
-          var stats = function () {
-            var totalCards = kb.each(undefined, VCARD('inAddressBook'), book).length
-            log('' + totalCards + ' cards loaded. ')
-            var groups = kb.each(book, VCARD('includesGroup'))
-            log('' + groups.length + ' total groups. ')
-            var gg = [], g
-            for (g in selectedGroups) {
-              gg.push(g)
+          kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
+            if (!ok) {
+              var msg = "Can't load group file: " + groupList + ': ' + message
+              badness.push(msg)
+              return complainIfBad(ok, msg)
             }
-            log('' + gg.length + ' selected groups. ')
-          }
-
-          var loadIndexButton = pane.appendChild(dom.createElement('button'))
-          loadIndexButton.textContent = 'Load main index'
-          loadIndexButton.style = buttonStyle
-          loadIndexButton.addEventListener('click', function (e) {
-            loadIndexButton.setAttribute('style', 'background-color: #ffc;')
-
-            var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
-            UI.store.fetcher.nowOrWhenFetched(nameEmailIndex, undefined, function (ok, message) {
-              if (ok) {
-                loadIndexButton.setAttribute('style', 'background-color: #cfc;')
-                log(' People index has been loaded\n')
-              } else {
-                loadIndexButton.setAttribute('style', 'background-color: #fcc;')
-                log('Error: People index has NOT been loaded' + message + '\n')
-              }
-            })
-          })
-
-          var statButton = pane.appendChild(dom.createElement('button'))
-          statButton.textContent = 'Statistics'
-          statButton.style = buttonStyle
-          statButton.addEventListener('click', stats)
-
-          var checkAccessButton = MainRow.appendChild(dom.createElement('button'))
-          checkAccessButton.textContent = 'Check inidividual card access of selected groups'
-          checkAccessButton.style = buttonStyle
-          checkAccessButton.addEventListener('click', function (event) {
-
-            var gg = [], g
-            for (g in selectedGroups) {
-              gg.push(g)
-            }
-
-            for (var i = 0; i < gg.length; i++) {
-              var g = kb.sym(gg[i])
-              var a = kb.each(g, ns.vcard('hasMember'))
-              log(UI.utils.label(g) + ': ' + a.length + ' members')
-              for (var j = 0; j < a.length; j++) {
-                var card = a[j]
-                log(UI.utils.label(card))
-                function doCard (card) {
-                  UI.widgets.fixIndividualCardACL(card, log, function (ok, message) {
-                    if (ok) {
-                      log('Sucess for ' + UI.utils.label(card))
-                    } else {
-                      log('Failure for ' + UI.utils.label(card) + ': ' + message)
-                    }
-                  })
-                }
-                doCard(card)
-              }
+            groupRow.setAttribute('style', 'background-color: #cce;')
+            refreshNames(); // @@ every time??
+            todo -= 1
+            if (!todo) {
+              if (callback) callback(badness.length === 0, badness)
             }
           })
+        } // for each row
+      }
 
-          /////////////////////////////////////////////////////////////////////////////
-          //
-          //      DUPLICATES CHECK
+      var sortGroups = function () {
+        var gs = []
+        groups = []
+        if (options.foreignGroup) {
+          groups.push(['', kb.any(options.foreignGroup, ns.vcard('fn')), options.foreignGroup])
+        }
+        if (book){
+          books.map(function (book) {
+            var gs = book ? kb.each(book, ns.vcard('includesGroup')) : []
+            var gs2 = gs.map(function (g) {return [ book, kb.any(g, ns.vcard('fn')), g] })
+            groups = groups.concat(gs2)
+          })
+          groups.sort()
+        }
+      }
 
-          var checkDuplicates = MainRow.appendChild(dom.createElement('button'))
-          checkDuplicates.textContent = 'Find duplicate cards'
-          checkDuplicates.style = buttonStyle
-          checkDuplicates.addEventListener('click', function (event) {
+      var cardPane = function (dom, subject, paneName) {
+        var p = UI.panes.byName(paneName)
+        var d = p.render(subject, dom)
+        d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
+        return d
+      }
 
-            var stats = {} // global god context
+      var compareForSort = function (self, other) {
+        var s = nameFor(self)
+        var o = nameFor(other)
+        if (s && o) {
+          s = s.toLowerCase()
+          o = o.toLowerCase()
+          if (s > o) return 1
+          if (s < o) return -1
+        }
+        if (self.uri > other.uri) return 1
+        if (self.uri < other.uri) return -1
+        return 0
+      }
 
-            stats.book = book
-            stats.nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
-            log('Loading name index...')
+      // In a LDP work, deletes the whole document describing a thing
+      // plus patch out ALL mentiosn of it!    Use with care!
+      // beware of other dta picked up from other places being smushed
+      // together and then deleted.
 
+      var deleteThing = function (x) {
+        var ds = kb.statementsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
+        var targets = {}
+        ds.map(function (st) {targets[st.why.uri] = st;})
+        var agenda = [] // sets of statements of same dcoument to delete
+        for (var target in targets) {
+          agenda.push(ds.filter(function (st) { return st.why.uri = target }))
+          dump('Deleting ' + agenda[agenda.length - 1].length + ' from ' + target)
+        }
+        function nextOne () {
+          if (agenda.length > 0) {
+            updater.update(agenda.shift(), [], function (uri, ok, body) {
+              nextOne()
+            })
+          } else {
+            var doc = kb.sym(x.uri.split('#')[0])
+            dump('Deleting resoure ' + doc)
+            updater.deleteResource(doc)
+          }
+        }
+        nextOne()
+      }
 
-            UI.store.fetcher.nowOrWhenFetched(stats.nameEmailIndex, undefined,
-              function (ok, message) {
-                log('Loaded name index.')
+      var localNode = function(person, div){
+        var aliases = kb.allAliases(person)
+        var prefix = book.dir().uri
+        for (var i=0; i<aliases.length; i++){
+          if (aliases[i].uri.slice(0, prefix.length) == prefix){
+            return aliases[i]
+          }
+        }
+        throw "No local URI for " + person
+      }
 
-                stats.cards = []
-                stats.duplicates = []
-                stats.definitive = []
-                stats.nameless = []
+      var refreshNames = function () {
+        var cards = [], ng = 0
+        for (var u in selectedGroups) {
+          if (selectedGroups[u]) {
+            var a = kb.each(kb.sym(u), ns.vcard('hasMember'))
+            // dump('Adding '+ a.length + ' people from ' + u + '\n')
+            cards = cards.concat(a)
+            ng += 1
+          }
+        }
+        cards.sort(compareForSort); // @@ sort by name not UID later
+        for (var k = 0; k < cards.length - 1;) {
+          if (cards[k].uri === cards[k + 1].uri) {
+            cards.splice(k, 1)
+          } else {
+            k++
+          }
+        }
 
-                stats.exactDuplicates = []
-                stats.nameOnlyDuplicates = []
+        peopleMainTable.innerHTML = '' // clear
+        peopleHeader.textContent = (cards.length > 5 ? '' + cards.length + ' contacts' : 'contact')
 
-                stats.uniquesSet = []
-                stats.groupProblems = []
+        for (var j = 0; j < cards.length; j++) {
+          var personRow = peopleMainTable.appendChild(dom.createElement('tr'))
+          var personLeft = personRow.appendChild(dom.createElement('td'))
+          var personRight = personRow.appendChild(dom.createElement('td'))
+          personLeft.setAttribute('style', dataCellStyle)
+          var person = cards[j]
+          var name = nameFor(person)
+          personLeft.textContent = name
+          personRow.subject = person
+          UI.widgets.makeDraggable(personRow, person)
 
-                // Erase one card and all its files  -> (err)
-                //
-                var eraseOne = function(card){
-                  return new Promise(function(resolve, reject){
-                    var removeFromMainIndex = function(){
-                      var indexBit = kb.connectedStatements(card, stats.nameEmailIndex)
-                      log('Bits of the name index file:' + indexBit)
-                      log('Patching main index file...')
-                      kb.updater.update(indexBit, [], function (uri, ok, body){
-                        if (ok){
-                          log('Success')
-                          resolve(null)
-                        } else {
-                          log('Error patching index file! ' + body)
-                          reject('Error patching index file! ' + body)
-                        }
-                      })
-                    }
-                  })
+          var setPersonListener = function toggle (personLeft, person) {
+            UI.widgets.deleteButtonWithCheck(dom, personRight, 'contact', function () {
+              deleteThing(person)
+              refreshNames()
+              cardMain.innerHTML = ''
+            })
+            personRow.addEventListener('click', function (event) {
+              event.preventDefault()
+              cardMain.innerHTML = 'loading...'
+              var local = localNode(person)
+              UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
+                cardMain.innerHTML = ''
+                if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
+                // dump("Loaded card " + local + '\n')
+                cardMain.appendChild(cardPane(dom, local, 'contact'))
+                cardMain.appendChild(dom.createElement('br'))
 
-                  var filesToDelete = [ card.doc()]
-                  var photo = kb.any(card, ns.vcard('hasPhoto'))
-                  if (photo) filesToDelete.push(photo)
-                  filesToDelete.push(card.dir()) // the folder last
-                  log('Files to delete: ' + filesToDelete)
-                  if (!confirm('DELETE card ' + card.dir() + ' for ' + name + ', with ' + desc.length + 'statements?')){
-                    return resolve('Cancelled by user')
-                  }
-
-                  var deleteOneFile = function(){
-                    var resource = filesToDelete.shift()
-                    if (!resource) {
-                      log('All deleted')
-                      removeFromMainIndex()
-                      return
-                    }
-                    log('Deleting ... ' + resource)
-                    kb.fetcher.webOperation('DELETE', resource).then(function(xhr){
-                      log('Deleted ok: ' + resource)
-                      deleteOneFile()
-                    }).catch(function(e){
-                      var err = '*** ERROR deleteing ' + resource + ': ' + e
-                      log(err)
-                      if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card DELETE errors?')){
-                        removeFromMainIndex()
-                      } else {
-                        reject(err)
-                      }
-                    })
-                  }
-                  deleteOneFile()
-                } // erase one
-
-                //   Check actual recorrds to see which are exact matches - slow
-                stats.nameDupLog = kb.sym(book.dir().uri + "dedup-nameDupLog.ttl")
-                stats.exactDupLog = kb.sym(book.dir().uri + "dedup-exactDupLog.ttl")
-
-                var checkOne = function(card){
-                  return new Promise(function(resolve, reject){
-                    var name = kb.anyValue(card, ns.vcard('fn'))
-                    var other = definitive[name]
-                    kb.fetcher.load([card, other]).then(function(xhrs){
-                      var exclude = {}
-                      exclude[ns.vcard('hasUID').uri] = true
-                      exclude[ns.dc('created').uri] = true
-                      exclude[ns.dc('modified').uri] = true
-                      var filtered = function(x){
-                        return kb.statementsMatching(null, null, null, x.doc()).filter(function(st){
-                          return !exclude[st.predicate.uri]
-                        })
-                      }
-                      var desc = filtered(card)
-                      var desc2 = filtered(other)
-                      // var desc = connectedStatements(card, card.doc(), exclude)
-                      // var desc2 = connectedStatements(other, other.doc(), exclude)
-                      if (desc.length !== desc2.length){
-                        log('CARDS to NOT match lengths ')
-                        stats.nameOnlyDuplicates.push(card)
-                        return resolve(false)
-                      }
-                      if (!desc.length){
-                        log('@@@@@@  Zero length ')
-                        stats.nameOnlyDuplicates.push(card)
-                        return resolve(false)
-                      }
-                      ////////// Compare the two
-                      // Cheat: serialize and compare
-                      // var cardText = $rdf.serialize(card.doc(), kb, card.doc().uri, 'text/turtle')
-                      // var otherText = $rdf.serialize(other.doc(), kb, other.doc().uri, 'text/turtle')
-                      var cardText = (new $rdf.Serializer(kb)).setBase(card.doc().uri).statementsToN3(desc)
-                      var otherText = (new $rdf.Serializer(kb)).setBase(other.doc().uri).statementsToN3(desc2)
-/*
-                      log('Name: ' + name + ', statements: ' + desc.length)
-                      log('___________________________________________')
-                      log('KEEPING: ' + other.doc() + '\n' + cardText);
-                      log('___________________________________________')
-                      log('DELETING: '+ card.doc() + '\n' + otherText);
-                      log('___________________________________________')
-*/
-                      if (cardText !== otherText){
-                        log("Texts differ")
-                        stats.nameOnlyDuplicates.push(card)
-                        return resolve(false)
-                      }
-                      var cardGroups = kb.each(null, ns.vcard('hasMember'), card)
-                      var otherGroups = kb.each(null, ns.vcard('hasMember'), other)
-                      for (var j=0; j< cardGroups.length; j++){
-                        var found = false
-                        for (var k=0; k < otherGroups.length; k++){
-                          if (otherGroups[k].sameTerm(cardGroups[j])) found = true;
-                        }
-                        if (!found){
-                          log('This one groups: ' + cardGroups)
-                          log('Other one groups: ' + otherGroups)
-                          log('Cant delete this one because it has a group, ' + cardGroups[j] + ', which the other does not.')
-                          stats.nameOnlyDuplicates.push(card)
-                          return resolve(false)
-                        }
-                      }
-                      console.log('Group check done -- exact duplicate: ' + card)
-                      stats.exactDuplicates.push(card)
-                      resolve(true)
-
-                    }).catch(function(e){
-                      log('Cant load a card! ' + [card, other] + ': ' + e)
-                      stats.nameOnlyDuplicates.push(card)
-                      resolve(false)
-                      //if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card READ errors?')){
-                      //  removeFromMainIndex()
-                      // }
-                    })
-                  })
-                } // checkOne
-
-                stats.nameOnlyErrors = []
-                stats.nameLessZeroData = []
-                stats.nameLessIndex = []
-                stats.namelessUniques = []
-                stats.nameOnlyDuplicatesGroupDiff = []
-
-                var checkOneNameless = function(card){
-                  return new Promise(function(resolve, reject){
-                    kb.fetcher.load(card).then(function(xhr){
-                      log(' Nameless check ' + card)
-                      var exclude = {}
-                      exclude[ns.vcard('hasUID').uri] = true
-                      exclude[ns.dc('created').uri] = true
-                      exclude[ns.dc('modified').uri] = true
-                      var filtered = function(x){
-                        return kb.statementsMatching(null, null, null, x.doc()).filter(function(st){
-                          return !exclude[st.predicate.uri]
-                        })
-                      }
-
-                      var desc = filtered(card)
-                      // var desc = connectedStatements(card, card.doc(), exclude)
-                      // var desc2 = connectedStatements(other, other.doc(), exclude)
-                      if (!desc.length){
-                        log('  Zero length ' + card)
-                        stats.nameLessZeroData.push(card)
-                        return resolve(false)
-                      }
-                      ////////// Compare the two
-                      // Cheat: serialize and compare
-                      // var cardText = $rdf.serialize(card.doc(), kb, card.doc().uri, 'text/turtle')
-                      // var otherText = $rdf.serialize(other.doc(), kb, other.doc().uri, 'text/turtle')
-                      var cardText = (new $rdf.Serializer(kb)).setBase(card.doc().uri).statementsToN3(desc)
-                      var other = stats.nameLessIndex[cardText]
-                      if (other){
-                        log('  Matches with ' + other)
-                        var cardGroups = kb.each(null, ns.vcard('hasMember'), card)
-                        var otherGroups = kb.each(null, ns.vcard('hasMember'), other)
-                        for (var j=0; j< cardGroups.length; j++){
-                          var found = false
-                          for (var k=0; k < otherGroups.length; k++){
-                            if (otherGroups[k].sameTerm(cardGroups[j])) found = true;
-                          }
-                          if (!found){
-                            log('This one groups: ' + cardGroups)
-                            log('Other one groups: ' + otherGroups)
-                            log('Cant skip this one because it has a group, ' + cardGroups[j] + ', which the other does not.')
-                            stats.nameOnlyDuplicatesGroupDiff.push(card)
-                            return resolve(false)
-                          }
-                        }
-                        console.log('Group check done -- exact duplicate: ' + card)
-                      } else {
-                        log('First nameless like: ' + card.doc());
-                        log('___________________________________________')
-                        log(cardText)
-                        log('___________________________________________')
-                         stats.nameLessIndex[cardText] = card
-                         stats.namelessUniques.push(card)
-                      }
-                      resolve(true)
-
-                    }).catch(function(e){
-                      log('Cant load a nameless card! ' + other + ': ' + e)
-                      stats.nameOnlyErrors.push(card)
-                      resolve(false)
-                    })
-                  })
-                } // checkOneNameless
-
-                var duplicatesToCheck = stats.duplicates.slice() // copy
-                var checkAll = function(){
-                  return new Promise(function(resolve, reject){
-                    var x = duplicatesToCheck.shift()
-                    if (!x) return resolve(true)
-                    checkOne(x).then(function(exact){
-                      var logg = exact? exactDupLog : nameDupLog
-                      var klass = exact ? 'ExactDuplicate' : 'NameOnlyDuplicate'
-                      kb.updater.update([], $rdf.st(x, ns.rdf('type'), ns.vcard(klass), logg),
-                        function(uri, ok, error_body){
-                          if (ok) {
-                            checkAll() // loop
-                          } else {
-                            log('Stop: log write failure ' +  error_body)
-                          }
-                        })
-                      })
-                  })
-                }
-
-                var checkAllNameless = function(){
-                  stats.namelessToCheck = stats.namelessToCheck  || stats.nameless.slice()
-                  log('Nameless check left: ' + stats.namelessToCheck.length)
-                  return new Promise(function(resolve, reject){
-                    var x = stats.namelessToCheck.shift()
-                    if (!x) {
-                      log('namelessUniques: ' + stats.namelessUniques.length)
-                      log('namelessUniques: ' + stats.namelessUniques)
-                      if (confirm("Add all " + stats.namelessUniques.length + " nameless cards to the rescued set?")){
-                        stats.uniques = stats.uniques.concat(stats.namelessUniques)
-                        for (var k=0; k < stats.namelessUniques.length; k++){
-                          stats.uniqueSet[stats.namelessUniques[k].uri] = true
-                        }
-                      }
-                      return resolve(true)
-                    }
-                    checkOneNameless(x).then(function(exact){
-                      log('    Namelessc check returns ' + exact)
-                      checkAllNameless() // loop
-                      })
-                  })
-                }
-
-
-                var checkGroupMembers = function(){
-                  return new Promise(function(resolve, reject){
-                    var i, inUniques = 0
-                    log('Groups loaded')
-                    for (i=0; i < stats.uniques.length; i++){
-                      stats.uniquesSet[stats.uniques[i].uri] = true
-                    }
-                    stats.groupMembers = kb.statementsMatching(null, ns.vcard('hasMember')).map(st => st.object)
-                    log('  Naive group members ' + stats.groupMembers.length)
-                    stats.groupMemberSet = []
-                    for (var j=0; j < stats.groupMembers.length; j++){
-                      stats.groupMemberSet[stats.groupMembers[j].uri] = stats.groupMembers[j]
-                    }
-                    stats.groupMembers2 = []
-                    for (var g in stats.groupMemberSet){
-                      stats.groupMembers2.push(stats.groupMemberSet[g])
-                    }
-                    log('  Compact group members ' + stats.groupMembers2.length)
-
-                    if (false){ // Don't inspect as seems groups membership is complete
-                      for (i=0; i< stats.groupMembers.length; i++){
-                        var card = stats.groupMembers[i]
-                        if (stats.uniquesSet[card.uri]) {
-                          inUniques += 1
-                        } else {
-                          log('  Not in uniques: ' + card)
-                          stats.groupProblems.push(card)
-                          if (stats.duplicateSet[card.uri]){
-                            log('    ** IN duplicates alas:' + card)
-                          } else {
-                            log('   **** WTF?')
-                          }
-                        }
-                      }
-                      log('Problem cards: ' + stats.groupProblems.length)
-                    } // if
-                    resolve(true)
-                  })
-                } //  checkGroupMembers
-
-                var scanForDuplicates = function(){
-                  return new Promise(function(resolve, reject){
-                    stats.cards = kb.each(undefined, VCARD('inAddressBook'), stats.book)
-                    log('' + stats.cards.length + ' total cards')
-
-
-                    var c, card, name, count = 0
-                    for (c = 0; c < stats.cards.length; c++) {
-                      card = stats.cards[c]
-                      name = kb.anyValue(card, ns.vcard('fn'))
-                      if (!name) {
-                        stats.nameless.push(card)
-                        continue
-                      }
-                      if (stats.definitive[name] == card) {
-                          // pass
-                      } else if (stats.definitive[name]){
-                        var n = stats.duplicates.length
-                        if ((n < 100 ) || (n < 1000 && (n % 10 === 0)) || (n % 100 === 0)) {
-                          // log('' + n + ') Possible duplicate ' + card + ' of: ' + definitive[name])
-                        }
-                        stats.duplicates.push(card)
-                      } else {
-                        stats.definitive[name] = card
-                      }
-                    }
-
-                    stats.duplicateSet = []
-                    for (var i=0; i < stats.duplicates.length; i++){
-                      stats.duplicateSet[stats.duplicates[i].uri] = stats.duplicates[i]
-                    }
-                    stats.namelessSet = []
-                    for (i=0; i < stats.nameless.length; i++){
-                      stats.namelessSet[stats.nameless[i].uri] = stats.nameless[i]
-                    }
-                    stats.uniques = []
-                    stats.uniqueSet = []
-                    for (i=0; i< stats.cards.length; i++){
-                      var uri = stats.cards[i].uri
-                      if (!stats.duplicateSet[uri] && !stats.namelessSet[uri]){
-                          stats.uniques.push(stats.cards[i])
-                          stats.uniqueSet[uri] = stats.cards[i]
-                      }
-                    }
-                    log('Uniques: ' + stats.uniques.length)
-
-                    log('' + stats.nameless.length + ' nameless cards.')
-                    log('' + stats.duplicates.length + ' name-duplicate cards, leaving ' + (stats.cards.length - stats.duplicates.length))
-                    resolve(true)
-                  })
-                }
-
-
-                // Save a new clean version
-                var saveCleanPeople = function(){
-                  return new Promise(function(resolve, reject){
-                    var cleanPeople = kb.sym(stats.book.dir().uri + 'clean-people.ttl')
-                    var sts = []
-                    for (i=0; i < stats.uniques.length; i++){
-                      sts = sts.concat(kb.connectedStatements(stats.uniques[i], stats.nameEmailIndex))
-                    }
-                    var sz = (new $rdf.Serializer(kb)).setBase(stats.nameEmailIndex.uri)
-                    log('Serializing index of uniques...')
-                    var data = sz.statementsToN3(sts)
-                    kb.fetcher.webOperation('PUT', cleanPeople, { data: data, contentType: 'text/turtle'})
-                    .then(function(xhr){
-                      log("Done uniques log " + cleanPeople)
-                      resolve(true)
-                    }).catch(function(e){
-                      log("Error saving uniques: " + e)
-                      reject("Error saving uniques: " + e)
-                    })
-                  })
-                }
-
-                var saveCleanGroup = function(g){
-                  return new Promise(function(resolve, reject){
-                    var s = g.uri.replace('/Group/', '/NewGroup/')
-                    var cleanGroup = kb.sym(s)
-                    var sts = []
-                    for (i=0; i < stats.uniques.length; i++){
-                      sts = sts.concat(kb.connectedStatements(stats.uniques[i], g.doc()))
-                    }
-                    var sz = (new $rdf.Serializer(kb)).setBase(g.uri)
-                    log('   Regenerating group of uniques...' + cleanGroup)
-                    var data = sz.statementsToN3(sts)
-                    kb.fetcher.webOperation('PUT', cleanGroup, { data})
-                    .then(function(xhr){
-                      log("     Done uniques group " + cleanGroup)
-                      resolve(true)
-                    }).catch(function(e){
-                      log("Error saving : " + e)
-                      reject(e)
-                    })
-                  })
-                }
-
-                var saveAllGroups = function(){
-                  log('Saving ALL GROUPS')
-                  return Promise.all(stats.groupObjects.map(saveCleanGroup))
-                }
-
-                stats.groupObjects = groups.map(gstr => gstr[2])
-                log('Loading ' + stats.groupObjects.length + ' groups... ')
-                kb.fetcher.load(stats.groupObjects)
-                .then(scanForDuplicates)
-                .then(checkGroupMembers)
-                .then(checkAllNameless)
-                .then((resolve, reject) => { if (confirm("Write new clean versions?")) resolve(true); else reject() })
-                .then(saveCleanPeople)
-                .then(saveAllGroups)
-                .then(function(resolve, reject){
-                  log("Done!")
-                })
+                var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local))// hoverHide
               })
-          })
-
-          var checkGroupless = MainRow.appendChild(dom.createElement('button'))
-          checkGroupless.style = buttonStyle
-          checkGroupless.textContent = 'Find inidividuals with no group'
-          checkGroupless.addEventListener('click', function (event) {
-
-
-            log('Loading groups...')
-            selectAllGroups(selectedGroups, groupsMainTable, function (ok, message) {
-              if (!ok) {
-                log('Failed: ' + message)
-                return
-              }
-
-              var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
-              UI.store.fetcher.nowOrWhenFetched(nameEmailIndex, undefined,
-                function (ok, message) {
-                  log('Loaded groups and name index.')
-                  var reverseIndex = {}, groupless = []
-                  var groups = kb.each(book, VCARD('includesGroup'))
-                  log('' + groups.length + ' total groups. ')
-
-                  for (var i = 0; i < groups.length; i++) {
-                    var g = groups[i]
-                    var a = kb.each(g, ns.vcard('hasMember'))
-                    log(UI.utils.label(g) + ': ' + a.length + ' members')
-                    for (var j = 0; j < a.length; j++) {
-                      kb.allAliases(a[j]).forEach(function(y){
-                        reverseIndex[y.uri] = g
-                      })
-                    }
-                  }
-
-                  var cards = kb.each(undefined, VCARD('inAddressBook'), book)
-                  log('' + cards.length + ' total cards')
-                  var c, card
-                  for (c = 0; c < cards.length; c++) {
-                    if (!reverseIndex[cards[c].uri]) {
-                      groupless.push(cards[c])
-                      log('   groupless ' + UI.utils.label(cards[c]))
-                    }
-                  }
-                  log('' + groupless.length + ' groupless cards.')
-                })
-
             })
-          })
+          }
+          setPersonListener(personRow, person)
+        }
+        searchFilterNames()
+      }
 
-          return pane
+      var refreshGroupsSelected = function () {
+        for (var i = 0; i < groupsMainTable.children.length; i++) {
+          var row = groupsMainTable.children[i]
+          if (row.subject) {
+            row.setAttribute('style', selectedGroups[row.subject.uri] ? 'background-color: #cce;' : '')
+          }
+        }
+      }
+
+      // Check every group is in the list and add it if not.
+
+      var syncGroupTable = function () {
+        var foundOne
+        sortGroups()
+
+        for (i = 0; i < groupsMainTable.children.length; i++) {
+          var row = groupsMainTable.children[i]
+          row.trashMe = true
         }
 
-        // //////////////////   Body of 3-column browser
+        for (var g = 0; g < groups.length; g++) {
+          var book = groups[g][0]
+          var name = groups[g][1]
+          var group = groups[g][2]
 
-        var bookTable = dom.createElement('table')
-        bookTable.setAttribute('style', 'border-collapse: collapse; margin-right: 0;')
-        div.appendChild(bookTable)
-        var bookHeader = bookTable.appendChild(dom.createElement('tr'))
-        var bookMain = bookTable.appendChild(dom.createElement('tr'))
-        var bookFooter = bookTable.appendChild(dom.createElement('tr'))
-        var groupsHeader = bookHeader.appendChild(dom.createElement('td'))
-        var peopleHeader = bookHeader.appendChild(dom.createElement('td'))
-        var cardHeader = bookHeader.appendChild(dom.createElement('td'))
-        var groupsMain = bookMain.appendChild(dom.createElement('td'))
-        var groupsMainTable = groupsMain.appendChild(dom.createElement('table'))
-        var peopleMain = bookMain.appendChild(dom.createElement('td'))
-        var peopleMainTable = peopleMain.appendChild(dom.createElement('table'))
+          // selectedGroups[group.uri] = false
+          foundOne = false
 
-        var groupsFooter = bookFooter.appendChild(dom.createElement('td'))
-        var peopleFooter = bookFooter.appendChild(dom.createElement('td'))
-        var cardFooter = bookFooter.appendChild(dom.createElement('td'))
+          for (var i = 0; i < groupsMainTable.children.length; i++) {
+            var row = groupsMainTable.children[i]
+            if (row.subject && row.subject.sameTerm(group)) {
+              row.trashMe = false
+              foundOne = true
+              break
+            }
+          }
+          if (!foundOne) {
+            var groupRow = groupsMainTable.appendChild(dom.createElement('tr'))
+            groupRow.subject = group
+            UI.widgets.makeDraggable(groupRow, group)
 
-        var searchDiv = cardHeader.appendChild(dom.createElement('div'))
-        // searchDiv.setAttribute('style', 'border: 0.1em solid #888; border-radius: 0.5em')
-        var searchInput = cardHeader.appendChild(dom.createElement('input'))
-        searchInput.setAttribute('type', 'text')
-        searchInput.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em; width: 100%;')
-        // searchInput.addEventListener('input', searchFilterNames)
-        searchInput.addEventListener('input', function (e) {
-          searchFilterNames()
-        })
+            groupRow.setAttribute('style', dataCellStyle)
+            groupRow.textContent = name
+            var foo = function toggle (groupRow, group, name) {
+              UI.widgets.deleteButtonWithCheck(dom, groupRow, 'group ' + name, function () {
+                deleteThing(group)
+                syncGroupTable()
+              })
+              groupRow.addEventListener('click', function (event) {
+                event.preventDefault()
+                var groupList = kb.sym(group.uri.split('#')[0])
+                if (!event.metaKey) {
+                  selectedGroups = {}; // If Command key pressed, accumulate multiple
+                }
+                selectedGroups[group.uri] = ! selectedGroups[group.uri]
+                refreshGroupsSelected()
+                peopleMainTable.innerHTML = ''; // clear in case refreshNames doesn't work for unknown reason
 
-        var cardMain = bookMain.appendChild(dom.createElement('td'))
-        cardMain.setAttribute('style', 'margin: 0;') // fill space available
-        var dataCellStyle = 'padding: 0.1em;'
+                kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
+                  if (!ok) return complainIfBad(ok, "Can't load group file: " + groupList + ': ' + message)
+                  refreshNames()
 
-        groupsHeader.textContent = 'groups'
-        groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;')
+                  if (!event.metaKey) { // If only one group has beeen selected show ACL
+                    cardMain.innerHTML = ''
+                    cardMain.appendChild(UI.aclControl.ACLControlBox5(group, dom, 'group', kb, function (ok, body) {
+                      if (!ok) cardMain.innerHTML = 'Failed: ' + body
+                    }))
+                  }
+                })
+              }, true)
+            }
+            foo(groupRow, group, name)
+          } // if not foundOne
+        } // loop g
 
+        for (i = 0; i < groupsMainTable.children.length; i++) {
+          var row = groupsMainTable.children[i]
+          if (row.trashMe) {
+            groupsMainTable.removeChild(row)
+          }
+        }
+        refreshGroupsSelected()
+      } // syncGroupTable
+
+
+
+
+      // //////////////////////////// Three-column Contact Browser  - Body
+
+      // UI.store.fetcher.nowOrWhenFetched(groupIndex.uri, book, function (ok, body) {
+      //   if (!ok) return console.log('Cannot load group index: ' + body)
+
+
+
+      // //////////////////   Body of 3-column browser
+
+      var bookTable = dom.createElement('table')
+      bookTable.setAttribute('style', 'border-collapse: collapse; margin-right: 0;')
+      div.appendChild(bookTable)
+      var bookHeader = bookTable.appendChild(dom.createElement('tr'))
+      var bookMain = bookTable.appendChild(dom.createElement('tr'))
+      var bookFooter = bookTable.appendChild(dom.createElement('tr'))
+      var groupsHeader = bookHeader.appendChild(dom.createElement('td'))
+      var peopleHeader = bookHeader.appendChild(dom.createElement('td'))
+      var cardHeader = bookHeader.appendChild(dom.createElement('td'))
+      var groupsMain = bookMain.appendChild(dom.createElement('td'))
+      var groupsMainTable = groupsMain.appendChild(dom.createElement('table'))
+      var peopleMain = bookMain.appendChild(dom.createElement('td'))
+      var peopleMainTable = peopleMain.appendChild(dom.createElement('table'))
+
+      var groupsFooter = bookFooter.appendChild(dom.createElement('td'))
+      var peopleFooter = bookFooter.appendChild(dom.createElement('td'))
+      var cardFooter = bookFooter.appendChild(dom.createElement('td'))
+
+      var searchDiv = cardHeader.appendChild(dom.createElement('div'))
+      // searchDiv.setAttribute('style', 'border: 0.1em solid #888; border-radius: 0.5em')
+      var searchInput = cardHeader.appendChild(dom.createElement('input'))
+      searchInput.setAttribute('type', 'text')
+      searchInput.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em; width: 100%;')
+      // searchInput.addEventListener('input', searchFilterNames)
+      searchInput.addEventListener('input', function (e) {
+        searchFilterNames()
+      })
+
+      var cardMain = bookMain.appendChild(dom.createElement('td'))
+      cardMain.setAttribute('style', 'margin: 0;') // fill space available
+      var dataCellStyle = 'padding: 0.1em;'
+
+      groupsHeader.textContent = 'groups'
+      groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;')
+
+      var groups
+      if (book){
         var allGroups = groupsHeader.appendChild(dom.createElement('button'))
         allGroups.textContent = 'All'
         allGroups.setAttribute('style', 'margin-left: 1em; font-size: 80%')
@@ -1188,330 +822,117 @@ module.exports = {
             refreshGroupsSelected()
           }
         }) // on button click
-
-        peopleHeader.textContent = 'name'
-        peopleHeader.setAttribute('style', 'min-width: 18em;')
-        peopleMain.setAttribute('style', 'overflow:scroll;')
-
-        var groups
-
-        var sortGroups = function () {
-          var gs = []
-          groups = []
-          if (options.foreignGroup) {
-            groups.push(['', kb.any(options.foreignGroup, ns.vcard('fn')), options.foreignGroup])
-          }
-          books.map(function (book) {
-            var gs = book ? kb.each(book, ns.vcard('includesGroup')) : []
-            var gs2 = gs.map(function (g) {return [ book, kb.any(g, ns.vcard('fn')), g] })
-            groups = groups.concat(gs2)
-          })
-          groups.sort()
-        }
-
-        var cardPane = function (dom, subject, paneName) {
-          var p = UI.panes.byName(paneName)
-          var d = p.render(subject, dom)
-          d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
-          return d
-        }
-
-        var compareForSort = function (self, other) {
-          var s = nameFor(self)
-          var o = nameFor(other)
-          if (s && o) {
-            s = s.toLowerCase()
-            o = o.toLowerCase()
-            if (s > o) return 1
-            if (s < o) return -1
-          }
-          if (self.uri > other.uri) return 1
-          if (self.uri < other.uri) return -1
-          return 0
-        }
-
-        // In a LDP work, deletes the whole document describing a thing
-        // plus patch out ALL mentiosn of it!    Use with care!
-        // beware of other dta picked up from other places being smushed
-        // together and then deleted.
-
-        var deleteThing = function (x) {
-          var ds = kb.statementsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
-          var targets = {}
-          ds.map(function (st) {targets[st.why.uri] = st;})
-          var agenda = [] // sets of statements of same dcoument to delete
-          for (var target in targets) {
-            agenda.push(ds.filter(function (st) { return st.why.uri = target }))
-            dump('Deleting ' + agenda[agenda.length - 1].length + ' from ' + target)
-          }
-          function nextOne () {
-            if (agenda.length > 0) {
-              updater.update(agenda.shift(), [], function (uri, ok, body) {
-                nextOne()
-              })
-            } else {
-              var doc = kb.sym(x.uri.split('#')[0])
-              dump('Deleting resoure ' + doc)
-              updater.deleteResource(doc)
-            }
-          }
-          nextOne()
-        }
-
-        var localNode = function(person, div){
-          var aliases = kb.allAliases(person)
-          var prefix = book.dir().uri
-          for (var i=0; i<aliases.length; i++){
-            if (aliases[i].uri.slice(0, prefix.length) == prefix){
-              return aliases[i]
-            }
-          }
-          throw "No local URI for " + person
-        }
-
-        var refreshNames = function () {
-          var cards = [], ng = 0
-          for (var u in selectedGroups) {
-            if (selectedGroups[u]) {
-              var a = kb.each(kb.sym(u), ns.vcard('hasMember'))
-              // dump('Adding '+ a.length + ' people from ' + u + '\n')
-              cards = cards.concat(a)
-              ng += 1
-            }
-          }
-          cards.sort(compareForSort); // @@ sort by name not UID later
-          for (var k = 0; k < cards.length - 1;) {
-            if (cards[k].uri === cards[k + 1].uri) {
-              cards.splice(k, 1)
-            } else {
-              k++
-            }
-          }
-
-          peopleMainTable.innerHTML = '' // clear
-          peopleHeader.textContent = (cards.length > 5 ? '' + cards.length + ' contacts' : 'contact')
-
-          for (var j = 0; j < cards.length; j++) {
-            var personRow = peopleMainTable.appendChild(dom.createElement('tr'))
-            var personLeft = personRow.appendChild(dom.createElement('td'))
-            var personRight = personRow.appendChild(dom.createElement('td'))
-            personLeft.setAttribute('style', dataCellStyle)
-            var person = cards[j]
-            var name = nameFor(person)
-            personLeft.textContent = name
-            personRow.subject = person
-            UI.widgets.makeDraggable(personRow, person)
-
-            var setPersonListener = function toggle (personLeft, person) {
-              UI.widgets.deleteButtonWithCheck(dom, personRight, 'contact', function () {
-                deleteThing(person)
-                refreshNames()
-                cardMain.innerHTML = ''
-              })
-              personRow.addEventListener('click', function (event) {
-                event.preventDefault()
-                cardMain.innerHTML = 'loading...'
-                var local = localNode(person)
-                UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
-                  cardMain.innerHTML = ''
-                  if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
-                  // dump("Loaded card " + local + '\n')
-                  cardMain.appendChild(cardPane(dom, local, 'contact'))
-                  cardMain.appendChild(dom.createElement('br'))
-
-                  var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local))// hoverHide
-                })
-              })
-            }
-            setPersonListener(personRow, person)
-          }
-          searchFilterNames()
-        }
-
-        var refreshGroupsSelected = function () {
-          for (var i = 0; i < groupsMainTable.children.length; i++) {
-            var row = groupsMainTable.children[i]
-            if (row.subject) {
-              row.setAttribute('style', selectedGroups[row.subject.uri] ? 'background-color: #cce;' : '')
-            }
-          }
-        }
-
-        // Check every group is in the list and add it if not.
-
-        var syncGroupTable = function () {
-          var foundOne
-          sortGroups()
-
-          for (i = 0; i < groupsMainTable.children.length; i++) {
-            var row = groupsMainTable.children[i]
-            row.trashMe = true
-          }
-
-          for (var g = 0; g < groups.length; g++) {
-            var book = groups[g][0]
-            var name = groups[g][1]
-            var group = groups[g][2]
-
-            // selectedGroups[group.uri] = false
-            foundOne = false
-
-            for (var i = 0; i < groupsMainTable.children.length; i++) {
-              var row = groupsMainTable.children[i]
-              if (row.subject && row.subject.sameTerm(group)) {
-                row.trashMe = false
-                foundOne = true
-                break
-              }
-            }
-            if (!foundOne) {
-              var groupRow = groupsMainTable.appendChild(dom.createElement('tr'))
-              groupRow.subject = group
-              UI.widgets.makeDraggable(groupRow, group)
-
-              groupRow.setAttribute('style', dataCellStyle)
-              groupRow.textContent = name
-              var foo = function toggle (groupRow, group, name) {
-                UI.widgets.deleteButtonWithCheck(dom, groupRow, 'group ' + name, function () {
-                  deleteThing(group)
-                  syncGroupTable()
-                })
-                groupRow.addEventListener('click', function (event) {
-                  event.preventDefault()
-                  var groupList = kb.sym(group.uri.split('#')[0])
-                  if (!event.metaKey) {
-                    selectedGroups = {}; // If Command key pressed, accumulate multiple
-                  }
-                  selectedGroups[group.uri] = ! selectedGroups[group.uri]
-                  refreshGroupsSelected()
-                  peopleMainTable.innerHTML = ''; // clear in case refreshNames doesn't work for unknown reason
-
-                  kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
-                    if (!ok) return complainIfBad(ok, "Can't load group file: " + groupList + ': ' + message)
-                    refreshNames()
-
-                    if (!event.metaKey) { // If only one group has beeen selected show ACL
-                      cardMain.innerHTML = ''
-                      cardMain.appendChild(UI.aclControl.ACLControlBox5(group, dom, 'group', kb, function (ok, body) {
-                        if (!ok) cardMain.innerHTML = 'Failed: ' + body
-                      }))
-                    }
-                  })
-                }, true)
-              }
-              foo(groupRow, group, name)
-            } // if not foundOne
-          } // loop g
-
-          for (i = 0; i < groupsMainTable.children.length; i++) {
-            var row = groupsMainTable.children[i]
-            if (row.trashMe) {
-              groupsMainTable.removeChild(row)
-            }
-          }
-          refreshGroupsSelected()
-        } // syncGroupTable
-
+        UI.store.fetcher.nowOrWhenFetched(groupIndex.uri, book, function (ok, body) {
+          if (!ok) return console.log('Cannot load group index: ' + body)
+          syncGroupTable()
+        })
+      } else {
         syncGroupTable()
+      } // if not book
 
-        // New Contact button
-        var newContactButton = dom.createElement('button')
-        var container = dom.createElement('div')
-        newContactButton.setAttribute('type', 'button')
-        if (!me) newContactButton.setAttribute('disabled', 'true')
-        UI.widgets.checkUser(book.doc(), function (uri) {
-          newContactButton.removeAttribute('disabled')
-        })
-        container.appendChild(newContactButton)
-        newContactButton.innerHTML = 'New Contact' // + IndividualClassLabel
-        peopleFooter.appendChild(container)
+      peopleHeader.textContent = 'name'
+      peopleHeader.setAttribute('style', 'min-width: 18em;')
+      peopleMain.setAttribute('style', 'overflow:scroll;')
 
-        var createdNewContactCallback1 = function (ok, person) {
-          dump('createdNewContactCallback1 ' + ok + ' - ' + person + '\n')
-          cardMain.innerHTML = ''
-          if (ok) {
-            cardMain.appendChild(cardPane(dom, person, 'contact'))
-          } // else no harm done delete form
-        }
 
-        newContactButton.addEventListener('click', function (e) {
-          // b.setAttribute('disabled', 'true');  (do we need o do this?)
-          cardMain.innerHTML = ''
-
-          var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
-          UI.store.fetcher.nowOrWhenFetched(nameEmailIndex, undefined, function (ok, message) {
-            if (ok) {
-              dump(' People index has been loaded\n')
-            } else {
-              dump('Error: People index has NOT been loaded' + message + '\n')
-            }
-          // Just a heads up, actually used later.
-          })
-          // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
-          cardMain.appendChild(getNameForm(dom, kb, 'Contact',
-            function (ok, name) {
-              if (!ok) return // cancelled by user
-              createNewContact(book, name, selectedGroups, function (success, body) {
-                if (!success) {
-                  console.log("Error: can't save new contact:" + body)
-                } else {
-                  cardMain.innerHTML = ''
-                  refreshNames() // Add name to list of group
-                  cardMain.appendChild(cardPane(dom, body, 'contact'))
-                }
-              })
-            }))
-        }, false)
-
-        // New Group button
-        var newGroupButton = groupsFooter.appendChild(dom.createElement('button'))
-        newGroupButton.setAttribute('type', 'button')
-        newGroupButton.innerHTML = 'New Group' // + IndividualClassLabel
-        newGroupButton.addEventListener('click', function (e) {
-          // b.setAttribute('disabled', 'true');  (do we need o do this?)
-          cardMain.innerHTML = ''
-          var groupIndex = kb.any(book, ns.vcard('groupIndex'))
-          UI.store.fetcher.nowOrWhenFetched(groupIndex, undefined, function (ok, message) {
-            if (ok) {
-              dump(' Group index has been loaded\n')
-            } else {
-              dump('Error: Group index has NOT been loaded' + message + '\n')
-            }
-          })
-
-          cardMain.appendChild(getNameForm(dom, kb, 'Group',
-            function (ok, name) {
-              if (!ok) return // cancelled by user
-              saveNewGroup(book, name, function (success, body) {
-                if (!success) {
-                  console.log("Error: can't save new group:" + body)
-                  cardMain.innerHTML = 'Failed to save group' + body
-                } else {
-                  selectedGroups = {}
-                  selectedGroups[body.uri] = true
-                  syncGroupTable() // Refresh list of groups
-
-                  cardMain.innerHTML = ''
-                  cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
-                    if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
-                  }))
-                }
-              })
-            }))
-        }, false)
-
-        // Tools button
-        var toolsButton = cardFooter.appendChild(dom.createElement('button'))
-        toolsButton.setAttribute('type', 'button')
-        toolsButton.innerHTML = 'Tools'
-        toolsButton.addEventListener('click', function (e) {
-          cardMain.innerHTML = ''
-          cardMain.appendChild(toolsPane(selectedGroups, groupsMainTable))
-        })
-
-        cardFooter.appendChild(newAddressBookButton(book))
-
+      // New Contact button
+      var newContactButton = dom.createElement('button')
+      var container = dom.createElement('div')
+      newContactButton.setAttribute('type', 'button')
+      if (!me) newContactButton.setAttribute('disabled', 'true')
+      UI.widgets.checkUser(book.doc(), function (uri) {
+        newContactButton.removeAttribute('disabled')
       })
+      container.appendChild(newContactButton)
+      newContactButton.innerHTML = 'New Contact' // + IndividualClassLabel
+      peopleFooter.appendChild(container)
+
+      var createdNewContactCallback1 = function (ok, person) {
+        dump('createdNewContactCallback1 ' + ok + ' - ' + person + '\n')
+        cardMain.innerHTML = ''
+        if (ok) {
+          cardMain.appendChild(cardPane(dom, person, 'contact'))
+        } // else no harm done delete form
+      }
+
+      newContactButton.addEventListener('click', function (e) {
+        // b.setAttribute('disabled', 'true');  (do we need o do this?)
+        cardMain.innerHTML = ''
+
+        var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
+        UI.store.fetcher.nowOrWhenFetched(nameEmailIndex, undefined, function (ok, message) {
+          if (ok) {
+            dump(' People index has been loaded\n')
+          } else {
+            dump('Error: People index has NOT been loaded' + message + '\n')
+          }
+        // Just a heads up, actually used later.
+        })
+        // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
+        cardMain.appendChild(getNameForm(dom, kb, 'Contact',
+          function (ok, name) {
+            if (!ok) return // cancelled by user
+            createNewContact(book, name, selectedGroups, function (success, body) {
+              if (!success) {
+                console.log("Error: can't save new contact:" + body)
+              } else {
+                cardMain.innerHTML = ''
+                refreshNames() // Add name to list of group
+                cardMain.appendChild(cardPane(dom, body, 'contact'))
+              }
+            })
+          }))
+      }, false)
+
+      // New Group button
+      var newGroupButton = groupsFooter.appendChild(dom.createElement('button'))
+      newGroupButton.setAttribute('type', 'button')
+      newGroupButton.innerHTML = 'New Group' // + IndividualClassLabel
+      newGroupButton.addEventListener('click', function (e) {
+        // b.setAttribute('disabled', 'true');  (do we need o do this?)
+        cardMain.innerHTML = ''
+        var groupIndex = kb.any(book, ns.vcard('groupIndex'))
+        UI.store.fetcher.nowOrWhenFetched(groupIndex, undefined, function (ok, message) {
+          if (ok) {
+            dump(' Group index has been loaded\n')
+          } else {
+            dump('Error: Group index has NOT been loaded' + message + '\n')
+          }
+        })
+
+        cardMain.appendChild(getNameForm(dom, kb, 'Group',
+          function (ok, name) {
+            if (!ok) return // cancelled by user
+            saveNewGroup(book, name, function (success, body) {
+              if (!success) {
+                console.log("Error: can't save new group:" + body)
+                cardMain.innerHTML = 'Failed to save group' + body
+              } else {
+                selectedGroups = {}
+                selectedGroups[body.uri] = true
+                syncGroupTable() // Refresh list of groups
+
+                cardMain.innerHTML = ''
+                cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
+                  if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
+                }))
+              }
+            })
+          }))
+      }, false)
+
+      // Tools button
+      var toolsButton = cardFooter.appendChild(dom.createElement('button'))
+      toolsButton.setAttribute('type', 'button')
+      toolsButton.innerHTML = 'Tools'
+      toolsButton.addEventListener('click', function (e) {
+        cardMain.innerHTML = ''
+        cardMain.appendChild(toolsPane(selectedGroups, groupsMainTable, book, dom, me))
+      })
+
+      cardFooter.appendChild(newAddressBookButton(book))
+
+      //})
 
       div.appendChild(dom.createElement('hr'))
     //  div.appendChild(newAddressBookButton(book))       // later
@@ -1531,8 +952,8 @@ module.exports = {
           if (!ok) {
             console.log('Error looking up dropped thing ' + uri + ': ' + mess)
           } else {
-            var types = kb.findTypeURIs(obj)
             var obj = kb.sym(uri)
+            var types = kb.findTypeURIs(obj)
             for (ty in types) {
               console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
             }
@@ -1733,9 +1154,9 @@ module.exports = {
       UI.widgets.findAppInstances(context, ns.vcard('AddressBook'))
         .then(function (context) {
           var addressBooks = context.instances
+          var options = { foreignGroup: subject}
           if (addressBooks.length > 0) {
             var book = addressBooks[0]
-            var options = { foreignGroup: subject}
             renderThreeColumnBrowser(addressBooks, context, options)
           } else {
             renderThreeColumnBrowser([], context, options)
