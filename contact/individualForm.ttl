@@ -9,15 +9,27 @@
     <http://purl.org/dc/elements/1.1/title> "Contact Details" ;
     a <http://www.w3.org/ns/ui#Form> ;
     <http://www.w3.org/ns/ui#part>
-        <#fullNameField>, <#addressesComment>, <#addresses>,
+        <#fullNameField>,   <#fullNameFieldB>,   <#fullNameFieldC>, <#addressesComment>, <#addresses>,
         <#emailComment>, <#eMails>,
         <#telephoneComment>, <#telephones>, <#noteComment>, <#noteField> .
 
-<#fullNameField>
-    a <http://www.w3.org/ns/ui#SingleLineTextField> ;
-    <http://www.w3.org/ns/ui#maxLength> "128" ;
-    <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#fn> ;
-    <http://www.w3.org/ns/ui#size> "40" .
+    <#fullNameField>
+        a <http://www.w3.org/ns/ui#SingleLineTextField> ;
+        <http://www.w3.org/ns/ui#maxLength> "128" ;
+        <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#fn> ;
+        <http://www.w3.org/ns/ui#size> "40" .
+
+    <#fullNameFieldB>
+        a <http://www.w3.org/ns/ui#SingleLineTextField> ;
+        <http://www.w3.org/ns/ui#maxLength> "128" ;
+        <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#role> ;
+        <http://www.w3.org/ns/ui#size> "40" .
+
+      <#fullNameFieldC>
+          a <http://www.w3.org/ns/ui#SingleLineTextField> ;
+          <http://www.w3.org/ns/ui#maxLength> "128" ;
+          <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#organization-name> ;
+          <http://www.w3.org/ns/ui#size> "40" .
 
 
 <#addressesComment>
@@ -136,6 +148,3 @@
 <#noteField>
     a <http://www.w3.org/ns/ui#MultiLineTextField> ;
     <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#note> .
-
-
-
