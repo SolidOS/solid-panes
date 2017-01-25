@@ -147,21 +147,49 @@ module.exports = {
 
     // ////////////////////  DRAG and Drop
 
-    var handleDroppedURI = function (uri) {
+    var handleDroppedURI = function (uri) { // @@ idea: look
       kb.fetcher.nowOrWhenFetched(uri, function (ok, mess) {
         if (!ok) {
           console.log('Error looking up dropped thing ' + uri + ': ' + mess)
         } else {
-          var types = kb.findTypeURIs(obj)
           var obj = kb.sym(uri)
+          var types = kb.findTypeURIs(obj)
           for (ty in types) {
             console.log('    drop object type includes: ' + ty)
           }
           if (ns.vcard('Individual').uri in types || ns.foaf('Person').uri in types || ns.foaf('Agent').uri in types) {
             var pref = kb.any(obj, ns.foaf('preferredURI'))
             obj = pref ? kb.sym(pref) : obj
+            var group = kb.any(meeting, ns.meeting('attendeeGroup'))
+            var addPersonToGroup = function(obj, g){
+              var ins = [$rdf.st(g, UI.ns.vcard('hasMember'), obj, g.doc())] // @@@ Complex rules about webid?
+              var name = kb.any(obj, ns.vcard('fn')) || kb.any(obj, ns.foaf('name'))
+              if (name){
+                ins.push($rdf.st(obj, UI.ns.vcard('fn'), name, g.doc()))
+              }
+              kb.fetcher.nowOrWhenFetched(group.doc(), undefined, function(ok, body){
+                if (!ok){
+                  complain('Can\'t read group to add person' + group)
+                  return
+                }
+                kb.updater.update([], ins, function(uri, ok, body){
+                  complainIfBad(ok, body)
+                  if (ok){
+                    console.log('Addded to particpants OK: ' + obj)
+                  }
+                })
+              })
+            }
+            if (group){
+              addPersonToGroup(obj, group)
+              return
+            }
             makeParticipantsGroup().then(function (options) {
-              kb.add(options.newInstance, UI.ns.vcard('member'), obj, options.newInstance.doc())
+              var g = options.newInstance
+              addPersonToGroup(obj, g)
+              kb.fetcher.putBack(meetingDoc, {contentType: 'text/turtle'}).then(function (xhr) {
+                console.log('Particiants Group created: ' + g)
+              })
             }).catch(function (err) {
               complain(err)
             })
@@ -276,7 +304,7 @@ module.exports = {
         tabTitle: 'Schedule poll',
       noIndexHTML: true}
 
-      return makeNewPaneTool(toolObject, newPaneOptions)
+      return makeNewPaneTool(toolObject, options)
     }
 
     var makePicturesFolder = function (folderName) {
@@ -299,14 +327,14 @@ module.exports = {
         icon: 'noun_681601.svg', // Document
         limit: 1
       }
-      var newPaneOptions = {
+      var options = {
         newInstance: kb.sym(meeting.dir().uri + 'Files/'),
         pane: UI.panes.classInstance,
         predicate: ns.meeting('materialsFolder'),
         tabTitle: 'Materials',
       noIndexHTML: true}
 
-      return makeNewPaneTool(toolObject, newPaneOptions)
+      return makeNewPaneTool(toolObject, options)
     }
 
     var makeParticipantsGroup = function () {
@@ -314,7 +342,7 @@ module.exports = {
         icon: 'noun_339237.svg', // Group of people
         limit: 1
       }
-      var newPaneOptions = {
+      var options = {
         newInstance: kb.sym(meeting.dir().uri + 'Attendees/index.ttl#this'),
         pane: UI.panes.contact,
         predicate: ns.meeting('attendeeGroup'),
@@ -323,7 +351,12 @@ module.exports = {
         instanceName: UI.utils.label(subject) + ' attendees',
       noIndexHTML: true}
 
-      return makeNewPaneTool(toolObject, newPaneOptions) // @@@ makeNewPaneTool ??
+      return makeNewPaneTool(toolObject, options)
+      /*.then(function(newPaneOptions){
+        var group = newPaneOptions.newInstance
+        //kb.add(group, ns.vcard('fn'))
+      })
+      */
     }
 
     //   Make Pad for notes of meeting
@@ -359,25 +392,32 @@ module.exports = {
     }
 
     // Returns promise of newPaneOptions
+    // In: options.
+    //            me?, predicate, newInstance ?, newBase, instanceClass
+    // out: options. the above plus
+    //             me, newInstance
+
     var makeNewPaneTool = function (toolObject, options) {
       return new Promise(function (resolve, reject) {
         var kb = UI.store
-        if (toolObject.limit && toolObject.limit === 1 && kb.holds(meeting, options.predicate)) {
-          complain('Ignored - already have ' + UI.utils.label(options.predicate))
-          resolve(null)
-          return
+        var existing = kb.any(meeting, options.predicate)
+        if (existing){
+          complain('Already have ' + existing + ' as ' +  UI.utils.label(options.predicate))
+          if (toolObject.limit && toolObject.limit === 1) {
+            complain('Cant have two')
+            return resolve(null)
+          }
+          return resolve({ me: me, newInstance: existing, instanceClass: options.instanceClass})
         }
-        if (!me) reject(new Error('Username nor defined for new tool'))
-        var newPaneOptions = {
-          me: me,
-          newInstance: options.newInstance || kb.sym(options.newBase + 'index.ttl#this'),
-          instanceClass: options.instanceClass
-        }
-        options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
-          makeToolNode(newPaneOptions.newInstance, options.predicate, options.tabTitle, options.pane.icon)
+        if (!me && !options.me) reject(new Error('Username not defined for new tool'))
+        options.me = options.me || me
+        options.newInstance = options.newInstance || kb.sym(options.newBase + 'index.ttl#this')
+
+        options.pane.mintNew(options).then(function (options) {
+          makeToolNode(options.newInstance, options.predicate, options.tabTitle, options.pane.icon)
           saveBackMeetingDoc()
           kb.fetcher.putBack(meetingDoc, {contentType: 'text/turtle'}).then(function (xhr) {
-            resolve(newPaneOptions)
+            resolve(options)
           }).catch(function (err) {
             reject(err)
           })
@@ -602,16 +642,25 @@ module.exports = {
         var target = kb.any(item, ns.meeting('target'))
         var label = kb.any(item, ns.rdfs('label'))
         label = label ? label.value : UI.utils.label(target)
-        var icon = kb.any(item, ns.meeting('icon'))
-        if (icon) {
-          var img = div.appendChild(dom.createElement('img'))
-          img.setAttribute('src', icon.uri)
-          img.setAttribute('style', 'max-width: 1.5em; max-height: 1.5em;') // @
-          img.setAttribute('title', label)
-        }
         var s = div.appendChild(dom.createElement('div'))
         s.textContent = label
         s.setAttribute('style', 'margin-left: 0.7em')
+        var icon = kb.any(item, ns.meeting('icon'))
+        if (icon) { // Make sure the icon is cleanly on the left of the label
+          var table = div.appendChild(dom.createElement('table'))
+          var tr = table.appendChild(dom.createElement('tr'))
+          var left = tr.appendChild(dom.createElement('td'))
+          var right = tr.appendChild(dom.createElement('td'))
+          // var img = div.appendChild(dom.createElement('img'))
+          var img = left.appendChild(dom.createElement('img'))
+          img.setAttribute('src', icon.uri)
+          //img.setAttribute('style', 'max-width: 1.5em; max-height: 1.5em;') // @@ SVG shrinks to 0
+          img.setAttribute('style', 'width: 1.5em; height: 1.5em;') // @
+          img.setAttribute('title', label)
+          right.appendChild(s)
+        } else {
+          div.appendChild(s)
+        }
       } else {
         div.textContent = UI.utils.label(item)
       }
@@ -651,8 +700,9 @@ module.exports = {
           // delButton.setAttribute('class', '')
           // delButton.setAttribute('style', 'height: 2em; width: 2em; margin: 1em; border-radius: 0.5em; padding: 1em; font-size: 120%; background-color: red; color: white;')
           // delButton.textContent = 'Delete this tab'
-          containerDiv.appendChild(tipDiv(
-            'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
+
+          //containerDiv.appendChild(tipDiv(
+          //  'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         })
       } else {
         containerDiv.appendChild(dom.createElement('h4')).textContent = '(No adjustments available)'

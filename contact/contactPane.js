@@ -171,9 +171,13 @@ module.exports = {
       return false
     }
 
+    var complain = function (message) {
+      console.log(message)
+      div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
+    }
     var complainIfBad = function (ok, body) {
       if (!ok) {
-        console.log('Error: ' + body)
+        complain('Error: ' + body)
       }
     }
 
@@ -659,7 +663,7 @@ module.exports = {
             personRow.addEventListener('click', function (event) {
               event.preventDefault()
               cardMain.innerHTML = 'loading...'
-              var local = localNode(person)
+              var local = book? localNode(person) : person
               UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
                 cardMain.innerHTML = ''
                 if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
@@ -808,6 +812,9 @@ module.exports = {
       groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;')
 
       var groups
+      if (options.foreignGroup){
+        selectedGroups[options.foreignGroup.uri] = true
+      }
       if (book){
         var allGroups = groupsHeader.appendChild(dom.createElement('button'))
         allGroups.textContent = 'All'
@@ -825,9 +832,11 @@ module.exports = {
         UI.store.fetcher.nowOrWhenFetched(groupIndex.uri, book, function (ok, body) {
           if (!ok) return console.log('Cannot load group index: ' + body)
           syncGroupTable()
+          refreshNames()
         })
       } else {
         syncGroupTable()
+        refreshNames()
       } // if not book
 
       peopleHeader.textContent = 'name'
@@ -840,7 +849,7 @@ module.exports = {
       var container = dom.createElement('div')
       newContactButton.setAttribute('type', 'button')
       if (!me) newContactButton.setAttribute('disabled', 'true')
-      UI.widgets.checkUser(book.doc(), function (uri) {
+      UI.widgets.checkUser(target.doc(), function (uri) {
         newContactButton.removeAttribute('disabled')
       })
       container.appendChild(newContactButton)
@@ -885,41 +894,43 @@ module.exports = {
       }, false)
 
       // New Group button
-      var newGroupButton = groupsFooter.appendChild(dom.createElement('button'))
-      newGroupButton.setAttribute('type', 'button')
-      newGroupButton.innerHTML = 'New Group' // + IndividualClassLabel
-      newGroupButton.addEventListener('click', function (e) {
-        // b.setAttribute('disabled', 'true');  (do we need o do this?)
-        cardMain.innerHTML = ''
-        var groupIndex = kb.any(book, ns.vcard('groupIndex'))
-        UI.store.fetcher.nowOrWhenFetched(groupIndex, undefined, function (ok, message) {
-          if (ok) {
-            dump(' Group index has been loaded\n')
-          } else {
-            dump('Error: Group index has NOT been loaded' + message + '\n')
-          }
-        })
+      if (book){
+        var newGroupButton = groupsFooter.appendChild(dom.createElement('button'))
+        newGroupButton.setAttribute('type', 'button')
+        newGroupButton.innerHTML = 'New Group' // + IndividualClassLabel
+        newGroupButton.addEventListener('click', function (e) {
+          // b.setAttribute('disabled', 'true');  (do we need o do this?)
+          cardMain.innerHTML = ''
+          var groupIndex = kb.any(book, ns.vcard('groupIndex'))
+          UI.store.fetcher.nowOrWhenFetched(groupIndex, undefined, function (ok, message) {
+            if (ok) {
+              dump(' Group index has been loaded\n')
+            } else {
+              dump('Error: Group index has NOT been loaded' + message + '\n')
+            }
+          })
 
-        cardMain.appendChild(getNameForm(dom, kb, 'Group',
-          function (ok, name) {
-            if (!ok) return // cancelled by user
-            saveNewGroup(book, name, function (success, body) {
-              if (!success) {
-                console.log("Error: can't save new group:" + body)
-                cardMain.innerHTML = 'Failed to save group' + body
-              } else {
-                selectedGroups = {}
-                selectedGroups[body.uri] = true
-                syncGroupTable() // Refresh list of groups
+          cardMain.appendChild(getNameForm(dom, kb, 'Group',
+            function (ok, name) {
+              if (!ok) return // cancelled by user
+              saveNewGroup(book, name, function (success, body) {
+                if (!success) {
+                  console.log("Error: can't save new group:" + body)
+                  cardMain.innerHTML = 'Failed to save group' + body
+                } else {
+                  selectedGroups = {}
+                  selectedGroups[body.uri] = true
+                  syncGroupTable() // Refresh list of groups
 
-                cardMain.innerHTML = ''
-                cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
-                  if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
-                }))
-              }
-            })
-          }))
-      }, false)
+                  cardMain.innerHTML = ''
+                  cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
+                    if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
+                  }))
+                }
+              })
+            }))
+        }, false)
+      } // if book
 
       // Tools button
       var toolsButton = cardFooter.appendChild(dom.createElement('button'))
@@ -938,6 +949,8 @@ module.exports = {
     //  div.appendChild(newAddressBookButton(book))       // later
     // end of AddressBook instance
     } // renderThreeColumnBrowser
+
+    /////////////////////////////////////////////////////////////////////////////////////
 
     // Render Individual card
 
