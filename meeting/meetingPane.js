@@ -4,6 +4,7 @@
 */
 
 var UI = require('solid-ui')
+var meetingDetailsFormText = require('./meetingDetailsForm.js')
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_66617.svg',
@@ -681,8 +682,9 @@ module.exports = {
       containerDiv.appendChild(dom.createElement('h3')).textContent = 'Adjust this tab'
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
-        UI.store.fetcher.nowOrWhenFetched(form, function (ok, message) {
-          if (!ok) return complainIfBad(ok, message)
+        $rdf.parse(meetingDetailsFormText, kb, form.doc().uri, 'text/turtle')
+        //UI.store.fetcher.nowOrWhenFetched(form, function (ok, message) {
+          // if (!ok) return complainIfBad(ok, message)
           UI.widgets.appendForm(document, containerDiv, {}, subject, form, meeting.doc(), complainIfBad)
           var delButton = UI.widgets.deleteButtonWithCheck(dom, containerDiv, 'tab', function () {
             var toolList = kb.the(meeting, ns.meeting('toolList'))
@@ -704,7 +706,7 @@ module.exports = {
 
           //containerDiv.appendChild(tipDiv(
           //  'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
-        })
+        //})
       } else {
         containerDiv.appendChild(dom.createElement('h4')).textContent = '(No adjustments available)'
       }
