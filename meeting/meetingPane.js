@@ -40,6 +40,7 @@ module.exports = {
 
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
       kb.add(meeting, ns.dc('created'), new Date(), meetingDoc)
+      kb.add(meeting, ns.ui('backgroundColor'), new $rdf.Literal("#ddddcc", ns.xsd('color')), meetingDoc)
       var toolList = new $rdf.Collection()
       kb.add(meeting, ns.meeting('toolList'), toolList , meetingDoc)
 
@@ -822,6 +823,7 @@ module.exports = {
     options.renderMain = renderMain
     options.renderTab = renderTab
     options.renderTabSettings = renderTabSettings
+    options.backgroundColor = kb.anyValue(subject, ns.ui('backgroundColor')) || "#ddddcc"
     var tabs = mainTR.appendChild(UI.tabs.tabWidget(options))
 
     UI.aclControl.preventBrowserDropEvents(dom)
