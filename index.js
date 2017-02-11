@@ -77,6 +77,8 @@ paneModule.register(require('./chat/chatPane.js'))
 //paneModule.register(require('./publication/publicationPane.js'))
 paneModule.register(require('./meeting/meetingPane.js'))
 paneModule.register(require('./schedule/schedulePane.js'))
+paneModule.register(require('./links/linksPane.js'))
+
 
 paneModule.register(require('./trip/tripPane.js'))
 paneModule.register(require('./airPane.js'))

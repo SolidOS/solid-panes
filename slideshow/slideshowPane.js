@@ -35,7 +35,7 @@ module.exports =  {
   // and follow instructions there
   render: function(subject, dom) {
 
-    var styleSheet = 'http://leemark.github.io/better-simple-slideshow/css/simple-slideshow-styles.css'
+    var styleSheet = 'https://leemark.github.io/better-simple-slideshow/css/simple-slideshow-styles.css'
     UI.widgets.addStyleSheet(dom, styleSheet)
 
     var kb = UI.store;

@@ -72,6 +72,38 @@ module.exports =  {
       trackRow.textContent = decode(removeExtension(a[2]))
     }
 
+    var moveOn = function(current, level){
+      level = level || 0
+      var folder = kb.any(undefined, ns.ldp('contains'), current)
+      if (!folder || !options.chain) return
+      var contents = kb.each(folder, ns.ldp('contains'))
+      if (contents.length < 2) return null
+      var j
+      contents.sort() // sort by URI which hopefully will get tracks in order
+      for (var i=0; i < contents.length; i++){
+        if (current === contents[i].uri){
+          j = (i + 1) % contents.length
+          if (j === 0){
+            if (!options.chainAlbums){
+              if (options.loop){
+                return contents[j]
+              }
+              return null
+            } else { // chain albums
+              if (level === 1) return null; //limit of navigating treee
+              var folder2 = moveOn(folder, level +1)
+              if (folder2 && options.chainAlbums) {
+                var contents = kb.each(folder2, ns.ldp('contains'))
+                if (contents.length === 0) return null
+                contents.sort()
+                return contents[0] // Start off new album
+              }
+            }
+          }
+          return contents[j]
+        }
+      }
+    }
     var endedListener = function(event){
       var folder = kb.any(undefined, ns.ldp('contains'), subject)
       if (!folder || !options.chain) return

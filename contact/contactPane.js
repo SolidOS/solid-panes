@@ -17,6 +17,8 @@ var UI = require('solid-ui')
 var mime = require('mime-types')
 var toolsPane = require('./toolsPane')
 
+
+
 if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
   console = {}
   console.log = function (msg) { UI.log.info(msg);}
@@ -55,7 +57,12 @@ module.exports = {
         var doc = g.doc()
         kb.add(g, ns.rdf('type'), ns.vcard('Group'), doc)
         kb.add(g, ns.vcard('fn'), context.instanceName || 'untitled group', doc) // @@ write doc back
-        return resolve(context)
+        kb.fetcher.putBack(doc, {contentType: 'text/turtle'}).then(function(xhr){
+          resolve(context)
+        }).catch(function(err){
+          reject(new Error('Error creating docunment for new group ' + err))
+        })
+        return
       }
       var appInstanceNoun = 'address book'
 
@@ -194,66 +201,6 @@ module.exports = {
         var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8)
         return v.toString(16)
       })
-    }
-
-    // Unused and untested but could be handy: a facetted browser view
-    //
-    var addressBookAsTable = function () {
-      var query = new $rdf.Query(UI.utils.label(subject))
-      var vars = ['contact', 'name', 'em', 'email']
-      var v = {} // The RDF variable objects for each variable name
-      vars.map(function (x) {query.vars.push(v[x] = $rdf.variable(x))})
-
-      query.pat.add(v['contact'], ns.vcard('fn'), v['name'])
-      query.pat.add(v['contact'], ns.vcard('hasEmail'), v['em'])
-      query.pat.add(v['contact'], ns.vcard('value'), v['email'])
-      query.pat.optional = []
-
-      var propertyList = kb.any(subject, ns.wf('propertyList')) // List of extra properties
-      // console.log('Property list: '+propertyList) //
-      if (propertyList) {
-        var properties = propertyList.elements
-        for (var p = 0; p < properties.length; p++) {
-          var prop = properties[p]
-          var vname = '_prop_' + p
-          if (prop.uri.indexOf('#') >= 0) {
-            vname = prop.uri.split('#')[1]
-          }
-          query.vars.push(v[vname] = $rdf.variable(vname))
-          var oneOpt = new $rdf.IndexedFormula()
-          query.pat.optional.push(oneOpt)
-          oneOpt.add(v['contact'], prop, v[vname])
-        }
-      }
-
-      var tableDiv = UI.table(dom, {'query': query,
-      /*             'hints': {
-                       '?created': { 'cellFormat': 'shortDate'},
-                       '?state': { 'initialSelection': selectedStates }}
-                       */
-      })
-
-      div.appendChild(tableDiv)
-
-      if (tableDiv.refresh) { // Refresh function
-        var refreshButton = dom.createElement('button')
-        refreshButton.textContent = 'refresh'
-        refreshButton.style = buttonStyle
-        refreshButton.addEventListener('click', function (e) {
-          var nameEmailIndex = kb.any(subject, ns.vcard('nameEmailIndex'))
-          UI.store.fetcher.unload(nameEmailIndex)
-          UI.store.fetcher.nowOrWhenFetched(nameEmailIndex.uri, undefined, function (ok, body) {
-            if (!ok) {
-              console.log('Cant refresh data:' + body)
-            } else {
-              tableDiv.refresh()
-            }
-          })
-        }, false)
-        div.appendChild(refreshButton)
-      } else {
-        console.log('No refresh function?!')
-      }
     }
 
     // ///////////////////// Reproduction: Spawn a new instance of this app
@@ -593,18 +540,24 @@ module.exports = {
         ds.map(function (st) {targets[st.why.uri] = st;})
         var agenda = [] // sets of statements of same dcoument to delete
         for (var target in targets) {
-          agenda.push(ds.filter(function (st) { return st.why.uri = target }))
+          agenda.push(ds.filter(function (st) { return st.why.uri === target }))
           dump('Deleting ' + agenda[agenda.length - 1].length + ' from ' + target)
         }
         function nextOne () {
           if (agenda.length > 0) {
             updater.update(agenda.shift(), [], function (uri, ok, body) {
+              if (!ok){
+                complain("Eror deleting all trace of: " + x + ": " + body)
+                return
+              }
               nextOne()
             })
           } else {
-            var doc = kb.sym(x.uri.split('#')[0])
-            dump('Deleting resoure ' + doc)
-            updater.deleteResource(doc)
+            dump('Deleting resoure ' + x.doc())
+            kb.fetcher.webOperation('DELETE', x.doc()).then(function(xhr){
+              console.log('Delete thing ' + x + ': complete.')
+            })
+            .catch(function(e){complain('Error deleting thing ' + x + ': ' + e)})
           }
         }
         nextOne()
@@ -721,9 +674,45 @@ module.exports = {
             groupRow.subject = group
             UI.widgets.makeDraggable(groupRow, group)
 
+
             groupRow.setAttribute('style', dataCellStyle)
             groupRow.textContent = name
-            var foo = function toggle (groupRow, group, name) {
+            var foo = function addNewGroupRow2 (groupRow, group, name) {
+              // Is something is dropped on a group, add people to group
+              var handleURIsDroppedOnGroup = function(uris){
+                uris.forEach(function(u){
+                  console.log('Dropped on group: ' + u)
+                  var thing = kb.sym(u)
+                  var toBeFetched = [ thing.doc(), group.doc()]
+
+                  kb.fetcher.load(toBeFetched).then(function(xhrs){
+                    var types = kb.findTypeURIs(thing)
+                    for (ty in types) {
+                      console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
+                    }
+                    if (ns.vcard('Individual').uri in types || ns.vcard('Organization').uri in types){
+                      var pname = kb.any(thing, ns.vcard('fn'))
+                      if (!pname) return alert('No vcard name known for ' + thing)
+                      var already = kb.holds(group, ns.vcard('hasMember'), thing, group.doc())
+                      if (already) return alert('ALREADY added ' + pname + ' to group ' + name)
+                      var message = 'Add ' + pname + ' to group ' + name + '?'
+                      if (confirm(message)){
+                        var ins = [  $rdf.st(group, ns.vcard('hasMember'), thing, group.doc()),
+                          $rdf.st(thing, ns.vcard('fn'), pname, group.doc())]
+                        kb.updater.update([], ins, function(uri, ok, err){
+                          if (!ok) return complain('Error adding member to group ' + group + ': ' + err)
+                          console.log('Added ' + pname + ' to group ' + name)
+                          // @@ refresh UI
+                        })
+                      }
+                    }
+                  }).catch(function(e){
+                    complain('Error looking up dropped thing ' + thing + ' and group: ' + e)
+                  })
+                })
+              }
+              UI.widgets.makeDropTarget(groupRow, handleURIsDroppedOnGroup)
+
               UI.widgets.deleteButtonWithCheck(dom, groupRow, 'group ' + name, function () {
                 deleteThing(group)
                 syncGroupTable()
@@ -744,9 +733,23 @@ module.exports = {
 
                   if (!event.metaKey) { // If only one group has beeen selected show ACL
                     cardMain.innerHTML = ''
-                    cardMain.appendChild(UI.aclControl.ACLControlBox5(group, dom, 'group', kb, function (ok, body) {
+                    var visible = false
+                    var aclControl = UI.aclControl.ACLControlBox5(group, dom, 'group', kb, function (ok, body) {
                       if (!ok) cardMain.innerHTML = 'Failed: ' + body
-                    }))
+                    })
+                    var sharingButton = cardMain.appendChild(dom.createElement('button'))
+                    sharingButton.style = 'padding: 1em; margin: 1em'
+                    var img = sharingButton.appendChild(dom.createElement('img'))
+                    img.style = 'width: 1.5em; height: 1.5em'
+                    img.setAttribute('src', UI.icons.iconBase + 'noun_123691.svg')
+                    sharingButton.addEventListener('click', function(){
+                      visible = !visible
+                      if (visible) {
+                        cardMain.appendChild(aclControl)
+                      } else {
+                        cardMain.removeChild(aclControl)
+                      }
+                    })
                   }
                 })
               }, true)
@@ -957,34 +960,35 @@ module.exports = {
     var renderIndividual = function(subject){
 
       var mainImage
-      // ////////////////////  DRAG and Drop
+      // ////////////////////  DRAG and Drop for mugshot image
       var card = subject
 
-      var handleDroppedURI = function (uri) {
-        kb.fetcher.nowOrWhenFetched(uri, function (ok, mess) {
+      var handleDroppedThing = function (thing) {
+        kb.fetcher.nowOrWhenFetched(thing.doc(), function (ok, mess) {
           if (!ok) {
-            console.log('Error looking up dropped thing ' + uri + ': ' + mess)
+            console.log('Error looking up dropped thing ' + thing + ': ' + mess)
           } else {
-            var obj = kb.sym(uri)
-            var types = kb.findTypeURIs(obj)
+            var types = kb.findTypeURIs(thing)
             for (ty in types) {
               console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
             }
             console.log('Default: assume web page  ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
-            kb.add(card, UI.ns.vcard('url'), kb.sym(u), card.doc())
+            var b = kb.bnode()
+            kb.add(card, UI.ns.vcard('url'), b, card.doc())
+            kb.add(b, UI.ns.vcard('value'), kb.sym(u), card.doc())
             // @@ refresh UI
           }
         })
       }
 
       // When a set of URIs are dropped on
-      var droppedURIHandler = function (uris) {
+      var handleURIsDroppedOnMugshot = function (uris) {
         uris.map(function (u) {
-          var target = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
-          console.log('Dropped on thing ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+          var thing = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
+          console.log('Dropped on thing ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+          var thing = kb.sym(u)
           if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
-            var target = kb.sym(u)
-            kb.add(subject, UI.ns.vcard('url'), target, subject.doc())
+            kb.add(subject, UI.ns.vcard('url'), thing, subject.doc())
             kb.fetcher.putBack(subject.doc()).then(function(xhr){
               // @@@ Refresh UI
               // mainImage.setAttribute('src', pic.uri)
@@ -992,7 +996,7 @@ module.exports = {
             })
             return
           }
-          handleDroppedURI(u)
+          handleDroppedThing(thing)
         })
       }
 
@@ -1011,7 +1015,7 @@ module.exports = {
               var data = e.target.result
               console.log(' File read byteLength : ' + data.byteLength)
               // var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
-              var filename = theFile.name
+              var filename = encodeURIComponent(theFile.name)
               var extension = mime.extension(theFile.type)
               if (theFile.type !== mime.lookup(theFile.name)){
                 filename += '_.' + extension
@@ -1043,11 +1047,19 @@ module.exports = {
       }
       ////////// End of drag and drop
 
-      var individualFormDoc = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl')
-      // var individualFormDoc = kb.sym('https://timbl.rww.io/Apps/Contactator/individualForm.ttl')
-      var individualForm = kb.sym(individualFormDoc.uri + '#form1')
+      // Background metadata for this pane we bundle with the JS
+      var individualForm = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl#form1')
+      var individualFormDoc = individualForm.doc()
+      if (!kb.holds(undefined, undefined, undefined, individualFormDoc)){ // If not loaded already
+        var individualFormText = require('./individualForm.js')
+        $rdf.parse(individualFormText, kb, individualFormDoc.uri, 'text/turtle') // Load form directly
+      }
+      var vcardOnt = UI.ns.vcard('Type').doc()
+      if (!kb.holds(undefined, undefined, undefined, vcardOnt)){ // If not loaded already
+        $rdf.parse(require('./vcard.js'), kb, vcardOnt.uri, 'text/turtle') // Load ontology directly
+      }
 
-      var toBeFetched = [ subject.doc(), individualFormDoc, UI.ns.vcard('Type').doc()]
+      var toBeFetched = [ subject.doc()] // was: individualFormDoc, UI.ns.vcard('Type').doc()
       UI.store.fetcher.load(toBeFetched)
 
       .catch(function(e){
@@ -1075,7 +1087,7 @@ module.exports = {
         mainImage = div.appendChild(dom.createElement('img'))
         mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
         UI.widgets.setImage(mainImage, subject)
-        UI.widgets.makeDropTarget(mainImage, droppedURIHandler, droppedFileHandler)
+        UI.widgets.makeDropTarget(mainImage, handleURIsDroppedOnMugshot, droppedFileHandler)
 
         UI.widgets.appendForm(dom, div, {}, subject, individualForm, cardDoc, complainIfBad)
 
@@ -1119,8 +1131,8 @@ module.exports = {
         }
 
         var attachementControl = UI.widgets.attachmentList(dom, subject, div, {
-          promptIcon: UI.icons.iconBase +  'noun_681601.svg',
-          predicate:  UI.ns.vcard('url')
+          // promptIcon: UI.icons.iconBase +  'noun_681601.svg',
+          predicate:  UI.ns.vcard('url') // @@@@@@@@@ ,--- no, the actual structure uses a bnode.
         });
 
         var hr = div.appendChild(dom.createElement('hr'))
@@ -1143,7 +1155,6 @@ module.exports = {
             span.textContent = val.uri
           }
         })
-
       })
 /*
       .catch(function(e){
