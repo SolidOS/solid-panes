@@ -4,6 +4,8 @@
 */
 
 var UI = require('solid-ui')
+var mime = require('mime-types')
+
 var meetingDetailsFormText = require('./meetingDetailsForm.js')
 
 module.exports = {

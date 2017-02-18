@@ -474,7 +474,6 @@ module.exports = {
           var group = groupRow.subject
 
           var groupList = kb.sym(group.uri.split('#')[0])
-          selectedGroups[group.uri] = true
 
           kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
             if (!ok) {
@@ -483,6 +482,8 @@ module.exports = {
               return complainIfBad(ok, msg)
             }
             groupRow.setAttribute('style', 'background-color: #cce;')
+            selectedGroups[group.uri] = true
+            refreshGroupsSelected()
             refreshNames(); // @@ every time??
             todo -= 1
             if (!todo) {
@@ -814,6 +815,15 @@ module.exports = {
       groupsHeader.textContent = 'groups'
       groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;')
 
+      var setGroupListVisibility = function(visible){
+        var vis = visible ? '' : 'display: none;'
+        groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;' + vis)
+        var hfstyle = 'padding: 0.1em;'
+        groupsMain.setAttribute('style', hfstyle + vis)
+        groupsFooter.setAttribute('style', hfstyle + vis)
+      }
+      setGroupListVisibility(true)
+
       var groups
       if (options.foreignGroup){
         selectedGroups[options.foreignGroup.uri] = true
@@ -826,7 +836,10 @@ module.exports = {
           allGroups.state = allGroups.state ? 0 : 1
           peopleMainTable.innerHTML = ''; // clear in case refreshNames doesn't work for unknown reason
           if (allGroups.state) {
-            selectAllGroups(selectedGroups, groupsMainTable)
+            allGroups.backgroundColor = '#ff8'
+            selectAllGroups(selectedGroups, groupsMainTable, function(){
+              allGroups.backgroundColor = '#8f8'
+            })
           } else {
             selectedGroups = {}
             refreshGroupsSelected()
@@ -840,6 +853,8 @@ module.exports = {
       } else {
         syncGroupTable()
         refreshNames()
+        console.log("No book, only one group -> hide list of groups")
+        setGroupListVisibility(false) // If no books involved, hide group list
       } // if not book
 
       peopleHeader.textContent = 'name'
@@ -933,16 +948,17 @@ module.exports = {
               })
             }))
         }, false)
-      } // if book
 
-      // Tools button
-      var toolsButton = cardFooter.appendChild(dom.createElement('button'))
-      toolsButton.setAttribute('type', 'button')
-      toolsButton.innerHTML = 'Tools'
-      toolsButton.addEventListener('click', function (e) {
-        cardMain.innerHTML = ''
-        cardMain.appendChild(toolsPane(selectedGroups, groupsMainTable, book, dom, me))
-      })
+        // Tools button
+        var toolsButton = cardFooter.appendChild(dom.createElement('button'))
+        toolsButton.setAttribute('type', 'button')
+        toolsButton.innerHTML = 'Tools'
+        toolsButton.addEventListener('click', function (e) {
+          cardMain.innerHTML = ''
+          cardMain.appendChild(toolsPane(selectedGroups, groupsMainTable, book, dom, me))
+        })
+
+      } // if book
 
       cardFooter.appendChild(newAddressBookButton(book))
 
