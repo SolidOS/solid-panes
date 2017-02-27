@@ -28,7 +28,8 @@ module.exports =  {
 
   render: function(subject, dom) {
 
-    var options = { autoplay: false,  chain: true, loop: false}
+    var options = { autoplay: false,  chain: true, chainAlbums: true, loop: false}
+    var current = subject
 
     var removeExtension = function(str){
       var dot = str.lastIndexOf('.')
@@ -38,16 +39,21 @@ module.exports =  {
       return str.slice(0, dot)
     }
 
-    // True if there is another file like song.mp4 when this is "song 1.mp4"
+    // True if there is another file like song.mp3 when this is "song 1.mp3"
+    // or this is song.m4a
     //
-    var looksRedundant = function(x, contents) {
+    var looksRedundant = function(x) {
+      var folder = kb.any(undefined, ns.ldp('contains'), x)
+      if (!folder) return false
+      var contents = kb.each(folder, ns.ldp('contains'))
+      if (contents.length < 2) return false
       var thisName = x.uri
       for (var k=0; k < contents.length; k++){
         var otherName = contents[k].uri
         if (thisName.length > otherName.length && thisName.startsWith(removeExtension(otherName))){
           return true
         }
-        if (thisName.endsWith('.mp3') && otherName.endsWith('.m4a')
+        if (thisName.endsWith('.m4a') && otherName.endsWith('.mp3')
           && removeExtension(thisName) === removeExtension(otherName)){
           return true
         }
@@ -73,61 +79,65 @@ module.exports =  {
     }
 
     var moveOn = function(current, level){
-      level = level || 0
-      var folder = kb.any(undefined, ns.ldp('contains'), current)
-      if (!folder || !options.chain) return
-      var contents = kb.each(folder, ns.ldp('contains'))
-      if (contents.length < 2) return null
-      var j
-      contents.sort() // sort by URI which hopefully will get tracks in order
-      for (var i=0; i < contents.length; i++){
-        if (current === contents[i].uri){
-          j = (i + 1) % contents.length
-          if (j === 0){
-            if (!options.chainAlbums){
-              if (options.loop){
-                return contents[j]
-              }
-              return null
-            } else { // chain albums
-              if (level === 1) return null; //limit of navigating treee
-              var folder2 = moveOn(folder, level +1)
-              if (folder2 && options.chainAlbums) {
-                var contents = kb.each(folder2, ns.ldp('contains'))
-                if (contents.length === 0) return null
-                contents.sort()
-                return contents[0] // Start off new album
+      return new Promise(function(resolve, reject){
+        level = level || 0
+        if (!options.chain) return resolve(null)
+        // Ideally navigate graph else cheat with URI munging:
+        var folder = kb.any(undefined, ns.ldp('contains'), current) || current.dir()
+        if (!folder) return resolve(null)
+        kb.fetcher.load(folder).then(function(xhr){
+          var contents = kb.each(folder, ns.ldp('contains')) // @@ load if not loaded
+          if (contents.length < 2) return resolve(null)
+          var j
+          contents.sort() // sort by URI which hopefully will get tracks in order
+          for (var i=0; i < contents.length; i++){
+            if (current.uri === contents[i].uri){
+              j = (i + 1) % contents.length
+              if (j === 0){
+                if (!options.chainAlbums){
+                  if (options.loop){
+                    return resolve(contents[j])
+                  }
+                  return resolve(null) // No more music needed
+                } else { // chain albums
+                  if (level === 1 || !options.chainAlbums) return resolve(null); //limit of navigating treee
+                  moveOn(folder, level +1).then(function(folder2){
+                    if (folder2) {
+                      kb.fetcher.load(folder2).then(function(xhr){
+                        var contents = kb.each(folder2, ns.ldp('contains'))
+                        if (contents.length === 0) return resolve(null)
+                        contents.sort()
+                        console.log("New Album: " + folder2)
+                        return resolve(contents[0]) // Start off new album
+                      })
+                    }
+                  })
+                }
+              } else {
+                return resolve(contents[j])
               }
             }
-          }
-          return contents[j]
-        }
-      }
+          } // for
+        })
+      })
     }
     var endedListener = function(event){
-      var folder = kb.any(undefined, ns.ldp('contains'), subject)
-      if (!folder || !options.chain) return
-      var contents = kb.each(folder, ns.ldp('contains'))
-      if (contents.length < 2) return
-      var current = event.target.getAttribute('src')
-      var j
-      contents.sort() // sort by URI which hopefully will get tracks in order
-      for (var i=0; i < contents.length; i++){
-        if (current === contents[i].uri){
-          j = (i + 1) % contents.length
-          while (looksRedundant(contents[j], contents)  && j){ // skip dups
-            j = (j + 1) % contents.length
-            if (j == 0){
-              break
-            }
+      var current = kb.sym(event.target.getAttribute('src'))
+      if (!options.chain) return
+      var tryNext = function(current){
+        moveOn(current).then(function(next){
+          if (!looksRedundant(next)){
+            guessNames(next)
+            controlRow.appendChild(audioControl(next, true)) // Force autoplay
+            controlRow.removeChild(event.target)
+            return
+          } else {
+            console.log("Ignoring redundant " + next)
+            tryNext(next)
           }
-          if (!options.loop && j === 0) return
-          guessNames(contents[j])
-          controlRow.appendChild(audioControl(contents[j], true)) // Force autoplay
-          controlRow.removeChild(event.target)
-          return
-        }
+        })
       }
+      tryNext(current)
     }
 
     var audioControl = function(song, autoplay){
