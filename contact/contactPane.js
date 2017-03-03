@@ -472,24 +472,25 @@ module.exports = {
         for (var k = 0; k < groupsMainTable.children.length; k++) {
           var groupRow = groupsMainTable.children[k]
           var group = groupRow.subject
-
-          var groupList = kb.sym(group.uri.split('#')[0])
-
-          kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
-            if (!ok) {
-              var msg = "Can't load group file: " + groupList + ': ' + message
-              badness.push(msg)
-              return complainIfBad(ok, msg)
-            }
-            groupRow.setAttribute('style', 'background-color: #cce;')
-            selectedGroups[group.uri] = true
-            refreshGroupsSelected()
-            refreshNames(); // @@ every time??
-            todo -= 1
-            if (!todo) {
-              if (callback) callback(badness.length === 0, badness)
-            }
-          })
+          var foo = function(group, groupRow){
+            groupRow.setAttribute('style', 'background-color: #ffe;')
+            kb.fetcher.nowOrWhenFetched(group.doc(), undefined, function (ok, message) {
+              if (!ok) {
+                var msg = "Can't load group file: " + group + ': ' + message
+                badness.push(msg)
+                return complainIfBad(ok, msg)
+              }
+              groupRow.setAttribute('style', 'background-color: #cce;')
+              selectedGroups[group.uri] = true
+              refreshGroupsSelected()
+              refreshNames(); // @@ every time??
+              todo -= 1
+              if (!todo) {
+                if (callback) callback(badness.length === 0, badness)
+              }
+            })
+          }
+          foo(group, groupRow)
         } // for each row
       }
 
@@ -831,16 +832,20 @@ module.exports = {
       if (book){
         var allGroups = groupsHeader.appendChild(dom.createElement('button'))
         allGroups.textContent = 'All'
-        allGroups.setAttribute('style', 'margin-left: 1em; font-size: 80%')
+        var style =  'margin-left: 1em; font-size: 100%;'
+        allGroups.setAttribute('style', style)
         allGroups.addEventListener('click', function (event) {
           allGroups.state = allGroups.state ? 0 : 1
           peopleMainTable.innerHTML = ''; // clear in case refreshNames doesn't work for unknown reason
           if (allGroups.state) {
-            allGroups.backgroundColor = '#ff8'
-            selectAllGroups(selectedGroups, groupsMainTable, function(){
-              allGroups.backgroundColor = '#8f8'
+            allGroups.setAttribute('style', style + 'background-color: #ff8;')
+            selectAllGroups(selectedGroups, groupsMainTable, function(ok, message){
+              if (!ok) return complain(message)
+              allGroups.setAttribute('style', style + 'background-color: black; color: white')
+              refreshGroupsSelected()
             })
           } else {
+            allGroups.setAttribute('style', style + 'background-color: #cfc;') // pale green hint groups loaded
             selectedGroups = {}
             refreshGroupsSelected()
           }

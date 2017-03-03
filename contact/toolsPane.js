@@ -2,7 +2,7 @@
 //
 var UI = require('solid-ui')
 var mime = require('mime-types')
-var toolsPane = require('./toolsPane')
+var toolsPane = require('./toolsPane.js')
 
 // var toolsPane
 module.export = function (selectedGroups, groupsMainTable, book, dom, me) {

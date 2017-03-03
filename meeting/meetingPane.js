@@ -363,14 +363,15 @@ module.exports = {
     var makePoll = function (toolObject) {
       var newPaneOptions = {
         useExisting: meeting, // Regard the meeting as being the schedulable event itself.
-        newInstance: meeting,
+        // newInstance: meeting,
         pane: UI.panes.schedule,
-        predicate: ns.meeting('schedulingPoll'),
-        newBase: meetingBase + 'Schedule/',
+        view: 'schedule',
+        // predicate: ns.meeting('schedulingPoll'),
+        // newBase: meetingBase + 'Schedule/',   Not needed as uses existing meeting
         tabTitle: 'Schedule poll',
       noIndexHTML: true}
 
-      return makeNewPaneTool(toolObject, options)
+      return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
     var makePicturesFolder = function (folderName) {
@@ -462,22 +463,28 @@ module.exports = {
     var makeNewPaneTool = function (toolObject, options) {
       return new Promise(function (resolve, reject) {
         var kb = UI.store
-        var existing = kb.any(meeting, options.predicate)
-        if (existing){
-          complain('Already have ' + existing + ' as ' +  UI.utils.label(options.predicate))
-          if (toolObject.limit && toolObject.limit === 1) {
-            complain('Cant have two')
-            return resolve(null)
-          } if (toolObject.shareTab){ // return existing one
-            return resolve({ me: me, newInstance: existing, instanceClass: options.instanceClass})
+        if (!options.useExisting){ // useExisting means use existing object in new role
+          var existing = kb.any(meeting, options.predicate)
+          if (existing){
+            complain('Already have ' + existing + ' as ' +  UI.utils.label(options.predicate))
+            if (toolObject.limit && toolObject.limit === 1) {
+              complain('Cant have two')
+              return resolve(null)
+            } if (toolObject.shareTab){ // return existing one
+              return resolve({ me: me, newInstance: existing, instanceClass: options.instanceClass})
+            }
           }
         }
         if (!me && !options.me) reject(new Error('Username not defined for new tool'))
         options.me = options.me || me
-        options.newInstance = options.newInstance || kb.sym(options.newBase + 'index.ttl#this')
+        options.newInstance = options.useExisting || options.newInstance || kb.sym(options.newBase + 'index.ttl#this')
 
         options.pane.mintNew(options).then(function (options) {
-          makeToolNode(options.newInstance, options.predicate, options.tabTitle, options.pane.icon)
+          var tool = makeToolNode(options.newInstance, options.predicate,
+              options.tabTitle, options.pane.icon)
+          if (options.view){
+            kb.add(tool, UI.ns.meeting('view'), options.view, meetingDoc)
+          }
           saveBackMeetingDoc()
           kb.fetcher.putBack(meetingDoc, {contentType: 'text/turtle'}).then(function (xhr) {
             resolve(options)
