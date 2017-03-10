@@ -16,7 +16,7 @@ LawPane.label = function(subject) {
     stsJust = UI.store.statementsMatching(undefined, ap_just, undefined, subject);
 
         for (var j=0; j<stsJust.length; j++){
-            if (stsJust[j].subject.termType == 'formula'){
+            if (stsJust[j].subject.termType == 'Graph'){
             var sts = stsJust[j].subject.statements;
             for (var k=0; k<sts.length; k++){
                 if (sts[k].predicate.toString() == ap_compliant.toString()){
@@ -129,13 +129,13 @@ LawPane.render = function(subject, myDocument) {
  	var stsAnalysisAll = [];
  	var stsDesc = kb.statementsMatching(undefined, ap_description, undefined, subject);
     for (var j=0; j<stsDesc.length; j++){
-	    if (stsDesc[j].subject.termType == 'formula' && stsDesc[j].object.termType == 'collection'){
+	    if (stsDesc[j].subject.termType == 'Graph' && stsDesc[j].object.termType == 'Collection'){
 	    	    stsAnalysisAll.push(LawPane.display(myDocument, stsDesc[j].object));
 		}
 	}
 	var stsFound = [];
 	for (var j=0; j<stsJust.length; j++){
-	    if (stsJust[j].subject.termType == 'formula'){
+	    if (stsJust[j].subject.termType == 'Graph'){
 	        var sts = stsJust[j].subject.statements;
 	        for (var k=0; k<sts.length; k++){
 	            if (sts[k].predicate.toString() == ap_compliant.toString() ||
@@ -150,7 +150,7 @@ LawPane.render = function(subject, myDocument) {
             	var terminatingCondition = kb.statementsMatching(ruleNameFound, ap_just, ap_prem, subject);
 				while (terminatingCondition[0] == undefined){
 	            	var currentRule = kb.statementsMatching( undefined, undefined, ruleNameFound, subject);
-	            	if (currentRule[0].object.termType == 'collection'){
+	            	if (currentRule[0].object.termType == 'Collection'){
 			    	    stsDescAll.push(LawPane.display(myDocument, currentRule[0].object));
 	                }
 	        		var currentRuleSts = kb.statementsMatching(currentRule[0].subject, ap_just, undefined, subject);

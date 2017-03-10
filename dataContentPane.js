@@ -126,7 +126,7 @@ module.exports = {
                     }
                     return newTable;
 
-                case 'collection':
+                case 'Collection':
                     var res = myDocument.createElement('table')
                     res.setAttribute('class', 'collectionAsTables')
                     for (var i=0; i<obj.elements.length; i++) {
@@ -135,7 +135,7 @@ module.exports = {
                         tr.appendChild(objectTree(obj.elements[i]));
                     }
                     return  res;
-                case 'formula':
+                case 'Graph':
                     var res = UI.panes.dataContents.statementsAsTables(obj.statements, myDocument);
                     res.setAttribute('class', 'nestedFormula')
                     return res;

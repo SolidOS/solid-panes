@@ -407,7 +407,7 @@ module.exports = function UserInput(outline){
                         var newStat;
                         var textTerm=kb.literal(this.lastModified.value,"");
                         //<Feature about="labelChoice">
-                        if (s.predicate.termType=='collection'){ //case: add triple   ????????? Weird - tbl
+                        if (s.predicate.termType=='Collection'){ //case: add triple   ????????? Weird - tbl
                             var selectedPredicate=s.predicate.elements[0];   //    @@ TBL elements is a list on the predicate??
                             if (kb.any(undefined,selectedPredicate,textTerm)){
                                 if (!e){ //keyboard
@@ -460,7 +460,7 @@ module.exports = function UserInput(outline){
 
             //UI.log.warn("test .isNew)");
             return;
-        }else if(s.predicate.termType=='collection'){
+        }else if(s.predicate.termType=='Collection'){
             kb.removeMany(s.subject);
             var upperTr=UI.utils.ancestor(UI.utils.ancestor(this.lastModified,'TR').parentNode,'TR');
             var preStat=upperTr.AJAR_statement;
@@ -764,7 +764,7 @@ module.exports = function UserInput(outline){
         }else{ //objectTd
             var predicateTerm=selectedTd.parentNode.AJAR_statement.predicate;
             if (kb.whether(predicateTerm,rdf('type'),UI.ns.owl('DatatypeProperty'))||
-                predicateTerm.termType=='collection'||
+                predicateTerm.termType=='Collection'||
                 kb.whether(predicateTerm,UI.ns.rdfs('range'),UI.ns.rdfs('Literal'))){
                 selectedTd.className='';
                 UI.utils.emptyNode(selectedTd);
@@ -1072,7 +1072,7 @@ module.exports = function UserInput(outline){
         //var predicateTerm=selectedTd.parentNode.AJAR_statement.predicate;
         if(kb.whether(predicateTerm,UI.ns.rdf('type'),UI.ns.owl('DatatypeProperty'))||
            kb.whether(predicateTerm,UI.ns.rdfs('range'),UI.ns.rdfs('Literal'))||
-               predicateTerm.termType=='collection')
+               predicateTerm.termType=='Collection')
                 return 'DatatypeProperty-like';
             else if (kb.whether(predicateTerm,rdf('type'),UI.ns.owl('ObjectProperty')))
                 return 'ObjectProperty-like';
@@ -1572,8 +1572,8 @@ module.exports = function UserInput(outline){
             case 'LimitedPredicateChoice':
                 var choiceTerm=tabulator.util.getAbout(kb,extraInformation.clickedTd);
                 //because getAbout relies on kb.fromNT, which does not deal with
-                //the 'collection' termType. This termType is ambiguous anyway.
-                choiceTerm.termType='collection';
+                //the 'Collection' termType. This termType is ambiguous anyway.
+                choiceTerm.termType='Collection';
                 var choices=kb.each(choiceTerm,UI.ns.link('element'));
                 for (var i=0;i<choices.length;i++)
                     addMenuItem(choices[i]);

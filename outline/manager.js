@@ -388,7 +388,7 @@ module.exports = function(doc) {
           case 'NamedNode':
               var lab = UI.utils.predicateLabelForXML(predicate, inverse);
               break;
-          case 'collection': // some choices of predicate
+          case 'Collection': // some choices of predicate
               lab = UI.utils.predicateLabelForXML(predicate.elements[0],inverse);
       }
       lab = lab.slice(0,1).toUpperCase() + lab.slice(1)
@@ -1457,7 +1457,7 @@ module.exports = function(doc) {
               trIterator; trIterator=trIterator.nextSibling) {
               var st = trIterator.AJAR_statement;
               if (!st) continue;
-              if (st.predicate.termType=='collection') break;
+              if (st.predicate.termType=='Collection') break;
           }
           thisOutline.UserInput.Click(e,trIterator.lastChild);
           thisOutline.walk('moveTo',trIterator.lastChild);
@@ -2001,7 +2001,7 @@ module.exports = function(doc) {
           } else {  // bnode
               rep.appendChild(dom.createTextNode(UI.utils.label(obj)));
           }
-      } else if (obj.termType=='collection'){
+      } else if (obj.termType=='Collection'){
           // obj.elements is an array of the elements in the collection
           rep = dom.createElement('table');
           rep.setAttribute('about', obj.toNT());
@@ -2021,7 +2021,7 @@ module.exports = function(doc) {
               numcell.innerHTML = (i+1) + ')';
               row.appendChild(thisOutline.outline_objectTD(elt));
           }
-      } else if (obj.termType=='formula'){
+      } else if (obj.termType=='Graph'){
           rep = UI.panes.dataContentPane.statementsAsTables(obj.statements, dom);
           rep.setAttribute('class', 'nestedFormula')
 

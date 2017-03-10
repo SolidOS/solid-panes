@@ -51,7 +51,7 @@ airPane.label = function(subject) {
 		//The subject of the statements should be a quouted formula and
 		//the object should not be tms:premise (this corresponds to the final chunk of the output
 		//which has {some triples} tms:justification tms:premise)
-		if (stsJust[j].subject.termType == 'formula' && stsJust[j].object != ap_prem.toString()){
+		if (stsJust[j].subject.termType == 'Graph' && stsJust[j].object != ap_prem.toString()){
 			var sts = stsJust[j].subject.statements;
 			if (sts.length != 1) throw new Error("There should be only ONE statement indicating some event is (non-)compliant with some policy!")
 			//Keep track of the subjects of the statements in the global variables above and return "Justify"
@@ -156,7 +156,7 @@ airPane.render = function(subject, myDocument) {
         for (var i=0; i<stsJust.length; i++){
 
             //Find the statement maching the option selected from the drop down box
-            if (stsJust[i].subject.termType == 'formula' &&
+            if (stsJust[i].subject.termType == 'Graph' &&
                 stsJust[i].object != ap_prem.toString() &&
                 stsJust[i].subject.statements[0].object.toString() == selected[0].toString()){
 
@@ -268,7 +268,7 @@ airPane.render = function(subject, myDocument) {
                                     if (obj.elements[i].value != undefined)
                                         divDescription.appendChild(myDocument.createTextNode(obj.elements[i].value));
                                 }
-                                else if (obj.elements[i].termType == 'formula') {
+                                else if (obj.elements[i].termType == 'Graph') {
                                     //@@ As per Lalana's request to handle formulas within the description
                                     divDescription.appendChild(myDocument.createTextNode(obj.elements[i]));
                                     //@@@ Using statementsAsTables to render the result gives a very ugly result -- urgh!
@@ -308,7 +308,7 @@ airPane.render = function(subject, myDocument) {
 
                                     for (var j=0; j<currentRuleDesc.length; j++){
                                         if (currentRuleDesc[j].predicate == ap_description.toString() &&
-                                        currentRuleDesc[j].object.termType == 'collection'){
+                                        currentRuleDesc[j].object.termType == 'Collection'){
                                             divDescription.appendChild(myDocument.createElement('br'));
                                             airPane.render.showSelected.because.displayDesc(currentRuleDesc[j].object);
                                             divDescription.appendChild(myDocument.createElement('br'));
@@ -338,7 +338,7 @@ airPane.render = function(subject, myDocument) {
                             var formulaFound = false;
                             var bnodeFound = false;
                             for (var i=0; i<currentRuleSubExpr.length; i++){
-                                if(currentRuleSubExpr[i].object.termType == 'formula'){
+                                if(currentRuleSubExpr[i].object.termType == 'Graph'){
                                     divPremises.appendChild(statementsAsTables(currentRuleSubExpr[i].object.statements, myDocument));
                                     formulaFound = true;
                                 }
@@ -420,8 +420,8 @@ airPane.render = function(subject, myDocument) {
                     //You are bound to have more than one such triple,
                     //so iterates through all of them and figure out which belongs to the one that's referred from the drop down box
                     for (var j=0; j<stsDesc.length; j++){
-                        if (stsDesc[j].subject.termType == 'formula' &&
-                            stsDesc[j].object.termType == 'collection' &&
+                        if (stsDesc[j].subject.termType == 'Graph' &&
+                            stsDesc[j].object.termType == 'Collection' &&
                             stsDesc[j].subject.statements[0].object.toString() == selected[0].toString()){
 
                             divDescription.appendChild(myDocument.createElement('br'));
@@ -462,7 +462,7 @@ airPane.render = function(subject, myDocument) {
                     }
 
                     for (var j=0; j<stsJust.length; j++){
-                        if (stsJust[j].subject.termType == 'formula' && stsJust[j].object.termType == 'BlankNode'){
+                        if (stsJust[j].subject.termType == 'Graph' && stsJust[j].object.termType == 'BlankNode'){
 
                             var ruleNameSts = UI.store.statementsMatching(stsJust[j].object, ap_ruleName, undefined, subject);
                             ruleNameFound =	ruleNameSts[0].object; // This would be the initial rule name from the
@@ -472,7 +472,7 @@ airPane.render = function(subject, myDocument) {
                                 for (var k=0; k<t1.length; k++){
                                     var t2 = UI.store.statementsMatching(t1[k].object, undefined, undefined, subject);
                                     for (var l=0; l<t2.length; l++){
-                                        if (t2[l].subject.termType == 'BlankNode' && t2[l].object.termType == 'formula'){
+                                        if (t2[l].subject.termType == 'BlankNode' && t2[l].object.termType == 'Graph'){
                                             justificationSts = t2;
                                             divPremises.appendChild(myDocument.createElement('br'));
                                             //divPremises.appendChild(myDocument.createElement('br'));
@@ -697,7 +697,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
 	  var aAnd_justification = UI.store.the(obj, ap_antcExpr);
 	  var subExprs = UI.store.each(aAnd_justification, ap_subExpr);
 	  var premiseFormula = null;
-	  if (subExprs[0].termType == 'formula')
+	  if (subExprs[0].termType == 'Graph')
 	    premiseFormula = subExprs[0];
 	  else
 	    premiseFormula = subExprs[1];
@@ -735,7 +735,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
 		switch(element.termType) {
 
 		  //@@ As per Lalana's request to handle formulas within the description
-		case 'formula':
+		case 'Graph':
 		  p.appendChild(myDocument.createTextNode("{ "));
 		  dumpFormula.current_p = p;
 		  dumpFormula(element, false);
@@ -904,7 +904,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
 
                         for (var j=0; j<currentRuleDesc.length; j++){
                             if (currentRuleDesc[j].predicate == ap_description.toString() &&
-                            currentRuleDesc[j].object.termType == 'collection'){
+                            currentRuleDesc[j].object.termType == 'Collection'){
                                 divDescription.appendChild(myDocument.createElement('br'));
                                 airPane.render.because.displayDesc(currentRuleDesc[j].object);
                                 divDescription.appendChild(myDocument.createElement('br'));
@@ -925,7 +925,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
                 var currentRuleSubExpr = UI.store.statementsMatching(currentRuleAntc[0].object, ap_subExpr, undefined);
 
                 for (var i=0; i<currentRuleSubExpr.length; i++){
-                    if(currentRuleSubExpr[i].object.termType == 'formula')
+                    if(currentRuleSubExpr[i].object.termType == 'Graph')
                         divPremises.appendChild(statementsAsTables(currentRuleSubExpr[i].object.statements, myDocument));
                 }
 
@@ -1003,7 +1003,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
         }
 
         for (var j=0; j<stsJust.length; j++){
-            if (stsJust[j].subject.termType == 'formula' && stsJust[j].object.termType == 'BlankNode'){
+            if (stsJust[j].subject.termType == 'Graph' && stsJust[j].object.termType == 'BlankNode'){
 
                 var ruleNameSts = kb.statementsMatching(stsJust[j].object, ap_ruleName, undefined, subject);
                 ruleNameFound =    ruleNameSts[0].object; // This would be the initial rule name from the
@@ -1013,7 +1013,7 @@ airPane.renderExplanationForStatement = function renderExplanationForStatement(s
                     for (var k=0; k<t1.length; k++){
                         var t2 = kb.statementsMatching(t1[k].object, undefined, undefined, subject);
                         for (var l=0; l<t2.length; l++){
-                            if (t2[l].subject.termType == 'BlankNode' && t2[l].object.termType == 'formula'){
+                            if (t2[l].subject.termType == 'BlankNode' && t2[l].object.termType == 'Graph'){
                                 justificationSts = t2;
                                 divPremises.appendChild(myDocument.createElement('br'));
                                 divPremises.appendChild(myDocument.createElement('br'));
