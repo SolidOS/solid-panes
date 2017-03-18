@@ -87,7 +87,7 @@ module.exports =  {
         if (!folder) return resolve(null)
         kb.fetcher.load(folder).then(function(xhr){
           var contents = kb.each(folder, ns.ldp('contains')) // @@ load if not loaded
-          if (contents.length < 2) return resolve(null)
+          // if (contents.length < 2) return resolve(null)   NO might move on from 1-track album
           var j
           contents.sort() // sort by URI which hopefully will get tracks in order
           for (var i=0; i < contents.length; i++){
@@ -124,9 +124,15 @@ module.exports =  {
     var endedListener = function(event){
       var current = kb.sym(event.target.getAttribute('src'))
       if (!options.chain) return
-      var tryNext = function(current){
+      var tryNext = function(cur){
+        var current = cur
         moveOn(current).then(function(next){
+          if (!next){
+            console.log("No successor to " + current)
+            return
+          }
           if (!looksRedundant(next)){
+            console.log("Moving on to " + next)
             guessNames(next)
             controlRow.appendChild(audioControl(next, true)) // Force autoplay
             controlRow.removeChild(event.target)
