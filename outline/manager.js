@@ -298,14 +298,13 @@ module.exports = function(doc) {
 
 
   this.outline_objectTD = function outline_objectTD(obj, view, deleteNode, statement) {
-      // UI.log.info("@outline_objectTD, dom is now " + this.document.location);
       var td = dom.createElement('td');
       td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('notSelectable','false');
       var theClass = "obj";
 
       // check the IPR on the data.  Ok if there is any checked license which is one the document has.
-if (statement){
+      if (statement){
           var licenses = kb.each(statement.why, kb.sym('http://creativecommons.org/ns#license'));
           UI.log.info('licenses:'+ statement.why+': '+ licenses)
           var licenseURI = ['http://creativecommons.org/licenses/by-nc-nd/3.0/',
@@ -363,7 +362,7 @@ if (statement){
           //The following works because Formula.hashString works fine for
           //one statement formula
           var reasons = kb.each(one_statement_formula,
-     kb.sym("http://dig.csail.mit.edu/TAMI/2007/amord/tms#justification"));
+            kb.sym("http://dig.csail.mit.edu/TAMI/2007/amord/tms#justification"));
           if(reasons.length){
               var inquiry_span = dom.createElement('span');
               if(reasons.length>1)
@@ -389,7 +388,7 @@ if (statement){
           case 'NamedNode':
               var lab = UI.utils.predicateLabelForXML(predicate, inverse);
               break;
-          case 'collection': // some choices of predicate
+          case 'Collection': // some choices of predicate
               lab = UI.utils.predicateLabelForXML(predicate.elements[0],inverse);
       }
       lab = lab.slice(0,1).toUpperCase() + lab.slice(1)
@@ -423,23 +422,24 @@ if (statement){
   function expandedHeaderTR(subject, requiredPane, options) {
       var tr = dom.createElement('tr');
       tr.setAttribute('class','hoverControl')
-      var td = dom.createElement('td');
+      var td = tr.appendChild(dom.createElement('td'));
       td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
       td.setAttribute('notSelectable','false');
-
+      td.setAttribute('about', subject.toNT());
       td.setAttribute('colspan', '2');
-      td.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase + 'tbl-collapse.png', 'collapse',undefined,dom)
-          ).addEventListener('click', collapseMouseDownListener);
-      td.appendChild(dom.createElement('strong'));
-      tr.appendChild(td);
 
-      tr.firstChild.setAttribute('about', subject.toNT());
-      tr.firstChild.childNodes[1].appendChild(dom.createTextNode(UI.utils.label(subject)));
+      var icon = td.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase +
+         'tbl-collapse.png', 'collapse',undefined,dom))
+      icon.addEventListener('click', collapseMouseDownListener);
+
+      var strong = td.appendChild(dom.createElement('strong'))
+      strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
+      UI.widgets.makeDraggable(strong, subject) // 2017
+
       tr.firstPane = null;
       var paneNumber = 0;
       var relevantPanes = [];
       var labels = [];
-
 
       if (requiredPane) {
           tr.firstPane = requiredPane;
@@ -1131,40 +1131,8 @@ if (statement){
       selection = [];
   }
 
-  /////////  Hiding
-/*
-  this.AJAR_hideNext = function(event) {
-      var target = UI.utils.getTarget(event)
-      var div = target.parentNode.nextSibling
-      for (; div.nodeType != 1; div = div.nextSibling) {}
-      if (target.src.indexOf('collapse') >= 0) {
-          div.setAttribute('class', 'collapse')
-          target.src = (UI.icons.originalIconBase + 'tbl-expand-trans.png')
-      } else {
-          div.removeAttribute('class')
-          target.scrollIntoView(true)
-          target.src = UI.icons.originalIconBase + 'tbl-collapse.png'
-      }
-  }
-*/
-  this.TabulatorDoubleClick =function(event) { // used??
-      var target = UI.utils.getTarget(event);
-      var tname = target.tagName;
-      UI.log.debug("TabulatorDoubleClick: " + tname + " in "+target.parentNode.tagName);
-      if (tname == "IMG") return; // icons only click once, panes toggle on second click
-      var aa = UI.utils.getAbout(kb, target);
-      if (!aa) return;
-          this.GotoSubject(aa,true);
-  }
 
-  function ResultsDoubleClick(event) {
-      var target = UI.utils.getTarget(event);
-      var aa = UI.utils.getAbout(kb, target)
-      if (!aa) return;
-      this.GotoSubject(aa,true);
-  }
-
-  /** get the target of an event **/
+  /** Get the target of an event **/
   this.targetOf=function(e) {
       var target;
       if (!e) var e = window.event
@@ -1489,7 +1457,7 @@ if (statement){
               trIterator; trIterator=trIterator.nextSibling) {
               var st = trIterator.AJAR_statement;
               if (!st) continue;
-              if (st.predicate.termType=='collection') break;
+              if (st.predicate.termType=='Collection') break;
           }
           thisOutline.UserInput.Click(e,trIterator.lastChild);
           thisOutline.walk('moveTo',trIterator.lastChild);
@@ -1652,7 +1620,7 @@ if (statement){
   function outline_expand(p, subject1, options) {
       options = options || {}
       var pane = options.pane
-      var already = options.already
+      var already = !!options.already
       var immediate = options.immediate
 
       UI.log.info("@outline_expand, dom is now " + dom.location);
@@ -1662,7 +1630,6 @@ if (statement){
 
       var subject = kb.canon(subject1)
       var requTerm = subject.uri?kb.sym(UI.rdf.uri.docpart(subject.uri)):subject
-      var already = !!already
 
       function render() {
           subject = kb.canon(subject)
@@ -1763,7 +1730,9 @@ if (statement){
               return;
           }
       }
-      if (subject.uri && !immediate) {
+      if (subject.uri && !immediate && !UI.widgets.isAudio(subject) &&
+        !UI.widgets.isVideo(subject) && // Never parse videos as data
+          !kb.holds(subject, UI.ns.rdf('type'), $rdf.Util.mediaTypeClass('application/pdf'))) {  // or PDF
           // Wait till at least the main URI is loaded before expanding:
           sf.nowOrWhenFetched(subject.doc(), undefined, function(ok, body) {
               if (ok) {
@@ -1776,7 +1745,7 @@ if (statement){
                   var message = dom.createElement("pre");
                   message.textContent = body;
                   message.setAttribute('style', 'background-color: #fee;');
-                  message.textContent = 'Unable to fetch ' + subject.doc() + ': '  + message;
+                  message.textContent = 'Unable to fetch ' + subject.doc() + ': '  + body;
                   p.appendChild(message)
               }
           });
@@ -1880,8 +1849,7 @@ if (statement){
   // table   -- option  -- a table element in which to put the outline.
 
   this.GotoSubject = function(subject, expand, pane, solo, referrer, table) {
-      UI.log.error("@@ outline.js test 50 UI.log.error: $rdf.log.error)"+$rdf.log.error);
-      if (!table) table = dom.getElementById('outline');
+      if (!table) table = dom.getElementById('outline'); // @@ if does not exist just add one
       if (solo) UI.utils.emptyNode(table);
 
       function GotoSubject_default(){
@@ -1889,7 +1857,6 @@ if (statement){
           tr.style.verticalAlign="top";
           table.appendChild(tr);
           var td = thisOutline.outline_objectTD(subject, undefined, tr)
-
           tr.appendChild(td)
           return td
       }
@@ -1899,7 +1866,7 @@ if (statement){
               return lastTr.appendChild(outline.outline_objectTD(subject,undefined,true));
       }
 
-      if (tabulator.isExtension) newURI = function(spec) {
+      if (tabulator.isExtension) var newURI = function(spec) {
           // e.g. see http://www.nexgenmedia.net/docs/protocol/
           var kSIMPLEURI_CONTRACTID = "@mozilla.org/network/simple-uri;1";
           var nsIURI = Components.interfaces.nsIURI;
@@ -1909,7 +1876,7 @@ if (statement){
       }
 
       var td = GotoSubject_default();
-      if (!td) td = GotoSubject_default(); //the first tr is required
+      // if (!td) td = GotoSubject_default(); //the first tr is required  // eh?
 
       if (solo) dom.title = UI.utils.label(subject);  // "Tabulator: "+  No need to advertize
 
@@ -2025,15 +1992,16 @@ if (statement){
                   anchor.setAttribute('href', obj.uri);
                   anchor.appendChild(UI.utils.AJARImage(outlineIcons.src.icon_telephone,
                                                'phone', 'phone '+num,dom))
-                  rep.appendChild(anchor);
-                  anchor.firstChild.setAttribute('class', 'phoneIcon');
+                  rep.appendChild(anchor)
+                  anchor.firstChild.setAttribute('class', 'phoneIcon')
               } else { // not tel:
-                  rep.appendChild(dom.createTextNode(UI.utils.label(obj)));
+                  rep.appendChild(dom.createTextNode(UI.utils.label(obj)))
+                  UI.widgets.makeDraggable(rep, obj) // 2017
               }
           } else {  // bnode
               rep.appendChild(dom.createTextNode(UI.utils.label(obj)));
           }
-      } else if (obj.termType=='collection'){
+      } else if (obj.termType=='Collection'){
           // obj.elements is an array of the elements in the collection
           rep = dom.createElement('table');
           rep.setAttribute('about', obj.toNT());
@@ -2053,7 +2021,7 @@ if (statement){
               numcell.innerHTML = (i+1) + ')';
               row.appendChild(thisOutline.outline_objectTD(elt));
           }
-      } else if (obj.termType=='formula'){
+      } else if (obj.termType=='Graph'){
           rep = UI.panes.dataContentPane.statementsAsTables(obj.statements, dom);
           rep.setAttribute('class', 'nestedFormula')
 

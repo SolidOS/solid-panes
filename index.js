@@ -76,7 +76,10 @@ paneModule.register(require('./transaction/period.js'))
 paneModule.register(require('./chat/chatPane.js'))
 //paneModule.register(require('./publication/publicationPane.js'))
 paneModule.register(require('./meeting/meetingPane.js'))
+paneModule.register(require('./tabbed/tabbedPane.js'))
 paneModule.register(require('./schedule/schedulePane.js'))
+paneModule.register(require('./links/linksPane.js'))
+
 
 paneModule.register(require('./trip/tripPane.js'))
 paneModule.register(require('./airPane.js'))
@@ -85,6 +88,9 @@ paneModule.register(require('./airPane.js'))
 
 paneModule.register(require('./imagePane.js')) // Basic image view
 paneModule.register(require('./playlist/playlistPane.js')) // Basic playlist view
+
+paneModule.register(require('./video/videoPane.js')) // Video clip player
+paneModule.register(require('./audio/audioPane.js')) // Audio clip player
 
 
 paneModule.register(require('./classInstancePane.js')) // Should be above dataContentPane

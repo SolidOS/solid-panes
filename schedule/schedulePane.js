@@ -4,6 +4,8 @@
 */
 
 var UI = require('solid-ui')
+var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
+
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
@@ -20,19 +22,19 @@ module.exports = {
   },
 
 //////////////////////// Mint a new Schedule poll
+  mintClass: SCHED('SchedulableEvent'),
 
   mintNew: function (options) {
 
     return new Promise(function(resolve, reject){
 
       var ns = UI.ns
+      var kb = UI.store
       var newBase = options.newBase
-      var thisInstance = options.useExisting
+      var thisInstance = options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
       var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-      var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
       var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-      var FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
 
       var complainIfBad = function(ok, body){
         if (ok) return;
@@ -277,7 +279,6 @@ module.exports = {
     var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
     var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
     var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
-    var FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
 
     var thisInstance = subject
     var detailsDoc = subject.doc()
@@ -596,7 +597,7 @@ module.exports = {
         var title = '' + (kb.any(subject, DC('title')) || '')
         var mailto = 'mailto:' +
           kb.each(subject, SCHED('invitee')).map(function (who) {
-            var mbox = kb.any(who, FOAF('mbox'))
+            var mbox = kb.any(who, ns.foaf('mbox'))
             return mbox ? '' + mbox : ''
           }).join(',') +
           '?subject=' + encodeURIComponent(title + '-- When can we meet?') +
@@ -788,7 +789,7 @@ module.exports = {
       if (comment) div.appendChild(dom.createElement('p')).textContent = comment.value
       var author = kb.any(invitation, DC('author'))
       if (author) {
-        var authorName = kb.any(author, FOAF('name'))
+        var authorName = kb.any(author, ns.foaf('name'))
         if (authorName) {
           div.appendChild(dom.createElement('p')).textContent = authorName
         }

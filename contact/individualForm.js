@@ -1,3 +1,4 @@
+module.exports = `
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix ui: <http://www.w3.org/ns/ui#>.
 @prefix : <#>.
@@ -155,3 +156,4 @@
 <#noteField>
     a <http://www.w3.org/ns/ui#MultiLineTextField> ;
     <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#note> .
+`

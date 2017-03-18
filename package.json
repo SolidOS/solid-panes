@@ -21,11 +21,14 @@
   "keywords": [
     "solid",
     "decentralized",
-    "widgets", "ui",
+    "widgets",
+    "ui",
     "web",
     "rdf",
     "ldp",
-    "linked", "panes", "app",
+    "linked",
+    "panes",
+    "app",
     "data"
   ],
   "author": "Tim Berners-Lee <timbl@mit.edu>",
@@ -36,6 +39,7 @@
   "homepage": "https://github.com/linkeddata/solid-app-set",
   "dependencies": {
     "better-simple-slideshow": "git://github.com/linkeddata/better-simple-slideshow.git#gh-pages",
+    "mime-types": "^2.1.13",
     "solid-ui": "git://github.com/linkeddata/solid-ui.git"
   },
   "devDependencies": {

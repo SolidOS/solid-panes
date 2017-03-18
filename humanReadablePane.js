@@ -21,7 +21,8 @@ module.exports = {
 
         var allowed = ['text/plain',
                        'text/html','application/xhtml+xml',
-                        'image/png', 'image/jpeg', 'application/pdf'];
+                        'image/png', 'image/jpeg', 'application/pdf',
+                      'video/mp4'];
 
         var hasContentTypeIn = function(kb, x, displayables) {
             var cts = kb.fetcher.getHeader(x, 'content-type');
@@ -37,12 +38,24 @@ module.exports = {
             return false;
         };
 
-        if (!subject.uri) return null; // no bnodes
+        // This data coul d come from a fetch OR from ldp comtaimner
+        var hasContentTypeIn2 = function(kb, x, displayables) {
+          var t = kb.findTypeURIs(subject)
+          for (var k=0; k < displayables.length; k++) {
+              if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
+                  return true;
+              }
+          }
+            return false;
+        };
 
-        var t = kb.findTypeURIs(subject);
-        if (t[ns.link('WebPage').uri]) return "view";
+        if (!subject.uri) return null // no bnodes
 
-        if (subject.uri && hasContentTypeIn(kb, subject, allowed)) return "View";
+        var t = kb.findTypeURIs(subject)
+        if (t[ns.link('WebPage').uri]) return "view"
+
+        if (hasContentTypeIn(kb, subject, allowed) ||
+          hasContentTypeIn2(kb, subject, allowed)) return "View"
 
         return null;
     },

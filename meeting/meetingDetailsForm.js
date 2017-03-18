@@ -1,4 +1,4 @@
-@prefix : <http://www.w3.org/ns/ui#> .
+module.exports = `@prefix : <http://www.w3.org/ns/ui#> .
 @prefix f: <#> .
 @prefix dc: <http://purl.org/dc/elements/1.1/>.
 @prefix cal: <http://www.w3.org/2002/12/cal/ical#>.
@@ -79,3 +79,4 @@ f:settings a :Form;
         :size 40 .
 
 #
+`

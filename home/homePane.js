@@ -35,21 +35,26 @@ module.exports = {
     }
 
     var newThingUI = function(context) {
+
+      var genericMaker = function(event, tool){
+
+      }
       var toolIcons = [
-        { icon: 'noun_339237.svg', maker: makeGroup, hint: 'Make an address book', limit: 1 },
-        { icon: 'noun_346777.svg', maker: makePoll, hint: 'Make a poll to schedule a meeting'},
-        { icon: 'noun_79217.svg', maker: makePad, hint: 'Make a shared notepad'},
-        { icon: 'noun_346319.svg', maker: makeChat, limit:1, hint: 'Create a chat channel'},
-        { icon: 'noun_17020.svg', maker: makeActions, limit: 1, hint: 'Make an issue tracker'},
-        { icon: 'noun_66617.svg', maker: makeMeeting, hint: 'Make a new meeting', disabled: false}
+        { icon: 'noun_339237.svg', maker: genericMaker, paneName: 'contact', hint: 'Make an address book', limit: 1 },
+        { icon: 'noun_346777.svg', maker: genericMaker, paneName: 'schedule',  hint: 'Make a poll to schedule a meeting'},
+        { icon: 'noun_79217.svg', maker: genericMaker, paneName: 'pad', hint: 'Make a shared notepad'},
+        { icon: 'noun_346319.svg', maker: genericMaker, paneName: 'chat', limit:1, hint: 'Create a chat channel'},
+        { icon: 'noun_17020.svg', maker: genericMaker, paneName: 'issue', hint: 'Make an issue tracker'},
+        { icon: 'noun_66617.svg', maker: genericMaker, paneName: 'meeting', hint: 'Make a new meeting', disabled: false}
       ] // 'noun_66617.svg'
 
       var iconStyle = 'padding: 1em; width: 3em; height: 3em;'
-      var star = bottomTR.appendChild(dom.createElement('img'))
+      var star = context.div.appendChild(dom.createElement('img'))
       var visible = false; // the inividual tools tools
       star.setAttribute('src', UI.icons.iconBase + 'noun_272948.svg')
       star.setAttribute('style', iconStyle)
       star.setAttribute('title', 'Add another tool to the meeting')
+
       var selectNewTool = function(event){
         visible = !visible
         star.setAttribute('style', iconStyle + (visible? 'background-color: yellow;': ''));
@@ -60,11 +65,83 @@ module.exports = {
         star.setAttribute('style', iconStyle)
       }
 
-      var icon, iconArray = []
+      var makeNewAppInstance = function (options) {
+        return new Promise(function(resolve, reject){
+          var kb = UI.store
+
+          var callbackWS = function(ws, newBase){
+            var newPaneOptions = {
+              newBase: newBase,
+              workspace: ws,
+              pane: options.pane
+            }
+            for (opt in options) {// get div, dom, me
+              newPaneOptions[opt] = options[opt]
+            }
+            options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
+              var p = options.div.appendChild(dom.createElement('p'))
+              var newInstance
+              p.setAttribute('style', 'font-size: 120%;')
+              // Make link to new thing
+              p.innerHTML =
+                "Your <a target='_blank' href='" + newPaneOptions.newInstance.uri + "'><b>new " + options.noun + "</b></a> is ready to be set up. " +
+                "<br/><br/><a target='_blank' href='" + newPaneOptions.newInstance.uri + "'>Go to your new " + options.noun + ".</a>"
+              selectUI.parentNode.removeChild(selectUI)  // Clean up
+              selectNewTool() // toggle star to plain and menu vanish again
+
+            }).catch(function (err) {
+              complain(err)
+              reject(err)
+            })
+          }
+
+          var pa = options.pane
+          options.appPathSegment = 'edu.mit.solid.pane.' + pa.name
+          options.noun = pa.mintClass ? UI.utils.label(pa.mintClass) : ( pa.name + ' @@' )
+
+          var selectUI = UI.widgets.selectWorkspace(dom, options, callbackWS)
+          options.div.appendChild(selectUI)
+        })
+      }
+
+      var iconArray = []
+
+      for (var pn in UI.panes){
+        var pane = UI.panes[pn]
+        if (pane.mintNew){
+          var icon = context.div.appendChild(dom.createElement('img'))
+          icon.setAttribute('src', pane.icon)
+          var noun = pane.mintClass ? UI.utils.label(pane.mintClass) : ( pane.name + ' @@' )
+          icon.setAttribute('title', 'Make new ' + noun)
+          icon.setAttribute('style', iconStyle + "display: none;")
+          iconArray.push(icon)
+          var foo = function(pane, icon, noun){
+            var iconEle = icon
+            var thisPane = pane
+            var thisNoun = noun
+            if (!icon.disabled){
+              icon.addEventListener('click', function(e){
+                  selectTool(iconEle)
+                  options = {event: e, iconEle:
+                    iconEle, pane: thisPane,
+                    noun: thisNoun,
+                    noIndexHTML: true, // do NOT @@ for now write a HTML file
+                    div: context.div,
+                    me: context.me,
+                    dom: context.dom}
+                  makeNewAppInstance(options)
+              })
+            }
+          }// foo
+          foo(pane, icon, noun)
+        }
+      }
+
+/*
       for (var i=0; i< toolIcons.length; i++){
         var foo = function() {
           var tool = toolIcons[i]
-          var icon = bottomTR.appendChild(dom.createElement('img'))
+          var icon = context.div.appendChild(dom.createElement('img'))
           icon.setAttribute('src', UI.icons.iconBase + tool.icon)
           icon.setAttribute('title', tool.hint)
           icon.setAttribute('style', iconStyle + "display: none;")
@@ -73,13 +150,13 @@ module.exports = {
           var maker = toolIcons[i].maker
           if (!tool.disabled){
             icon.addEventListener('click', function(e){
-                maker(e, icon)
+                maker(e, tool)
             })
           }
         }
         foo()
       }
-
+*/
       var styleTheIcons = function(style){
         for (var i=0; i<iconArray.length; i++){
           var st = iconStyle + style
