@@ -205,7 +205,7 @@ module.exports = {
         var outgoingSt = kb.statementsMatching(cme, knows, s)
         if (outgoingSt.length) {
           outgoing = true
-          if (!profile) profile = outgoingSt.why
+          if (!profile) profile = outgoingSt[0].why
         }
 
         var tr = dom.createElement('tr')
