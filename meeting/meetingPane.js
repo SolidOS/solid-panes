@@ -181,7 +181,7 @@ module.exports = {
         // of meeting participants is one does not already exist, and add them
         var addParticipant = function (target) {
           var pref = kb.any(target, ns.foaf('preferredURI'))
-          var obj = pref ? kb.sym(pref) : obj
+          var obj = pref ? kb.sym(pref) : target
           var group = kb.any(meeting, ns.meeting('attendeeGroup'))
           var addPersonToGroup = function (obj, group) {
             var ins = [$rdf.st(group, UI.ns.vcard('hasMember'), obj, group.doc())] // @@@ Complex rules about webid?
