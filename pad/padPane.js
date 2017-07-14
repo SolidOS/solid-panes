@@ -75,31 +75,6 @@ module.exports = {
       return ele
     }
 
-    var webOperation = function (method, uri, options, callback) {
-      var xhr = $rdf.Util.XMLHTTPFactory()
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          var ok = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-          callback(uri, ok, xhr.responseText, xhr)
-        }
-      }
-      xhr.open(method, uri, true)
-      if (options.contentType) {
-        xhr.setRequestHeader('Content-type', options.contentType)
-      }
-      xhr.send(options.data ? options.data : undefined)
-    }
-
-    var webCopy = function (here, there, contentType, callback) {
-      webOperation('GET', here, {}, function (uri, ok, body, xhr) {
-        if (ok) {
-          webOperation('PUT', there, { data: xhr.responseText, contentType: contentType }, callback)
-        } else {
-          callback(uri, ok, '(on read) ' + body, xhr)
-        }
-      })
-    }
-
     // Access control
 
     // Two variations of ACL for this app, public read and public read/write
@@ -128,25 +103,47 @@ module.exports = {
       return $rdf.serialize(acl, g, aclURI, 'text/turtle')
     }
 
-    var setACL = function (docURI, allWrite, callback) {
+    /**
+     * @param docURI
+     * @param allWrite
+     * @param callback
+     *
+     * @returns {Promise<Response>}
+     */
+    var setACL = function setACL (docURI, allWrite, callback) {
       var aclDoc = kb.any(kb.sym(docURI),
         kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+
       if (aclDoc) { // Great we already know where it is
         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-        webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' }, callback)
+
+        return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+          .then(result => callback(true))
+          .catch(err => {
+            callback(false, err.message)
+          })
       } else {
-        fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
-          if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
-          var aclDoc = kb.any(kb.sym(docURI),
-            kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
-          if (!aclDoc) {
-            // complainIfBad(false, "No Link rel=ACL header for " + docURI);
-            callback(false, 'No Link rel=ACL header for ' + docURI)
-          } else {
+        return fetcher.load(docURI)
+          .catch(err => {
+            callback(false, 'Getting headers for ACL: ' + err)
+          })
+          .then(() => {
+            var aclDoc = kb.any(kb.sym(docURI),
+              kb.sym('http://www.iana.org/assignments/link-relations/acl'))
+
+            if (!aclDoc) {
+              // complainIfBad(false, "No Link rel=ACL header for " + docURI);
+              throw new Error('No Link rel=ACL header for ' + docURI)
+            }
+
             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-            webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' }, callback)
-          }
-        })
+
+            return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+          })
+          .then(result => callback(true))
+          .catch(err => {
+            callback(false, err.message)
+          })
       }
     }
 
@@ -277,27 +274,24 @@ module.exports = {
           agenda.push(function () {
             var newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
-            webCopy(base + item.local, newBase + item.local, item.contentType, function (uri, ok, message, xhr) {
-              if (!ok) {
-                complainIfBad(ok, 'FAILED to copy ' + base + item.local + ' : ' + message)
-                console.log('FAILED to copy ' + base + item.local + ' : ' + message)
-              } else {
-                xhr.resource = kb.sym(newURI)
-                kb.fetcher.parseLinkHeader(xhr, kb.bnode()) // Dont save the whole headers, just the links
 
-                var setThatACL = function () {
-                  setACL(newURI, false, function (ok, message) {
-                    if (!ok) {
-                      complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
-                      console.log('FAILED to set ACL ' + newURI + ' : ' + message)
-                    } else {
-                      agenda.shift()() // beware too much nesting
-                    }
-                  })
+            var setThatACL = function () {
+              setACL(newURI, false, function (ok, message) {
+                if (!ok) {
+                  complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
+                  console.log('FAILED to set ACL ' + newURI + ' : ' + message)
+                } else {
+                  agenda.shift()() // beware too much nesting
                 }
+              })
+            }
+
+            kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
+              .then(() => {
+                let resource = kb.sym(newURI)
                 if (!me) {
-                  console.log('Waiting to find out id user users to access ' + xhr.resource)
-                  UI.widgets.checkUser(xhr.resource, function (webid) {
+                  console.log('Waiting to find out id user users to access ' + resource)
+                  UI.widgets.checkUser(resource, function (webid) {
                     me = kb.sym(webid)
                     console.log('Got user id: ' + me)
                     setThatACL()
@@ -305,12 +299,15 @@ module.exports = {
                 } else {
                   setThatACL()
                 }
-              }
-            })
+              })
+              .catch(err => {
+                console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
+                complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + err.message)
+              })
           })
         }
         fun(item)
-      };
+      }
       /*
        if (!me) {
        agenda.push(function(){

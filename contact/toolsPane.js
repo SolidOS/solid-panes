@@ -183,18 +183,20 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               return
             }
             log('Deleting ... ' + resource)
-            kb.fetcher.webOperation('DELETE', resource).then(function (xhr) {
-              log('Deleted ok: ' + resource)
-              deleteOneFile()
-            }).catch(function(e){
-              var err = '*** ERROR deleteing ' + resource + ': ' + e
-              log(err)
-              if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card DELETE errors?')){
-                removeFromMainIndex()
-              } else {
-                reject(err)
-              }
-            })
+            kb.fetcher.delete(resource)
+              .then(function () {
+                log('Deleted ok: ' + resource)
+                deleteOneFile()
+              })
+              .catch(function (e) {
+                var err = '*** ERROR deleteing ' + resource + ': ' + e
+                log(err)
+                if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card DELETE errors?')) {
+                  removeFromMainIndex()
+                } else {
+                  reject(err)
+                }
+              })
           }
           deleteOneFile()
         } // erase one
@@ -487,46 +489,54 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
 
         // Save a new clean version
         var saveCleanPeople = function () {
-          return new Promise(function (resolve, reject) {
-            var cleanPeople = kb.sym(stats.book.dir().uri + 'clean-people.ttl')
-            var sts = []
-            for (i = 0; i < stats.uniques.length; i++) {
-              sts = sts.concat(kb.connectedStatements(stats.uniques[i], stats.nameEmailIndex))
-            }
-            var sz = (new $rdf.Serializer(kb)).setBase(stats.nameEmailIndex.uri)
-            log('Serializing index of uniques...')
-            var data = sz.statementsToN3(sts)
-            kb.fetcher.webOperation('PUT', cleanPeople, { data: data, contentType: 'text/turtle' })
-              .then(function (xhr) {
-                log('Done uniques log ' + cleanPeople)
-                resolve(true)
-              }).catch(function (e) {
-              log('Error saving uniques: ' + e)
-              reject('Error saving uniques: ' + e)
+          var cleanPeople
+
+          return Promise.resolve()
+            .then(() => {
+              cleanPeople = kb.sym(stats.book.dir().uri + 'clean-people.ttl')
+              var sts = []
+              for (i = 0; i < stats.uniques.length; i++) {
+                sts = sts.concat(kb.connectedStatements(stats.uniques[i], stats.nameEmailIndex))
+              }
+              var sz = (new $rdf.Serializer(kb)).setBase(stats.nameEmailIndex.uri)
+              log('Serializing index of uniques...')
+              var data = sz.statementsToN3(sts)
+
+              return kb.fetcher.webOperation('PUT', cleanPeople, { data: data, contentType: 'text/turtle' })
             })
-          })
+            .then(function () {
+              log('Done uniques log ' + cleanPeople)
+              return true
+            })
+            .catch(function (e) {
+              log('Error saving uniques: ' + e)
+            })
         }
 
         var saveCleanGroup = function (g) {
-          return new Promise(function (resolve, reject) {
-            var s = g.uri.replace('/Group/', '/NewGroup/')
-            var cleanGroup = kb.sym(s)
-            var sts = []
-            for (i = 0; i < stats.uniques.length; i++) {
-              sts = sts.concat(kb.connectedStatements(stats.uniques[i], g.doc()))
-            }
-            var sz = (new $rdf.Serializer(kb)).setBase(g.uri)
-            log('   Regenerating group of uniques...' + cleanGroup)
-            var data = sz.statementsToN3(sts)
-            kb.fetcher.webOperation('PUT', cleanGroup, { data})
-            .then(function (xhr) {
-              log('     Done uniques group ' + cleanGroup)
-              resolve(true)
-            }).catch(function (e) {
-              log('Error saving : ' + e)
-              reject(e)
+          var cleanGroup
+
+          return Promise.resolve()
+            .then(() => {
+              var s = g.uri.replace('/Group/', '/NewGroup/')
+              cleanGroup = kb.sym(s)
+              var sts = []
+              for (i = 0; i < stats.uniques.length; i++) {
+                sts = sts.concat(kb.connectedStatements(stats.uniques[i], g.doc()))
+              }
+              var sz = (new $rdf.Serializer(kb)).setBase(g.uri)
+              log('   Regenerating group of uniques...' + cleanGroup)
+              var data = sz.statementsToN3(sts)
+
+              return kb.fetcher.webOperation('PUT', cleanGroup, { data})
             })
-          })
+            .then(() => {
+              log('     Done uniques group ' + cleanGroup)
+              return true
+            })
+            .catch((e) => {
+              log('Error saving : ' + e)
+            })
         }
 
         var saveAllGroups = function () {

@@ -138,11 +138,10 @@ module.exports = {
           }
 
           if ('content' in task) {
-            UI.widgets.webOperation('PUT', dest,
-              { data: task.content, saveMetadata: true, contentType: task.contentType},
-              checkOKSetACL)
+            kb.fetcher.webOperation('PUT', dest, { data: task.content, saveMetadata: true, contentType: task.contentType})
+              .then(() => checkOKSetACL(dest, true))
           } else if ('existing' in task) {
-            checkOKSetACL(true, dest)
+            checkOKSetACL(dest, true)
           } else {
             reject(new Error('copy not expected buiding new app'))
             // var from = task.from || task.to // default source to be same as dest
@@ -156,7 +155,7 @@ module.exports = {
 
   //  Render the pane
   render: function (subject, dom, paneOptions) {
-    paneOptions == paneOptions || {}
+    paneOptions = paneOptions || {}
     var kb = UI.store
     var ns = UI.ns
     var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
@@ -172,7 +171,7 @@ module.exports = {
 
     var commentFlter = function (pred, inverse) {
       if (!inverse && pred.uri ==
-        'http://www.w3.org/2000/01/rdf-schema#comment') return true
+          'http://www.w3.org/2000/01/rdf-schema#comment') return true
       return false
     }
 
@@ -196,7 +195,8 @@ module.exports = {
 
     var gen_uuid = function () { // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8)
+        var r = Math.random() * 16 | 0
+        var v = c == 'x' ? r : (r & 0x3 | 0x8)
         return v.toString(16)
       })
     }
@@ -546,10 +546,13 @@ module.exports = {
             })
           } else {
             dump('Deleting resoure ' + x.doc())
-            kb.fetcher.webOperation('DELETE', x.doc()).then(function(xhr){
-              console.log('Delete thing ' + x + ': complete.')
-            })
-            .catch(function(e){complain('Error deleting thing ' + x + ': ' + e)})
+            kb.fetcher.delete(x.doc())
+              .then(function () {
+                console.log('Delete thing ' + x + ': complete.')
+              })
+              .catch(function (e) {
+                complain('Error deleting thing ' + x + ': ' + e)
+              })
           }
         }
         nextOne()
@@ -1042,15 +1045,19 @@ module.exports = {
                 filename = 'image' + n + extension
               }
               kb.add(subject, ns.vcard('hasPhoto') , pic, subject.doc())
-              kb.fetcher.webOperation('PUT', pic, { data: data, contentType: theFile.type}).then(function (xhr) {
-                console.log(' Upload: put OK: ' + pic)
-                kb.fetcher.putBack(subject.doc()).then(function(xhr){
+              kb.fetcher.webOperation('PUT', pic, { data: data, contentType: theFile.type})
+                .then(function () {
+                  console.log(' Upload: put OK: ' + pic)
+
+                  return kb.fetcher.putBack(subject.doc())
+                })
+                .then(function () {
                   mainImage.setAttribute('src', pic.uri)
                   // UI.widgets.setImage(mainImage, subject)// try again
                 })
-              }).catch(function (status) {
-                console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
-              })
+                .catch(function (status) {
+                  console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
+                })
             }
           })(f)
           reader.readAsArrayBuffer(f)

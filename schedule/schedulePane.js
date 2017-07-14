@@ -39,32 +39,6 @@ module.exports = {
         reject(new Error(body))
       }
 
-      var webOperation = function (method, uri, options, callback) {
-        var xhr = $rdf.Util.XMLHTTPFactory()
-        uri = UI.store.fetcher.proxyIfNecessary(uri)
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState == 4) {
-            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-            callback(uri, success, xhr.responseText, xhr)
-          }
-        }
-        xhr.open(method, uri, true)
-        if (options.contentType) {
-          xhr.setRequestHeader('Content-type', options.contentType)
-        }
-        xhr.send(options.data ? options.data : undefined)
-      }
-
-      var webCopy = function (here, there, content_type, callback) {
-        webOperation('GET', here, {}, function (uri, success, body, xhr) {
-          if (success) {
-            webOperation('PUT', there, { data: xhr.responseText, contentType: content_type }, callback)
-          } else {
-            callback(uri, success, '(on read) ' + body, xhr)
-          }
-        })
-      }
-
       // ////////////////////// Accesss control
 
       // Two variations of ACL for this app, public read and public read/write
@@ -101,25 +75,40 @@ module.exports = {
       }
       */
 
-      var setACL2 = function (docURI, allWrite, callback) {
+      var setACL2 = function setACL2 (docURI, allWrite, callback) {
         var aclDoc = kb.any(kb.sym(docURI),
-         kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+          kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+
         if (aclDoc) { // Great we already know where it is
           var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-          webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' }, callback)
+
+          return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+            .then(result => callback(true))
+            .catch(err => {
+              callback(false, err.message)
+            })
         } else {
-          fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
-            if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
-            var aclDoc = kb.any(kb.sym(docURI),
-             kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
-            if (!aclDoc) {
-             // complainIfBad(false, "No Link rel=ACL header for " + docURI)
-              callback(false, 'No Link rel=ACL header for ' + docURI)
-            } else {
+          return fetcher.load(docURI)
+            .catch(err => {
+              callback(false, 'Getting headers for ACL: ' + err)
+            })
+            .then(() => {
+              var aclDoc = kb.any(kb.sym(docURI),
+                kb.sym('http://www.iana.org/assignments/link-relations/acl'))
+
+              if (!aclDoc) {
+                // complainIfBad(false, "No Link rel=ACL header for " + docURI);
+                throw new Error('No Link rel=ACL header for ' + docURI)
+              }
+
               var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-              webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' }, callback)
-            }
-          })
+
+              return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+            })
+            .then(result => callback(true))
+            .catch(err => {
+              callback(false, err.message)
+            })
         }
       }
 
@@ -171,37 +160,37 @@ module.exports = {
           agenda.push(function () {
             var newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
-            fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
-            .then(function (xhr) {
-              xhr.resource = kb.sym(newURI)
-              kb.fetcher.parseLinkHeader(xhr, kb.bnode()) // Dont save the whole headers, just the links
 
-              var setThatACL = function () {
-                setACL2(newURI, false, function (ok, message) {
-                  if (!ok) {
-                    complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
-                    console.log('FAILED to set ACL ' + newURI + ' : ' + message)
-                  } else {
-                    agenda.shift()() // beware too much nesting
-                  }
-                })
-              }
-              if (!me) {
-                console.log('Waiting to find out id user users to access ' + xhr.resource)
-                UI.widgets.checkUser(xhr.resource, function (webid) {
-                  me = kb.sym(webid)
-                  console.log('Got user id: ' + me)
+            var setThatACL = function () {
+              setACL2(newURI, false, function (ok, message) {
+                if (!ok) {
+                  complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
+                  console.log('FAILED to set ACL ' + newURI + ' : ' + message)
+                } else {
+                  agenda.shift()() // beware too much nesting
+                }
+              })
+            }
+
+            kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
+              .then(() => {
+                let resource = kb.sym(newURI)
+                if (!me) {
+                  console.log('Waiting to find out id user users to access ' + resource)
+                  UI.widgets.checkUser(resource, function (webid) {
+                    me = kb.sym(webid)
+                    console.log('Got user id: ' + me)
+                    setThatACL()
+                  })
+                } else {
                   setThatACL()
-                })
-              } else {
-                setThatACL()
-              }
-            })
-            .catch(function (e) {
-              complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + e)
-              console.log('FAILED to copy ' + base + item.local + ' : ' + e)
-            })
-          }) // agenda.push
+                }
+              })
+              .catch(err => {
+                console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
+                complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + err.message)
+              })
+          })
         }
         fun(item)
       }
@@ -231,10 +220,11 @@ module.exports = {
       })
 
       agenda.push(function () {
-        webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle' }, function (ok, body) {
-          complainIfBad(ok, 'Failed to initialize empty results file: ' + body)
-          if (ok) agenda.shift()()
-        })
+        kb.fetcher.webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle' })
+          .then(() => { agenda.shift()() })
+          .catch(err => {
+            complainIfBad(false, 'Failed to initialize empty results file: ' + err.message)
+          })
       })
 
       agenda.push(function () {

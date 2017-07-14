@@ -14,42 +14,35 @@ module.exports = {
   name: 'classInstance',
 
   // Create a new folder in a Solid system,
-  //
-  mintNew: function(newPaneOptions){
-    var kb = UI.store, updater = kb.updater
+  mintNew: function (newPaneOptions) {
+    var kb = UI.store
+    var updater = kb.updater
     var newInstance = newPaneOptions.newInstance
     var u = newInstance.uri
-    if (!u.endsWith('/')) throw new Error('URI of new folder must end in "/" :' + u)
-    u = u.slice(0,-1) // chop off trailer
+    if (!u.endsWith('/')) { throw new Error('URI of new folder must end in "/" :' + u) }
+    u = u.slice(0, -1) // chop off trailer
 
-    var parentURI = newInstance.dir().uri // ends in /
+    var parentURI = newInstance.dir().uri  // ends in /
     var slash = u.lastIndexOf('/')
     var folderName = u.slice(slash + 1)
 
     // @@@@ kludge until we can get the solid-client version working
     // Force the folder by saving a dummy file insie it
-    return new Promise(function(resolve, reject){
-      kb.fetcher.webOperation('PUT', newInstance.uri + ".dummy").then(function(xhr){
+    return kb.fetcher.webOperation('PUT', newInstance.uri + ".dummy")
+      .then(function () {
         console.log('New folder created: ' + newInstance.uri)
-        kb.fetcher.webOperation('DELETE', newInstance.uri + ".dummy").then(function(xhr){
-          console.log('Dummy file deleted : ' + newInstance.uri + ".dummy")
-          resolve(newPaneOptions)
-        }).catch(function(e){
-          reject(e)
-        })
-      }).catch(function(e){
-        reject(e)
-      })
-    }) // Promise
 
-    return new Promise(function(resolve, reject){
-      UI.solid.web.createContainer(parentURI, folderName).then(function(xhr){
-        console.log('New container created: ' + newInstance.uri)
-        resolve(newPaneOptions)
-      }).catch(function(e){
-        reject(e)
+        return kb.fetcher.delete(newInstance.uri + ".dummy")
       })
-    })
+      .then(function () {
+        console.log('Dummy file deleted : ' + newInstance.uri + ".dummy")
+
+        return UI.solid.web.createContainer(parentURI, folderName)
+      })
+      .then(function () {
+        console.log('New container created: ' + newInstance.uri)
+        return newPaneOptions
+      })
   },
 
   label: function (subject) {
@@ -92,7 +85,7 @@ module.exports = {
     var sts = kb.statementsMatching(undefined, ns.rdf('type'), subject)
     if (sts.length > 0) {
       var already = {}, more = []
-      sts.map(function (st) {already[st.subject.toNT()] = st})
+      sts.map(function (st) { already[st.subject.toNT()] = st })
       for (var nt in kb.findMembersNT(subject)) if (!already[nt])
           more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)); // @@ no provenence
       if (more.length) complain('There are ' + sts.length + ' explicit and ' +
@@ -150,19 +143,20 @@ module.exports = {
               console.log("Drag-drop upload aborted: resource already exists: " + destination)
               return
             }
-            UI.store.fetcher.webOperation('PUT', destination, { data: data, contentType: theFile.type}).then(function (xhr) {
-              console.log(' Upload: put OK: ' + destination)
-              // @@ Restore the target style
-              // @@ refresh the display from the container!
-            }).catch(function (status) {
-              console.log(' Upload: FAIL ' + destination + ', Error: ' + status)
-            })
+            UI.store.fetcher.webOperation('PUT', destination, { data: data, contentType: theFile.type})
+              .then(function () {
+                console.log(' Upload: put OK: ' + destination)
+                // @@ Restore the target style
+                // @@ refresh the display from the container!
+              })
+              .catch(function (error) {
+                console.log(' Upload: FAIL ' + destination + ', Error: ' + error)
+              })
           }
         })(f)
         reader.readAsArrayBuffer(f)
       }
     }
-
 
     UI.aclControl.preventBrowserDropEvents(dom)
 
@@ -175,5 +169,4 @@ module.exports = {
     return div
   }
 }
-
 // ends

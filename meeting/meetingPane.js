@@ -302,16 +302,17 @@ module.exports = {
             }
 
             UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type })
-              .then(function (xhr) {
+              .then(function () {
                 console.log(' Upload: put OK: ' + destURI)
                 if (theFile.type.startsWith('image/')) {
                   makePicturesFolder(folderName) // If necessary
                 } else {
                   makeMaterialsFolder(folderName)
                 }
-              }).catch(function (status) {
-              console.log(' Upload: FAIL ' + destURI + ', Error: ' + status)
-            })
+              })
+              .catch(function (error) {
+                console.log(' Upload: FAIL ' + destURI + ', Error: ' + error)
+              })
           }
         })(f)
         reader.readAsArrayBuffer(f)
