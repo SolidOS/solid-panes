@@ -18,11 +18,9 @@ var mime = require('mime-types')
 var toolsPane0 = require('./toolsPane')
 var toolsPane = toolsPane0.toolsPane
 
-
-
 if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
   console = {}
-  console.log = function (msg) { UI.log.info(msg);}
+  console.log = function (msg) { UI.log.info(msg) }
 }
 
 module.exports = {
@@ -156,8 +154,7 @@ module.exports = {
     })
   },
 
-  //                            Render the pane
-  //
+  //  Render the pane
   render: function (subject, dom, paneOptions) {
     paneOptions == paneOptions || {}
     var kb = UI.store
@@ -194,7 +191,7 @@ module.exports = {
     var timestring = function () {
       var now = new Date()
       return '' + now.getTime()
-    // http://www.w3schools.com/jsref/jsref_obj_date.asp
+      // http://www.w3schools.com/jsref/jsref_obj_date.asp
     }
 
     var gen_uuid = function () { // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
@@ -204,16 +201,13 @@ module.exports = {
       })
     }
 
-    // ///////////////////// Reproduction: Spawn a new instance of this app
-
+    //  Reproduction: Spawn a new instance of this app
     var newAddressBookButton = function (thisAddressBook) {
       return UI.widgets.newAppInstance(dom,
         {noun: 'address book', appPathSegment: 'contactorator.timbl.com'}, function (ws, newBase) {
           thisPane.clone(thisAddressBook, newBase, {me: me, div: div, dom: dom})
         })
     } // newAddressBookButton
-
-    // /////////////////////////////////////////////////////////////////////////////
 
     var updater = UI.store.updater
     UI.aclControl.preventBrowserDropEvents(dom)
@@ -229,8 +223,7 @@ module.exports = {
     var context = { target: subject, me: me, noun: 'address book',
     div: div, dom: dom}; // missing: statusRegion
 
-    // Reload resorce then
-
+    // Reload resource then
     var reloadStore = function (store, callBack) {
       UI.store.fetcher.unload(store)
       UI.store.fetcher.nowOrWhenFetched(store.uri, undefined, function (ok, body) {
@@ -243,7 +236,6 @@ module.exports = {
     }
 
     // Refresh the DOM tree
-
     var refreshTree = function (root) {
       if (root.refresh) {
         root.refresh()
@@ -254,8 +246,7 @@ module.exports = {
       }
     }
 
-    //    Render a 3-column browser for an address book or a group
-    //
+    //  Render a 3-column browser for an address book or a group
     var renderThreeColumnBrowser = function (books, context, options) {
       kb.fetcher.load(books).then(function (xhr) {
         renderThreeColumnBrowser2(books, context, options)
@@ -292,7 +283,6 @@ module.exports = {
       // var cats = kb.each(book, ns.wf('contactCategory')) // zero or more
 
       //  Write a new contact to the web
-      //
       var createNewContact = function (book, name, selectedGroups, callback) {
         var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
 
@@ -302,7 +292,6 @@ module.exports = {
 
         // Sets of statements to different files
         var agenda = [ // Patch the main index to add the person
-
           [   $rdf.st(person, ns.vcard('inAddressBook'), book, nameEmailIndex), // The people index
             $rdf.st(person, ns.vcard('fn'), name, nameEmailIndex) ]
         ]
@@ -619,7 +608,7 @@ module.exports = {
             personRow.addEventListener('click', function (event) {
               event.preventDefault()
               cardMain.innerHTML = 'loading...'
-              var local = book? localNode(person) : person
+              var local = book ? localNode(person) : person
               UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
                 cardMain.innerHTML = ''
                 if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
@@ -627,7 +616,7 @@ module.exports = {
                 cardMain.appendChild(cardPane(dom, local, 'contact'))
                 cardMain.appendChild(dom.createElement('br'))
 
-                var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local))// hoverHide
+                var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
               })
             })
           }
@@ -1234,5 +1223,4 @@ module.exports = {
     return div
   }
 }
-
 // ends

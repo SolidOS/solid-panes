@@ -6,7 +6,6 @@
 var UI = require('solid-ui')
 var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
 
-
 module.exports = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
@@ -21,13 +20,11 @@ module.exports = {
     return null // No under other circumstances
   },
 
-//////////////////////// Mint a new Schedule poll
+//  Mint a new Schedule poll
   mintClass: SCHED('SchedulableEvent'),
 
   mintNew: function (options) {
-
-    return new Promise(function(resolve, reject){
-
+    return new Promise(function (resolve, reject) {
       var ns = UI.ns
       var kb = UI.store
       var newBase = options.newBase
@@ -36,9 +33,9 @@ module.exports = {
       var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
       var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
 
-      var complainIfBad = function(ok, body){
-        if (ok) return;
-        console.log("Error in Schedule Pane: Error constructing new scheduler: " + body)
+      var complainIfBad = function (ok, body) {
+        if (ok) return
+        console.log('Error in Schedule Pane: Error constructing new scheduler: ' + body)
         reject(new Error(body))
       }
 
@@ -61,7 +58,7 @@ module.exports = {
       var webCopy = function (here, there, content_type, callback) {
         webOperation('GET', here, {}, function (uri, success, body, xhr) {
           if (success) {
-            webOperation('PUT', there, { data: xhr.responseText, contentType: content_type}, callback)
+            webOperation('PUT', there, { data: xhr.responseText, contentType: content_type }, callback)
           } else {
             callback(uri, success, '(on read) ' + body, xhr)
           }
@@ -74,8 +71,11 @@ module.exports = {
       // In all cases owner has read write control
 
       var genACLtext = function (docURI, aclURI, allWrite) {
-        var g = $rdf.graph(), auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
-        var a = g.sym(aclURI + '#a1'), acl = g.sym(aclURI), doc = g.sym(docURI)
+        var g = $rdf.graph()
+        var auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
+        var a = g.sym(aclURI + '#a1')
+        var acl = g.sym(aclURI)
+        var doc = g.sym(docURI)
         g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
         g.add(a, auth('accessTo'), doc, acl)
         g.add(a, auth('agent'), me, acl)
@@ -102,29 +102,28 @@ module.exports = {
       */
 
       var setACL2 = function (docURI, allWrite, callback) {
-       var aclDoc = kb.any(kb.sym(docURI),
-         kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
-       if (aclDoc) { // Great we already know where it is
-         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-         webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
-       } else {
-         fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
-           if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
-           var aclDoc = kb.any(kb.sym(docURI),
-             kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
-           if (!aclDoc) {
+        var aclDoc = kb.any(kb.sym(docURI),
+         kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+        if (aclDoc) { // Great we already know where it is
+          var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+          webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' }, callback)
+        } else {
+          fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
+            if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
+            var aclDoc = kb.any(kb.sym(docURI),
+             kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+            if (!aclDoc) {
              // complainIfBad(false, "No Link rel=ACL header for " + docURI)
-             callback(false, 'No Link rel=ACL header for ' + docURI)
-           } else {
-             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-             webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
-           }
-         })
-       }
-     }
+              callback(false, 'No Link rel=ACL header for ' + docURI)
+            } else {
+              var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+              webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' }, callback)
+            }
+          })
+        }
+      }
 
       // Body of mintNew
-
       var kb = UI.store
       var fetcher = kb.fetcher
       var updater = kb.updater
@@ -140,31 +139,32 @@ module.exports = {
       var base = thisInstance.dir().uri
       var newDetailsDoc, newInstance, newResultsDoc, newIndexDoc
 
-      if (options.useExisting){
+      if (options.useExisting) {
         newInstance = options.useExisting
         newBase = thisInstance.dir().uri
         newDetailsDoc = newInstance.doc()
         newIndexDoc = null
-        if (options.newBase) throw "mint new scheduler: Illegal - have both new base and existing event"
+        if (options.newBase) {
+          throw new Error('mint new scheduler: Illegal - have both new base and existing event')
+        }
       } else {
         newDetailsDoc = kb.sym(newBase + 'details.ttl')
         newIndexDoc = kb.sym(newBase + 'index.html')
         newInstance = kb.sym(newDetailsDoc.uri + '#event')
       }
+
       var newResultsDoc = kb.sym(newBase + 'results.ttl')
 
-
-      var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html'}
+      var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html' }
 
       //   { local: 'forms.ttl', contentType: 'text/turtle'}
       //            { local: 'schedule.js', contentType: 'application/javascript'} ,
       //            { local: 'mashlib.js', contentType: 'application/javascript'} , //  @@ centrialize after testing?
       ]
 
-
       var agenda = []
 
-      var f, fi, fn; //   @@ This needs some form of visible progress bar
+      var f, fi, fn //   @@ This needs some form of visible progress bar
       for (f = 0; f < toBeCopied.length; f++) {
         var item = toBeCopied[f]
         var fun = function copyItem (item) {
@@ -172,10 +172,9 @@ module.exports = {
             var newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
             fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
-            .then(function(xhr){
-
-              xhr.resource = kb.sym(newURI);
-              kb.fetcher.parseLinkHeader(xhr, kb.bnode()); // Dont save the whole headers, just the links
+            .then(function (xhr) {
+              xhr.resource = kb.sym(newURI)
+              kb.fetcher.parseLinkHeader(xhr, kb.bnode()) // Dont save the whole headers, just the links
 
               var setThatACL = function () {
                 setACL2(newURI, false, function (ok, message) {
@@ -198,10 +197,10 @@ module.exports = {
                 setThatACL()
               }
             })
-            .catch(function(e){
+            .catch(function (e) {
               complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + e)
               console.log('FAILED to copy ' + base + item.local + ' : ' + e)
-            });
+            })
           }) // agenda.push
         }
         fun(item)
@@ -232,7 +231,7 @@ module.exports = {
       })
 
       agenda.push(function () {
-        webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle'}, function (ok, body) {
+        webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle' }, function (ok, body) {
           complainIfBad(ok, 'Failed to initialize empty results file: ' + body)
           if (ok) agenda.shift()()
         })
@@ -262,8 +261,7 @@ module.exports = {
     }) // promise
   }, // mintNew
 
-  /////////////////////////////////////// Render one meeting schedule poll
-
+  //  Render one meeting schedule poll
   render: function (subject, dom) {
     var kb = UI.store
     var ns = UI.ns
@@ -332,8 +330,8 @@ module.exports = {
       }
     }
 
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri ? kb.sym(me_uri) : null
+    var meUri = tabulator.preferences.get('me')
+    var me = meUri ? kb.sym(meUri) : null
     UI.widgets.checkUser(detailsDoc, setUser)
 
     // //////////////////////////////  Reproduction: spawn a new instance
@@ -342,7 +340,7 @@ module.exports = {
     //
 
     var newInstanceButton = function () {
-      var b = UI.widgets.newAppInstance(dom, { noun: 'scheduler'},
+      var b = UI.widgets.newAppInstance(dom, { noun: 'scheduler' },
         initializeNewInstanceInWorkspace)
       b.firstChild.setAttribute('style', inputStyle)
       return b
@@ -358,7 +356,7 @@ module.exports = {
         newBase = newBase.value
       }
       if (newBase.slice(-1) !== '/') {
-        $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
+        $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase) // @@ paramater?
         newBase = newBase + '/'
       }
       var now = new Date()
@@ -369,17 +367,16 @@ module.exports = {
 
     var initializeNewInstanceAtBase = function (thisInstance, newBase) {
       var options = {thisInstance: thisInstance, newBase: newBase}
-      this.mintNew(options).then(function(options){
+      this.mintNew(options).then(function (options) {
         var p = div.appendChild(dom.createElement('p'))
         p.setAttribute('style', 'font-size: 140%;')
         p.innerHTML =
           "Your <a href='" + result.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
           "<br/><br/><a href='" + result.uri + "'>Say when you what days work for you.</a>"
-      }).catch(function(error){
+      }).catch(function (error) {
         complainIfBad(false, result)
-      });
+      })
     }
-
 
     // ///////////////////////
 
@@ -393,7 +390,7 @@ module.exports = {
     }
 
     var getDetails = function () {
-      console.log('getDetails()'); // Looking for blank screen hang-up
+      console.log('getDetails()') // Looking for blank screen hang-up
       fetcher.nowOrWhenFetched(detailsDoc.uri, undefined, function (ok, body) {
         console.log('getDetails() ok? ' + ok)
         if (!ok) return complainIfBad(ok, body)
@@ -421,10 +418,10 @@ module.exports = {
       }, false)
     }
 
-    var showAppropriateDisplay = function () {
+    var showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
-      var me_uri = tabulator.preferences.get('me')
-      var me = me_uri ? kb.sym(me_uri) : null
+      var meUri = tabulator.preferences.get('me')
+      var me = meUri ? kb.sym(meUri) : null
 
       if (!me) {
         showSignon()
@@ -467,7 +464,7 @@ module.exports = {
       var na = div.appendChild(UI.widgets.newAppInstance(
         dom, 'Start a new poll in a workspace', initializeNewInstanceInWorkspace))
 
-      var hr = div.appendChild(dom.createElement('hr')); // @@
+      var hr = div.appendChild(dom.createElement('hr')) // @@
 
       var p = div.appendChild(dom.createElement('p'))
       p.textContent = 'Where would you like to store the data for the poll?  ' +
@@ -478,7 +475,7 @@ module.exports = {
       baseField.label = 'base URL'
       baseField.autocomplete = 'on'
 
-      div.appendChild(dom.createElement('br')); // @@
+      div.appendChild(dom.createElement('br')) // @@
 
       var button = div.appendChild(dom.createElement('button'))
       button.setAttribute('style', inputStyle)
@@ -492,6 +489,7 @@ module.exports = {
       })
     }
 
+
     // ///////////// The forms to configure the poll
 
     var showForms = function () {
@@ -502,7 +500,8 @@ module.exports = {
       if (wizard) {
         forms = [ form1, form2, form3 ]
         slides = []
-        var slide, currentSlide = 0
+        var slide
+        var currentSlide = 0
         for (var f = 0; f < forms.length; f++) {
           slide = dom.createElement('div')
           UI.widgets.appendForm(document, slide, {}, subject, forms[f], detailsDoc, complainIfBad)
@@ -527,7 +526,6 @@ module.exports = {
           } else {
             b2.removeAttribute('disabled')
           }
-
         }
         var b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
         b1.setAttribute('style', inputStyle)
@@ -550,7 +548,6 @@ module.exports = {
         }, false)
 
         refresh()
-
       } else { // not wizard one big form
         // @@@ create the initial config doc if not exist
         var table = div.appendChild(dom.createElement('table'))
@@ -558,14 +555,13 @@ module.exports = {
         UI.widgets.appendForm(document, table, {}, subject, form2, detailsDoc, complainIfBad)
         UI.widgets.appendForm(document, table, {}, subject, form3, detailsDoc, complainIfBad)
         naviCenter.appendChild(doneButton) // could also check data shape
-
       }
       // @@@  link config to results
 
       insertables = []
       insertables.push($rdf.st(subject, SCHED('availabilityOptions'), SCHED('YesNoMaybe'), detailsDoc))
       insertables.push($rdf.st(subject, SCHED('ready'), new Date(), detailsDoc))
-      insertables.push($rdf.st(subject, SCHED('results'), resultsDoc, detailsDoc)); // @@ also link in results
+      insertables.push($rdf.st(subject, SCHED('results'), resultsDoc, detailsDoc)) // @@ also link in results
 
       var doneButton = dom.createElement('button')
       doneButton.setAttribute('style', inputStyle)
@@ -576,9 +572,9 @@ module.exports = {
           naviRight.appendChild(emailButton)
         } else {
           naviRight.appendChild(emailButton)
-          UI.store.updater.update([], insertables, function (uri, success, error_body) {
+          UI.store.updater.update([], insertables, function (uri, success, errorBody) {
             if (!success) {
-              complainIfBad(success, error_body)
+              complainIfBad(success, errorBody)
             } else {
               // naviRight.appendChild(emailButton)
               getResults()
@@ -590,7 +586,7 @@ module.exports = {
       var emailButton = dom.createElement('button')
       emailButton.setAttribute('style', inputStyle)
       var emailIcon = emailButton.appendChild(dom.createElement('img'))
-      //emailIcon.setAttribute('src', scriptBase + 'envelope-icon.png') // noun_480183.svg
+      // emailIcon.setAttribute('src', scriptBase + 'envelope-icon.png') // noun_480183.svg
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
       emailButton.textContent = 'email invitations'
       emailButton.addEventListener('click', function (e) {
@@ -611,7 +607,8 @@ module.exports = {
     // Ask for each day, what times
 
     var setTimesOfDay = function () {
-      var i, j, x, y, slot, cell, day, insertables = []
+      var i, j, x, y, slot, cell, day
+      var insertables = []
       var possibleDays = kb.each(invitation, SCHED('option'))
         .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
       var cellLookup = []
@@ -635,7 +632,7 @@ module.exports = {
 
       var query = new $rdf.Query('TimesOfDay')
       var v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
-        query.vars.push(v[x] = $rdf.variable(x))})
+        query.vars.push(v[x] = $rdf.variable(x)) })
       query.pat.add(invitation, SCHED('slot'), v.slot)
       query.pat.add(v.slot, RDFS('label'), v.label)
       query.pat.add(v.slot, SCHED('cell'), v.cell)
@@ -643,14 +640,14 @@ module.exports = {
       query.pat.add(v.cell, SCHED('day'), v.day)
 
       var options = {}
-      options.set_x = kb.each(subject, SCHED('slot')); // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) {return kb.any(opt, RDFS('label'))})
+      options.set_x = kb.each(subject, SCHED('slot')) // @@@@@ option -> dtstart in future
+      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, RDFS('label')) })
 
       options.set_y = kb.each(subject, SCHED('option')); // @@@@@ option -> dtstart in future
-      options.set_y = options.set_y.map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+      options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var possibleTimes = kb.each(invitation, SCHED('option'))
-        .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+        .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var displayTheMatrix = function () {
         var matrix = div.appendChild(UI.matrix.matrixForQuery(
@@ -680,7 +677,7 @@ module.exports = {
       var dataPointForNT = []
 
       var doc = resultsDoc
-      options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me))})
+      options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me)) })
       options.set_y.push(me) // Put me on the end
 
       options.cellFunction = function (cell, x, y, value) {
@@ -726,26 +723,23 @@ module.exports = {
         if (dataPointForNT[possibleTimes[j].toNT()]) continue
         var dataPoint = $rdf.sym(id + '_' + j)
         insertables.push($rdf.st(myResponse, SCHED('cell'), dataPoint, doc))
-        insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)); // @@
+        insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
       }
       if (insertables.length) {
-        UI.store.updater.update([], insertables, function (uri, success, error_body) {
+        UI.store.updater.update([], insertables, function (uri, success, errorBody) {
           if (!success) {
-            complainIfBad(success, error_body)
+            complainIfBad(success, errorBody)
           } else {
             displayTheMatrix()
           }
         })
-
       } else { // no insertables
         displayTheMatrix()
       }
-
     }
 
     // Read or create empty results file
-
     var getResults = function () {
       var div = naviMain
       fetcher.nowOrWhenFetched(resultsDoc.uri, undefined, function (ok, body, xhr) {
@@ -799,7 +793,8 @@ module.exports = {
       var v = {}
       var vs = ['time', 'author', 'value', 'resp', 'cell']
       vs.map(function (x) {
-        query.vars.push(v[x] = $rdf.variable(x))})
+        query.vars.push(v[x] = $rdf.variable(x))
+      })
       query.pat.add(invitation, SCHED('response'), v.resp)
       query.pat.add(v.resp, DC('author'), v.author)
       query.pat.add(v.resp, SCHED('cell'), v.cell)
@@ -809,14 +804,14 @@ module.exports = {
       // Sort by by person @@@
 
       var options = {}
-      options.set_x = kb.each(subject, SCHED('option')); // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+      options.set_x = kb.each(subject, SCHED('option')) // @@@@@ option -> dtstart in future
+      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       options.set_y = kb.each(subject, SCHED('response'))
-      options.set_y = options.set_y.map(function (resp) {return kb.any(resp, DC('author'))})
+      options.set_y = options.set_y.map(function (resp) { return kb.any(resp, DC('author')) })
 
       var possibleTimes = kb.each(invitation, SCHED('option'))
-        .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+        .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var displayTheMatrix = function () {
         var matrix = div.appendChild(UI.matrix.matrixForQuery(
@@ -845,16 +840,16 @@ module.exports = {
       }
 
       // @@ Give other combos too-- see schedule ontology
-      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes')]
+      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      var me_uri = tabulator.preferences.get('me')
-      var me = me_uri ? kb.sym(me_uri) : null
+      var meUri = tabulator.preferences.get('me')
+      var me = meUri ? kb.sym(meUri) : null
 
       var dataPointForNT = []
 
       if (me) {
         var doc = resultsDoc
-        options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me))})
+        options.set_y = options.set_y.filter(function (z) { return (!z.sameTerm(me)) })
         options.set_y.push(me) // Put me on the end
 
         options.cellFunction = function (cell, x, y, value) {
@@ -868,7 +863,7 @@ module.exports = {
             })
           }
           if (y.sameTerm(me)) {
-            var callback = function () { refreshColor(); }; //  @@ may need that
+            var callback = function () { refreshColor() } //  @@ may need that
             var selectOptions = {}
             var predicate = SCHED('availabilty')
             var cellSubject = dataPointForNT[x.toNT()]
@@ -906,22 +901,20 @@ module.exports = {
           if (dataPointForNT[possibleTimes[j].toNT()]) continue
           var dataPoint = $rdf.sym(id + '_' + j)
           insertables.push($rdf.st(myResponse, SCHED('cell'), dataPoint, doc))
-          insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)); // @@
+          insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
           dataPointForNT[possibleTimes[j].toNT()] = dataPoint
         }
         if (insertables.length) {
-          UI.store.updater.update([], insertables, function (uri, success, error_body) {
+          UI.store.updater.update([], insertables, function (uri, success, errorBody) {
             if (!success) {
-              complainIfBad(success, error_body)
+              complainIfBad(success, errorBody)
             } else {
               displayTheMatrix()
             }
           })
-
         } else { // no insertables
           displayTheMatrix()
         }
-
       } else {
         // pass me not defined
       }
@@ -943,11 +936,10 @@ module.exports = {
 
       clearElement(naviRight)
       naviRight.appendChild(newInstanceButton())
-
     } // showResults
 
     var div = dom.createElement('div')
-    var structure = div.appendChild(dom.createElement('table')); // @@ make responsive style
+    var structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.setAttribute('style', 'background-color: white; min-width: 40em; min-height: 13em;')
 
     var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
