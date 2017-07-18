@@ -14,10 +14,10 @@ module.exports =  {
 
   name: 'link',
 
-  // Does the subject deserve an audio play pane?
+  // Does the subject deserve a link list pane?
   label: function(subject) {
-
-    var count = kb.each(subject, predicate).length
+    var target = kb.any(subject,  ns.meeting('target')) || subject
+    var count = kb.each(target, predicate).length
     if (count > 0){
       return UI.utils.label(predicate) + ' ' + count
     }
@@ -31,20 +31,20 @@ module.exports =  {
   },
 
   render: function(subject, dom) {
-
+    var target = kb.any(subject,  ns.meeting('target')) || subject
     createNewRow = function(object){
       var opts = {} // @@ Add delete function
       return UI.widgets.personTR(dom, predicate, object, opts)
     }
     var div = dom.createElement('div')
     var table = div.appendChild(dom.createElement('table'))
-    return div;
     var refresh = function(){
-      var things = kb.each(subject, predicate)
+      var things = kb.each(target, predicate)
       UI.utils.syncTableToArray(table, things, createNewRow)
     }
     div.refresh = refresh
     refresh()
+    return div;
   }
 }
 
