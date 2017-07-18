@@ -30,8 +30,8 @@ module.exports  = { // Encapsulates all of the methods and classes
     }
     this.PatternNode.prototype.fetch = function(subject) {
         if(subject == null) return null;
-        if(subject.type === 'Symbol')
-            UI.store.fetcher.requestURI(getBaseURI(subject.uri));
+        if(subject.termType === 'NamedNode')
+            UI.store.fetcher.fetch(getBaseURI(subject.uri));
         return this.fetchMethod(this.searchMethod(subject), this.children);
     }
     this.PatternNode.prototype.toString = function() {

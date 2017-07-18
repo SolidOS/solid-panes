@@ -292,16 +292,18 @@ module.exports = {
         }
 
         preview.innerHTML = 'Loading ....'
-        if (x.uri) kb.fetcher.nowOrWhenFetched(x.uri, undefined, function (ok, body) {
-            if (!ok) {
-              preview.textContent = 'Error loading ' + x.uri + ': ' + body
-              return
-            }
-            var outliner = UI.panes.getOutliner(dom)
-            var display = outliner.propertyTable(x); //  ,table, pane
-            preview.innerHTML = ''
-            preview.appendChild(display)
-          })
+        if (x.uri) {
+          kb.fetcher.load(x.uri)
+            .then(() => {
+              var outliner = UI.panes.getOutliner(dom)
+              var display = outliner.propertyTable(x) //  ,table, pane
+              preview.innerHTML = ''
+              preview.appendChild(display)
+            })
+            .catch(err => {
+              preview.textContent = 'Error loading ' + x.uri + ': ' + err
+            })
+        }
 
           /*
               if (dispalyable(kb, x) || x.uri.slice(-4) == ".pdf" || x.uri.slice(-4) == ".png" || x.uri.slice(-5) == ".html" ||

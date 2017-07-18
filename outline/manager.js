@@ -1418,7 +1418,7 @@ module.exports = function(doc) {
       var target = thisOutline.targetOf(e);
       var uri = target.getAttribute('uri'); // Put on access buttons
       if (e.altKey) {
-          sf.requestURI(UI.rdf.uri.docpart(uri), undefined, { 'force': true }); // Add 'force' bit?
+          sf.fetch(UI.rdf.uri.docpart(uri), { 'force': true }); // Add 'force' bit?
       } else {
           sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))); // just one
       }
@@ -1428,7 +1428,7 @@ module.exports = function(doc) {
       var target = thisOutline.targetOf(e);
       var uri = target.getAttribute('uri'); // Put on access buttons
       if (e.altKey) {
-          sf.requestURI(UI.rdf.uri.docpart(uri), undefined, { 'force': true })
+          sf.fetch(UI.rdf.uri.docpart(uri), { 'force': true })
       } else {
           sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))); // just one
       }
@@ -1437,7 +1437,7 @@ module.exports = function(doc) {
   function unrequestedIconMouseDownListener(e) {
       var target = thisOutline.targetOf(e);
       var uri = target.getAttribute('uri'); // Put on access buttons
-      sf.requestURI(UI.rdf.uri.docpart(uri))
+      sf.fetch(UI.rdf.uri.docpart(uri))
   }
 
 
