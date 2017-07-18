@@ -169,8 +169,8 @@ module.exports = {
             shareTab: true // but many things behind it
           }
           var newPaneOptions = {
-            newInstance: subject,
-            pane: UI.panes.links,
+            newInstance: kb.sym(subject.doc().uri + '#LinkListTool'),
+            pane: UI.panes.link,
             predicate: ns.meeting('attachmentTool'),
             tabTitle: 'Links',
             noIndexHTML: true}
@@ -510,8 +510,8 @@ module.exports = {
       var newInstance = kb.sym(newBase + 'config.ttl#this')
       var stateStore = kb.sym(newBase + 'state.ttl')
 
-      // kb.add(newInstance, ns.dc('title'), 'Actions', appDoc)
-
+      kb.add(newInstance, ns.dc('title'), (kb.anyValue(meeting,
+         ns.cal('summary')) || 'Meeting ') + ' actions', appDoc)
       kb.add(newInstance, ns.wf('issueClass'), ns.wf('Task'), appDoc)
       kb.add(newInstance, ns.wf('initialState'), ns.wf('Open'), appDoc)
       kb.add(newInstance, ns.wf('stateStore'), stateStore, appDoc)

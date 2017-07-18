@@ -10,6 +10,9 @@
 */
 
 var UI = require('solid-ui')
+
+const SET_MODIFIED_DATES = false
+
 module.exports = {
   icon: UI.icons.iconBase + 'noun_97839.svg', // was: js/panes/issue/tbl-bug-22.png
 
@@ -44,13 +47,16 @@ module.exports = {
       return false
     }
 
+    // Don't bother changing the last modified dates of things: save time
     var setModifiedDate = function (subj, kb, doc) {
-      if (!getOption(tracker, 'trackLastModified')) return
-      var deletions = kb.statementsMatching(subject, DCT('modified'))
-      var deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')))
-      var insertions = [ $rdf.st(subject, DCT('modified'), new Date(), doc) ]
-      if (me) insertions.push($rdf.st(subject, WF('modifiedBy'), me, doc))
-      updater.update(deletions, insertions, function (uri, ok, body) {})
+      if (SET_MODIFIED_DATES){
+        if (!getOption(tracker, 'trackLastModified')) return
+        var deletions = kb.statementsMatching(subject, DCT('modified'))
+        var deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')))
+        var insertions = [ $rdf.st(subject, DCT('modified'), new Date(), doc) ]
+        if (me) insertions.push($rdf.st(subject, WF('modifiedBy'), me, doc))
+        updater.update(deletions, insertions, function (uri, ok, body) {})
+      }
     }
 
     var say = function say (message, style) {
@@ -98,22 +104,49 @@ module.exports = {
       var sendNewIssue = function () {
         titlefield.setAttribute('class', 'pendingedit')
         titlefield.disabled = true
-        sts = []
+        sts = [], sts2 = []
 
-        var issue = kb.sym(stateStore.uri + '#' + 'Iss' + timestring())
-        sts.push(new $rdf.Statement(issue, WF('tracker'), tracker, stateStore))
+        var issue
+        var now = new $rdf.Literal(new Date())
+
+        var expandTemplate = function(template){
+          const now = new $rdf.Literal(new Date())
+          const nnnn = '' + (new Date()).getTime()
+          let YYYY = now.value.slice(0, 4)
+          var MM = now.value.slice(5, 7)
+          var DD = now.value.slice(8, 10)
+          return template.replace('{N}', nnnn).replace('{YYYY}', YYYY).replace('{MM}', MM).replace('{DD}', DD)
+        }
+        // Where to store the new issue?
+        var template = kb.anyValue(tracker, WF('issueURITemplate'))
+        var issueDoc
+        if (template) { // Does each issue do in its own file?
+          template = $rdf.uri.join(template, stateStore.uri) // Template is relative
+          issue = kb.sym(expandTemplate(template))
+        } else {
+          issue = kb.sym(stateStore.uri + '#' + 'Iss' + timestring())
+        }
+        issueDoc = issue.doc()
+
+        // Basic 9 core predicates are stored in the main stateStore
+
         var title = kb.literal(titlefield.value)
+        sts.push(new $rdf.Statement(issue, WF('tracker'), tracker, stateStore))
         sts.push(new $rdf.Statement(issue, DC('title'), title, stateStore))
-
-        // sts.push(new $rdf.Statement(issue, ns.rdfs('comment'), "", stateStore))
         sts.push(new $rdf.Statement(issue, DCT('created'), new Date(), stateStore))
-
         var initialStates = kb.each(tracker, WF('initialState'))
         if (initialStates.length == 0) console.log('This tracker has no initialState')
         for (var i = 0; i < initialStates.length; i++) {
           sts.push(new $rdf.Statement(issue, ns.rdf('type'), initialStates[i], stateStore))
         }
         if (superIssue) sts.push(new $rdf.Statement(superIssue, WF('dependent'), issue, stateStore))
+
+        // Other things are stores in the individual
+        if (template){
+          sts.push(new $rdf.Statement(issue, WF('tracker'), tracker, issueDoc))
+          sts.push(new $rdf.Statement(issue, ns.rdfs('seeAlso'), stateStore, issueDoc))
+        }
+
         var sendComplete = function (uri, success, body) {
           if (!success) {
             console.log("Error: can't save new issue:" + body)
@@ -316,7 +349,7 @@ module.exports = {
 
       var states = kb.any(tracker, WF('issueClass'))
       if (!states) throw 'This tracker ' + tracker + ' has no issueClass'
-      var select = UI.widgets.makeSelectForCategory(dom, kb, subject, states, store, function (ok, body) {
+      var select = UI.widgets.makeSelectForCategory(dom, kb, subject, states, stateStore, function (ok, body) {
         if (ok) {
           setModifiedDate(store, kb, store)
           refreshTree(div)
@@ -328,7 +361,7 @@ module.exports = {
       var cats = kb.each(tracker, WF('issueCategory')) // zero or more
       for (var i = 0; i < cats.length; i++) {
         div.appendChild(UI.widgets.makeSelectForCategory(dom,
-          kb, subject, cats[i], store, function (ok, body) {
+          kb, subject, cats[i], stateStore, function (ok, body) {
             if (ok) {
               setModifiedDate(store, kb, store)
               refreshTree(div)
@@ -343,7 +376,7 @@ module.exports = {
       div.appendChild(a).textContent = UI.utils.label(tracker)
       a.addEventListener('click', UI.widgets.openHrefInOutlineMode, true)
       donePredicate(ns.wf('tracker'))
-
+      // Descriptions can be long and are stored local to the issue
       div.appendChild(UI.widgets.makeDescription(dom, kb, subject, WF('description'),
         store, function (ok, body) {
           if (ok) setModifiedDate(store, kb, store)
@@ -364,8 +397,6 @@ module.exports = {
             complain('Fixed failed: ' + body)
           }
         })
-
-      // throw "Error:"+subject+"has "+assignees.length+" > 1 assignee."
       }
 
       var assignee = assignments.length ? assignments[0].object : null
@@ -377,7 +408,7 @@ module.exports = {
       var proj = kb.any(undefined, ns.doap('bug-database'), tracker)
       if (proj) devs = devs.concat(kb.each(proj, ns.doap('developer')))
       if (devs.length) {
-        devs.map(function (person) {UI.store.fetcher.lookUpThing(person)}) // best effort async for names etc
+        devs.map(function (person) {kb.fetcher.lookUpThing(person)}) // best effort async for names etc
         var opts = { 'mint': '** Add new person **',
           'nullLabel': '(unassigned)',
           'mintStatementsFun': function (newDev) {
@@ -424,6 +455,7 @@ module.exports = {
           div.appendChild(newIssueForm(dom, kb, tracker, subject))}, false)
       }
 
+      // Extras are stored centrally to the tracker
       var extrasForm = kb.any(tracker, ns.wf('extrasEntryForm'))
       if (extrasForm) {
         UI.widgets.appendForm(dom, div, {},
@@ -442,8 +474,24 @@ module.exports = {
       var spacer = div.appendChild(dom.createElement('tr'))
       spacer.setAttribute('style', 'height: 1em') // spacer and placeHolder
 
-      var messageStore = kb.any(tracker, ns.wf('messageStore'))
-      if (!messageStore) messageStore = kb.any(tracker, WF('stateStore'))
+      var template = kb.anyValue(tracker, WF('issueURITemplate'))
+      /*
+      var chatDocURITemplate = kb.anyValue(tracker, WF('chatDocURITemplate')) // relaive to issue
+      var chat
+      if (chatDocURITemplate) {
+        let template = $rdf.uri.join(chatDocURITemplate, issue.uri) // Template is relative to issue
+        chat = kb.sym(expandTemplate(template))
+      } else
+      */
+      var messageStore
+      if (template) {
+        messageStore = issue.doc() // for now. Could go deeper
+      } else {
+        messageStore = kb.any(tracker, ns.wf('messageStore'))
+        if (!messageStore) messageStore = kb.any(tracker, WF('stateStore'))
+        chat = kb.sym(messageStore.uri + '#' + 'Chat' + timestring())
+      }
+
       kb.fetcher.nowOrWhenFetched(messageStore, function (ok, body, xhr) {
         if (!ok) {
           var er = dom.createElement('p')
@@ -504,16 +552,19 @@ module.exports = {
 
       var trackerURI = tracker.uri.split('#')[0]
       // Much data is in the tracker instance, so wait for the data from it
-      UI.store.fetcher.nowOrWhenFetched(trackerURI, subject, function drawIssuePane1 (ok, body) {
-        if (!ok) return console.log('Failed to load config ' + trackerURI + ' ' + body)
+      UI.store.fetcher.load([tracker.doc(), ns.wf('').doc()]).then(function(xhrs){
         var stateStore = kb.any(tracker, WF('stateStore'))
-
         UI.store.fetcher.nowOrWhenFetched(stateStore, subject, function drawIssuePane2 (ok, body) {
           if (!ok) return console.log('Failed to load state ' + stateStore + ' ' + body)
-
           singleIssueUI(subject, div)
           updater.addDownstreamChangeListener(stateStore, function () {refreshTree(div)}) // Live update
         })
+      }).catch(function(err){
+        return console.log('Failed to load config ' + trackerURI + ' ' + err)
+      })
+
+      UI.store.fetcher.nowOrWhenFetched(trackerURI, subject, function drawIssuePane1 (ok, body) {
+        if (!ok) return console.log('Failed to load config ' + trackerURI + ' ' + body)
 
       }) // End nowOrWhenFetched tracker
 
@@ -560,8 +611,9 @@ module.exports = {
       }, false)
 
       // Table of issues - when we have the main issue list
-      UI.store.fetcher.nowOrWhenFetched(stateStore.uri, subject, function (ok, body) {
-        if (!ok) return console.log('Cannot load state store ' + body)
+      // We also need the ontology loaded
+      //
+      UI.store.fetcher.load([stateStore, ns.wf('').doc()]).then(function(xhrs){
         var query = new $rdf.Query(UI.utils.label(subject))
         var cats = kb.each(tracker, WF('issueCategory')) // zero or more
         var vars = ['issue', 'state', 'created']
@@ -652,14 +704,11 @@ module.exports = {
           console.log('No refresh function?!')
         }
         div.appendChild(newTrackerButton(subject))
-
         updater.addDownstreamChangeListener(stateStore, tableDiv.refresh) // Live update
-
+      }).catch(function(err){
+        return console.log('Cannot load state store: ' + err)
       })
-
-      // div.appendChild(dom.createElement('hr'))
       // end of Tracker instance
-
     } else {
       console.log('Error: Issue pane: No evidence that ' + subject + ' is either a bug or a tracker.')
     }

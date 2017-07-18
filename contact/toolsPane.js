@@ -2,14 +2,15 @@
 //
 var UI = require('solid-ui')
 var mime = require('mime-types')
-var toolsPane = require('./toolsPane.js')
 
 // var toolsPane
-module.export = function (selectedGroups, groupsMainTable, book, dom, me) {
+var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book, dom, me) {
   var kb = UI.store, ns = UI.ns
   var updater = UI.store.updater
   var ACL = UI.ns.acl, VCARD = UI.ns.vcard
   var doc = $rdf.sym(book.uri.split('#')[0]) // The ACL is actually to the doc describing the thing
+
+  var buttonStyle = 'font-size: 100%; margin: 0.8em; padding:0.5em;'
 
   var pane = dom.createElement('div')
   var table = pane.appendChild(dom.createElement('table'))
@@ -597,3 +598,5 @@ module.export = function (selectedGroups, groupsMainTable, book, dom, me) {
   })
   return pane
 } // toolsPane
+module.exports = {}
+module.exports.toolsPane = toolsPane
