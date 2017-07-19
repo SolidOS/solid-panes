@@ -1669,7 +1669,7 @@ module.exports = function(doc) {
                       seeAlsoWhat.length + ") seeAlso links for "+ subject)
                   // break; Not sure what limits the AJAX system has here
               }
-              sf.lookUpThing(seeAlsoWhat[i],subject,false);
+              sf.lookUpThing(seeAlsoWhat[i],subject);
           }
       }
 
