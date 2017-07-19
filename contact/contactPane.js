@@ -357,15 +357,16 @@ module.exports = {
         var group = kb.sym(doc.uri + '#this')
         dump(' New group will be: ' + group + '\n')
 
-        UI.store.fetcher.nowOrWhenFetched(gix, undefined, function (ok, message) {
+        UI.store.fetcher.nowOrWhenFetched(gix, function (ok, message) {
           if (ok) {
             dump(' Group index must be loaded\n')
+
             updater.update([],
               [ $rdf.st(book, ns.vcard('includesGroup'), group, gix),
                 $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), gix),
                 $rdf.st(group, ns.vcard('fn'), name, gix) ], function (uri, success, body) {
                 if (ok) {
-                  updater.put(doc,[ $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc),
+                  updater.put(doc, [ $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc),
                                     $rdf.st(group, ns.vcard('fn'), name, doc) ],
                    'text/turtle', function (uri, ok, body) {
                     callback(ok, ok ? group : "Can't save new group file " + doc + body)

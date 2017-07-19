@@ -288,7 +288,7 @@ module.exports = {
 
             kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
               .then(() => {
-                let resource = kb.sym(newURI)
+                var resource = kb.sym(newURI)
                 if (!me) {
                   console.log('Waiting to find out id user users to access ' + resource)
                   UI.widgets.checkUser(resource, function (webid) {
@@ -393,21 +393,18 @@ module.exports = {
 
     // Read or create empty data file
     var loadPadData = function () {
-      var div = naviMain
-      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (ok, body, xhr) {
+      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (ok, body, response) {
         if (!ok) {
-          if (0 + xhr.status === 404) { // /  Check explictly for 404 error
+          if (response.status === 404) { // /  Check explicitly for 404 error
             console.log('Initializing results file ' + padDoc)
-            updater.put(padDoc, [], 'text/turtle', function (uri2, ok, message, xhr) {
+            updater.put(padDoc, [], 'text/turtle', function (uri2, ok, message) {
               if (ok) {
-                kb.fetcher.saveRequestMetadata(xhr, kb, padDoc.uri)
-                kb.fetcher.saveResponseMetadata(xhr, kb) // Drives the isEditable question
                 clearElement(naviMain)
                 showResults(false)
               } else {
                 complainIfBad(ok, 'FAILED to create results file at: ' + padDoc.uri + ' : ' + message)
                 console.log('FAILED to craete results file at: ' + padDoc.uri + ' : ' + message)
-              };
+              }
             })
           } else {  // Other error, not 404 -- do not try to overwite the file
             complainIfBad(ok, 'FAILED to read results file: ' + body)
