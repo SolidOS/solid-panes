@@ -42,9 +42,9 @@ module.exports = {
       return res + ' people'
     }
     var say = function (str) {
-      var tx = dom.createTextNode(str)
+      console.log(str)
       var p = dom.createElement('p')
-      p.appendChild(tx)
+      p.textContent = str
       tips.appendChild(p)
     }
 
@@ -123,31 +123,42 @@ module.exports = {
     div.setAttribute('class', 'socialPane')
     var foaf = UI.ns.foaf
 
-    var tools = dom.createElement('div')
-    tools.className = 'navBlock'
-    div.appendChild(tools)
-    var main = dom.createElement('table')
-    main.className = 'mainBlock'
-    div.appendChild(main)
-    var tips = dom.createElement('div')
-    tips.className = 'navBlock'
-    div.appendChild(tips)
+    // extracted from tabbedtab.css 2017-03-21
+    const navBlockStyle = 'background-color: #eee; width: 25%; border: 0; padding: 0.5em; margin: 0;'
+    const mainBlockStyle = 'background-color: #fff; color: #000; width: 46%; margin: 0; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 0;'
+    const foafPicStyle = ' width: 100% ; border: none; margin: 0; padding: 0;'
+
+    var structure = div.appendChild(dom.createElement('table'))
+    var tr = structure.appendChild(dom.createElement('tr'))
+    var left = tr.appendChild(dom.createElement('td'))
+    var middle = tr.appendChild(dom.createElement('td'))
+    var right = tr.appendChild(dom.createElement('td'))
+
+    var tools = left
+    tools.style = navBlockStyle
+    var mainTable = middle.appendChild(dom.createElement('table'))
+    mainTable.style = mainBlockStyle
+    var tips = right
+    tips.style = navBlockStyle
 
     // Image top left
     var src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
     if (src) {
       var img = dom.createElement('IMG')
       img.setAttribute('src', src.uri) // w640 h480
-      img.className = 'foafPic'
+      // img.className = 'foafPic'
+      img.style = foafPicStyle
       tools.appendChild(img)
     }
-    var name = kb.any(s, foaf('name'))
-    if (!name) name = '???'
+    var name = kb.anyValue(s, foaf('name')) || '???'
     var h3 = dom.createElement('H3')
     h3.appendChild(dom.createTextNode(name))
 
     var listener = function (newIdURI) {
+      me = kb.sym(newIdURI)
       // @@ To be written:   redraw as a function the new me
+      // @@ refresh the sidebars
+      UI.widgets.refreshTree(div) // this refreshes the middle at least
     }
 
     // @@ Addd: event handler to redraw the stuff below when me changes.
@@ -160,16 +171,15 @@ module.exports = {
 
     var knows = foaf('knows')
     //        var givenName = kb.sym('http://www.w3.org/2000/10/swap/pim/contact#givenName')
-    var familiar = kb.any(s, foaf('givenname')) || kb.any(s, foaf('firstName')) ||
-      kb.any(s, foaf('nick')) || kb.any(s, foaf('name'))
-    if (familiar) familiar = familiar.value
+    var familiar = kb.anyValue(s, foaf('givenname')) || kb.anyValue(s, foaf('firstName')) ||
+      kb.anyValue(s, foaf('nick')) || kb.anyValue(s, foaf('name')) || kb.anyValue(s, vcard('fn'))
     var friends = kb.each(s, knows)
 
     // Do I have a public profile document?
     var profile = null   // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
     var editable = false
-    if (me) {
-      var works = kb.each(undefined, foaf('primaryTopic'), me)
+    if (me) { // The definition of FAF personal profile document is ..
+      var works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
       var message = ''
       for (var i = 0; i < works.length; i++) {
         if (kb.whether(works[i], UI.ns.rdf('type'),
@@ -184,14 +194,18 @@ module.exports = {
         }
       }
 
+      if (!profile) {
+        say(message + "\nI couldn't find your editable personal profile document.")
+      } else {
+        say('Editing your profile ' + profile + '.')
+        // Do I have an EDITABLE profile?
+        editable = outliner.UserInput.sparqler.editable(profile.uri, kb)
+      }
+
       if (thisIsYou) { // This is about me
-        if (!profile) {
-          say(message + "\nI couldn't find an editable personal profile document.")
-        } else {
-          say('Editing your profile <' + UI.utils.escapeForXML(profile.uri) + '>.')
-          // Do I have an EDITABLE profile?
-          editable = outliner.UserInput.sparqler.editable(profile.uri, kb)
-        }
+
+        // pass... @@
+
       } else { // This is about someone else
         // My relationship with this person
 
@@ -248,9 +262,10 @@ module.exports = {
           tools.appendChild(f)
         } // editable
 
+        ////////////////// Mutual friends
         if (friends) {
           var myFriends = kb.each(me, foaf('knows'))
-          if (myFriends) {
+          if (myFriends.length) {
             var mutualFriends = common(friends, myFriends)
             let tr = dom.createElement('tr')
             tools.appendChild(tr)
@@ -273,75 +288,96 @@ module.exports = {
 
     // div.appendChild(dom.createTextNode(plural(friends.length, 'acqaintance') +'. '))
 
+    ///////////////////////////////////////////////  Main block
+    //
     // Find the intersection and difference sets
-    outgoing = kb.each(s, foaf('knows'))
-    incoming = kb.each(undefined, foaf('knows'), s)
-    var confirmed = []
-    var unconfirmed = []
-    var requests = []
 
-    for (let i = 0; i < outgoing.length; i++) {
-      let friend = outgoing[i]
-      let found = false
-      for (let j = 0; j < incoming.length; j++) {
-        if (incoming[j].sameTerm(friend)) {
-          found = true
-          break
+
+
+    if (true) {
+      var al = UI.widgets.attachmentList(dom, s, mainTable, {
+        doc: profile,
+        modify: !!editable,
+        predicate: foaf('knows'),
+        noun: 'friend'
+      })
+    } else {
+      outgoing = kb.each(s, foaf('knows'))
+      incoming = kb.each(undefined, foaf('knows'), s) // @@ have to load the friends
+      var confirmed = []
+      var unconfirmed = []
+      var requests = []
+
+      for (let i = 0; i < outgoing.length; i++) {
+        let friend = outgoing[i]
+        let found = false
+        for (let j = 0; j < incoming.length; j++) {
+          if (incoming[j].sameTerm(friend)) {
+            found = true
+            break
+          }
         }
-      }
-      if (found) confirmed.push(friend)
-      else unconfirmed.push(friend)
-    } // outgoing
+        if (found) confirmed.push(friend)
+        else unconfirmed.push(friend)
+      } // outgoing
 
-    for (let i = 0; i < incoming.length; i++) {
-      let friend = incoming[i]
-      // var lab = UI.utils.label(friend)
-      let found = false
-      for (let j = 0; j < outgoing.length; j++) {
-        if (outgoing[j].sameTerm(friend)) {
-          found = true
-          break
+      for (let i = 0; i < incoming.length; i++) {
+        let friend = incoming[i]
+        // var lab = UI.utils.label(friend)
+        let found = false
+        for (let j = 0; j < outgoing.length; j++) {
+          if (outgoing[j].sameTerm(friend)) {
+            found = true
+            break
+          }
         }
-      }
-      if (!found) requests.push(friend)
-    } // incoming
+        if (!found) requests.push(friend)
+      } // incoming
 
-    //        cases = [['Confirmed friends', confirmed],['Unconfirmed friends', unconfirmed],['Friend Requests', requests]]
-    var cases = [['Acquaintances', outgoing], ['Mentioned as acquaintances by: ', requests]]
+      //        cases = [['Confirmed friends', confirmed],['Unconfirmed friends', unconfirmed],['Friend Requests', requests]]
+      var cases = [['Acquaintances', outgoing], ['Mentioned as acquaintances by: ', requests]]
 
-    for (let i = 0; i < cases.length; i++) {
-      let thisCase = cases[i]
-      let friends = thisCase[1]
-      if (friends.length === 0) continue // Skip empty sections (sure?)
+      for (let i = 0; i < cases.length; i++) {
+        let thisCase = cases[i]
+        let friends = thisCase[1]
+        if (friends.length === 0) continue // Skip empty sections (sure?)
 
-      let h3 = dom.createElement('h3')
-      h3.textContent = thisCase[0]
-      let htr = dom.createElement('tr')
-      htr.appendChild(h3)
-      main.appendChild(htr)
+        let h3 = dom.createElement('h3')
+        h3.textContent = thisCase[0]
+        let htr = dom.createElement('tr')
+        htr.appendChild(h3)
+        mainTable.appendChild(htr)
 
-      var items = []
-      for (var j9 = 0; j9 < friends.length; j9++) {
-        items.push([UI.utils.label(friends[j9]), friends[j9]])
-      }
-      items.sort()
-      var last = null
-      var fr
-      for (var j7 = 0; j7 < items.length; j7++) {
-        fr = items[j7][1]
-        if (fr.sameTerm(last)) continue // unique
-        last = fr
-        if (UI.utils.label(fr) !== '...') { // This check is to avoid bnodes with no labels attached
-          // appearing in the friends list with "..." - Oshani
-          main.appendChild(oneFriend(fr))
+        var items = []
+        for (var j9 = 0; j9 < friends.length; j9++) {
+          items.push([UI.utils.label(friends[j9]), friends[j9]])
+        }
+        items.sort()
+        var last = null
+        var fr
+        for (var j7 = 0; j7 < items.length; j7++) {
+          fr = items[j7][1]
+          if (fr.sameTerm(last)) continue // unique
+          last = fr
+          if (UI.utils.label(fr) !== '...') { // This check is to avoid bnodes with no labels attached
+            // appearing in the friends list with "..." - Oshani
+            mainTable.appendChild(oneFriend(fr))
+          }
         }
       }
     }
+
+
+
+    ////////////////////////////////////// Basic info on left
 
     h3 = dom.createElement('h3')
     h3.appendChild(dom.createTextNode('Basic Information'))
     tools.appendChild(h3)
 
+    // For each home page like thing make a label which will
+    // make sense and add the domain (like "w3.org blog") if there are more than one of the same type
+    //
     var preds = [ UI.ns.foaf('homepage'),
       UI.ns.foaf('weblog'),
       UI.ns.foaf('workplaceHomepage'), UI.ns.foaf('schoolHomepage')]
@@ -380,7 +416,8 @@ module.exports = {
           a.appendChild(t)
           a.setAttribute('href', uri)
           var d = dom.createElement('div')
-          d.className = 'social_linkButton'
+          // d.className = 'social_linkButton'
+          d.style = 'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
           d.appendChild(a)
           tools.appendChild(d)
         }

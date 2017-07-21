@@ -15,7 +15,8 @@ to change its state according to an ontology, comment on it, etc.
 
 var UI = require('solid-ui')
 var mime = require('mime-types')
-var toolsPane = require('./toolsPane')
+var toolsPane0 = require('./toolsPane')
+var toolsPane = toolsPane0.toolsPane
 
 
 
@@ -960,7 +961,7 @@ module.exports = {
         toolsButton.innerHTML = 'Tools'
         toolsButton.addEventListener('click', function (e) {
           cardMain.innerHTML = ''
-          cardMain.appendChild(toolsPane(selectedGroups, groupsMainTable, book, dom, me))
+          cardMain.appendChild(toolsPane(selectAllGroups, selectedGroups, groupsMainTable, book, dom, me))
         })
 
       } // if book
