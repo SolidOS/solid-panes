@@ -75,7 +75,7 @@ module.exports = {
               workspace: ws,
               pane: options.pane
             }
-            for (opt in options) {// get div, dom, me
+            for (var opt in options) {// get div, dom, me
               newPaneOptions[opt] = options[opt]
             }
             options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
@@ -122,13 +122,16 @@ module.exports = {
             if (!icon.disabled){
               icon.addEventListener('click', function(e){
                   selectTool(iconEle)
-                  options = {event: e, iconEle:
-                    iconEle, pane: thisPane,
+                  var options = {
+                    event: e,
+                    iconEle: iconEle,
+                    pane: thisPane,
                     noun: thisNoun,
                     noIndexHTML: true, // do NOT @@ for now write a HTML file
                     div: context.div,
                     me: context.me,
-                    dom: context.dom}
+                    dom: context.dom
+                  }
                   makeNewAppInstance(options)
               })
             }
@@ -175,7 +178,6 @@ module.exports = {
         styleTheIcons('display: none;') // 'background-color: #ccc;'
         icon.setAttribute('style', iconStyle + 'background-color: yellow;')
       }
-
     }
 
     var showContent = function(){
