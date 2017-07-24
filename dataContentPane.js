@@ -198,13 +198,14 @@ module.exports = {
         // or we could keep all the pre-smushed triples.
         var sts = kb.statementsMatching(undefined, undefined, undefined, subject); // @@ slow with current store!
         if (1) {
-            initialRoots = []; // Ordering: start with stuf fabout this doc
+            var initialRoots = []; // Ordering: start with stuf fabout this doc
             if (kb.holds(subject, undefined, undefined, subject)) initialRoots.push(subject);
             // Then about the primary topic of the document if any
             var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject);
             if (ps) initialRoots.push(ps);
-            div.appendChild(UI.panes.dataContents.statementsAsTables(
-                            sts, myDocument, initialRoots));
+            div.appendChild(
+              UI.panes.dataContents.statementsAsTables(sts, myDocument, initialRoots)
+            );
 
         } else {  // An outline mode openable rendering .. might be better
             var sz = UI.rdf.Serializer( UI.store );
@@ -221,7 +222,7 @@ module.exports = {
             }
             for (var i=0; i<roots.length; i++) {
                 var tr = myDocument.createElement("TR");
-                root = roots[i];
+                var root = roots[i];
                 tr.style.verticalAlign="top";
                 var td = outliner.outline_objectTD(root, undefined, tr)
                 tr.appendChild(td)
