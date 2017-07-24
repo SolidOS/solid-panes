@@ -4,6 +4,7 @@
 */
 
 var UI = require('solid-ui')
+var $rdf = UI.rdf
 var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
 
 module.exports = {

@@ -201,7 +201,7 @@ module.exports = {
     if (!me) {
       console.log('Waiting to find out id user users to access ' + subject.doc())
       UI.widgets.checkUser(subject.doc(), function (webid) {
-        me = kb.sym(webid)
+        me = webid ? kb.sym(webid) : null
         console.log('Got user id: ' + me)
         showContent()
       })
