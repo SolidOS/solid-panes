@@ -78,14 +78,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var initializeNewInstanceAtBase = function (thisInstance, newBase) {
     var pane = UI.panes.byName('meeting')
-    var newInstance = pane.mint(newBase)
-    .then(function(newInstance){
-      UI.outline.GotoSubject(newInstance, true, undefined, true);
-      div.removeChild(d)
-    })
-    .catch(function(e){
-      div.textContent = 'Error making new meeting: ' + e
-    })
+    pane.mint(newBase)
+      .then((newInstance) => {
+        UI.outline.GotoSubject(newInstance, true, undefined, true);
+        div.removeChild(d)
+      })
+      .catch((e) => {
+        div.textContent = 'Error making new meeting: ' + e
+      })
   }
 
   var d = newInstanceButtonDiv() // Actually a div in which minting will happen

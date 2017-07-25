@@ -42,7 +42,7 @@ module.exports = {
 
   mintClass: UI.ns.vcard('AddressBook'),
 
-  mintNew: function (context) {
+  mintNew: function mintNew (context) {
     return new Promise(function (resolve, reject) {
       var dom = context.dom
       var me = context.me
