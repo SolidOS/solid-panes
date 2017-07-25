@@ -556,7 +556,7 @@ module.exports = {
 
     var makeVideoCall = function (toolObject) {
       var kb = UI.store
-      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.gen_uuid())
+      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.genUuid())
 
       if (kb.holds(meeting, ns.meeting('videoCallPage'))) {
         console.log('Ignored - already have a videoCallPage')
