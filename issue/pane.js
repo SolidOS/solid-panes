@@ -345,7 +345,7 @@ module.exports = {
         refreshTree(div)
       }
 
-      UI.widgets.checkUserSetMe(stateStore)
+      UI.widgets.checkUser(stateStore)  // kick off async operation
 
       var states = kb.any(tracker, WF('issueClass'))
       if (!states) throw 'This tracker ' + tracker + ' has no issueClass'
@@ -580,9 +580,7 @@ module.exports = {
       var stateStore = kb.any(subject, WF('stateStore'))
       if (!stateStore) throw 'This tracker has no stateStore'
 
-      UI.widgets.checkUserSetMe(stateStore)
-
-      var cats = kb.each(subject, WF('issueCategory')) // zero or more
+      UI.widgets.checkUser(stateStore)  // kick off async operation
 
       var h = dom.createElement('h2')
       h.setAttribute('style', 'font-size: 150%')
