@@ -128,13 +128,7 @@ module.exports = {
             }
 
             UI.widgets.setACLUserPublic(dest, me, aclOptions)
-              .then(result => {
-                if (!result.ok) {
-                  throw new Error(result.error)
-                }
-
-                doNextTask()
-              })
+              .then(() => doNextTask())
               .catch(err => {
                 let message = 'Error setting access permissions for ' +
                   task.to + ' : ' + err.message

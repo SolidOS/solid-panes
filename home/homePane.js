@@ -66,33 +66,39 @@ module.exports = {
       }
 
       var makeNewAppInstance = function (options) {
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
           var kb = UI.store
 
-          var callbackWS = function(ws, newBase){
+          var callbackWS = function (ws, newBase) {
             var newPaneOptions = {
               newBase: newBase,
               workspace: ws,
               pane: options.pane
             }
-            for (var opt in options) {// get div, dom, me
+            for (var opt in options) { // get div, dom, me
               newPaneOptions[opt] = options[opt]
             }
-            options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
-              var p = options.div.appendChild(dom.createElement('p'))
-              var newInstance
-              p.setAttribute('style', 'font-size: 120%;')
-              // Make link to new thing
-              p.innerHTML =
-                "Your <a target='_blank' href='" + newPaneOptions.newInstance.uri + "'><b>new " + options.noun + "</b></a> is ready to be set up. " +
-                "<br/><br/><a target='_blank' href='" + newPaneOptions.newInstance.uri + "'>Go to your new " + options.noun + ".</a>"
-              selectUI.parentNode.removeChild(selectUI)  // Clean up
-              selectNewTool() // toggle star to plain and menu vanish again
+            options.pane.mintNew(newPaneOptions)
+              .then(function (newPaneOptions) {
+                if (!newPaneOptions || !newPaneOptions.newInstance) {
+                  throw new Error('Cannot mint new - missing newInstance')
+                }
 
-            }).catch(function (err) {
-              complain(err)
-              reject(err)
-            })
+                var p = options.div.appendChild(dom.createElement('p'))
+
+                p.setAttribute('style', 'font-size: 120%;')
+                // Make link to new thing
+                p.innerHTML =
+                  "Your <a target='_blank' href='" + newPaneOptions.newInstance.uri + "'><b>new " + options.noun + "</b></a> is ready to be set up. " +
+                  "<br/><br/><a target='_blank' href='" + newPaneOptions.newInstance.uri + "'>Go to your new " + options.noun + ".</a>"
+                selectUI.parentNode.removeChild(selectUI)  // Clean up
+                selectNewTool() // toggle star to plain and menu vanish again
+
+              })
+              .catch(function (err) {
+                complain(err)
+                reject(err)
+              })
           }
 
           var pa = options.pane

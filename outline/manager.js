@@ -962,9 +962,9 @@ module.exports = function(doc) {
               return true
           }
       }
-      sf.addCallback('request',makeIconCallback(outlineIcons.src.icon_requested))
-      sf.addCallback('done',makeIconCallback(outlineIcons.src.icon_fetched))
-      sf.addCallback('fail',makeIconCallback(outlineIcons.src.icon_failed))
+      sf.addCallback('request', makeIconCallback(outlineIcons.src.icon_requested))
+      sf.addCallback('done', makeIconCallback(outlineIcons.src.icon_fetched))
+      sf.addCallback('fail', makeIconCallback(outlineIcons.src.icon_failed))
   }
 
   //   Selection support
