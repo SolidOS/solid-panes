@@ -63,18 +63,6 @@ module.exports = {
       }
     }))
 
-    /*
-    UI.widgets.logInLoadProfile(context).then(function(context){
-    }).catch(function(err){
-      console.log('Catch from ACLControlBox: ' + err)
-      box.appendChild(UI.widgets.ACLControlBox(subject, dom, noun, function(ok, body){
-        if (!ok) {
-          box.innerHTML = "ACL control box Failed (with no profile): " + body
-        }
-      }))
-    } // If we don't have a profile, we can manaagwe wihout esp when testing
-    )
-    */
     div.appendChild(pane);
     return div;
   }
