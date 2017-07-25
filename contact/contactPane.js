@@ -122,19 +122,25 @@ module.exports = {
           var dest = $rdf.uri.join(task.to, newBase) //
           var aclOptions = task.aclOptions || {}
           var checkOKSetACL = function (uri, ok) {
-            if (ok) {
-              UI.widgets.setACLUserPublic(dest, me, aclOptions, function () {
-                if (ok) {
-                  doNextTask()
-                } else {
-                  complain('Error setting access permisssions for ' + task.to)
-                  reject(new Error('Error setting access permisssions for ' + task.to))
-                }
-              })
-            } else {
+            if (!ok) {
               complain('Error writing new file ' + task.to)
-              reject(new Error('Error writing new file ' + task.to))
+              return reject(new Error('Error writing new file ' + task.to))
             }
+
+            UI.widgets.setACLUserPublic(dest, me, aclOptions)
+              .then(result => {
+                if (!result.ok) {
+                  throw new Error(result.error)
+                }
+
+                doNextTask()
+              })
+              .catch(err => {
+                let message = 'Error setting access permissions for ' +
+                  task.to + ' : ' + err.message
+                complain(message)
+                return reject(new Error(message))
+              })
           }
 
           if ('content' in task) {
@@ -1101,7 +1107,7 @@ module.exports = {
         }
         setPaneStyle()
 
-        UI.widgets.checkUserSetMe(cardDoc)
+        UI.widgets.checkUser(cardDoc)  // kick off async operation
 
         mainImage = div.appendChild(dom.createElement('img'))
         mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
