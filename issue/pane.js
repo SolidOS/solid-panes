@@ -49,7 +49,7 @@ module.exports = {
 
     // Don't bother changing the last modified dates of things: save time
     var setModifiedDate = function (subj, kb, doc) {
-      if (SET_MODIFIED_DATES){
+      if (SET_MODIFIED_DATES) {
         if (!getOption(tracker, 'trackLastModified')) return
         var deletions = kb.statementsMatching(subject, DCT('modified'))
         var deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')))
@@ -72,7 +72,7 @@ module.exports = {
       }
       else console.log('Sorry, failed to save your change:\n' + body, 'background-color: pink;')
     }
-    var complain = function(message){
+    var complain = function (message) {
       console.warn(message)
       div.appendChild(UI.widgets.errorMessageBlock(dom, message))
     }
@@ -104,12 +104,10 @@ module.exports = {
       var sendNewIssue = function () {
         titlefield.setAttribute('class', 'pendingedit')
         titlefield.disabled = true
-        sts = [], sts2 = []
-
+        var sts = []
         var issue
-        var now = new $rdf.Literal(new Date())
 
-        var expandTemplate = function(template){
+        var expandTemplate = function (template) {
           const now = new $rdf.Literal(new Date())
           const nnnn = '' + (new Date()).getTime()
           let YYYY = now.value.slice(0, 4)
@@ -142,7 +140,7 @@ module.exports = {
         if (superIssue) sts.push(new $rdf.Statement(superIssue, WF('dependent'), issue, stateStore))
 
         // Other things are stores in the individual
-        if (template){
+        if (template) {
           sts.push(new $rdf.Statement(issue, WF('tracker'), tracker, issueDoc))
           sts.push(new $rdf.Statement(issue, ns.rdfs('seeAlso'), stateStore, issueDoc))
         }
@@ -165,7 +163,7 @@ module.exports = {
       UI.store.fetcher.removeCallback('fail', 'expand')
 
       var states = kb.any(tracker, WF('issueClass'))
-      classLabel = UI.utils.label(states)
+      var classLabel = UI.utils.label(states)
       form.innerHTML = '<h2>Add new ' + (superIssue ? 'sub ' : '') +
         classLabel + '</h2><p>Title of new ' + classLabel + ':</p>'
       var titlefield = dom.createElement('input')
@@ -186,28 +184,29 @@ module.exports = {
     // ///////////////////// Reproduction: Spawn a new instance of this app
 
     var newTrackerButton = function (thisTracker) {
-      var button = UI.authn.newAppInstance(dom, { noun: 'tracker'}, function (ws) {
+      var button = UI.authn.newAppInstance(dom, { noun: 'tracker'}, function (ws, base) {
         var appPathSegment = 'issuetracker.w3.org' // how to allocate this string and connect to
+
+        if (!base){
+          base = kb.any(ws, sp('uriPrefix')).value
+          if (base.slice(-1) !== '/') {
+            $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + base)
+            base = base + '/'
+          }
+          base += appPathSegment + '/' + timestring() + '/' // unique id
+          if (!confirm("Make new tracker at " + base + "?")) {
+            return
+          }
+        }
 
         // console.log("Ready to make new instance at "+ws)
         var sp = UI.ns.space
         var kb = UI.store
 
-        var base = kb.any(ws, sp('uriPrefix')).value
-        if (base.slice(-1) !== '/') {
-          $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + base)
-          base = base + '/'
-        }
-        base += appPathSegment + '/' + timestring() + '/' // unique id
-
-        var documentOf = function (x) {
-          return kb.sym($rdf.uri.docpart(x.uri))
-        }
-
         var stateStore = kb.any(tracker, WF('stateStore'))
         var newStore = kb.sym(base + 'store.ttl')
 
-        var here = documentOf(thisTracker)
+        var here = thisTracker.doc()
 
         var oldBase = here.uri.slice(0, here.uri.lastIndexOf('/') + 1)
 
@@ -227,7 +226,7 @@ module.exports = {
 
         var myConfig = kb.statementsMatching(undefined, undefined, undefined, here)
         for (var i = 0; i < myConfig.length; i++) {
-          st = myConfig[i]
+          var st = myConfig[i]
           kb.add(morph(st.subject), morph(st.predicate), morph(st.object), there)
         }
 
@@ -335,7 +334,8 @@ module.exports = {
       var store = kb.sym(subject.uri.split('#')[0])
 
       // Unfinished -- need this for speed to save the reloadStore below
-      var incommingPatch = function (text) {
+      /*
+      var incommingPatch = function (xhr, text) {
         var contentType = xhr.headers['content-type'].trim()
         var patchKB = $rdf.graph()
         $rdf.parse(patchText, patchKB, doc.uri, contentType)
@@ -344,6 +344,7 @@ module.exports = {
         setPaneStyle()
         refreshTree(div)
       }
+      */
 
       UI.authn.checkUser(stateStore)  // kick off async operation
 
@@ -448,7 +449,7 @@ module.exports = {
         var b = dom.createElement('button')
         b.setAttribute('type', 'button')
         div.appendChild(b)
-        classLabel = UI.utils.label(states)
+        var classLabel = UI.utils.label(states)
         b.innerHTML = 'New sub ' + classLabel
         b.setAttribute('style', 'float: right; margin: 0.5em 1em;')
         b.addEventListener('click', function (e) {
@@ -485,11 +486,11 @@ module.exports = {
       */
       var messageStore
       if (template) {
-        messageStore = issue.doc() // for now. Could go deeper
+        messageStore = subject.doc() // for now. Could go deeper
       } else {
         messageStore = kb.any(tracker, ns.wf('messageStore'))
         if (!messageStore) messageStore = kb.any(tracker, WF('stateStore'))
-        chat = kb.sym(messageStore.uri + '#' + 'Chat' + timestring())
+        var chat = kb.sym(messageStore.uri + '#' + 'Chat' + timestring())
       }
 
       kb.fetcher.nowOrWhenFetched(messageStore, function (ok, body, xhr) {
@@ -511,7 +512,6 @@ module.exports = {
         predicate: ns.wf('attachment')
       })
       donePredicate(ns.wf('attachment'))
-
 
       // Remaining properties
       var plist = kb.statementsMatching(subject)
@@ -552,14 +552,14 @@ module.exports = {
 
       var trackerURI = tracker.uri.split('#')[0]
       // Much data is in the tracker instance, so wait for the data from it
-      UI.store.fetcher.load([tracker.doc(), ns.wf('').doc()]).then(function(xhrs){
+      UI.store.fetcher.load([tracker.doc(), ns.wf('').doc()]).then(function (xhrs) {
         var stateStore = kb.any(tracker, WF('stateStore'))
         UI.store.fetcher.nowOrWhenFetched(stateStore, subject, function drawIssuePane2 (ok, body) {
           if (!ok) return console.log('Failed to load state ' + stateStore + ' ' + body)
           singleIssueUI(subject, div)
           updater.addDownstreamChangeListener(stateStore, function () {refreshTree(div)}) // Live update
         })
-      }).catch(function(err){
+      }).catch(function (err) {
         return console.log('Failed to load config ' + trackerURI + ' ' + err)
       })
 
@@ -574,6 +574,7 @@ module.exports = {
 
     } else if (t['http://www.w3.org/2005/01/wf/flow#Tracker']) {
       var tracker = subject
+      var overlayPane
 
       var states = kb.any(subject, WF('issueClass'))
       if (!states) throw 'This tracker has no issueClass'
@@ -585,7 +586,7 @@ module.exports = {
       var h = dom.createElement('h2')
       h.setAttribute('style', 'font-size: 150%')
       div.appendChild(h)
-      classLabel = UI.utils.label(states)
+      var classLabel = UI.utils.label(states)
       h.appendChild(dom.createTextNode(classLabel + ' list')); // Use class label @@I18n
 
       // New Issue button
@@ -611,7 +612,7 @@ module.exports = {
       // Table of issues - when we have the main issue list
       // We also need the ontology loaded
       //
-      UI.store.fetcher.load([stateStore, ns.wf('').doc()]).then(function(xhrs){
+      UI.store.fetcher.load([stateStore, ns.wf('').doc()]).then(function (xhrs) {
         var query = new $rdf.Query(UI.utils.label(subject))
         var cats = kb.each(tracker, WF('issueCategory')) // zero or more
         var vars = ['issue', 'state', 'created']
@@ -633,7 +634,7 @@ module.exports = {
         var propertyList = kb.any(tracker, WF('propertyList')) // List of extra properties
         // console.log('Property list: '+propertyList) //
         if (propertyList) {
-          properties = propertyList.elements
+          var properties = propertyList.elements
           for (var p = 0; p < properties.length; p++) {
             var prop = properties[p]
             var vname = '_prop_' + p
@@ -703,10 +704,10 @@ module.exports = {
         }
         div.appendChild(newTrackerButton(subject))
         updater.addDownstreamChangeListener(stateStore, tableDiv.refresh) // Live update
-      }).catch(function(err){
+      }).catch(function (err) {
         return console.log('Cannot load state store: ' + err)
       })
-      // end of Tracker instance
+    // end of Tracker instance
     } else {
       console.log('Error: Issue pane: No evidence that ' + subject + ' is either a bug or a tracker.')
     }
