@@ -95,7 +95,7 @@ module.exports = {
 
       var newAppPointer = newBase + 'index.html' // @@ assuming we can't trust server with bare dir
 
-      var offline = UI.widgets.offlineTestID()
+      var offline = UI.authn.offlineTestID()
       if (offline) {
         toBeWritten.push({ to: 'local.html', from: 'local.html', contentType: 'text/html' })
         newAppPointer = newBase + 'local.html' // kludge for testing
@@ -199,7 +199,7 @@ module.exports = {
 
     //  Reproduction: Spawn a new instance of this app
     var newAddressBookButton = function (thisAddressBook) {
-      return UI.widgets.newAppInstance(dom,
+      return UI.authn.newAppInstance(dom,
         {noun: 'address book', appPathSegment: 'contactorator.timbl.com'}, function (ws, newBase) {
           thisPane.clone(thisAddressBook, newBase, {me: me, div: div, dom: dom})
         })
@@ -865,7 +865,7 @@ module.exports = {
       var container = dom.createElement('div')
       newContactButton.setAttribute('type', 'button')
       if (!me) newContactButton.setAttribute('disabled', 'true')
-      UI.widgets.checkUser(target.doc(), function (uri) {
+      UI.authn.checkUser(target.doc(), function (uri) {
         newContactButton.removeAttribute('disabled')
       })
       container.appendChild(newContactButton)
@@ -1097,7 +1097,7 @@ module.exports = {
           }
           setPaneStyle()
 
-          UI.widgets.checkUser(cardDoc)  // kick off async operation
+          UI.authn.checkUser(cardDoc)  // kick off async operation
 
           mainImage = div.appendChild(dom.createElement('img'))
           mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
@@ -1191,7 +1191,7 @@ module.exports = {
       //          Render a Group instance
     } else if (t[ns.vcard('Group').uri]) {
       // If we have a main address book, then render this group as a guest group within it
-      UI.widgets.findAppInstances(context, ns.vcard('AddressBook'))
+      UI.authn.findAppInstances(context, ns.vcard('AddressBook'))
         .then(function (context) {
           var addressBooks = context.instances
           var options = { foreignGroup: subject }

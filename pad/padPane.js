@@ -172,7 +172,7 @@ module.exports = {
     var whoAmI = function () {
       var meUri = tabulator.preferences.get('me')
       me = meUri ? kb.sym(meUri) : null
-      UI.widgets.checkUser(padDoc, setUser)
+      UI.authn.checkUser(padDoc, setUser)
 
       if (!tabulator.preferences.get('me')) {
         console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
@@ -203,7 +203,7 @@ module.exports = {
     // Option of either using the workspace system or just typing in a URI
     var showBootstrap = function showBootstrap (thisInstance, container, noun) {
       var div = clearElement(container)
-      var na = div.appendChild(UI.widgets.newAppInstance(
+      var na = div.appendChild(UI.authn.newAppInstance(
         dom, 'Start a new ' + noun + ' in a workspace', initializeNewInstanceInWorkspace))
 
       var hr = div.appendChild(dom.createElement('hr')) // @@
@@ -291,7 +291,7 @@ module.exports = {
                 var resource = kb.sym(newURI)
                 if (!me) {
                   console.log('Waiting to find out id user users to access ' + resource)
-                  UI.widgets.checkUser(resource, function (webid) {
+                  UI.authn.checkUser(resource, function (webid) {
                     me = kb.sym(webid)
                     console.log('Got user id: ' + me)
                     setThatACL()
@@ -312,7 +312,7 @@ module.exports = {
        if (!me) {
        agenda.push(function(){
        console.log("Waiting to dind out id user users to access " + newIndexDoc)
-       UI.widgets.checkUser(newIndexDoc, function(webid){
+       UI.authn.checkUser(newIndexDoc, function(webid){
        me = kb.sym(webid);
        conole.log("Got user id: "+ me);
        agenda.shift()();

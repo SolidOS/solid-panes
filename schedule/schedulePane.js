@@ -178,7 +178,7 @@ module.exports = {
                 var resource = kb.sym(newURI)
                 if (!me) {
                   console.log('Waiting to find out id user users to access ' + resource)
-                  UI.widgets.checkUser(resource, function (webid) {
+                  UI.authn.checkUser(resource, function (webid) {
                     me = kb.sym(webid)
                     console.log('Got user id: ' + me)
                     setThatACL()
@@ -323,7 +323,7 @@ module.exports = {
 
     var meUri = tabulator.preferences.get('me')
     var me = meUri ? kb.sym(meUri) : null
-    UI.widgets.checkUser(detailsDoc, setUser)
+    UI.authn.checkUser(detailsDoc, setUser)
 
     // //////////////////////////////  Reproduction: spawn a new instance
     //
@@ -331,7 +331,7 @@ module.exports = {
     //
 
     var newInstanceButton = function () {
-      var b = UI.widgets.newAppInstance(dom, { noun: 'scheduler' },
+      var b = UI.authn.newAppInstance(dom, { noun: 'scheduler' },
         initializeNewInstanceInWorkspace)
       b.firstChild.setAttribute('style', inputStyle)
       return b
@@ -452,7 +452,7 @@ module.exports = {
 
     var showBootstrap = function showBootstrap () {
       var div = clearElement(naviMain)
-      var na = div.appendChild(UI.widgets.newAppInstance(
+      var na = div.appendChild(UI.authn.newAppInstance(
         dom, 'Start a new poll in a workspace', initializeNewInstanceInWorkspace))
 
       var hr = div.appendChild(dom.createElement('hr')) // @@
@@ -938,7 +938,7 @@ module.exports = {
 
     var logInOutButton = null
     /*
-    var logInOutButton = UI.widgets.loginStatusBox(dom, setUser)
+    var logInOutButton = UI.authn.loginStatusBox(dom, setUser)
     // floating divs lead to a mess
     // logInOutButton.setAttribute('style', 'float: right') // float the beginning of the end
     naviLoginout3.appendChild(logInOutButton)

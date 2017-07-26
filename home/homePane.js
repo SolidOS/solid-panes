@@ -105,7 +105,7 @@ module.exports = {
           options.appPathSegment = 'edu.mit.solid.pane.' + pa.name
           options.noun = pa.mintClass ? UI.utils.label(pa.mintClass) : ( pa.name + ' @@' )
 
-          var selectUI = UI.widgets.selectWorkspace(dom, options, callbackWS)
+          var selectUI = UI.authn.selectWorkspace(dom, options, callbackWS)
           options.div.appendChild(selectUI)
         })
       }
@@ -190,9 +190,9 @@ module.exports = {
       var context = {div: div, dom: dom, statusArea: div, me: me}
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private:'
-      UI.widgets.registrationList(context, { private: true}).then(function(context){
+      UI.authn.registrationList(context, { private: true}).then(function(context){
         div.appendChild(dom.createElement('h4')).textContent = 'Public:'
-        UI.widgets.registrationList(context, { public: true}).then(function(context){
+        UI.authn.registrationList(context, { public: true}).then(function(context){
           div.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
           newThingUI(context)
         })
@@ -208,7 +208,7 @@ module.exports = {
     me = me? kb.sym(me) : null
     if (!me) {
       console.log('Waiting to find out id user users to access ' + subject.doc())
-      UI.widgets.checkUser(subject.doc(), function (webid) {
+      UI.authn.checkUser(subject.doc(), function (webid) {
         me = webid ? kb.sym(webid) : null
         console.log('Got user id: ' + me)
         showContent()

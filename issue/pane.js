@@ -186,7 +186,7 @@ module.exports = {
     // ///////////////////// Reproduction: Spawn a new instance of this app
 
     var newTrackerButton = function (thisTracker) {
-      var button = UI.widgets.newAppInstance(dom, { noun: 'tracker'}, function (ws) {
+      var button = UI.authn.newAppInstance(dom, { noun: 'tracker'}, function (ws) {
         var appPathSegment = 'issuetracker.w3.org' // how to allocate this string and connect to
 
         // console.log("Ready to make new instance at "+ws)
@@ -345,7 +345,7 @@ module.exports = {
         refreshTree(div)
       }
 
-      UI.widgets.checkUser(stateStore)  // kick off async operation
+      UI.authn.checkUser(stateStore)  // kick off async operation
 
       var states = kb.any(tracker, WF('issueClass'))
       if (!states) throw 'This tracker ' + tracker + ' has no issueClass'
@@ -580,7 +580,7 @@ module.exports = {
       var stateStore = kb.any(subject, WF('stateStore'))
       if (!stateStore) throw 'This tracker has no stateStore'
 
-      UI.widgets.checkUser(stateStore)  // kick off async operation
+      UI.authn.checkUser(stateStore)  // kick off async operation
 
       var h = dom.createElement('h2')
       h.setAttribute('style', 'font-size: 150%')
@@ -717,7 +717,7 @@ module.exports = {
     }
 
     /*
-            var loginOutButton = UI.widgets.loginStatusBox(dom, function(webid){
+            var loginOutButton = UI.authn.loginStatusBox(dom, function(webid){
                 // sayt.parent.removeChild(sayt)
                 if (webid) {
                     tabulator.preferences.set('me', webid)
@@ -734,14 +734,14 @@ module.exports = {
     */
 
     var loginOutButton
-    UI.widgets.checkUser(subject.doc(), function (id) {
+    UI.authn.checkUser(subject.doc(), function (id) {
       if (id) {
         console.log('Web ID set already from doc: ' + id)
 
         // @@ enable things
         return
       }
-      loginOutButton = UI.widgets.loginStatusBox(dom, function (webid) {
+      loginOutButton = UI.authn.loginStatusBox(dom, function (webid) {
         if (webid) {
           tabulator.preferences.set('me', webid.uri)
           console.log('(Logged in as ' + webid + ')')

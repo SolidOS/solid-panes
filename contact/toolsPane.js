@@ -36,7 +36,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
   }))
 
   //
-  UI.widgets.registrationControl(context, book, ns.vcard('AddressBook'))
+  UI.authn.registrationControl(context, book, ns.vcard('AddressBook'))
     .then(function (context) {
       console.log('Registration control finished.')
       // pane.appendChild(box)

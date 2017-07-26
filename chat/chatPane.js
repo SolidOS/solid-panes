@@ -80,7 +80,7 @@ if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // s
     var whoAmI = function() {
         var me_uri = tabulator.preferences.get('me');
         me = me_uri? kb.sym(me_uri) : null;
-        UI.widgets.checkUser(messageStore, setUser);
+        UI.authn.checkUser(messageStore, setUser);
 
         if (!tabulator.preferences.get('me')) {
             console.log("(You do not have your Web Id set. Sign in or sign up to make changes.)");

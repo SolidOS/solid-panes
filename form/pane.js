@@ -185,7 +185,7 @@ the file system (file:///) to store application data.\n")
             renderFormsFor(store, subject);
         } else {
             complain("No suitable store is known, to edit <" + subject.uri + ">.");
-            var foobarbaz = UI.widgets.selectWorkspace(dom,
+            var foobarbaz = UI.authn.selectWorkspace(dom,
                                         function(ws){
                 mention("Workspace selected OK: " + ws);
 

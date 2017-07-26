@@ -162,7 +162,7 @@ module.exports = {
     }
 
     // @@ Addd: event handler to redraw the stuff below when me changes.
-    tips.appendChild(UI.widgets.loginStatusBox(dom, listener))
+    tips.appendChild(UI.authn.loginStatusBox(dom, listener))
 
     var me_uri = tabulator.preferences.get('me')
     var me = me_uri && kb.sym(me_uri)

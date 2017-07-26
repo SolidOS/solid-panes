@@ -347,7 +347,7 @@ module.exports = {
       var div = dom.createElement('div')
       var context = { dom: dom, div: div }
       var book
-      UI.widgets.findAppInstances(context, ns.vcard('AddressBook')).then(
+      UI.authn.findAppInstances(context, ns.vcard('AddressBook')).then(
         function (context) {
           if (context.instances.length === 0) {
             complain('You have no solid address book. It is really handy to have one to keep track of people and groups')
@@ -653,13 +653,13 @@ module.exports = {
     }
 
     var loginOutButton
-    UI.widgets.checkUser(subject.doc(), function (id) {
+    UI.authn.checkUser(subject.doc(), function (id) {
       if (id) {
         star.addEventListener('click', selectNewTool)
         star.setAttribute('style', iconStyle)
         return
       }
-      loginOutButton = UI.widgets.loginStatusBox(dom, function (webid) {
+      loginOutButton = UI.authn.loginStatusBox(dom, function (webid) {
         if (webid) {
           tabulator.preferences.set('me', webid)
           console.log('(Logged in as ' + webid + ')')
@@ -819,7 +819,7 @@ module.exports = {
         }
         selectedGroup = kb.any(meeting, ns.meeting('particpantGroup'))
 
-        UI.widgets.loadTypeIndexes(context).then(function (context) {
+        UI.authn.loadTypeIndexes(context).then(function (context) {
           // Assumes that the type index has an entry for addressbook
           var options = { defaultNewGroupName: 'Meeting Participants', selectedGroup: selectedGroup }
           var picker = new UI.widgets.PeoplePicker(context.div, context.index.private[0], groupPickedCb, options)
@@ -838,7 +838,7 @@ module.exports = {
           kb.add(meeting, ns.dc('author'), me, meetingDoc)
         }
         var context = {noun: 'meeting', me: me, statusArea: containerDiv, div: containerDiv, dom: dom}
-        UI.widgets.registrationControl(context, meeting, ns.meeting('Meeting')).then(function (context) {
+        UI.authn.registrationControl(context, meeting, ns.meeting('Meeting')).then(function (context) {
           console.log('Registration control finsished.')
         })
         var options = {}

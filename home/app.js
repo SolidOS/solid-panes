@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var userTest = $rdf.sym('https://databox.me/')
 
-  UI.widgets.checkUser(userTest, setUser)
+  UI.authn.checkUser(userTest, setUser)
 
   var pane = UI.panes.home
   var target = me // @@ for now, in fact not relevant
@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
   //
 
   var newInstanceButtonDiv = function () {
-    return UI.widgets.newAppInstance(dom,
+    return UI.authn.newAppInstance(dom,
       { noun: 'meeting',
         appPathSegment: appPathSegment},
       initializeNewInstanceInWorkspace)
