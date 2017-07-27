@@ -204,18 +204,9 @@ module.exports = {
 
     var div = dom.createElement('div')
 
-    var me = tabulator.preferences.get('me')
-    me = me? kb.sym(me) : null
-    if (!me) {
-      console.log('Waiting to find out id user users to access ' + subject.doc())
-      UI.authn.checkUser(subject.doc(), function (webid) {
-        me = webid ? kb.sym(webid) : null
-        console.log('Got user id: ' + me)
-        showContent()
-      })
-    } else {
-      showContent()
-    }
+    var me = UI.authn.currentUser()
+
+    showContent()
 
     return div
   }
