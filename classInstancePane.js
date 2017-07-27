@@ -37,7 +37,7 @@ module.exports = {
       .then(function () {
         console.log('Dummy file deleted : ' + newInstance.uri + ".dummy")
 
-        return UI.solid.web.createContainer(parentURI, folderName)
+        return kb.fetcher.createContainer(parentURI, folderName)
       })
       .then(function () {
         console.log('New container created: ' + newInstance.uri)
