@@ -213,8 +213,7 @@ module.exports = {
 
     var t = kb.findTypeURIs(subject)
 
-    var meUri = tabulator.preferences.get('me')
-    var me = meUri ? kb.sym(meUri) : null
+    var me = UI.authn.currentUser()
 
     var context = {
       target: subject,
@@ -864,10 +863,14 @@ module.exports = {
       var newContactButton = dom.createElement('button')
       var container = dom.createElement('div')
       newContactButton.setAttribute('type', 'button')
+
       if (!me) newContactButton.setAttribute('disabled', 'true')
-      UI.authn.checkUser(target.doc(), function (uri) {
-        newContactButton.removeAttribute('disabled')
-      })
+
+      UI.authn.checkUser()
+        .then(webId => {
+          if (webId) { newContactButton.removeAttribute('disabled') }
+        })
+
       container.appendChild(newContactButton)
       newContactButton.innerHTML = 'New Contact' // + IndividualClassLabel
       peopleFooter.appendChild(container)
@@ -1097,7 +1100,7 @@ module.exports = {
           }
           setPaneStyle()
 
-          UI.authn.checkUser(cardDoc)  // kick off async operation
+          UI.authn.checkUser()  // kick off async operation
 
           mainImage = div.appendChild(dom.createElement('img'))
           mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
@@ -1214,10 +1217,13 @@ module.exports = {
       console.log('Error: Contact pane: No evidence that ' + subject +
         ' is anything to do with contacts.')
     }
-    if (!tabulator.preferences.get('me')) {
+
+    me = UI.authn.currentUser()
+
+    if (!me) {
       console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
     } else {
-      // console.log("(Your webid is "+ tabulator.preferences.get('me')+")")
+      // console.log("(Your webid is "+ me +")")
     }
 
     // /////////////// Fix user when testing on a plane

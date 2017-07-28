@@ -27,7 +27,7 @@ module.exports = {
     if (t['http://www.w3.org/2005/01/wf/flow#Tracker']) return 'tracker'
     // Later: Person. For a list of things assigned to them,
     // open bugs on projects they are developer on, etc
-    return null; // No under other circumstances (while testing at least!)
+    return null // No under other circumstances (while testing at least!)
   },
 
   render: function (subject, dom) {
@@ -42,7 +42,7 @@ module.exports = {
     div.setAttribute('class', 'issuePane')
 
     var commentFlter = function (pred, inverse) {
-      if (!inverse && pred.uri ==
+      if (!inverse && pred.uri ===
         'http://www.w3.org/2000/01/rdf-schema#comment') return true
       return false
     }
@@ -133,7 +133,7 @@ module.exports = {
         sts.push(new $rdf.Statement(issue, DC('title'), title, stateStore))
         sts.push(new $rdf.Statement(issue, DCT('created'), new Date(), stateStore))
         var initialStates = kb.each(tracker, WF('initialState'))
-        if (initialStates.length == 0) console.log('This tracker has no initialState')
+        if (initialStates.length === 0) console.log('This tracker has no initialState')
         for (var i = 0; i < initialStates.length; i++) {
           sts.push(new $rdf.Statement(issue, ns.rdf('type'), initialStates[i], stateStore))
         }
@@ -173,7 +173,7 @@ module.exports = {
       titlefield.setAttribute('maxLength', '2048') // No arbitrary limits
       titlefield.select() // focus next user input
       titlefield.addEventListener('keyup', function (e) {
-        if (e.keyCode == 13) {
+        if (e.keyCode === 13) {
           sendNewIssue()
         }
       }, false)
@@ -184,10 +184,10 @@ module.exports = {
     // ///////////////////// Reproduction: Spawn a new instance of this app
 
     var newTrackerButton = function (thisTracker) {
-      var button = UI.authn.newAppInstance(dom, { noun: 'tracker'}, function (ws, base) {
+      var button = UI.authn.newAppInstance(dom, { noun: 'tracker' }, function (ws, base) {
         var appPathSegment = 'issuetracker.w3.org' // how to allocate this string and connect to
 
-        if (!base){
+        if (!base) {
           base = kb.any(ws, sp('uriPrefix')).value
           if (base.slice(-1) !== '/') {
             $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + base)
@@ -263,12 +263,10 @@ module.exports = {
         // @@ Now create form to edit configuation parameters
         // @@ Optionally link new instance to list of instances -- both ways? and to child/parent?
         // @@ Set up access control for new config and store.
-
       }) // callback to newAppInstance
 
       button.setAttribute('style', 'margin: 0.5em 1em;')
       return button
-
     } // newTrackerButton
 
     // /////////////////////////////////////////////////////////////////////////////
@@ -279,8 +277,7 @@ module.exports = {
 
     var t = kb.findTypeURIs(subject)
 
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri ? kb.sym(me_uri) : null
+    var me = UI.authn.currentUser()
 
     // Reload resorce then
 
@@ -346,10 +343,10 @@ module.exports = {
       }
       */
 
-      UI.authn.checkUser(stateStore)  // kick off async operation
+      UI.authn.checkUser()  // kick off async operation
 
       var states = kb.any(tracker, WF('issueClass'))
-      if (!states) throw 'This tracker ' + tracker + ' has no issueClass'
+      if (!states) throw new Error('This tracker ' + tracker + ' has no issueClass')
       var select = UI.widgets.makeSelectForCategory(dom, kb, subject, states, stateStore, function (ok, body) {
         if (ok) {
           setModifiedDate(store, kb, store)
@@ -577,11 +574,11 @@ module.exports = {
       var overlayPane
 
       var states = kb.any(subject, WF('issueClass'))
-      if (!states) throw 'This tracker has no issueClass'
+      if (!states) throw new Error('This tracker has no issueClass')
       var stateStore = kb.any(subject, WF('stateStore'))
-      if (!stateStore) throw 'This tracker has no stateStore'
+      if (!stateStore) throw new Error('This tracker has no stateStore')
 
-      UI.authn.checkUser(stateStore)  // kick off async operation
+      UI.authn.checkUser()  // kick off async operation
 
       var h = dom.createElement('h2')
       h.setAttribute('style', 'font-size: 150%')
@@ -711,58 +708,34 @@ module.exports = {
     } else {
       console.log('Error: Issue pane: No evidence that ' + subject + ' is either a bug or a tracker.')
     }
-    if (!tabulator.preferences.get('me')) { // This should be in common UI not console
-      console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
-    } else {
-      // console.log("(Your webid is "+ tabulator.preferences.get('me')+")")
-    }
-
-    /*
-            var loginOutButton = UI.authn.loginStatusBox(dom, function(webid){
-                // sayt.parent.removeChild(sayt)
-                if (webid) {
-                    tabulator.preferences.set('me', webid)
-                    console.log("(Logged in as "+ webid+")")
-                    me = kb.sym(webid)
-                } else {
-                    tabulator.preferences.set('me', '')
-                    console.log("(Logged out)")
-                    me = null
-                }
-            })
-            loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
-            div.appendChild(loginOutButton)
-    */
 
     var loginOutButton
-    UI.authn.checkUser(subject.doc(), function (id) {
-      if (id) {
-        console.log('Web ID set already from doc: ' + id)
 
-        // @@ enable things
-        return
-      }
-      loginOutButton = UI.authn.loginStatusBox(dom, function (webid) {
-        if (webid) {
-          tabulator.preferences.set('me', webid.uri)
-          console.log('(Logged in as ' + webid + ')')
-          me = webid
-          console.log('Web ID set from login button: ' + id)
-          div.removeChild(loginOutButton)
-        // enable things
-        } else {
-          tabulator.preferences.set('me', '')
-          console.log('(Logged out)')
-          me = null
+    UI.authn.checkUser()
+      .then(webId => {
+        if (webId) {
+          console.log('Web ID set already: ' + webId)
+          me = webId
+          // @@ enable things
+          return
         }
-      })
-      loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
-      div.appendChild(loginOutButton)
 
-    })
+        loginOutButton = UI.authn.loginStatusBox(dom, (webIdUri) => {
+          if (webIdUri) {
+            me = kb.sym(webIdUri)
+            console.log('Web ID set from login button: ' + webIdUri)
+            div.removeChild(loginOutButton)
+            // enable things
+          } else {
+            me = null
+          }
+        })
+
+        loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
+        div.appendChild(loginOutButton)
+      })
 
     return div
-
   }
 }
 

@@ -37,8 +37,8 @@ module.exports = {
       var meeting = options.newInstance
       var meetingDoc = meeting.doc()
 
-      var me = tabulator.preferences.get('me')
-      me = me ? kb.sym(me) : null
+      var me = UI.authn.currentUser()
+
       if (me) {
         kb.add(meeting, ns.dc('author'), me, meetingDoc)
       }
@@ -59,7 +59,7 @@ module.exports = {
           if (ok) {
             resolve(options)
           } else {
-            reject('Error writing meeting configuration: ' + message)
+            reject(new Error('Error writing meeting configuration: ' + message))
           }
         })
     })
@@ -218,7 +218,6 @@ module.exports = {
           }).catch(function (err) {
             complain(err)
           })
-          return
         }
 
         console.log('Dropped on thing ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
@@ -643,9 +642,11 @@ module.exports = {
     var parameterCell = toolBar.appendChild(dom.createElement('td'))
     var star = iconCell.appendChild(dom.createElement('img'))
     var visible = false // the inividual tools tools
+
     star.setAttribute('src', UI.icons.iconBase + 'noun_19460_green.svg') //  noun_272948.svg
     star.setAttribute('style', iconStyle + 'opacity: 50%;')
     star.setAttribute('title', 'Add another tool to the meeting')
+
     var selectNewTool = function (event) {
       visible = !visible
       star.setAttribute('style', iconStyle + (visible ? 'background-color: yellow;' : ''))
@@ -653,30 +654,30 @@ module.exports = {
     }
 
     var loginOutButton
-    UI.authn.checkUser(subject.doc(), function (id) {
-      if (id) {
-        star.addEventListener('click', selectNewTool)
-        star.setAttribute('style', iconStyle)
-        return
-      }
-      loginOutButton = UI.authn.loginStatusBox(dom, function (webid) {
-        if (webid) {
-          tabulator.preferences.set('me', webid)
-          console.log('(Logged in as ' + webid + ')')
-          me = kb.sym(webid)
-          parameterCell.removeChild(loginOutButton)
-          // loginOutButton.setAttribute('',iconStyle) // make it match the icons
+    UI.authn.checkUser()
+      .then(webId => {
+        if (webId) {
+          me = webId
           star.addEventListener('click', selectNewTool)
           star.setAttribute('style', iconStyle)
-        } else {
-          tabulator.preferences.set('me', '')
-          console.log('(Logged out)')
-          me = null
+          return
         }
+
+        loginOutButton = UI.authn.loginStatusBox(dom, (webIdUri) => {
+          if (webIdUri) {
+            me = kb.sym(webIdUri)
+            parameterCell.removeChild(loginOutButton)
+            // loginOutButton.setAttribute('',iconStyle) // make it match the icons
+            star.addEventListener('click', selectNewTool)
+            star.setAttribute('style', iconStyle)
+          } else {
+            console.log('(Logged out)')
+            me = null
+          }
+        })
+        loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
+        parameterCell.appendChild(loginOutButton)
       })
-      loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
-      parameterCell.appendChild(loginOutButton)
-    })
 
     var iconArray = []
     for (var i = 0; i < toolIcons.length; i++) {
@@ -832,8 +833,7 @@ module.exports = {
         UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
         containerDiv.appendChild(tipDiv(
           'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
-        me = tabulator.preferences.get('me')
-        me = me ? kb.sym(me) : null
+        me = UI.authn.currentUser()
         if (me) {
           kb.add(meeting, ns.dc('author'), me, meetingDoc)
         }

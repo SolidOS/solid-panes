@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var UI = require('mashlib')
 
-
   var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 150%; text-align: center;' //  ;
   var kb = UI.store
   var fetcher = kb.fetcher
@@ -24,33 +23,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var div = document.getElementById('FormTarget')
 
-  // //////////////////////////////////// Getting logged in with a WebId
+  var target
 
-  var setUser = function (webid) {
-    if (webid) {
-      tabulator.preferences.set('me', webid)
-      console.log('(SetUser: Logged in as ' + webid + ')')
-      me = kb.sym(webid)
-    // @@ Here enable all kinds of stuff
-    } else {
-      tabulator.preferences.set('me', '')
-      console.log('(SetUser: Logged out)')
-      me = null
-    }
-  }
+  UI.authn.checkUser()
+    .then(webId => {
+      target = webId // @@ for now, in fact not relevant
 
-  var me_uri = tabulator.preferences.get('me')
-  var me = me_uri ? kb.sym(me_uri) : null
-
-  var userTest = $rdf.sym('https://databox.me/')
-
-  UI.authn.checkUser(userTest, setUser)
+      // subject, expand, pane, solo, referrer, table
+      UI.outline.GotoSubject(target, true, pane, true, undefined)
+    })
 
   var pane = UI.panes.home
-  var target = me // @@ for now, in fact not relevant
 
-  // subject, expand, pane, solo, referrer, table
-  UI.outline.GotoSubject(target, true, pane, true, undefined)
   // //////////////////////////////  Reproduction: spawn a new instance
   //
   // Viral growth path: user of app decides to make another instance

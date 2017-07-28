@@ -36,27 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var div = document.getElementById('FormTarget')
 
-  // //////////////////////////////////// Getting logged in with a WebId
-
-  var setUser = function (webid) {
-    if (webid) {
-      tabulator.preferences.set('me', webid)
-      console.log('(SetUser: Logged in as ' + webid + ')')
-      me = kb.sym(webid)
-    // @@ Here enable all kinds of stuff
-    } else {
-      tabulator.preferences.set('me', '')
-      console.log('(SetUser: Logged out)')
-      me = null
-    }
-  }
-
-  var me_uri = tabulator.preferences.get('me')
-  var me = me_uri ? kb.sym(me_uri) : null
-
-  var userTest = $rdf.sym('https://databox.me/')
-
-  UI.authn.checkUser(userTest, setUser)
+  UI.authn.checkUser()  // kick off async operation
 
   // //////////////////////////////  Reproduction: spawn a new instance
   //

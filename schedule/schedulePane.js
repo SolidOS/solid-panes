@@ -118,8 +118,7 @@ module.exports = {
       var fetcher = kb.fetcher
       var updater = kb.updater
 
-      var me = tabulator.preferences.get('me')
-      me = me ? kb.sym(me) : null
+      var me = UI.authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
@@ -174,18 +173,11 @@ module.exports = {
             }
 
             kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
-              .then(() => {
-                var resource = kb.sym(newURI)
-                if (!me) {
-                  console.log('Waiting to find out id user users to access ' + resource)
-                  UI.authn.checkUser(resource, function (webid) {
-                    me = kb.sym(webid)
-                    console.log('Got user id: ' + me)
-                    setThatACL()
-                  })
-                } else {
-                  setThatACL()
-                }
+              .then(() => UI.authn.checkUser())
+              .then(webId => {
+                me = webId
+
+                setThatACL()
               })
               .catch(err => {
                 console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
@@ -299,31 +291,20 @@ module.exports = {
       return ele
     }
 
-    // //////////////////////////////////// Getting logged in with a WebId
+    var me
 
-    var setUser = function (webid) {
-      if (webid) {
-        tabulator.preferences.set('me', webid)
-        console.log('(SetUser: Logged in as ' + webid + ')')
-        me = kb.sym(webid)
-      // @@ Here enable all kinds of stuff
-      } else {
-        tabulator.preferences.set('me', '')
-        console.log('(SetUser: Logged out)')
-        me = null
-      }
-      if (logInOutButton) {
-        logInOutButton.refresh()
-      }
-      if (webid && waitingForLogin) {
-        waitingForLogin = false
-        showAppropriateDisplay()
-      }
-    }
+    UI.authn.checkUser()
+      .then(webId => {
+        me = webId
 
-    var meUri = tabulator.preferences.get('me')
-    var me = meUri ? kb.sym(meUri) : null
-    UI.authn.checkUser(detailsDoc, setUser)
+        if (logInOutButton) {
+          logInOutButton.refresh()
+        }
+        if (webId && waitingForLogin) {
+          waitingForLogin = false
+          showAppropriateDisplay()
+        }
+      })
 
     // //////////////////////////////  Reproduction: spawn a new instance
     //
@@ -411,29 +392,29 @@ module.exports = {
 
     var showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
-      var meUri = tabulator.preferences.get('me')
-      var me = meUri ? kb.sym(meUri) : null
 
-      if (!me) {
-        showSignon()
-      } else {
-        // On gh-pages, the turtle will not load properly (bad mime type)
-        // but we can trap it as being a non-editable server.
+      UI.authn.checkUser()
+        .then(webId => {
+          if (!webId) { return showSignon() }
 
-        if (!UI.store.updater.editable(detailsDoc.uri, kb) ||
-          kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
-          // This is read-only example e.g. on github pages, etc
-          showBootstrap(div)
-          return
-        }
+          // On gh-pages, the turtle will not load properly (bad mime type)
+          // but we can trap it as being a non-editable server.
 
-        var ready = kb.any(subject, SCHED('ready'))
-        if (!ready) {
-          showForms()
-        } else { // no editing not author
-          getResults()
-        }
-      }
+          if (!UI.store.updater.editable(detailsDoc.uri, kb) ||
+            kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
+            // This is read-only example e.g. on github pages, etc
+            showBootstrap(div)
+            return
+          }
+
+          var ready = kb.any(subject, SCHED('ready'))
+
+          if (!ready) {
+            showForms()
+          } else { // no editing not author
+            getResults()
+          }
+        })
     }
 
     var showSignon = function showSignon () {
@@ -831,8 +812,7 @@ module.exports = {
       // @@ Give other combos too-- see schedule ontology
       var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      var meUri = tabulator.preferences.get('me')
-      var me = meUri ? kb.sym(meUri) : null
+      var me = UI.authn.currentUser()
 
       var dataPointForNT = []
 

@@ -147,47 +147,6 @@ module.exports = {
       }
     }
 
-    // Getting logged in with a WebId
-    var setUser = function (webid) {
-      if (webid) {
-        tabulator.preferences.set('me', webid)
-        console.log('(SetUser: Logged in as ' + webid + ')')
-        me = kb.sym(webid)
-        // @@ Here enable all kinds of stuff
-      } else {
-        tabulator.preferences.set('me', '')
-        console.log('(SetUser: Logged out)')
-        me = null
-      }
-      if (logInOutButton) {
-        logInOutButton.refresh()
-      }
-      if (webid && waitingForLogin) {
-        waitingForLogin = false
-        showAppropriateDisplay()
-      }
-    }
-
-    // Who am I
-    var whoAmI = function () {
-      var meUri = tabulator.preferences.get('me')
-      me = meUri ? kb.sym(meUri) : null
-      UI.authn.checkUser(padDoc, setUser)
-
-      if (!tabulator.preferences.get('me')) {
-        console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
-
-        if (tabulator.mode === 'webapp' && typeof document !== 'undefined' &&
-          document.location && ('' + document.location).slice(0, 16) === 'http://localhost') {
-          me = kb.any(subject, UI.ns.dc('author')) // when testing on plane with no webid
-          console.log('Assuming user is ' + me)
-        }
-      } else {
-        me = kb.sym(tabulator.preferences.get('me'))
-        // console.log("(Your webid is "+ tabulator.preferences.get('me')+")");
-      };
-    }
-
     //  Reproduction: spawn a new instance
     //
     // Viral growth path: user of app decides to make another instance
@@ -287,18 +246,11 @@ module.exports = {
             }
 
             kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
-              .then(() => {
-                var resource = kb.sym(newURI)
-                if (!me) {
-                  console.log('Waiting to find out id user users to access ' + resource)
-                  UI.authn.checkUser(resource, function (webid) {
-                    me = kb.sym(webid)
-                    console.log('Got user id: ' + me)
-                    setThatACL()
-                  })
-                } else {
-                  setThatACL()
-                }
+              .then(() => UI.authn.checkUser())
+              .then(webId => {
+                me = webId
+
+                setThatACL()
               })
               .catch(err => {
                 console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
@@ -308,19 +260,6 @@ module.exports = {
         }
         fun(item)
       }
-      /*
-       if (!me) {
-       agenda.push(function(){
-       console.log("Waiting to dind out id user users to access " + newIndexDoc)
-       UI.authn.checkUser(newIndexDoc, function(webid){
-       me = kb.sym(webid);
-       conole.log("Got user id: "+ me);
-       agenda.shift()();
-       });
-       });
-       };
-       */
-      //   me  is now defined
 
       agenda.push(function createNewPadDataFile () {
         kb.add(newInstance, ns.rdf('type'), PAD('Notepad'), newPadDoc)
@@ -375,7 +314,10 @@ module.exports = {
     var showResults = function (exists) {
       console.log('showResults()')
 
-      whoAmI() // Set 'me'  even if on a plane
+      UI.authn.checkUser()
+        .then(webId => {
+          me = webId
+        })
 
       var title = kb.any(subject, ns.dc('title')) || kb.any(subject, ns.vcard('fn'))
       if (paneOptions.solo && typeof window !== 'undefined' && title) {
@@ -428,7 +370,6 @@ module.exports = {
     var updater = UI.store.updater
     var ns = UI.ns
     var me
-    var waitingForLogin = false
 
     var PAD = $rdf.Namespace('http://www.w3.org/ns/pim/pad#')
 

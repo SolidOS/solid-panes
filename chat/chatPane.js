@@ -90,7 +90,7 @@ module.exports = {
       complain('Unknown chat type')
     }
 
-    UI.authn.checkUser(messageStore)  // async op
+    UI.authn.checkUser()  // async op
 
     div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
 

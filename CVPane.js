@@ -3,7 +3,6 @@
 
 var UI = require('solid-ui')
 
-
 module.exports = {
   icon: UI.icons.originalIconBase + 'CV.png', // This icon should be defined in 'test.js' and 'tabulate.js'
 
@@ -13,25 +12,25 @@ module.exports = {
   /*function(subject)
   { return 'CV '
   },*/
-  function (subject) { // 'subject' is the source of the document
-    if (tabulator.preferences.get('me') == subject.uri)
+    function (subject) { // 'subject' is the source of the document
+      let me = UI.authn.currentUser()
+      if (me && me.uri === subject.uri)
       // the criteria for displaying the pane is satisfied
-      return 'CV' // "the string that would be the title for the icon"
-    else
-      return null
-  },
+        return 'CV' // "the string that would be the title for the icon"
+      else
+        return null
+    },
 
   render: function (subject, CVdocument) { // 'subject' is the source of the document
     // 'document' is the HTML document element we are attaching elements to
 
     var kb = UI.store
-    var me = kb.sym(tabulator.preferences.get('me'))
+    var me = UI.authn.currentUser()
     var foaf = UI.ns.foaf
     var myName = kb.any(me, foaf('family_name')) + kb.any(me, foaf('givenname'))
 
     var content = CVdocument.createElement('div')
     content.className = 'CVclass'
-
 
     // for a School:
     var schoolForm = CVdocument.createElement('form')
@@ -89,7 +88,6 @@ module.exports = {
     companySubmit.type = 'submit'
     companyForm.appendChild(companySubmit)
 
-
     // for a Language:
     var tongueForm = CVdocument.createElement('form')
     var tongue = CVdocument.createElement('input')
@@ -101,7 +99,6 @@ module.exports = {
     var tongueSubmit = CVdocument.createElement('input')
     tongueSubmit.type = 'submit'
     tongueForm.appendChild(tongueSubmit)
-
 
     // The Menu:
     var menu = CVdocument.createElement('select')
@@ -117,25 +114,25 @@ module.exports = {
     content.appendChild(menu)
 
     var displayForm = function () {
-      if (menu.options[menu.selectedIndex].text == 'add a work history entry') {
+      if (menu.options[menu.selectedIndex].text === 'add a work history entry') {
         content.appendChild(companyForm)
       }
-      else if (menu.options[menu.selectedIndex].text == 'add an education entry') {
+      else if (menu.options[menu.selectedIndex].text === 'add an education entry') {
         content.appendChild(schoolForm)
       }
-      else if (menu.options[menu.selectedIndex].text == 'add an language entry') {
+      else if (menu.options[menu.selectedIndex].text === 'add an language entry') {
         content.appendChild(tongueForm)
       }
     }
 
     var currentForm = function () {
-      if (companyForm.parentNode == content) {
+      if (companyForm.parentNode === content) {
         var currentForm = companyForm
       }
-      else if (schoolForm.parentNode == content) {
+      else if (schoolForm.parentNode === content) {
         var currentForm = schoolForm
       }
-      else if (tongueForm.parentNode == content) {
+      else if (tongueForm.parentNode === content) {
         var currentForm = tongueForm
       }
       return currentForm
@@ -200,12 +197,9 @@ module.exports = {
       sparqlUpdater.insert_statement(batch, callback)
     }
 
-
-
     companyForm.addEventListener('submit', companyUpdate, false)
     schoolForm.addEventListener('submit', schoolUpdate, false)
     tongueForm.addEventListener('submit', tongueUpdate, false)
-
 
     return content
   }

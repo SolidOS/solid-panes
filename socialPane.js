@@ -154,18 +154,18 @@ module.exports = {
     var h3 = dom.createElement('H3')
     h3.appendChild(dom.createTextNode(name))
 
-    var listener = function (newIdURI) {
-      me = kb.sym(newIdURI)
+    var me = UI.authn.currentUser()
+    var meUri = me ? me.uri : null
+
+    // @@ Add: event handler to redraw the stuff below when me changes.
+    let loginOutButton = UI.authn.loginStatusBox(dom, (webIdUri) => {
+      me = kb.sym(webIdUri)
       // @@ To be written:   redraw as a function the new me
       // @@ refresh the sidebars
       UI.widgets.refreshTree(div) // this refreshes the middle at least
-    }
+    })
 
-    // @@ Addd: event handler to redraw the stuff below when me changes.
-    tips.appendChild(UI.authn.loginStatusBox(dom, listener))
-
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri && kb.sym(me_uri)
+    tips.appendChild(loginOutButton)
 
     var thisIsYou = (me && kb.sameThings(me, s))
 
@@ -226,7 +226,7 @@ module.exports = {
         tools.appendChild(tr)
 
         var youAndThem = function () {
-          tr.appendChild(link(text('You'), me_uri))
+          tr.appendChild(link(text('You'), meUri))
           tr.appendChild(text(' and '))
           tr.appendChild(link(text(familiar), s.uri))
         }
@@ -236,7 +236,7 @@ module.exports = {
             youAndThem()
             tr.appendChild(text(' have not said you know each other.'))
           } else {
-            tr.appendChild(link(text('You'), me_uri))
+            tr.appendChild(link(text('You'), meUri))
             tr.appendChild(text(' know '))
             tr.appendChild(link(text(familiar), s.uri))
             tr.appendChild(text(' (unconfirmed)'))
@@ -245,7 +245,7 @@ module.exports = {
           if (!outgoing) {
             tr.appendChild(link(text(familiar), s.uri))
             tr.appendChild(text(' knows '))
-            tr.appendChild(link(text('you'), me_uri))
+            tr.appendChild(link(text('you'), meUri))
             tr.appendChild(text(' (unconfirmed).')) // @@
             tr.appendChild(text(' confirm you know '))
             tr.appendChild(link(text(familiar), s.uri))

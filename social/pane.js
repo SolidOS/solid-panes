@@ -188,10 +188,10 @@ module.exports = {
 
       ]
       sparqlUpdater.insert_statement(
-        [new UI.rdf.Statement(I, foaf('knows'), s, I)],
+        [new UI.rdf.Statement(me, foaf('knows'), s, me)],
         function (a, b, c) {
           sparqlUpdater.insert_statement(
-            [new UI.rdf.Statement(I, foaf('knows'), s, s)],
+            [new UI.rdf.Statement(me, foaf('knows'), s, s)],
             function (a, b, c) {
               Events.raiseEvent('evtStatusUpdate', [acc, statusMsg, person], this)
               Events.raiseEvent('evtUpdateFriendState', [], that)
@@ -206,8 +206,8 @@ module.exports = {
     function updatePhotos (photo, comment, writableSpace) {
       var photo = photo.replace(/^\s+|\s+$/g, '')
       batch = [
-        new UI.rdf.Statement(I, foaf('made'), kb.sym(photo), I),
-        new UI.rdf.Statement(kb.sym(photo), dc('description'), comment, I)
+        new UI.rdf.Statement(me, foaf('made'), kb.sym(photo), me),
+        new UI.rdf.Statement(kb.sym(photo), dc('description'), comment, me)
       ]
       sparqlUpdater.insert_statement(batch, function (a, b, c) {
         // kb.add
@@ -215,10 +215,10 @@ module.exports = {
       })
     } // TODO update the photos
     var changeFriendButton = function () { // TODO update the text of the friend button
-      var I = kb.sym(tabulator.preferences.get('me'))
-      var myProfile = kb.sameThings(I, s)
+      var me = UI.authn.currentUser()
+      var myProfile = kb.sameThings(me, s)
 
-      if (kb.whether(I, foaf('knows'), s)) {
+      if (kb.whether(me, foaf('knows'), s)) {
         ui.addFriend.value = 'Unlink ' + (profile['nick'][0] || profile.name)
       } else {
         ui.addFriend.value = 'I know ' + (profile['nick'][0] || profile.name)
@@ -264,27 +264,22 @@ module.exports = {
           callback(a, b, c, batch)
         })
     }
-    function requestWebID (target) {
-    }
-    function changeMyProfile () {
-      return [(tabulator.preferences.get('me') === p), tabulator.preferences.get('me')]
-    }
 
     Events.addEventListener('evtUpdateFriendList', changeFriendList) // update the friends list
     Events.addEventListener('evtUpdateFriendState', changeFriendButton) // update the state of the add friend button
     // END LISTENERS-----------------------------------------
 
     var p = s.uri
-    var I = kb.sym(tabulator.preferences.get('me'))
-    var myProfile = kb.sameThings(I, s)
+    var me = UI.authn.currentUser()
+    var myProfile = kb.sameThings(me, s)
     var profile = getProfileData(p)
     var ui = {}
     sf.addCallback('done', function () {
       Events.raiseEvent('evtUpdateFriendState', [], this)
       UI.panes.newsocialpane.render(s, doc)
     })
-    if (!(kb.whether(I, rdf('type'), foaf('Person')))) {
-      sf.lookUpThing(I)
+    if (!(kb.whether(me, rdf('type'), foaf('Person')))) {
+      sf.lookUpThing(me)
     }
     ui.newacc = newElement('input')
     ui.newacc.type = 'button'
@@ -348,14 +343,17 @@ module.exports = {
     ui.me.addEventListener('click', function (evt) {
       if (evt.target.checked) {
         if (!kb.whether(s, foaf('weblog'), kb.sym(workspace + '/status'))) {
-          sparqlUpdater.insert_statement([ new UI.rdf.Statement(s, foaf('weblog'), kb.sym(workspace + '/status'), s) ], function () {})
+          sparqlUpdater.insert_statement(
+            [ new UI.rdf.Statement(s, foaf('weblog'), kb.sym(workspace + '/status'), s) ],
+            () => {}
+          )
         }
-        tabulator.preferences.set('me', s.uri)
+        UI.authn.saveUser(s.uri)
       } else {
-        tabulator.preferences.set('me', '')
+        UI.authn.saveUser('')
       }
       this.I = (evt.target.checked) ? s.uri : ''
-      this.myProfile = I === s.uri
+      this.myProfile = me === s.uri
       Events.raiseEvent('evtUpdateFriendState', [], this)
     }, false)
 
@@ -363,7 +361,7 @@ module.exports = {
     // check for documents whose primarytopic is the person
     // then check if those are personalprofiledocuments.
     ui.editable = newElement('p', ui.contact)
-    var aboutme = kb.each(null, foaf('primaryTopic'), I)
+    var aboutme = kb.each(null, foaf('primaryTopic'), me)
     var editableProfile = false
     /*
     for (var docAboutMe in Iterator(aboutme)) {
@@ -482,7 +480,7 @@ module.exports = {
     ui.post.value = 'Send'
     ui.postbox.addEventListener('submit', function () {
       // perform a status update
-      statusUpdate(workspace, doc.getElementById('status_text').value, I, sparqlUpdater)
+      statusUpdate(workspace, doc.getElementById('status_text').value, me, sparqlUpdater)
     }, false)
     ui.post.id = 'post_button'
     ui.statuses = newElement('ol', ui.statusbox)
@@ -499,7 +497,7 @@ module.exports = {
       ui.addnewphoto = newElement('form', ui.photobox)
       ui.addnewphoto.id = 'addnewphoto'
       ui.addnewphoto.addEventListener('submit', function (evt) {
-        updatePhotos(ui.addphotouri.value, ui.photocomment, I)
+        updatePhotos(ui.addphotouri.value, ui.photocomment, me)
         return false
       }, false) // TODO post photo
       newElement('p', ui.addnewphoto).innerHTML = 'Photo URL: '
