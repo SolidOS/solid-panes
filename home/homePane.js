@@ -188,13 +188,15 @@ module.exports = {
 
     var showContent = function(){
       var context = {div: div, dom: dom, statusArea: div, me: me}
+      
+      div.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
+      newThingUI(context)
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private:'
       UI.authn.registrationList(context, { private: true}).then(function(context){
         div.appendChild(dom.createElement('h4')).textContent = 'Public:'
         UI.authn.registrationList(context, { public: true}).then(function(context){
-          div.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
-          newThingUI(context)
+          // done
         })
       })
     }
