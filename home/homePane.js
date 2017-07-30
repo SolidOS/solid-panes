@@ -169,7 +169,7 @@ module.exports = {
       var styleTheIcons = function(style){
         for (var i=0; i<iconArray.length; i++){
           var st = iconStyle + style
-          if (toolIcons[i].disabled){
+          if (iconArray[i].disabled){ // @@ unused
             st += 'opacity: 0.3;'
           }
           iconArray[i].setAttribute('style', st) // eg 'background-color: #ccc;'
@@ -188,7 +188,7 @@ module.exports = {
 
     var showContent = function(){
       var context = {div: div, dom: dom, statusArea: div, me: me}
-      
+
       div.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
       newThingUI(context)
 
