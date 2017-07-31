@@ -24,7 +24,7 @@ module.exports = {
     return null // No under other circumstances
   },
 
-//  Mint a new Schedule poll
+  //  Mint a new Schedule poll
   mintClass: ns.sched('SchedulableEvent'),
 
   mintNew: function (options) {
@@ -69,12 +69,12 @@ module.exports = {
         return $rdf.serialize(acl, g, aclURI, 'text/turtle')
       }
 
-  /*
-      var setACL3 = function (docURI, allWrite, callback) {
-        var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-        return UI.acl.setACL(docURI, aclText, callback)
-      }
-      */
+      /*
+          var setACL3 = function (docURI, allWrite, callback) {
+            var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+            return UI.acl.setACL(docURI, aclText, callback)
+          }
+          */
 
       var setACL2 = function setACL2 (docURI, allWrite, callback) {
         var aclDoc = kb.any(kb.sym(docURI),
@@ -98,7 +98,7 @@ module.exports = {
                 kb.sym('http://www.iana.org/assignments/link-relations/acl'))
 
               if (!aclDoc) {
-                // complainIfBad(false, "No Link rel=ACL header for " + docURI);
+                // complainIfBad(false, "No Link rel=ACL header for " + docURI)
                 throw new Error('No Link rel=ACL header for ' + docURI)
               }
 
@@ -221,7 +221,9 @@ module.exports = {
 
       agenda.push(function () {
         kb.fetcher.webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle' })
-          .then(() => { agenda.shift()() })
+          .then(() => {
+            agenda.shift()()
+          })
           .catch(err => {
             complainIfBad(false, 'Failed to initialize empty results file: ' + err.message)
           })
@@ -242,7 +244,7 @@ module.exports = {
       })
 
       agenda.push(function () { // give the user links to the new app
-        console.log("Finished minting new scheduler")
+        console.log('Finished minting new scheduler')
         resolve(options)
       })
 
@@ -272,14 +274,14 @@ module.exports = {
     var base = baseDir.uri
 
     var resultsDoc = $rdf.sym(base + 'results.ttl')
-    //var forms_uri = base + 'forms.ttl'
+    // var forms_uri = base + 'forms.ttl'
     var forms_uri = 'https://linkeddata.github.io/solid-app-set/schedule/formsForSchedule.ttl'
 
     var form1 = kb.sym(forms_uri + '#form1')
     var form2 = kb.sym(forms_uri + '#form2')
     var form3 = kb.sym(forms_uri + '#form3')
 
-    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%;
+    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%
 
     // Utility functions
 
@@ -324,8 +326,8 @@ module.exports = {
         showAppropriateDisplay()
       }
     }
-
     UI.authn.checkUser(detailsDoc, setUser)
+    console.log('me: ' + me) // @@ curently not actually used elsewhere
 
     // //////////////////////////////  Reproduction: spawn a new instance
     //
@@ -367,7 +369,7 @@ module.exports = {
           "Your <a href='" + options.newInstance.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
           "<br/><br/><a href='" + options.newInstance.uri + "'>Say when you what days work for you.</a>"
       }).catch(function (error) {
-        complainIfBad(false, "Error createing new scheduler at: " + options.newInstance.uri )
+        complainIfBad(false, 'Error createing new scheduler at ' + options.newInstance + ': ' + error)
       })
     }
 
@@ -395,14 +397,14 @@ module.exports = {
       // Event listener for login (from child iframe)
       var eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent'
       var eventListener = window[eventMethod]
-      var messageEvent = eventMethod == 'attachEvent' ? 'onmessage' : 'message'
+      var messageEvent = eventMethod === 'attachEvent' ? 'onmessage' : 'message'
 
       // Listen to message from child window
       eventListener(messageEvent, function (e) {
-        if (e.data.slice(0, 5) == 'User:') {
+        if (e.data.slice(0, 5) === 'User:') {
           // the URI of the user (currently either http* or dns:* values)
           var user = e.data.slice(5, e.data.length)
-          if (user.slice(0, 4) == 'http') {
+          if (user.slice(0, 4) === 'http') {
             // we have an HTTP URI (probably a WebID), do something with the user variable
             // i.e. app.login(user)
             setUser(user)
@@ -455,7 +457,7 @@ module.exports = {
     var showBootstrap = function showBootstrap () {
       var div = clearElement(naviMain)
       div.appendChild(UI.authn.newAppInstance(
-        dom, { noun: 'poll'} , initializeNewInstanceInWorkspace))
+        dom, {noun: 'poll'}, initializeNewInstanceInWorkspace))
 
       div.appendChild(dom.createElement('hr')) // @@
 
@@ -482,7 +484,6 @@ module.exports = {
       })
     }
 
-
     // ///////////// The forms to configure the poll
 
     var showForms = function () {
@@ -491,11 +492,11 @@ module.exports = {
       var currentSlide = 0
       var gotDoneButton = false
       if (wizard) {
-        let  forms = [ form1, form2, form3 ]
-        let  slides = []
+        let forms = [ form1, form2, form3 ]
+        let slides = []
         currentSlide = 0
         for (var f = 0; f < forms.length; f++) {
-          let  slide = dom.createElement('div')
+          let slide = dom.createElement('div')
           UI.widgets.appendForm(document, slide, {}, subject, forms[f], detailsDoc, complainIfBad)
           slides.push(slide)
         }
@@ -731,7 +732,6 @@ module.exports = {
     */
     // end setTimesOfDay
 
-
     // Read or create empty results file
     var getResults = function () {
       fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
@@ -828,7 +828,6 @@ module.exports = {
         clearElement(naviCenter)
         naviCenter.appendChild(refreshButton)
       }
-
 
       var meUri = tabulator.preferences.get('me')
       var me = meUri ? kb.sym(meUri) : null
