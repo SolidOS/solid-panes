@@ -2,27 +2,30 @@
 **
 **
 */
+/* global alert */
 
-var UI = require('solid-ui')
-var $rdf = UI.rdf
-var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
+const UI = require('solid-ui')
+const $rdf = UI.rdf
+const ns = UI.ns
+
+// @@ Give other combos too-- see schedule ontology
+const possibleAvailabilities = [ ns.sched('No'), ns.sched('Maybe'), ns.sched('Yes') ]
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
   name: 'schedule',
 
-  // Does the subject deserve an contact pane?
+  // Does the subject deserve an Scheduler pane?
   label: function (subject) {
     var kb = UI.store
-    var ns = UI.ns
     var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) return 'Scheduling poll'
     return null // No under other circumstances
   },
 
 //  Mint a new Schedule poll
-  mintClass: SCHED('SchedulableEvent'),
+  mintClass: ns.sched('SchedulableEvent'),
 
   mintNew: function (options) {
     return new Promise(function (resolve, reject) {
@@ -30,9 +33,6 @@ module.exports = {
       var kb = UI.store
       var newBase = options.newBase
       var thisInstance = options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
-
-      var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-      var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
 
       var complainIfBad = function (ok, body) {
         if (ok) return
@@ -114,7 +114,6 @@ module.exports = {
       }
 
       // Body of mintNew
-      var kb = UI.store
       var fetcher = kb.fetcher
       var updater = kb.updater
 
@@ -127,19 +126,19 @@ module.exports = {
       }
 
       var base = thisInstance.dir().uri
-      var newDetailsDoc, newInstance, newResultsDoc, newIndexDoc
+      var newDetailsDoc, newInstance // , newIndexDoc
 
       if (options.useExisting) {
         newInstance = options.useExisting
         newBase = thisInstance.dir().uri
         newDetailsDoc = newInstance.doc()
-        newIndexDoc = null
+        // newIndexDoc = null
         if (options.newBase) {
           throw new Error('mint new scheduler: Illegal - have both new base and existing event')
         }
       } else {
         newDetailsDoc = kb.sym(newBase + 'details.ttl')
-        newIndexDoc = kb.sym(newBase + 'index.html')
+        // newIndexDoc = kb.sym(newBase + 'index.html')
         newInstance = kb.sym(newDetailsDoc.uri + '#event')
       }
 
@@ -154,8 +153,8 @@ module.exports = {
 
       var agenda = []
 
-      var f, fi, fn //   @@ This needs some form of visible progress bar
-      for (f = 0; f < toBeCopied.length; f++) {
+      //   @@ This needs some form of visible progress bar
+      for (var f = 0; f < toBeCopied.length; f++) {
         var item = toBeCopied[f]
         var fun = function copyItem (item) {
           agenda.push(function () {
@@ -197,13 +196,13 @@ module.exports = {
       }
 
       agenda.push(function createDetailsFile () {
-        kb.add(newInstance, ns.rdf('type'), SCHED('SchedulableEvent'), newDetailsDoc)
+        kb.add(newInstance, ns.rdf('type'), ns.sched('SchedulableEvent'), newDetailsDoc)
         if (me) {
-          kb.add(newInstance, DC('author'), me, newDetailsDoc)
+          kb.add(newInstance, ns.dc('author'), me, newDetailsDoc)
         }
 
-        kb.add(newInstance, DC('created'), new Date(), newDetailsDoc)
-        kb.add(newInstance, SCHED('resultsDocument'), newDetailsDoc)
+        kb.add(newInstance, ns.dc('created'), new Date(), newDetailsDoc)
+        kb.add(newInstance, ns.sched('resultsDocument'), newDetailsDoc)
 
         updater.put(
           newDetailsDoc,
@@ -213,8 +212,8 @@ module.exports = {
             if (ok) {
               agenda.shift()()
             } else {
-              complainIfBad(ok, 'FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
-              console.log('FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
+              complainIfBad(ok, 'FAILED to save new scheduler at: ' + newDetailsDoc + ' : ' + message)
+              console.log('FAILED to save new scheduler at: ' + newDetailsDoc + ' : ' + message)
             }
           }
         )
@@ -256,6 +255,7 @@ module.exports = {
   render: function (subject, dom) {
     var kb = UI.store
     var ns = UI.ns
+    var invitation = subject
     var appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     // ////////////////////////////////////////////
@@ -265,9 +265,6 @@ module.exports = {
     var waitingForLogin = false
 
     var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-    var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
 
     var thisInstance = subject
     var detailsDoc = subject.doc()
@@ -299,8 +296,15 @@ module.exports = {
       return ele
     }
 
+    var refreshCellColor = function (cell, value) {
+      var bg = kb.any(value, UI.ns.ui('backgroundColor'))
+      if (bg) cell.setAttribute('style', 'padding: 0.3em; text-align: center; background-color: ' + bg + ';')
+    }
+
     // //////////////////////////////////// Getting logged in with a WebId
 
+    var meUri = tabulator.preferences.get('me')
+    var me = meUri ? kb.sym(meUri) : null
     var setUser = function (webid) {
       if (webid) {
         tabulator.preferences.set('me', webid)
@@ -321,8 +325,6 @@ module.exports = {
       }
     }
 
-    var meUri = tabulator.preferences.get('me')
-    var me = meUri ? kb.sym(meUri) : null
     UI.authn.checkUser(detailsDoc, setUser)
 
     // //////////////////////////////  Reproduction: spawn a new instance
@@ -362,10 +364,10 @@ module.exports = {
         var p = div.appendChild(dom.createElement('p'))
         p.setAttribute('style', 'font-size: 140%;')
         p.innerHTML =
-          "Your <a href='" + result.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
-          "<br/><br/><a href='" + result.uri + "'>Say when you what days work for you.</a>"
+          "Your <a href='" + options.newInstance.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
+          "<br/><br/><a href='" + options.newInstance.uri + "'>Say when you what days work for you.</a>"
       }).catch(function (error) {
-        complainIfBad(false, result)
+        complainIfBad(false, "Error createing new scheduler at: " + options.newInstance.uri )
       })
     }
 
@@ -427,7 +429,7 @@ module.exports = {
           return
         }
 
-        var ready = kb.any(subject, SCHED('ready'))
+        var ready = kb.any(subject, ns.sched('ready'))
         if (!ready) {
           showForms()
         } else { // no editing not author
@@ -452,10 +454,10 @@ module.exports = {
 
     var showBootstrap = function showBootstrap () {
       var div = clearElement(naviMain)
-      var na = div.appendChild(UI.authn.newAppInstance(
-        dom, 'Start a new poll in a workspace', initializeNewInstanceInWorkspace))
+      div.appendChild(UI.authn.newAppInstance(
+        dom, { noun: 'poll'} , initializeNewInstanceInWorkspace))
 
-      var hr = div.appendChild(dom.createElement('hr')) // @@
+      div.appendChild(dom.createElement('hr')) // @@
 
       var p = div.appendChild(dom.createElement('p'))
       p.textContent = 'Where would you like to store the data for the poll?  ' +
@@ -489,12 +491,11 @@ module.exports = {
       var currentSlide = 0
       var gotDoneButton = false
       if (wizard) {
-        forms = [ form1, form2, form3 ]
-        slides = []
-        var slide
-        var currentSlide = 0
+        let  forms = [ form1, form2, form3 ]
+        let  slides = []
+        currentSlide = 0
         for (var f = 0; f < forms.length; f++) {
-          slide = dom.createElement('div')
+          let  slide = dom.createElement('div')
           UI.widgets.appendForm(document, slide, {}, subject, forms[f], detailsDoc, complainIfBad)
           slides.push(slide)
         }
@@ -549,16 +550,16 @@ module.exports = {
       }
       // @@@  link config to results
 
-      insertables = []
-      insertables.push($rdf.st(subject, SCHED('availabilityOptions'), SCHED('YesNoMaybe'), detailsDoc))
-      insertables.push($rdf.st(subject, SCHED('ready'), new Date(), detailsDoc))
-      insertables.push($rdf.st(subject, SCHED('results'), resultsDoc, detailsDoc)) // @@ also link in results
+      var insertables = []
+      insertables.push($rdf.st(subject, ns.sched('availabilityOptions'), ns.sched('YesNoMaybe'), detailsDoc))
+      insertables.push($rdf.st(subject, ns.sched('ready'), new Date(), detailsDoc))
+      insertables.push($rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)) // @@ also link in results
 
       var doneButton = dom.createElement('button')
       doneButton.setAttribute('style', inputStyle)
       doneButton.textContent = 'Go to poll'
       doneButton.addEventListener('click', function (e) {
-        if (kb.any(subject, SCHED('ready'))) { // already done
+        if (kb.any(subject, ns.sched('ready'))) { // already done
           getResults()
           naviRight.appendChild(emailButton)
         } else {
@@ -581,9 +582,9 @@ module.exports = {
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
       emailButton.textContent = 'email invitations'
       emailButton.addEventListener('click', function (e) {
-        var title = '' + (kb.any(subject, DC('title')) || '')
+        var title = '' + (kb.any(subject, ns.dc('title')) || '')
         var mailto = 'mailto:' +
-          kb.each(subject, SCHED('invitee')).map(function (who) {
+          kb.each(subject, ns.sched('invitee')).map(function (who) {
             var mbox = kb.any(who, ns.foaf('mbox'))
             return mbox ? '' + mbox : ''
           }).join(',') +
@@ -595,28 +596,28 @@ module.exports = {
       }, false)
     } // showForms
 
-    // Ask for each day, what times
-
+    // Ask for each day, what times .. @@ to be added some time
+    /*
     var setTimesOfDay = function () {
       var i, j, x, y, slot, cell, day
       var insertables = []
-      var possibleDays = kb.each(invitation, SCHED('option'))
+      var possibleDays = kb.each(invitation, ns.sched('option'))
         .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
       var cellLookup = []
-      var slots = kb.each(invitation, SCHED('slot'))
+      var slots = kb.each(invitation, ns.sched('slot'))
       if (slots.length === 0) {
         for (i = 0; i < 2; i++) {
           slot = UI.widgets.newThing(detailsDoc)
-          insertables.push($rdf.st(invitation, SCHED('slot'), slot))
-          insertables.push($rdf.st(slott, RDFS('label'), 'slot ' + (i + 1)))
+          insertables.push($rdf.st(invitation, ns.sched('slot'), slot))
+          insertables.push($rdf.st(slot, ns.rdfs('label'), 'slot ' + (i + 1)))
           for (j = 0; j < possibleDays.length; j++) {
             day - possibleDays[j]
-            x = kb.any(slot, RDFS('label'))
+            x = kb.any(slot, ns.rdfs('label'))
             y = kb.any(day, ICAL('dtstart'))
             cell = UI.widgets.newThing(detailsDoc)
             cellLookup[x.toNT() + y.toNT()] = cell
-            insertables.push($rdf.st(slot, SCHED('cell'), cell))
-            insertables.push($rdf.st(cell, SCHED('day'), possibleDays[j]))
+            insertables.push($rdf.st(slot, ns.sched('cell'), cell))
+            insertables.push($rdf.st(cell, ns.sched('day'), possibleDays[j]))
           }
         }
       }
@@ -624,20 +625,20 @@ module.exports = {
       var query = new $rdf.Query('TimesOfDay')
       var v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
         query.vars.push(v[x] = $rdf.variable(x)) })
-      query.pat.add(invitation, SCHED('slot'), v.slot)
-      query.pat.add(v.slot, RDFS('label'), v.label)
-      query.pat.add(v.slot, SCHED('cell'), v.cell)
-      query.pat.add(v.cell, SCHED('timeOfDay'), v.value)
-      query.pat.add(v.cell, SCHED('day'), v.day)
+      query.pat.add(invitation, ns.sched('slot'), v.slot)
+      query.pat.add(v.slot, ns.rdfs('label'), v.label)
+      query.pat.add(v.slot, ns.sched('cell'), v.cell)
+      query.pat.add(v.cell, ns.sched('timeOfDay'), v.value)
+      query.pat.add(v.cell, ns.sched('day'), v.day)
 
       var options = {}
-      options.set_x = kb.each(subject, SCHED('slot')) // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, RDFS('label')) })
+      options.set_x = kb.each(subject, ns.sched('slot')) // @@@@@ option -> dtstart in future
+      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.rdfs('label')) })
 
-      options.set_y = kb.each(subject, SCHED('option')); // @@@@@ option -> dtstart in future
+      options.set_y = kb.each(subject, ns.sched('option')); // @@@@@ option -> dtstart in future
       options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
-      var possibleTimes = kb.each(invitation, SCHED('option'))
+      var possibleTimes = kb.each(invitation, ns.sched('option'))
         .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var displayTheMatrix = function () {
@@ -672,12 +673,12 @@ module.exports = {
       options.set_y.push(me) // Put me on the end
 
       options.cellFunction = function (cell, x, y, value) {
-        var point = cellLookup[x.toNT() + y.toNT()]
+        // var point = cellLookup[x.toNT() + y.toNT()]
 
         if (y.sameTerm(me)) {
-          var callback = function () { refreshColor(); }; //  @@ may need that
+          var callback = function () { refreshCellColor(cell, value); }; //  @@ may need that
           var selectOptions = {}
-          var predicate = SCHED('timeOfDay')
+          var predicate = ns.sched('timeOfDay')
           var cellSubject = dataPointForNT[x.toNT()]
           var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
             possibleAvailabilities, selectOptions, resultsDoc, callback)
@@ -688,32 +689,30 @@ module.exports = {
 
       }
 
-      var responses = kb.each(invitation, SCHED('response'))
+      var responses = kb.each(invitation, ns.sched('response'))
       var myResponse = null
       responses.map(function (r) {
-        if (kb.holds(r, DC('author'), me)) {
+        if (kb.holds(r, ns.dc('author'), me)) {
           myResponse = r
         }
       })
 
-      var insertables = [] // list of statements to be stored
-
       var id = UI.widgets.newThing(doc).uri
       if (myResponse === null) {
         myResponse = $rdf.sym(id + '_response')
-        insertables.push($rdf.st(invitation, SCHED('response'), myResponse, doc))
-        insertables.push($rdf.st(myResponse, DC('author'), me, doc))
+        insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
+        insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
       } else {
-        var dps = kb.each(myResponse, SCHED('cell'))
+        var dps = kb.each(myResponse, ns.sched('cell'))
         dps.map(function (dataPoint) {
           var time = kb.any(dataPoint, ICAL('dtstart'))
           dataPointForNT[time.toNT()] = dataPoint
         })
       }
-      for (var j = 0; j < possibleTimes.length; j++) {
+      for (let j = 0; j < possibleTimes.length; j++) {
         if (dataPointForNT[possibleTimes[j].toNT()]) continue
         var dataPoint = $rdf.sym(id + '_' + j)
-        insertables.push($rdf.st(myResponse, SCHED('cell'), dataPoint, doc))
+        insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
         insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
       }
@@ -729,10 +728,12 @@ module.exports = {
         displayTheMatrix()
       }
     }
+    */
+    // end setTimesOfDay
+
 
     // Read or create empty results file
     var getResults = function () {
-      var div = naviMain
       fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
         if (!ok) {
           if (response.status === 404) { // /  Check explicitly for 404 error
@@ -762,15 +763,15 @@ module.exports = {
 
       // div.appendChild(dom.createElement('hr'))
 
-      var invitation = subject
-      var title = kb.any(invitation, DC('title'))
+      // var invitation = subject
+      var title = kb.any(invitation, ns.dc('title'))
       var comment = kb.any(invitation, ns.rdfs('comment'))
       var location = kb.any(invitation, ICAL('location'))
       var div = naviMain
       if (title) div.appendChild(dom.createElement('h3')).textContent = title
       if (location) div.appendChild(dom.createElement('address')).textContent = location.value
       if (comment) div.appendChild(dom.createElement('p')).textContent = comment.value
-      var author = kb.any(invitation, DC('author'))
+      var author = kb.any(invitation, ns.dc('author'))
       if (author) {
         var authorName = kb.any(author, ns.foaf('name'))
         if (authorName) {
@@ -784,22 +785,22 @@ module.exports = {
       vs.map(function (x) {
         query.vars.push(v[x] = $rdf.variable(x))
       })
-      query.pat.add(invitation, SCHED('response'), v.resp)
-      query.pat.add(v.resp, DC('author'), v.author)
-      query.pat.add(v.resp, SCHED('cell'), v.cell)
-      query.pat.add(v.cell, SCHED('availabilty'), v.value)
+      query.pat.add(invitation, ns.sched('response'), v.resp)
+      query.pat.add(v.resp, ns.dc('author'), v.author)
+      query.pat.add(v.resp, ns.sched('cell'), v.cell)
+      query.pat.add(v.cell, ns.sched('availabilty'), v.value)
       query.pat.add(v.cell, ICAL('dtstart'), v.time)
 
       // Sort by by person @@@
 
       var options = {}
-      options.set_x = kb.each(subject, SCHED('option')) // @@@@@ option -> dtstart in future
+      options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
-      options.set_y = kb.each(subject, SCHED('response'))
-      options.set_y = options.set_y.map(function (resp) { return kb.any(resp, DC('author')) })
+      options.set_y = kb.each(subject, ns.sched('response'))
+      options.set_y = options.set_y.map(function (resp) { return kb.any(resp, ns.dc('author')) })
 
-      var possibleTimes = kb.each(invitation, SCHED('option'))
+      var possibleTimes = kb.each(invitation, ns.sched('option'))
         .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var displayTheMatrix = function () {
@@ -828,8 +829,6 @@ module.exports = {
         naviCenter.appendChild(refreshButton)
       }
 
-      // @@ Give other combos too-- see schedule ontology
-      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
       var meUri = tabulator.preferences.get('me')
       var me = meUri ? kb.sym(meUri) : null
@@ -842,19 +841,17 @@ module.exports = {
         options.set_y.push(me) // Put me on the end
 
         options.cellFunction = function (cell, x, y, value) {
-          var refreshColor = function () {
-            var bg = kb.any(value, UI.ns.ui('backgroundColor'))
-            if (bg) cell.setAttribute('style', 'padding: 0.3em; text-align: center; background-color: ' + bg + ';')
-          }
           if (value !== null) {
             kb.fetcher.nowOrWhenFetched(value.uri.split('#')[0], undefined, function (uri, ok, error) {
-              refreshColor()
+              refreshCellColor(cell, value)
             })
           }
           if (y.sameTerm(me)) {
-            var callback = function () { refreshColor() } //  @@ may need that
+            var callback = function () {
+              refreshCellColor(cell, value)
+            } //  @@ may need that
             var selectOptions = {}
-            var predicate = SCHED('availabilty')
+            var predicate = ns.sched('availabilty')
             var cellSubject = dataPointForNT[x.toNT()]
             var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
               possibleAvailabilities, selectOptions, resultsDoc, callback)
@@ -864,10 +861,10 @@ module.exports = {
           }
         }
 
-        var responses = kb.each(invitation, SCHED('response'))
+        var responses = kb.each(invitation, ns.sched('response'))
         var myResponse = null
         responses.map(function (r) {
-          if (kb.holds(r, DC('author'), me)) {
+          if (kb.holds(r, ns.dc('author'), me)) {
             myResponse = r
           }
         })
@@ -877,10 +874,10 @@ module.exports = {
         var id = UI.widgets.newThing(doc).uri
         if (myResponse === null) {
           myResponse = $rdf.sym(id + '_response')
-          insertables.push($rdf.st(invitation, SCHED('response'), myResponse, doc))
-          insertables.push($rdf.st(myResponse, DC('author'), me, doc))
+          insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
+          insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
         } else {
-          var dps = kb.each(myResponse, SCHED('cell'))
+          var dps = kb.each(myResponse, ns.sched('cell'))
           dps.map(function (dataPoint) {
             var time = kb.any(dataPoint, ICAL('dtstart'))
             dataPointForNT[time.toNT()] = dataPoint
@@ -889,7 +886,7 @@ module.exports = {
         for (var j = 0; j < possibleTimes.length; j++) {
           if (dataPointForNT[possibleTimes[j].toNT()]) continue
           var dataPoint = $rdf.sym(id + '_' + j)
-          insertables.push($rdf.st(myResponse, SCHED('cell'), dataPoint, doc))
+          insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
           insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
           dataPointForNT[possibleTimes[j].toNT()] = dataPoint
         }
@@ -908,7 +905,7 @@ module.exports = {
         // pass me not defined
       }
 
-      var instanceAuthor = kb.any(subject, DC('author'))
+      var instanceAuthor = kb.any(subject, ns.dc('author'))
       if (!instanceAuthor || instanceAuthor.sameTerm(me)) {
         var editButton = dom.createElement('button')
         editButton.setAttribute('style', inputStyle)
@@ -932,9 +929,9 @@ module.exports = {
     structure.setAttribute('style', 'background-color: white; min-width: 40em; min-height: 13em;')
 
     var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
-    var naviLoginout1 = naviLoginoutTR.appendChild(dom.createElement('td'))
-    var naviLoginout2 = naviLoginoutTR.appendChild(dom.createElement('td'))
-    var naviLoginout3 = naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
 
     var logInOutButton = null
     /*
