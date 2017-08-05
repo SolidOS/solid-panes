@@ -22,20 +22,20 @@ module.exports = {
     if (!u.endsWith('/')) { throw new Error('URI of new folder must end in "/" :' + u) }
     u = u.slice(0, -1) // chop off trailer
 
-    var parentURI = newInstance.dir().uri  // ends in /
+    var parentURI = newInstance.dir().uri // ends in /
     var slash = u.lastIndexOf('/')
     var folderName = u.slice(slash + 1)
 
     // @@@@ kludge until we can get the solid-client version working
     // Force the folder by saving a dummy file insie it
-    return kb.fetcher.webOperation('PUT', newInstance.uri + ".dummy")
+    return kb.fetcher.webOperation('PUT', newInstance.uri + '.dummy')
       .then(function () {
         console.log('New folder created: ' + newInstance.uri)
 
-        return kb.fetcher.delete(newInstance.uri + ".dummy")
+        return kb.fetcher.delete(newInstance.uri + '.dummy')
       })
       .then(function () {
-        console.log('Dummy file deleted : ' + newInstance.uri + ".dummy")
+        console.log('Dummy file deleted : ' + newInstance.uri + '.dummy')
 
         return kb.fetcher.createContainer(parentURI, folderName)
       })
@@ -71,19 +71,20 @@ module.exports = {
     div.setAttribute('style', '  border-top: solid 1px #777; border-bottom: solid 1px #777; margin-top: 0.5em; margin-bottom: 0.5em ')
 
     // If this is an LDP container just list the directory
-    var noHiddenFiles = function (st) {
-      var lastbit = st.object.uri.slice(st.object.dir().length + 1)
-      return !(lastbit.length && lastbit[0] === '.' || lastbit.slice(-3) === '.acl')
+
+    var noHiddenFiles = function (st) { // @@ This hiddenness should actually be server defined
+      var pathEnd = st.object.uri.slice(st.object.dir().uri.length)
+      return !(pathEnd.startsWith('.') || pathEnd.endsWith('.acl'))
     }
     var contentsStatements = kb.statementsMatching(subject, ns.ldp('contains'))
     contentsStatements = contentsStatements.filter(noHiddenFiles)
     let thisDir = subject.uri.endsWith('/') ? subject.uri : subject.uri + '/'
     let indexThing = kb.sym(thisDir + 'index.ttl#this')
-    if (kb.holds(subject, ns.ldp('contains'), indexThing.doc())){
-      console.log("View of folder with be view of indexThing. Loading " + indexThing)
+    if (kb.holds(subject, ns.ldp('contains'), indexThing.doc())) {
+      console.log('View of folder with be view of indexThing. Loading ' + indexThing)
       let packageDiv = div.appendChild(dom.createElement('div'))
       packageDiv.style = 'border-top: 0.2em solid #ccc;' // Separate folder views above from package views below
-      kb.fetcher.load(indexThing.doc()).then(function(){
+      kb.fetcher.load(indexThing.doc()).then(function () {
         let table = packageDiv.appendChild(dom.createElement('table'))
         UI.outline.GotoSubject(indexThing, true, undefined, false, undefined, table)
       })
@@ -91,7 +92,6 @@ module.exports = {
       return div
     } else {
       if (contentsStatements.length) {
-        // complain("Contents:", 'white'); // filter out hidden files?
         outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
       }
     }
@@ -134,35 +134,35 @@ module.exports = {
       }
     }
 
-    ///////////// Allow new file to be Uploaded
+    // /////////// Allow new file to be Uploaded
     var droppedFileHandler = function (files) {
       for (var i = 0, f; f = files[i]; i++) {
         console.log(' folder: dropped filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
           ' size: ' + f.size + ' bytes, last modified: ' +
           (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
-        );
+        )
 
         var reader = new FileReader()
         reader.onload = (function (theFile) {
           return function (e) {
             var data = e.target.result
             console.log(' File read byteLength : ' + data.byteLength)
-            if (!subject.uri.endsWith('/')){
-              console.log("FAIL: - folder name should end in /")
+            if (!subject.uri.endsWith('/')) {
+              console.log('FAIL: - folder name should end in /')
               return
             }
             // Check it does not already exist
             var destination = kb.sym(subject.uri + theFile.name)
             if (kb.holds(subject, ns.ldp('contains'), destination)) {
-              alert("Sorry, " + subject.uri + " already has something called " + theFile.name)
-              console.log("Drag-drop upload aborted: resource already exists: " + destination)
+              alert('Sorry, ' + subject.uri + ' already has something called ' + theFile.name)
+              console.log('Drag-drop upload aborted: resource already exists: ' + destination)
               return
             }
             UI.store.fetcher.webOperation('PUT', destination, { data: data, contentType: theFile.type})
               .then(function () {
                 console.log(' Upload: put OK: ' + destination)
-                // @@ Restore the target style
-                // @@ refresh the display from the container!
+              // @@ Restore the target style
+              // @@ refresh the display from the container!
               })
               .catch(function (error) {
                 console.log(' Upload: FAIL ' + destination + ', Error: ' + error)
