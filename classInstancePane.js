@@ -2,9 +2,10 @@
 **
 **  This outline pane lists the members of a class
 */
+/* global FileReader, alert */
 
 var UI = require('solid-ui')
-//var Solid = require('solid-client')
+// var Solid = require('solid-client')
 
 var ns = UI.ns
 
@@ -16,7 +17,6 @@ module.exports = {
   // Create a new folder in a Solid system,
   mintNew: function (newPaneOptions) {
     var kb = UI.store
-    var updater = kb.updater
     var newInstance = newPaneOptions.newInstance
     var u = newInstance.uri
     if (!u.endsWith('/')) { throw new Error('URI of new folder must end in "/" :' + u) }
@@ -76,9 +76,24 @@ module.exports = {
       return !(lastbit.length && lastbit[0] === '.' || lastbit.slice(-3) === '.acl')
     }
     var contentsStatements = kb.statementsMatching(subject, ns.ldp('contains'))
-    if (contentsStatements.length) {
-      // complain("Contents:", 'white'); // filter out hidden files?
-      outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
+    contentsStatements = contentsStatements.filter(noHiddenFiles)
+    let thisDir = subject.uri.endsWith('/') ? subject.uri : subject.uri + '/'
+    let indexThing = kb.sym(thisDir + 'index.ttl#this')
+    if (kb.holds(subject, ns.ldp('contains'), indexThing.doc())){
+      console.log("View of folder with be view of indexThing. Loading " + indexThing)
+      let packageDiv = div.appendChild(dom.createElement('div'))
+      packageDiv.style = 'border-top: 0.2em solid #ccc;' // Separate folder views above from package views below
+      kb.fetcher.load(indexThing.doc()).then(function(){
+        let table = packageDiv.appendChild(dom.createElement('table'))
+        UI.outline.GotoSubject(indexThing, true, undefined, false, undefined, table)
+      })
+
+      return div
+    } else {
+      if (contentsStatements.length) {
+        // complain("Contents:", 'white'); // filter out hidden files?
+        outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) {return true;})
+      }
     }
 
     // If this is a class, look for all both explicit and implicit
