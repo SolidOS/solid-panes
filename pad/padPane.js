@@ -162,8 +162,9 @@ module.exports = {
     // Option of either using the workspace system or just typing in a URI
     var showBootstrap = function showBootstrap (thisInstance, container, noun) {
       var div = clearElement(container)
+      var appDetails= {'noun': 'notepad'}
       var na = div.appendChild(UI.authn.newAppInstance(
-        dom, 'Start a new ' + noun + ' in a workspace', initializeNewInstanceInWorkspace))
+        dom, appDetails, initializeNewInstanceInWorkspace))
 
       var hr = div.appendChild(dom.createElement('hr')) // @@
 

@@ -95,6 +95,7 @@ paneModule.register(require('./video/videoPane.js')) // Video clip player
 paneModule.register(require('./audio/audioPane.js')) // Audio clip player
 
 
+paneModule.register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
 paneModule.register(require('./classInstancePane.js')) // Should be above dataContentPane
 paneModule.register(require('./dynamic/dynamicPanes.js')) // warp etc
 paneModule.register(require('./slideshow/slideshowPane.js'))

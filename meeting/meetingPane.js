@@ -180,7 +180,7 @@ module.exports = {
           return makeNewPaneTool(toolObject, newPaneOptions)
         }
 
-        // When paerson added to he meeting, make an ad foc group
+        // When paerson added to he meeting, make an ad hoc group
         // of meeting participants is one does not already exist, and add them
         var addParticipant = function (target) {
           var pref = kb.any(target, ns.foaf('preferredURI'))
@@ -385,7 +385,7 @@ module.exports = {
       }
       var newPaneOptions = {
         newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
-        pane: UI.panes.classInstance,
+        pane: UI.panes.classInstance, // @@ slideshow??
         predicate: ns.meeting('pictures'),
         tabTitle: folderName,
         noIndexHTML: true
