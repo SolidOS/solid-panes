@@ -135,11 +135,11 @@ module.exports = {
     var right = tr.appendChild(dom.createElement('td'))
 
     var tools = left
-    tools.style = navBlockStyle
+    tools.style.cssText = navBlockStyle
     var mainTable = middle.appendChild(dom.createElement('table'))
-    mainTable.style = mainBlockStyle
+    mainTable.style.cssText = mainBlockStyle
     var tips = right
-    tips.style = navBlockStyle
+    tips.style.cssText = navBlockStyle
 
     // Image top left
     var src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
@@ -147,7 +147,7 @@ module.exports = {
       var img = dom.createElement('IMG')
       img.setAttribute('src', src.uri) // w640 h480
       // img.className = 'foafPic'
-      img.style = foafPicStyle
+      img.style.cssText = foafPicStyle
       tools.appendChild(img)
     }
     var name = kb.anyValue(s, foaf('name')) || '???'
@@ -417,7 +417,7 @@ module.exports = {
           a.setAttribute('href', uri)
           var d = dom.createElement('div')
           // d.className = 'social_linkButton'
-          d.style = 'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
+          d.style.cssText = 'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
           d.appendChild(a)
           tools.appendChild(d)
         }

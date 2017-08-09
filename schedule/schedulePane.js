@@ -299,7 +299,7 @@ module.exports = {
 
     UI.authn.checkUser()
     .then(webId => {
-    me= webId
+      me = webId
 
       if (logInOutButton) {
         logInOutButton.refresh()
@@ -308,9 +308,8 @@ module.exports = {
         waitingForLogin = false
         showAppropriateDisplay()
       }
-    }
-
-    )console.log('me: ' + me) // @@ curently not actually used elsewhere
+    })
+    console.log('me: ' + me) // @@ curently not actually used elsewhere
 
     // //////////////////////////////  Reproduction: spawn a new instance
     //
@@ -811,6 +810,9 @@ module.exports = {
         clearElement(naviCenter)
         naviCenter.appendChild(refreshButton)
       }
+
+      // @@ Give other combos too-- see schedule ontology
+      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
       var me = UI.authn.currentUser()
 
