@@ -66,40 +66,46 @@ module.exports = {
       }
 
       var makeNewAppInstance = function (options) {
-        return new Promise(function(resolve, reject){
+        return new Promise(function (resolve, reject) {
           var kb = UI.store
 
-          var callbackWS = function(ws, newBase){
+          var callbackWS = function (ws, newBase) {
             var newPaneOptions = {
               newBase: newBase,
               workspace: ws,
               pane: options.pane
             }
-            for (opt in options) {// get div, dom, me
+            for (var opt in options) { // get div, dom, me
               newPaneOptions[opt] = options[opt]
             }
-            options.pane.mintNew(newPaneOptions).then(function (newPaneOptions) {
-              var p = options.div.appendChild(dom.createElement('p'))
-              var newInstance
-              p.setAttribute('style', 'font-size: 120%;')
-              // Make link to new thing
-              p.innerHTML =
-                "Your <a target='_blank' href='" + newPaneOptions.newInstance.uri + "'><b>new " + options.noun + "</b></a> is ready to be set up. " +
-                "<br/><br/><a target='_blank' href='" + newPaneOptions.newInstance.uri + "'>Go to your new " + options.noun + ".</a>"
-              selectUI.parentNode.removeChild(selectUI)  // Clean up
-              selectNewTool() // toggle star to plain and menu vanish again
+            options.pane.mintNew(newPaneOptions)
+              .then(function (newPaneOptions) {
+                if (!newPaneOptions || !newPaneOptions.newInstance) {
+                  throw new Error('Cannot mint new - missing newInstance')
+                }
 
-            }).catch(function (err) {
-              complain(err)
-              reject(err)
-            })
+                var p = options.div.appendChild(dom.createElement('p'))
+
+                p.setAttribute('style', 'font-size: 120%;')
+                // Make link to new thing
+                p.innerHTML =
+                  "Your <a target='_blank' href='" + newPaneOptions.newInstance.uri + "'><b>new " + options.noun + "</b></a> is ready to be set up. " +
+                  "<br/><br/><a target='_blank' href='" + newPaneOptions.newInstance.uri + "'>Go to your new " + options.noun + ".</a>"
+                selectUI.parentNode.removeChild(selectUI)  // Clean up
+                selectNewTool() // toggle star to plain and menu vanish again
+
+              })
+              .catch(function (err) {
+                complain(err)
+                reject(err)
+              })
           }
 
           var pa = options.pane
           options.appPathSegment = 'edu.mit.solid.pane.' + pa.name
           options.noun = pa.mintClass ? UI.utils.label(pa.mintClass) : ( pa.name + ' @@' )
 
-          var selectUI = UI.widgets.selectWorkspace(dom, options, callbackWS)
+          var selectUI = UI.authn.selectWorkspace(dom, options, callbackWS)
           options.div.appendChild(selectUI)
         })
       }
@@ -122,13 +128,16 @@ module.exports = {
             if (!icon.disabled){
               icon.addEventListener('click', function(e){
                   selectTool(iconEle)
-                  options = {event: e, iconEle:
-                    iconEle, pane: thisPane,
+                  var options = {
+                    event: e,
+                    iconEle: iconEle,
+                    pane: thisPane,
                     noun: thisNoun,
                     noIndexHTML: true, // do NOT @@ for now write a HTML file
                     div: context.div,
                     me: context.me,
-                    dom: context.dom}
+                    dom: context.dom
+                  }
                   makeNewAppInstance(options)
               })
             }
@@ -160,7 +169,7 @@ module.exports = {
       var styleTheIcons = function(style){
         for (var i=0; i<iconArray.length; i++){
           var st = iconStyle + style
-          if (toolIcons[i].disabled){
+          if (iconArray[i].disabled){ // @@ unused
             st += 'opacity: 0.3;'
           }
           iconArray[i].setAttribute('style', st) // eg 'background-color: #ccc;'
@@ -175,18 +184,19 @@ module.exports = {
         styleTheIcons('display: none;') // 'background-color: #ccc;'
         icon.setAttribute('style', iconStyle + 'background-color: yellow;')
       }
-
     }
 
     var showContent = function(){
       var context = {div: div, dom: dom, statusArea: div, me: me}
 
+      div.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
+      newThingUI(context)
+
       div.appendChild(dom.createElement('h4')).textContent = 'Private:'
-      UI.widgets.registrationList(context, { private: true}).then(function(context){
+      UI.authn.registrationList(context, { private: true}).then(function(context){
         div.appendChild(dom.createElement('h4')).textContent = 'Public:'
-        UI.widgets.registrationList(context, { public: true}).then(function(context){
-          div.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
-          newThingUI(context)
+        UI.authn.registrationList(context, { public: true}).then(function(context){
+          // done
         })
       })
     }
@@ -196,18 +206,9 @@ module.exports = {
 
     var div = dom.createElement('div')
 
-    var me = tabulator.preferences.get('me')
-    me = me? kb.sym(me) : null
-    if (!me) {
-      console.log('Waiting to find out id user users to access ' + subject.doc())
-      UI.widgets.checkUser(subject.doc(), function (webid) {
-        me = kb.sym(webid)
-        console.log('Got user id: ' + me)
-        showContent()
-      })
-    } else {
-      showContent()
-    }
+    var me = UI.authn.currentUser()
+
+    showContent()
 
     return div
   }

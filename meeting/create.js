@@ -36,27 +36,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var div = document.getElementById('FormTarget')
 
-  // //////////////////////////////////// Getting logged in with a WebId
-
-  var setUser = function (webid) {
-    if (webid) {
-      tabulator.preferences.set('me', webid)
-      console.log('(SetUser: Logged in as ' + webid + ')')
-      me = kb.sym(webid)
-    // @@ Here enable all kinds of stuff
-    } else {
-      tabulator.preferences.set('me', '')
-      console.log('(SetUser: Logged out)')
-      me = null
-    }
-  }
-
-  var me_uri = tabulator.preferences.get('me')
-  var me = me_uri ? kb.sym(me_uri) : null
-
-  var userTest = $rdf.sym('https://databox.me/')
-
-  UI.widgets.checkUser(userTest, setUser)
+  UI.authn.checkUser()  // kick off async operation
 
   // //////////////////////////////  Reproduction: spawn a new instance
   //
@@ -64,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
   //
 
   var newInstanceButtonDiv = function () {
-    return UI.widgets.newAppInstance(dom,
+    return UI.authn.newAppInstance(dom,
       { noun: 'meeting',
         appPathSegment: appPathSegment},
       initializeNewInstanceInWorkspace)
@@ -85,14 +65,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   var initializeNewInstanceAtBase = function (thisInstance, newBase) {
     var pane = UI.panes.byName('meeting')
-    var newInstance = pane.mint(newBase)
-    .then(function(newInstance){
-      UI.outline.GotoSubject(newInstance, true, undefined, true);
-      div.removeChild(d)
-    })
-    .catch(function(e){
-      div.textContent = 'Error making new meeting: ' + e
-    })
+    pane.mint(newBase)
+      .then((newInstance) => {
+        UI.outline.GotoSubject(newInstance, true, undefined, true);
+        div.removeChild(d)
+      })
+      .catch((e) => {
+        div.textContent = 'Error making new meeting: ' + e
+      })
   }
 
   var d = newInstanceButtonDiv() // Actually a div in which minting will happen

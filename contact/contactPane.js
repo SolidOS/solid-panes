@@ -3,7 +3,7 @@
 **  This outline pane allows a user to interact with an contact,
 to change its state according to an ontology, comment on it, etc.
 **
-** See aslo things like
+** See also things like
 **  http://www.w3.org/TR/vcard-rdf/
 **  http://tools.ietf.org/html/rfc6350
 **  http://www.iana.org/assignments/vcard-elements/vcard-elements.xhtml
@@ -18,12 +18,10 @@ var mime = require('mime-types')
 var toolsPane0 = require('./toolsPane')
 var toolsPane = toolsPane0.toolsPane
 
-
-
-if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
-  console = {}
-  console.log = function (msg) { UI.log.info(msg);}
-}
+// if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
+//   console = {}
+//   console.log = function (msg) { UI.log.info(msg) }
+// }
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_99101.svg', // changed from embedded icon 2016-05-01
@@ -44,25 +42,29 @@ module.exports = {
 
   mintClass: UI.ns.vcard('AddressBook'),
 
-  mintNew: function (context) {
-    return new Promise(function(resolve, reject){
-      var dom = context.dom, me = context.me, div = context.div
+  mintNew: function mintNew (context) {
+    return new Promise(function (resolve, reject) {
+      var dom = context.dom
+      var me = context.me
+      var div = context.div
       var kb = UI.store
       var ns = UI.ns
       var newBase = context.newBase || context.newInstance.dir().uri
       var instanceClass = context.instanceClass || ns.vcard('AddressBook')
 
-      if (instanceClass.sameTerm(ns.vcard('Group'))){
+      if (instanceClass.sameTerm(ns.vcard('Group'))) {
         // Make a group not an address book
         var g = context.newInstance || kb.sym(context.newBase + 'index.ttl#this')
         var doc = g.doc()
         kb.add(g, ns.rdf('type'), ns.vcard('Group'), doc)
         kb.add(g, ns.vcard('fn'), context.instanceName || 'untitled group', doc) // @@ write doc back
-        kb.fetcher.putBack(doc, {contentType: 'text/turtle'}).then(function(xhr){
-          resolve(context)
-        }).catch(function(err){
-          reject(new Error('Error creating docunment for new group ' + err))
-        })
+        kb.fetcher.putBack(doc, {contentType: 'text/turtle'})
+          .then(function (xhr) {
+            resolve(context)
+          })
+          .catch(function (err) {
+            reject(new Error('Error creating document for new group ' + err))
+          })
         return
       }
       var appInstanceNoun = 'address book'
@@ -84,18 +86,18 @@ module.exports = {
       bookContents += '<#this> <http://www.w3.org/ns/auth/acl#owner> <' + me.uri + '>.\n\n'
 
       var toBeWritten = [
-  //      { to: 'index.html', contentType: 'text/html' },
+        // { to: 'index.html', contentType: 'text/html' },
         { to: 'index.ttl', content: bookContents, contentType: 'text/turtle' },
         { to: 'groups.ttl', content: '', contentType: 'text/turtle' },
-        { to: 'people.ttl', content: '', contentType: 'text/turtle'},
-        { to: '', existing: true, aclOptions: { defaultForNew: true}},
+        { to: 'people.ttl', content: '', contentType: 'text/turtle' },
+        { to: '', existing: true, aclOptions: { defaultForNew: true } }
       ]
 
-      var newAppPointer = newBase + 'index.html'; // @@ assuming we can't trust server with bare dir
+      var newAppPointer = newBase + 'index.html' // @@ assuming we can't trust server with bare dir
 
-      var offline = UI.widgets.offlineTestID()
+      var offline = UI.authn.offlineTestID()
       if (offline) {
-        toBeWritten.push({to: 'local.html', from: 'local.html', contentType: 'text/html' })
+        toBeWritten.push({ to: 'local.html', from: 'local.html', contentType: 'text/html' })
         newAppPointer = newBase + 'local.html' // kludge for testing
       }
 
@@ -124,27 +126,26 @@ module.exports = {
           var dest = $rdf.uri.join(task.to, newBase) //
           var aclOptions = task.aclOptions || {}
           var checkOKSetACL = function (uri, ok) {
-            if (ok) {
-              UI.widgets.setACLUserPublic(dest, me, aclOptions, function () {
-                if (ok) {
-                  doNextTask()
-                } else {
-                  complain('Error setting access permisssions for ' + task.to)
-                  reject(new Error('Error setting access permisssions for ' + task.to))
-                }
-              })
-            } else {
+            if (!ok) {
               complain('Error writing new file ' + task.to)
-              reject(new Error('Error writing new file ' + task.to))
+              return reject(new Error('Error writing new file ' + task.to))
             }
+
+            UI.widgets.setACLUserPublic(dest, me, aclOptions)
+              .then(() => doNextTask())
+              .catch(err => {
+                let message = 'Error setting access permissions for ' +
+                  task.to + ' : ' + err.message
+                complain(message)
+                return reject(new Error(message))
+              })
           }
 
           if ('content' in task) {
-            UI.widgets.webOperation('PUT', dest,
-              { data: task.content, saveMetadata: true, contentType: task.contentType},
-              checkOKSetACL)
+            kb.fetcher.webOperation('PUT', dest, { data: task.content, saveMetadata: true, contentType: task.contentType })
+              .then(() => checkOKSetACL(dest, true))
           } else if ('existing' in task) {
-            checkOKSetACL(true, dest)
+            checkOKSetACL(dest, true)
           } else {
             reject(new Error('copy not expected buiding new app'))
             // var from = task.from || task.to // default source to be same as dest
@@ -156,14 +157,13 @@ module.exports = {
     })
   },
 
-  //                            Render the pane
-  //
+  //  Render the pane
   render: function (subject, dom, paneOptions) {
-    paneOptions == paneOptions || {}
+    paneOptions = paneOptions || {}
     var kb = UI.store
     var ns = UI.ns
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
+    // var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
+    // var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
     var div = dom.createElement('div')
     var cardDoc = subject.doc()
 
@@ -174,7 +174,7 @@ module.exports = {
     div.setAttribute('class', 'contactPane')
 
     var commentFlter = function (pred, inverse) {
-      if (!inverse && pred.uri ==
+      if (!inverse && pred.uri ===
         'http://www.w3.org/2000/01/rdf-schema#comment') return true
       return false
     }
@@ -191,29 +191,19 @@ module.exports = {
 
     var thisPane = this
 
-    var timestring = function () {
+    var timestring = function timestring () {
       var now = new Date()
       return '' + now.getTime()
-    // http://www.w3schools.com/jsref/jsref_obj_date.asp
+      // http://www.w3schools.com/jsref/jsref_obj_date.asp
     }
 
-    var gen_uuid = function () { // http://stackoverflow.com/questions/105034/create-guid-uuid-in-javascript
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8)
-        return v.toString(16)
-      })
-    }
-
-    // ///////////////////// Reproduction: Spawn a new instance of this app
-
+    //  Reproduction: Spawn a new instance of this app
     var newAddressBookButton = function (thisAddressBook) {
-      return UI.widgets.newAppInstance(dom,
+      return UI.authn.newAppInstance(dom,
         {noun: 'address book', appPathSegment: 'contactorator.timbl.com'}, function (ws, newBase) {
           thisPane.clone(thisAddressBook, newBase, {me: me, div: div, dom: dom})
         })
     } // newAddressBookButton
-
-    // /////////////////////////////////////////////////////////////////////////////
 
     var updater = UI.store.updater
     UI.aclControl.preventBrowserDropEvents(dom)
@@ -223,14 +213,17 @@ module.exports = {
 
     var t = kb.findTypeURIs(subject)
 
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri ? kb.sym(me_uri) : null
+    var me = UI.authn.currentUser()
 
-    var context = { target: subject, me: me, noun: 'address book',
-    div: div, dom: dom}; // missing: statusRegion
+    var context = {
+      target: subject,
+      me: me,
+      noun: 'address book',
+      div: div,
+      dom: dom
+    } // missing: statusRegion
 
-    // Reload resorce then
-
+    // Reload resource then
     var reloadStore = function (store, callBack) {
       UI.store.fetcher.unload(store)
       UI.store.fetcher.nowOrWhenFetched(store.uri, undefined, function (ok, body) {
@@ -243,7 +236,6 @@ module.exports = {
     }
 
     // Refresh the DOM tree
-
     var refreshTree = function (root) {
       if (root.refresh) {
         root.refresh()
@@ -254,12 +246,11 @@ module.exports = {
       }
     }
 
-    //    Render a 3-column browser for an address book or a group
-    //
+    //  Render a 3-column browser for an address book or a group
     var renderThreeColumnBrowser = function (books, context, options) {
       kb.fetcher.load(books).then(function (xhr) {
         renderThreeColumnBrowser2(books, context, options)
-      }).catch(function (err) {complain(err)})
+      }).catch(function (err) { complain(err) })
     }
     var renderThreeColumnBrowser2 = function (books, context, options) {
       var classLabel = UI.utils.label(ns.vcard('AddressBook'))
@@ -273,7 +264,7 @@ module.exports = {
 
       var title = kb.any(target, ns.dc('title')) || kb.any(target, ns.vcard('fn'))
       if (paneOptions.solo && title && typeof document !== 'undefined') {
-        document.title = title.value; // @@ only when the outermmost pane
+        document.title = title.value // @@ only when the outermmost pane
       }
       title = title ? title.value : classLabel
 
@@ -284,26 +275,24 @@ module.exports = {
           var selectedGroups = {}
           var title = kb.any(book, ns.dc('title'))
           title = title ? title.value : classLabel
-        // @@ Todo
+          // @@ Todo
         })
-          .catch(function (err) {UI.widgets.complain(context, err)})
+          .catch(function (err) { UI.widgets.complain(context, err) })
       }
 
       // var cats = kb.each(book, ns.wf('contactCategory')) // zero or more
 
       //  Write a new contact to the web
-      //
       var createNewContact = function (book, name, selectedGroups, callback) {
         var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
 
-        var uuid = gen_uuid()
+        var uuid = UI.utils.genUuid()
         var person = kb.sym(book.dir().uri + 'Person/' + uuid + '/index.ttl#this')
         var doc = person.doc()
 
         // Sets of statements to different files
         var agenda = [ // Patch the main index to add the person
-
-          [   $rdf.st(person, ns.vcard('inAddressBook'), book, nameEmailIndex), // The people index
+          [ $rdf.st(person, ns.vcard('inAddressBook'), book, nameEmailIndex), // The people index
             $rdf.st(person, ns.vcard('fn'), name, nameEmailIndex) ]
         ]
 
@@ -313,7 +302,7 @@ module.exports = {
         for (var gu in selectedGroups) {
           var g = kb.sym(gu)
           var gd = g.doc()
-          agenda.push([  $rdf.st(g, ns.vcard('hasMember'), person, gd),
+          agenda.push([ $rdf.st(g, ns.vcard('hasMember'), person, gd),
             $rdf.st(person, ns.vcard('fn'), name, gd)
           ])
         }
@@ -345,15 +334,14 @@ module.exports = {
           if (ok) {
             dump(' People index must be loaded\n')
             updater.put(doc, [
-              $rdf.st(person, ns.vcard('fn'), name, doc),
-              $rdf.st(person, ns.rdf('type'), ns.vcard('Individual'), doc) ],
+                $rdf.st(person, ns.vcard('fn'), name, doc),
+                $rdf.st(person, ns.rdf('type'), ns.vcard('Individual'), doc) ],
               'text/turtle', updateCallback)
           } else {
             dump('Error loading people index!' + nameEmailIndex.uri + ': ' + message)
             callback(false, 'Error loading people index!' + nameEmailIndex.uri + ': ' + message + '\n')
           }
         })
-
       }
 
       // Write new group to web
@@ -368,23 +356,28 @@ module.exports = {
         var group = kb.sym(doc.uri + '#this')
         dump(' New group will be: ' + group + '\n')
 
-        UI.store.fetcher.nowOrWhenFetched(gix, undefined, function (ok, message) {
+        UI.store.fetcher.nowOrWhenFetched(gix, function (ok, message) {
           if (ok) {
             dump(' Group index must be loaded\n')
-            updater.update([],
-              [ $rdf.st(book, ns.vcard('includesGroup'), group, gix),
-                $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), gix),
-                $rdf.st(group, ns.vcard('fn'), name, gix) ], function (uri, success, body) {
-                if (ok) {
-                  updater.put(doc,[ $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc),
-                                    $rdf.st(group, ns.vcard('fn'), name, doc) ],
-                   'text/turtle', function (uri, ok, body) {
-                    callback(ok, ok ? group : "Can't save new group file " + doc + body)
-                  })
-                } else {
-                  callback(ok, 'Could not update group index ' + body) // fail
-                }
-              })
+
+            var insertTriples = [
+              $rdf.st(book, ns.vcard('includesGroup'), group, gix),
+              $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), gix),
+              $rdf.st(group, ns.vcard('fn'), name, gix)
+            ]
+            updater.update([], insertTriples, function (uri, success, body) {
+              if (ok) {
+                var triples = [
+                  $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc),
+                  $rdf.st(group, ns.vcard('fn'), name, doc)
+                ]
+                updater.put(doc, triples, 'text/turtle', function (uri, ok, body) {
+                  callback(ok, ok ? group : "Can't save new group file " + doc + body)
+                })
+              } else {
+                callback(ok, 'Could not update group index ' + body) // fail
+              }
+            })
           } else {
             dump('Error loading people index!' + gix.uri + ': ' + message)
             callback(false, 'Error loading people index!' + gix.uri + ': ' + message + '\n')
@@ -396,8 +389,8 @@ module.exports = {
       var getNameForm = function (dom, kb, classLabel, gotNameCallback) {
         var form = dom.createElement('div') // form is broken as HTML behaviour can resurface on js error
 
-        UI.store.fetcher.removeCallback('done', 'expand'); // @@ experimental -- does this kill the re-paint? no
-        UI.store.fetcher.removeCallback('fail', 'expand'); // @@ ??
+        UI.store.fetcher.removeCallback('done', 'expand') // @@ experimental -- does this kill the re-paint? no
+        UI.store.fetcher.removeCallback('fail', 'expand') // @@ ??
 
         // classLabel = UI.utils.label(ns.vcard('Individual'))
         form.innerHTML = '<p>Name of new ' + classLabel + ':</p>'
@@ -414,7 +407,7 @@ module.exports = {
         }
 
         namefield.addEventListener('keyup', function (e) {
-          if (e.keyCode == 13) {
+          if (e.keyCode === 13) {
             gotName()
           }
         }, false)
@@ -424,7 +417,7 @@ module.exports = {
 
         var cancel = form.appendChild(dom.createElement('button'))
         cancel.setAttribute('type', 'button')
-        cancel.style = buttonStyle
+        cancel.style.cssText = buttonStyle
         cancel.innerHTML = 'Cancel'
         cancel.addEventListener('click', function (e) {
           form.parentNode.removeChild(form)
@@ -473,7 +466,7 @@ module.exports = {
         for (var k = 0; k < groupsMainTable.children.length; k++) {
           var groupRow = groupsMainTable.children[k]
           var group = groupRow.subject
-          var foo = function(group, groupRow){
+          var foo = function (group, groupRow) {
             groupRow.setAttribute('style', 'background-color: #ffe;')
             kb.fetcher.nowOrWhenFetched(group.doc(), undefined, function (ok, message) {
               if (!ok) {
@@ -484,7 +477,7 @@ module.exports = {
               groupRow.setAttribute('style', 'background-color: #cce;')
               selectedGroups[group.uri] = true
               refreshGroupsSelected()
-              refreshNames(); // @@ every time??
+              refreshNames() // @@ every time??
               todo -= 1
               if (!todo) {
                 if (callback) callback(badness.length === 0, badness)
@@ -501,10 +494,10 @@ module.exports = {
         if (options.foreignGroup) {
           groups.push(['', kb.any(options.foreignGroup, ns.vcard('fn')), options.foreignGroup])
         }
-        if (book){
+        if (book) {
           books.map(function (book) {
             var gs = book ? kb.each(book, ns.vcard('includesGroup')) : []
-            var gs2 = gs.map(function (g) {return [ book, kb.any(g, ns.vcard('fn')), g] })
+            var gs2 = gs.map(function (g) { return [ book, kb.any(g, ns.vcard('fn')), g ] })
             groups = groups.concat(gs2)
           })
           groups.sort()
@@ -540,7 +533,7 @@ module.exports = {
       var deleteThing = function (x) {
         var ds = kb.statementsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
         var targets = {}
-        ds.map(function (st) {targets[st.why.uri] = st;})
+        ds.map(function (st) { targets[st.why.uri] = st })
         var agenda = [] // sets of statements of same dcoument to delete
         for (var target in targets) {
           agenda.push(ds.filter(function (st) { return st.why.uri === target }))
@@ -549,36 +542,40 @@ module.exports = {
         function nextOne () {
           if (agenda.length > 0) {
             updater.update(agenda.shift(), [], function (uri, ok, body) {
-              if (!ok){
-                complain("Eror deleting all trace of: " + x + ": " + body)
+              if (!ok) {
+                complain('Eror deleting all trace of: ' + x + ': ' + body)
                 return
               }
               nextOne()
             })
           } else {
             dump('Deleting resoure ' + x.doc())
-            kb.fetcher.webOperation('DELETE', x.doc()).then(function(xhr){
-              console.log('Delete thing ' + x + ': complete.')
-            })
-            .catch(function(e){complain('Error deleting thing ' + x + ': ' + e)})
+            kb.fetcher.delete(x.doc())
+              .then(function () {
+                console.log('Delete thing ' + x + ': complete.')
+              })
+              .catch(function (e) {
+                complain('Error deleting thing ' + x + ': ' + e)
+              })
           }
         }
         nextOne()
       }
 
-      var localNode = function(person, div){
+      var localNode = function (person, div) {
         var aliases = kb.allAliases(person)
         var prefix = book.dir().uri
-        for (var i=0; i<aliases.length; i++){
-          if (aliases[i].uri.slice(0, prefix.length) == prefix){
+        for (var i = 0; i < aliases.length; i++) {
+          if (aliases[i].uri.slice(0, prefix.length) === prefix) {
             return aliases[i]
           }
         }
-        throw "No local URI for " + person
+        throw new Error('No local URI for ' + person)
       }
 
       var refreshNames = function () {
-        var cards = [], ng = 0
+        var cards = []
+        var ng = 0
         for (var u in selectedGroups) {
           if (selectedGroups[u]) {
             var a = kb.each(kb.sym(u), ns.vcard('hasMember'))
@@ -587,7 +584,7 @@ module.exports = {
             ng += 1
           }
         }
-        cards.sort(compareForSort); // @@ sort by name not UID later
+        cards.sort(compareForSort) // @@ sort by name not UID later
         for (var k = 0; k < cards.length - 1;) {
           if (cards[k].uri === cards[k + 1].uri) {
             cards.splice(k, 1)
@@ -619,7 +616,7 @@ module.exports = {
             personRow.addEventListener('click', function (event) {
               event.preventDefault()
               cardMain.innerHTML = 'loading...'
-              var local = book? localNode(person) : person
+              var local = book ? localNode(person) : person
               UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
                 cardMain.innerHTML = ''
                 if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
@@ -627,7 +624,7 @@ module.exports = {
                 cardMain.appendChild(cardPane(dom, local, 'contact'))
                 cardMain.appendChild(dom.createElement('br'))
 
-                var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local))// hoverHide
+                var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
               })
             })
           }
@@ -651,6 +648,7 @@ module.exports = {
         var foundOne
         sortGroups()
 
+        var i
         for (i = 0; i < groupsMainTable.children.length; i++) {
           var row = groupsMainTable.children[i]
           row.trashMe = true
@@ -664,7 +662,7 @@ module.exports = {
           // selectedGroups[group.uri] = false
           foundOne = false
 
-          for (var i = 0; i < groupsMainTable.children.length; i++) {
+          for (i = 0; i < groupsMainTable.children.length; i++) {
             var row = groupsMainTable.children[i]
             if (row.subject && row.subject.sameTerm(group)) {
               row.trashMe = false
@@ -677,39 +675,38 @@ module.exports = {
             groupRow.subject = group
             UI.widgets.makeDraggable(groupRow, group)
 
-
             groupRow.setAttribute('style', dataCellStyle)
             groupRow.textContent = name
             var foo = function addNewGroupRow2 (groupRow, group, name) {
               // Is something is dropped on a group, add people to group
-              var handleURIsDroppedOnGroup = function(uris){
-                uris.forEach(function(u){
+              var handleURIsDroppedOnGroup = function (uris) {
+                uris.forEach(function (u) {
                   console.log('Dropped on group: ' + u)
                   var thing = kb.sym(u)
                   var toBeFetched = [ thing.doc(), group.doc()]
 
-                  kb.fetcher.load(toBeFetched).then(function(xhrs){
+                  kb.fetcher.load(toBeFetched).then(function (xhrs) {
                     var types = kb.findTypeURIs(thing)
-                    for (ty in types) {
+                    for (var ty in types) {
                       console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
                     }
-                    if (ns.vcard('Individual').uri in types || ns.vcard('Organization').uri in types){
+                    if (ns.vcard('Individual').uri in types || ns.vcard('Organization').uri in types) {
                       var pname = kb.any(thing, ns.vcard('fn'))
                       if (!pname) return alert('No vcard name known for ' + thing)
                       var already = kb.holds(group, ns.vcard('hasMember'), thing, group.doc())
                       if (already) return alert('ALREADY added ' + pname + ' to group ' + name)
                       var message = 'Add ' + pname + ' to group ' + name + '?'
-                      if (confirm(message)){
-                        var ins = [  $rdf.st(group, ns.vcard('hasMember'), thing, group.doc()),
+                      if (confirm(message)) {
+                        var ins = [ $rdf.st(group, ns.vcard('hasMember'), thing, group.doc()),
                           $rdf.st(thing, ns.vcard('fn'), pname, group.doc())]
-                        kb.updater.update([], ins, function(uri, ok, err){
+                        kb.updater.update([], ins, function (uri, ok, err) {
                           if (!ok) return complain('Error adding member to group ' + group + ': ' + err)
                           console.log('Added ' + pname + ' to group ' + name)
                           // @@ refresh UI
                         })
                       }
                     }
-                  }).catch(function(e){
+                  }).catch(function (e) {
                     complain('Error looking up dropped thing ' + thing + ' and group: ' + e)
                   })
                 })
@@ -724,11 +721,11 @@ module.exports = {
                 event.preventDefault()
                 var groupList = kb.sym(group.uri.split('#')[0])
                 if (!event.metaKey) {
-                  selectedGroups = {}; // If Command key pressed, accumulate multiple
+                  selectedGroups = {} // If Command key pressed, accumulate multiple
                 }
-                selectedGroups[group.uri] = ! selectedGroups[group.uri]
+                selectedGroups[group.uri] = !selectedGroups[group.uri]
                 refreshGroupsSelected()
-                peopleMainTable.innerHTML = ''; // clear in case refreshNames doesn't work for unknown reason
+                peopleMainTable.innerHTML = '' // clear in case refreshNames doesn't work for unknown reason
 
                 kb.fetcher.nowOrWhenFetched(groupList.uri, undefined, function (ok, message) {
                   if (!ok) return complainIfBad(ok, "Can't load group file: " + groupList + ': ' + message)
@@ -741,11 +738,11 @@ module.exports = {
                       if (!ok) cardMain.innerHTML = 'Failed: ' + body
                     })
                     var sharingButton = cardMain.appendChild(dom.createElement('button'))
-                    sharingButton.style = 'padding: 1em; margin: 1em'
+                    sharingButton.style.cssText = 'padding: 1em; margin: 1em'
                     var img = sharingButton.appendChild(dom.createElement('img'))
-                    img.style = 'width: 1.5em; height: 1.5em'
+                    img.style.cssText = 'width: 1.5em; height: 1.5em'
                     img.setAttribute('src', UI.icons.iconBase + 'noun_123691.svg')
-                    sharingButton.addEventListener('click', function(){
+                    sharingButton.addEventListener('click', function () {
                       visible = !visible
                       if (visible) {
                         cardMain.appendChild(aclControl)
@@ -770,15 +767,10 @@ module.exports = {
         refreshGroupsSelected()
       } // syncGroupTable
 
-
-
-
       // //////////////////////////// Three-column Contact Browser  - Body
 
       // UI.store.fetcher.nowOrWhenFetched(groupIndex.uri, book, function (ok, body) {
       //   if (!ok) return console.log('Cannot load group index: ' + body)
-
-
 
       // //////////////////   Body of 3-column browser
 
@@ -817,7 +809,7 @@ module.exports = {
       groupsHeader.textContent = 'groups'
       groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;')
 
-      var setGroupListVisibility = function(visible){
+      var setGroupListVisibility = function (visible) {
         var vis = visible ? '' : 'display: none;'
         groupsHeader.setAttribute('style', 'min-width: 10em; padding-bottom 0.2em;' + vis)
         var hfstyle = 'padding: 0.1em;'
@@ -827,20 +819,20 @@ module.exports = {
       setGroupListVisibility(true)
 
       var groups
-      if (options.foreignGroup){
+      if (options.foreignGroup) {
         selectedGroups[options.foreignGroup.uri] = true
       }
-      if (book){
+      if (book) {
         var allGroups = groupsHeader.appendChild(dom.createElement('button'))
         allGroups.textContent = 'All'
-        var style =  'margin-left: 1em; font-size: 100%;'
+        var style = 'margin-left: 1em; font-size: 100%;'
         allGroups.setAttribute('style', style)
         allGroups.addEventListener('click', function (event) {
           allGroups.state = allGroups.state ? 0 : 1
-          peopleMainTable.innerHTML = ''; // clear in case refreshNames doesn't work for unknown reason
+          peopleMainTable.innerHTML = '' // clear in case refreshNames doesn't work for unknown reason
           if (allGroups.state) {
             allGroups.setAttribute('style', style + 'background-color: #ff8;')
-            selectAllGroups(selectedGroups, groupsMainTable, function(ok, message){
+            selectAllGroups(selectedGroups, groupsMainTable, function (ok, message) {
               if (!ok) return complain(message)
               allGroups.setAttribute('style', style + 'background-color: black; color: white')
               refreshGroupsSelected()
@@ -859,7 +851,7 @@ module.exports = {
       } else {
         syncGroupTable()
         refreshNames()
-        console.log("No book, only one group -> hide list of groups")
+        console.log('No book, only one group -> hide list of groups')
         setGroupListVisibility(false) // If no books involved, hide group list
       } // if not book
 
@@ -867,15 +859,18 @@ module.exports = {
       peopleHeader.setAttribute('style', 'min-width: 18em;')
       peopleMain.setAttribute('style', 'overflow:scroll;')
 
-
       // New Contact button
       var newContactButton = dom.createElement('button')
       var container = dom.createElement('div')
       newContactButton.setAttribute('type', 'button')
+
       if (!me) newContactButton.setAttribute('disabled', 'true')
-      UI.widgets.checkUser(target.doc(), function (uri) {
-        newContactButton.removeAttribute('disabled')
-      })
+
+      UI.authn.checkUser()
+        .then(webId => {
+          if (webId) { newContactButton.removeAttribute('disabled') }
+        })
+
       container.appendChild(newContactButton)
       newContactButton.innerHTML = 'New Contact' // + IndividualClassLabel
       peopleFooter.appendChild(container)
@@ -899,7 +894,7 @@ module.exports = {
           } else {
             dump('Error: People index has NOT been loaded' + message + '\n')
           }
-        // Just a heads up, actually used later.
+          // Just a heads up, actually used later.
         })
         // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
         cardMain.appendChild(getNameForm(dom, kb, 'Contact',
@@ -918,7 +913,7 @@ module.exports = {
       }, false)
 
       // New Group button
-      if (book){
+      if (book) {
         var newGroupButton = groupsFooter.appendChild(dom.createElement('button'))
         newGroupButton.setAttribute('type', 'button')
         newGroupButton.innerHTML = 'New Group' // + IndividualClassLabel
@@ -963,24 +958,22 @@ module.exports = {
           cardMain.innerHTML = ''
           cardMain.appendChild(toolsPane(selectAllGroups, selectedGroups, groupsMainTable, book, dom, me))
         })
-
       } // if book
 
       cardFooter.appendChild(newAddressBookButton(book))
 
-      //})
+      // })
 
       div.appendChild(dom.createElement('hr'))
-    //  div.appendChild(newAddressBookButton(book))       // later
-    // end of AddressBook instance
+      //  div.appendChild(newAddressBookButton(book))       // later
+      // end of AddressBook instance
     } // renderThreeColumnBrowser
 
-    /////////////////////////////////////////////////////////////////////////////////////
+    // ///////////////////////////////////////////////////////////////////////////////////
 
     // Render Individual card
 
-    var renderIndividual = function(subject){
-
+    var renderIndividual = function (subject) {
       var mainImage
       // ////////////////////  DRAG and Drop for mugshot image
       var card = subject
@@ -1011,7 +1004,7 @@ module.exports = {
           var thing = kb.sym(u)
           if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
             kb.add(subject, UI.ns.vcard('url'), thing, subject.doc())
-            kb.fetcher.putBack(subject.doc()).then(function(xhr){
+            kb.fetcher.putBack(subject.doc()).then(function (xhr) {
               // @@@ Refresh UI
               // mainImage.setAttribute('src', pic.uri)
               // UI.widgets.setImage(mainImage, subject)// try again
@@ -1028,7 +1021,7 @@ module.exports = {
           console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
             ' size: ' + f.size + ' bytes, last modified: ' +
             (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
-          ); // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
+          ) // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
 
           // @@ Add: progress bar(s)
           var reader = new FileReader()
@@ -1039,189 +1032,198 @@ module.exports = {
               // var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
               var filename = encodeURIComponent(theFile.name)
               var extension = mime.extension(theFile.type)
-              if (theFile.type !== mime.lookup(theFile.name)){
+              if (theFile.type !== mime.lookup(theFile.name)) {
                 filename += '_.' + extension
-                console.log("MIME TYPE MISMATCH -- adding extension: " + filename)
+                console.log('MIME TYPE MISMATCH -- adding extension: ' + filename)
               }
               var photos = kb.any(subject, ns.vcard('hasPhoto'))
               var n, pic
               for (n = 0; ; n++) {
                 pic = kb.sym(card.dir().uri + filename)
-                if (!kb.holds(subject, ns.vcard('hasPhoto') , pic)){
+                if (!kb.holds(subject, ns.vcard('hasPhoto'), pic)) {
                   break
                 }
                 filename = 'image' + n + extension
               }
-              kb.add(subject, ns.vcard('hasPhoto') , pic, subject.doc())
-              kb.fetcher.webOperation('PUT', pic, { data: data, contentType: theFile.type}).then(function (xhr) {
-                console.log(' Upload: put OK: ' + pic)
-                kb.fetcher.putBack(subject.doc()).then(function(xhr){
+              kb.add(subject, ns.vcard('hasPhoto'), pic, subject.doc())
+              kb.fetcher.webOperation('PUT', pic, { data: data, contentType: theFile.type })
+                .then(function () {
+                  console.log(' Upload: put OK: ' + pic)
+
+                  return kb.fetcher.putBack(subject.doc())
+                })
+                .then(function () {
                   mainImage.setAttribute('src', pic.uri)
                   // UI.widgets.setImage(mainImage, subject)// try again
                 })
-              }).catch(function (status) {
-                console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
-              })
+                .catch(function (status) {
+                  console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
+                })
             }
           })(f)
           reader.readAsArrayBuffer(f)
         }
       }
-      ////////// End of drag and drop
+      // //////// End of drag and drop
 
       // Background metadata for this pane we bundle with the JS
-      var individualForm = kb.sym( 'https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl#form1')
+      var individualForm = kb.sym('https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl#form1')
       var individualFormDoc = individualForm.doc()
-      if (!kb.holds(undefined, undefined, undefined, individualFormDoc)){ // If not loaded already
+      if (!kb.holds(undefined, undefined, undefined, individualFormDoc)) { // If not loaded already
         var individualFormText = require('./individualForm.js')
         $rdf.parse(individualFormText, kb, individualFormDoc.uri, 'text/turtle') // Load form directly
       }
       var vcardOnt = UI.ns.vcard('Type').doc()
-      if (!kb.holds(undefined, undefined, undefined, vcardOnt)){ // If not loaded already
+      if (!kb.holds(undefined, undefined, undefined, vcardOnt)) { // If not loaded already
         $rdf.parse(require('./vcard.js'), kb, vcardOnt.uri, 'text/turtle') // Load ontology directly
       }
 
-      var toBeFetched = [ subject.doc()] // was: individualFormDoc, UI.ns.vcard('Type').doc()
+      var toBeFetched = [ subject.doc() ] // was: individualFormDoc, UI.ns.vcard('Type').doc()
       UI.store.fetcher.load(toBeFetched)
 
-      .catch(function(e){
-        console.log('Error: Failed to load form or ontology: ' + e)
-      }) // load.then
+        .catch(function (e) {
+          console.log('Error: Failed to load form or ontology: ' + e)
+        }) // load.then
 
-      .then(function(xhrs){
-
-        var setPaneStyle = function () {
-          var types = kb.findTypeURIs(subject)
-          var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
-          var backgroundColor = null
-          for (var uri in types) {
-            backgroundColor = kb.any(kb.sym(uri), kb.sym('http://www.w3.org/ns/ui#backgroundColor'))
-            if (backgroundColor) break
-          }
-          backgroundColor = backgroundColor ? backgroundColor.value : '#fff' // default white
-          mystyle += 'background-color: ' + backgroundColor + '; '
-          div.setAttribute('style', mystyle)
-        }
-        setPaneStyle()
-
-        UI.widgets.checkUserSetMe(cardDoc)
-
-        mainImage = div.appendChild(dom.createElement('img'))
-        mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
-        UI.widgets.setImage(mainImage, subject)
-        UI.widgets.makeDropTarget(mainImage, handleURIsDroppedOnMugshot, droppedFileHandler)
-
-        UI.widgets.appendForm(dom, div, {}, subject, individualForm, cardDoc, complainIfBad)
-
-        //   Comment/discussion area
-        /*
-        var messageStore = kb.any(tracker, ns.wf('messageStore'))
-        if (!messageStore) messageStore = kb.any(tracker, ns.wf('doc'))
-        div.appendChild(UI.messageArea(dom, kb, subject, messageStore))
-        donePredicate(ns.wf('message'))
-        */
-
-        div.appendChild(dom.createElement('tr'))
-          .setAttribute('style', 'height: 1em') // spacer
-
-        var lookUpId = function(dom, container, x){
-          var tr = table.appendChild(dom.createElement('tr'))
-          tr.setAttribute('style', 'margin-top: 0.1em solid #ccc;')
-          var nameTD = tr.appendChild(dom.createElement('td'))
-          var formTD = tr.appendChild(dom.createElement('td'))
-          nameTD.textContent = x.uri.split('/')[2]
-          kb.fetcher.load(x).then(function(xhr){
-            nameTD.textContent = x.uri.split('/')[2] + ' (' +
-              kb.statementsMatching(undefined, undefined, undefined, x.doc()).length + ')'
-          }).catch(function(e){
-            formTD.appendChild(UI.widgets.errorMessageBlock(dom, e, 'pink'))
-          })
-          var anchor = formTD.appendChild(UI.widgets.linkIcon(dom, x))
-        }
-
-        var table = div.appendChild(dom.createElement('table'))
-
-        var aliases = kb.allAliases(subject)
-        if (aliases.length > 1) {
-          for (var i=0; i <aliases.length; i++){
-            var x = aliases[i]
-            if (!x.sameTerm(subject)){
-              lookUpId(dom, table, x)
-              // UI.widgets.appendForm(dom, formTD, {}, x, individualForm, x.doc(), complainIfBad)
+        .then(function (xhrs) {
+          var setPaneStyle = function () {
+            var types = kb.findTypeURIs(subject)
+            var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
+            var backgroundColor = null
+            for (var uri in types) {
+              backgroundColor = kb.any(kb.sym(uri), kb.sym('http://www.w3.org/ns/ui#backgroundColor'))
+              if (backgroundColor) break
             }
+            backgroundColor = backgroundColor ? backgroundColor.value : '#fff' // default white
+            mystyle += 'background-color: ' + backgroundColor + '; '
+            div.setAttribute('style', mystyle)
           }
-        }
+          setPaneStyle()
 
-        var attachementControl = UI.widgets.attachmentList(dom, subject, div, {
-          // promptIcon: UI.icons.iconBase +  'noun_681601.svg',
-          predicate:  UI.ns.vcard('url') // @@@@@@@@@ ,--- no, the actual structure uses a bnode.
-        });
+          UI.authn.checkUser()  // kick off async operation
 
-        var hr = div.appendChild(dom.createElement('hr'))
+          mainImage = div.appendChild(dom.createElement('img'))
+          mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
+          UI.widgets.setImage(mainImage, subject)
+          UI.widgets.makeDropTarget(mainImage, handleURIsDroppedOnMugshot, droppedFileHandler)
 
-        var pages = kb.each(subject, ns.vcard('url')) // vcard:url [ a vcard:HomePage; vcard:value <http://www.w3.org/People/Berners-Lee>],
-        pages.forEach(function(p){
-          var cla = kb.any(p, ns.rdf('type'))
-          var val = kb.any(p, ns.vcard('value'))
-          if (val) {
+          UI.widgets.appendForm(dom, div, {}, subject, individualForm, cardDoc, complainIfBad)
+
+          //   Comment/discussion area
+          /*
+          var messageStore = kb.any(tracker, ns.wf('messageStore'))
+          if (!messageStore) messageStore = kb.any(tracker, ns.wf('doc'))
+          div.appendChild(UI.messageArea(dom, kb, subject, messageStore))
+          donePredicate(ns.wf('message'))
+          */
+
+          div.appendChild(dom.createElement('tr'))
+            .setAttribute('style', 'height: 1em') // spacer
+
+          var lookUpId = function (dom, container, x) {
             var tr = table.appendChild(dom.createElement('tr'))
             tr.setAttribute('style', 'margin-top: 0.1em solid #ccc;')
-
             var nameTD = tr.appendChild(dom.createElement('td'))
-            nameTD.textContent = UI.utils.label(cla)
-
             var formTD = tr.appendChild(dom.createElement('td'))
-            var anchor = formTD.appendChild(dom.createElement('a'))
-            anchor.setAttribute('href', val.uri)
-            var span = anchor.appendChild(dom.createElement('span'))
-            span.textContent = val.uri
+            nameTD.textContent = x.uri.split('/')[2]
+
+            kb.fetcher.load(x)
+              .then(function (xhr) {
+                nameTD.textContent = x.uri.split('/')[2] + ' (' +
+                  kb.statementsMatching(undefined, undefined, undefined, x.doc()).length + ')'
+              })
+              .catch(function (e) {
+                formTD.appendChild(UI.widgets.errorMessageBlock(dom, e, 'pink'))
+              })
+
+            var anchor = formTD.appendChild(UI.widgets.linkIcon(dom, x))
           }
+
+          var table = div.appendChild(dom.createElement('table'))
+
+          var aliases = kb.allAliases(subject)
+          if (aliases.length > 1) {
+            for (var i = 0; i < aliases.length; i++) {
+              var x = aliases[i]
+              if (!x.sameTerm(subject)) {
+                lookUpId(dom, table, x)
+                // UI.widgets.appendForm(dom, formTD, {}, x, individualForm, x.doc(), complainIfBad)
+              }
+            }
+          }
+
+          var attachementControl = UI.widgets.attachmentList(dom, subject, div, {
+            // promptIcon: UI.icons.iconBase +  'noun_681601.svg',
+            predicate: UI.ns.vcard('url') // @@@@@@@@@ ,--- no, the actual structure uses a bnode.
+          })
+
+          var hr = div.appendChild(dom.createElement('hr'))
+
+          var pages = kb.each(subject, ns.vcard('url')) // vcard:url [ a vcard:HomePage; vcard:value <http://www.w3.org/People/Berners-Lee>],
+          pages.forEach(function (p) {
+            var cla = kb.any(p, ns.rdf('type'))
+            var val = kb.any(p, ns.vcard('value'))
+            if (val) {
+              var tr = table.appendChild(dom.createElement('tr'))
+              tr.setAttribute('style', 'margin-top: 0.1em solid #ccc;')
+
+              var nameTD = tr.appendChild(dom.createElement('td'))
+              nameTD.textContent = UI.utils.label(cla)
+
+              var formTD = tr.appendChild(dom.createElement('td'))
+              var anchor = formTD.appendChild(dom.createElement('a'))
+              anchor.setAttribute('href', val.uri)
+              var span = anchor.appendChild(dom.createElement('span'))
+              span.textContent = val.uri
+            }
+          })
         })
-      })
-/*
-      .catch(function(e){
-        console.log('Error: Failed to load form or ontology: ' + e)
-      }) // load.then
-*/
+      /*
+            .catch(function(e){
+              console.log('Error: Failed to load form or ontology: ' + e)
+            }) // load.then
+      */
     } // renderIndividual
-
-
 
     //              Render a single contact Individual
 
-    if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri]
-      || t[ns.foaf('Person').uri]) {
-
-        renderIndividual(subject)
+    if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri] ||
+      t[ns.foaf('Person').uri]) {
+      renderIndividual(subject)
 
       //          Render a Group instance
     } else if (t[ns.vcard('Group').uri]) {
-      // If we have a main address book, then render this group as a guest group withn it
-      UI.widgets.findAppInstances(context, ns.vcard('AddressBook'))
+      // If we have a main address book, then render this group as a guest group within it
+      UI.authn.findAppInstances(context, ns.vcard('AddressBook'))
         .then(function (context) {
           var addressBooks = context.instances
-          var options = { foreignGroup: subject}
+          var options = { foreignGroup: subject }
           if (addressBooks.length > 0) {
-            var book = addressBooks[0]
+            // var book = addressBooks[0]
             renderThreeColumnBrowser(addressBooks, context, options)
           } else {
             renderThreeColumnBrowser([], context, options)
-          // @@ button to Make a new addressBook
+            // @@ button to Make a new addressBook
           }
-        }).catch(function (e) {
+        })
+        .catch(function (e) {
           UI.widgets.complain(context, e)
         })
 
-    //          Render a AddressBook instance
+      // Render a AddressBook instance
     } else if (t[ns.vcard('AddressBook').uri]) {
       renderThreeColumnBrowser([subject], context, {})
     } else {
-      console.log('Error: Contact pane: No evidence that ' + subject + ' is anything to do with contacts.')
+      console.log('Error: Contact pane: No evidence that ' + subject +
+        ' is anything to do with contacts.')
     }
-    if (!tabulator.preferences.get('me')) {
+
+    me = UI.authn.currentUser()
+
+    if (!me) {
       console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
     } else {
-      // console.log("(Your webid is "+ tabulator.preferences.get('me')+")")
+      // console.log("(Your webid is "+ me +")")
     }
 
     // /////////////// Fix user when testing on a plane
@@ -1234,5 +1236,4 @@ module.exports = {
     return div
   }
 }
-
 // ends

@@ -34,7 +34,7 @@ module.exports = function(doc) {
   this.kb = UI.store;
   var kb = UI.store;
   var sf = UI.store.fetcher;
-  var sourceWidget = tabulator.sourceWidget; // only set in extension
+  // var sourceWidget = tabulator.sourceWidget; // only set in extension
   dom.outline = this;
 
 
@@ -42,8 +42,10 @@ module.exports = function(doc) {
   var tabont = UI.ns.tabont;
   var foaf = UI.ns.foaf;
   var rdf = UI.ns.rdf;
-  var rdfs = RDFS = UI.ns.rdfs;
-  var owl = OWL = UI.ns.owl;
+  var rdfs = UI.ns.rdfs;
+  var RDFS = rdfs;
+  var owl = UI.ns.owl;
+  var OWL = owl;
   var dc = UI.ns.dc;
   var rss = UI.ns.rss;
   var contact = UI.ns.contact;
@@ -313,7 +315,7 @@ module.exports = function(doc) {
                       'http://creativecommons.org/licenses/by-nd/3.0/',
                       'http://creativecommons.org/licenses/by-sa/3.0/',
                       'http://creativecommons.org/licenses/by/3.0/' ];
-          for (i=0; i< licenses.length; i++) {
+          for (var i=0; i< licenses.length; i++) {
               for (j=0; j<tabulator.options.checkedLicenses.length; j++) {
                   if (tabulator.options.checkedLicenses[j] && (licenses[i].uri == licenseURI[j])) {
                       theClass += ' licOkay'; // icon_expand
@@ -816,7 +818,8 @@ module.exports = function(doc) {
 /*   termWidget
 **
 */
-  termWidget={} // @@@@@@ global
+  var termWidget={} // @@@@@@ global
+  global.termWidget = termWidget
   termWidget.construct = function (dom) {
       dom = dom||document;
       var td = dom.createElement('TD')
@@ -959,9 +962,9 @@ module.exports = function(doc) {
               return true
           }
       }
-      sf.addCallback('request',makeIconCallback(outlineIcons.src.icon_requested))
-      sf.addCallback('done',makeIconCallback(outlineIcons.src.icon_fetched))
-      sf.addCallback('fail',makeIconCallback(outlineIcons.src.icon_failed))
+      sf.addCallback('request', makeIconCallback(outlineIcons.src.icon_requested))
+      sf.addCallback('done', makeIconCallback(outlineIcons.src.icon_fetched))
+      sf.addCallback('fail', makeIconCallback(outlineIcons.src.icon_failed))
   }
 
   //   Selection support
@@ -1050,6 +1053,7 @@ module.exports = function(doc) {
 
 
   this.showSource = function showSource(){
+    if (typeof sourceWidget === 'undefined') return
       //deselect all before going on, this is necessary because you would switch tab,
       //close tab or so on...
       for (var uri in sourceWidget.sources)
@@ -1119,7 +1123,7 @@ module.exports = function(doc) {
 
           UI.log.info("Deselecting "+node.textContent);
       }
-      if (sourceWidget) thisOutline.showSource(); // Update the data sources display
+      if (typeof sourceWidget !== 'undefined') thisOutline.showSource(); // Update the data sources display
       //UI.log.info("selection becomes [" +selection.map(function(item){return item.textContent;}).join(", ")+"]");
       //UI.log.info("Setting className " + cla);
       node.setAttribute('class', cla)
@@ -1418,7 +1422,7 @@ module.exports = function(doc) {
       var target = thisOutline.targetOf(e);
       var uri = target.getAttribute('uri'); // Put on access buttons
       if (e.altKey) {
-          sf.requestURI(UI.rdf.uri.docpart(uri), undefined, { 'force': true }); // Add 'force' bit?
+          sf.fetch(UI.rdf.uri.docpart(uri), { 'force': true }); // Add 'force' bit?
       } else {
           sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))); // just one
       }
@@ -1428,7 +1432,7 @@ module.exports = function(doc) {
       var target = thisOutline.targetOf(e);
       var uri = target.getAttribute('uri'); // Put on access buttons
       if (e.altKey) {
-          sf.requestURI(UI.rdf.uri.docpart(uri), undefined, { 'force': true })
+          sf.fetch(UI.rdf.uri.docpart(uri), { 'force': true })
       } else {
           sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))); // just one
       }
@@ -1437,7 +1441,7 @@ module.exports = function(doc) {
   function unrequestedIconMouseDownListener(e) {
       var target = thisOutline.targetOf(e);
       var uri = target.getAttribute('uri'); // Put on access buttons
-      sf.requestURI(UI.rdf.uri.docpart(uri))
+      sf.fetch(UI.rdf.uri.docpart(uri))
   }
 
 
@@ -1669,7 +1673,7 @@ module.exports = function(doc) {
                       seeAlsoWhat.length + ") seeAlso links for "+ subject)
                   // break; Not sure what limits the AJAX system has here
               }
-              sf.lookUpThing(seeAlsoWhat[i],subject,false);
+              sf.lookUpThing(seeAlsoWhat[i],subject);
           }
       }
 
@@ -1882,7 +1886,7 @@ module.exports = function(doc) {
 
       if (expand) {
           outline_expand(td, subject, { 'pane': pane, solo: solo});
-          tr=td.parentNode;
+          var tr=td.parentNode;
           UI.utils.getEyeFocus(tr,false,undefined,window);//instantly: false
       }
       /*
@@ -2070,7 +2074,7 @@ module.exports = function(doc) {
       return n;
   }
   // counter for calendar ids,
-  counter = function(){
+  var counter = function(){
           var n = 0;
           return function(){
                   n+=1;

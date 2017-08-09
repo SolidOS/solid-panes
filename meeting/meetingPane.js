@@ -14,7 +14,8 @@ module.exports = {
   name: 'meeting',
 
   label: function (subject) {
-    var kb = UI.store, ns = UI.ns
+    var kb = UI.store
+    var ns = UI.ns
     if (kb.holds(subject, ns.rdf('type'), ns.meeting('Meeting'))) {
       return 'Meeting'
     }
@@ -30,22 +31,23 @@ module.exports = {
 
   mintNew: function (options) {
     return new Promise(function (resolve, reject) {
-      var kb = UI.store, ns = UI.ns
+      var kb = UI.store
+      var ns = UI.ns
       options.newInstance = options.newInstance || kb.sym(options.newBase + 'index.ttl#this')
       var meeting = options.newInstance
       var meetingDoc = meeting.doc()
 
-      var me = tabulator.preferences.get('me')
-      me = me ? kb.sym(me) : null
+      var me = UI.authn.currentUser()
+
       if (me) {
         kb.add(meeting, ns.dc('author'), me, meetingDoc)
       }
 
       kb.add(meeting, ns.rdf('type'), ns.meeting('Meeting'), meetingDoc)
       kb.add(meeting, ns.dc('created'), new Date(), meetingDoc)
-      kb.add(meeting, ns.ui('backgroundColor'), new $rdf.Literal("#ddddcc", undefined, ns.xsd('color')), meetingDoc)
+      kb.add(meeting, ns.ui('backgroundColor'), new $rdf.Literal('#ddddcc', undefined, ns.xsd('color')), meetingDoc)
       var toolList = new $rdf.Collection()
-      kb.add(meeting, ns.meeting('toolList'), toolList , meetingDoc)
+      kb.add(meeting, ns.meeting('toolList'), toolList, meetingDoc)
 
       toolList.elements.push(meeting) // Add the meeting itself - see renderMain()
 
@@ -57,7 +59,7 @@ module.exports = {
           if (ok) {
             resolve(options)
           } else {
-            reject('Error writing meeting configuration: ' + message)
+            reject(new Error('Error writing meeting configuration: ' + message))
           }
         })
     })
@@ -66,7 +68,8 @@ module.exports = {
   // Returns a div
 
   render: function (subject, dom) {
-    var kb = UI.store, ns = UI.ns
+    var kb = UI.store
+    var ns = UI.ns
     var updater = kb.updater
     var thisPane = this
 
@@ -97,7 +100,7 @@ module.exports = {
 
     topTR.setAttribute('style', 'height: 2em;') // spacer if notthing else
 
-    var me = null; // @@ Put code to find out logged in person
+    var me = null // @@ Put code to find out logged in person
 
     var saveBackMeetingDoc = function () {
       updater.put(
@@ -177,7 +180,7 @@ module.exports = {
           return makeNewPaneTool(toolObject, newPaneOptions)
         }
 
-        // When paerson added to he meeting, make an ad foc group
+        // When paerson added to he meeting, make an ad hoc group
         // of meeting participants is one does not already exist, and add them
         var addParticipant = function (target) {
           var pref = kb.any(target, ns.foaf('preferredURI'))
@@ -186,23 +189,23 @@ module.exports = {
           var addPersonToGroup = function (obj, group) {
             var ins = [$rdf.st(group, UI.ns.vcard('hasMember'), obj, group.doc())] // @@@ Complex rules about webid?
             var name = kb.any(obj, ns.vcard('fn')) || kb.any(obj, ns.foaf('name'))
-            if (name){
+            if (name) {
               ins.push($rdf.st(obj, UI.ns.vcard('fn'), name, group.doc()))
             }
             kb.fetcher.nowOrWhenFetched(group.doc(), undefined, function (ok, body) {
-              if (!ok){
+              if (!ok) {
                 complain('Can\'t read group to add person' + group)
                 return
               }
               kb.updater.update([], ins, function (uri, ok, body) {
                 complainIfBad(ok, body)
-                if (ok){
+                if (ok) {
                   console.log('Addded to particpants OK: ' + obj)
                 }
               })
             })
           }
-          if (group){
+          if (group) {
             addPersonToGroup(obj, group)
             return
           }
@@ -215,7 +218,6 @@ module.exports = {
           }).catch(function (err) {
             complain(err)
           })
-          return
         }
 
         console.log('Dropped on thing ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
@@ -243,7 +245,7 @@ module.exports = {
               var hh = kb.fetcher.getHeader(target, 'x-frame-options')
               var ok2 = true
               if (hh) {
-                for (var j=0; j<hh.length; j++) {
+                for (var j = 0; j < hh.length; j++) {
                   console.log('x-frame-options: ' + hh[j])
                   if (hh[j].indexOf('sameorigin') < 0) {  // (and diff origin @@)
                     ok2 = false
@@ -282,7 +284,7 @@ module.exports = {
         console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
           ' size: ' + f.size + ' bytes, last modified: ' +
           (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
-        ); // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
+        ) // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
 
         // @@ Add: progress bar(s)
         var reader = new FileReader()
@@ -293,21 +295,23 @@ module.exports = {
             var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
             var destURI = meeting.dir().uri + folderName + '/' + encodeURIComponent(theFile.name)
             var extension = mime.extension(theFile.type)
-            if (theFile.type !== mime.lookup(theFile.name)){
+            if (theFile.type !== mime.lookup(theFile.name)) {
               destURI += '_.' + extension
-              console.log("MIME TYPE MISMATCH -- adding extension: " + destURI)
+              console.log('MIME TYPE MISMATCH -- adding extension: ' + destURI)
             }
 
-            UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type}).then(function (xhr) {
-              console.log(' Upload: put OK: ' + destURI)
-              if (theFile.type.startsWith('image/')) {
-                makePicturesFolder(folderName) // If necessary
-              } else {
-                makeMaterialsFolder(folderName)
-              }
-            }).catch(function (status) {
-              console.log(' Upload: FAIL ' + destURI + ', Error: ' + status)
-            })
+            UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type })
+              .then(function () {
+                console.log(' Upload: put OK: ' + destURI)
+                if (theFile.type.startsWith('image/')) {
+                  makePicturesFolder(folderName) // If necessary
+                } else {
+                  makeMaterialsFolder(folderName)
+                }
+              })
+              .catch(function (error) {
+                console.log(' Upload: FAIL ' + destURI + ', Error: ' + error)
+              })
           }
         })(f)
         reader.readAsArrayBuffer(f)
@@ -340,14 +344,14 @@ module.exports = {
 
       // Create a tab for the addressbook
       var div = dom.createElement('div')
-      var context = {dom: dom, div: div}
+      var context = { dom: dom, div: div }
       var book
-      UI.widgets.findAppInstances(context, ns.vcard('AddressBook')).then(
+      UI.authn.findAppInstances(context, ns.vcard('AddressBook')).then(
         function (context) {
           if (context.instances.length === 0) {
             complain('You have no solid address book. It is really handy to have one to keep track of people and groups')
           } else if (context.instances.length > 1) {
-            var s = context.instances.map(function (x) {return '' + x}).join(', ')
+            var s = context.instances.map(function (x) { return '' + x }).join(', ')
             complain('You have more than one solid address book: ' + s + ' Not supported yet.')
           } else { // addressbook
             book = context.instances[0]
@@ -368,7 +372,8 @@ module.exports = {
         // predicate: ns.meeting('schedulingPoll'),
         // newBase: meetingBase + 'Schedule/',   Not needed as uses existing meeting
         tabTitle: 'Schedule poll',
-        noIndexHTML: true}
+        noIndexHTML: true
+      }
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
@@ -380,10 +385,11 @@ module.exports = {
       }
       var newPaneOptions = {
         newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
-        pane: UI.panes.classInstance,
+        pane: UI.panes.classInstance, // @@ slideshow??
         predicate: ns.meeting('pictures'),
         tabTitle: folderName,
-        noIndexHTML: true}
+        noIndexHTML: true
+      }
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
@@ -398,7 +404,8 @@ module.exports = {
         pane: UI.panes.classInstance,
         predicate: ns.meeting('materialsFolder'),
         tabTitle: 'Materials',
-        noIndexHTML: true}
+        noIndexHTML: true
+      }
       return makeNewPaneTool(toolObject, options)
     }
 
@@ -415,7 +422,8 @@ module.exports = {
         tabTitle: 'Attendees',
         instanceClass: ns.vcard('Group'),
         instanceName: UI.utils.label(subject) + ' attendees',
-        noIndexHTML: true}
+        noIndexHTML: true
+      }
 
       return makeNewPaneTool(toolObject, options)
     }
@@ -427,7 +435,8 @@ module.exports = {
         newBase: meetingBase + 'SharedNotes/',
         predicate: UI.ns.meeting('sharedNotes'),
         tabTitle: 'Shared Notes',
-        pane: UI.panes.pad }
+        pane: UI.panes.pad
+      }
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
 
@@ -444,11 +453,12 @@ module.exports = {
             newBase: meetingBase + URIsegment + '/', // @@@ sanitize
             predicate: UI.ns.meeting('subMeeting'),
             tabTitle: name,
-          pane: UI.panes.meeting }
+            pane: UI.panes.meeting }
           return makeNewPaneTool(toolObject, options)
-        }).catch(function (e) {
-        complain('Error making new sub-meeting: ' + e)
-      })
+        })
+        .catch(function (e) {
+          complain('Error making new sub-meeting: ' + e)
+        })
     }
 
     // Returns promise of newPaneOptions
@@ -460,15 +470,15 @@ module.exports = {
     var makeNewPaneTool = function (toolObject, options) {
       return new Promise(function (resolve, reject) {
         var kb = UI.store
-        if (!options.useExisting){ // useExisting means use existing object in new role
+        if (!options.useExisting) { // useExisting means use existing object in new role
           var existing = kb.any(meeting, options.predicate)
-          if (existing){
+          if (existing) {
             complain('Already have ' + existing + ' as ' +  UI.utils.label(options.predicate))
             if (toolObject.limit && toolObject.limit === 1) {
               complain('Cant have two')
               return resolve(null)
-            } if (toolObject.shareTab){ // return existing one
-              return resolve({ me: me, newInstance: existing, instanceClass: options.instanceClass})
+            } if (toolObject.shareTab) { // return existing one
+              return resolve({ me: me, newInstance: existing, instanceClass: options.instanceClass })
             }
           }
         }
@@ -476,22 +486,24 @@ module.exports = {
         options.me = options.me || me
         options.newInstance = options.useExisting || options.newInstance || kb.sym(options.newBase + 'index.ttl#this')
 
-        options.pane.mintNew(options).then(function (options) {
-          var tool = makeToolNode(options.newInstance, options.predicate,
+        options.pane.mintNew(options)
+          .then(function (options) {
+            var tool = makeToolNode(options.newInstance, options.predicate,
               options.tabTitle, options.pane.icon)
-          if (options.view){
-            kb.add(tool, UI.ns.meeting('view'), options.view, meetingDoc)
-          }
-          saveBackMeetingDoc()
-          kb.fetcher.putBack(meetingDoc, {contentType: 'text/turtle'}).then(function (xhr) {
-            resolve(options)
-          }).catch(function (err) {
+            if (options.view){
+              kb.add(tool, UI.ns.meeting('view'), options.view, meetingDoc)
+            }
+            saveBackMeetingDoc()
+            kb.fetcher.putBack(meetingDoc, {contentType: 'text/turtle'}).then(function (xhr) {
+              resolve(options)
+            }).catch(function (err) {
+              reject(err)
+            })
+          })
+          .catch(function (err) {
+            complain(err)
             reject(err)
           })
-        }).catch(function (err) {
-          complain(err)
-          reject(err)
-        })
       })
     }
 
@@ -543,7 +555,7 @@ module.exports = {
 
     var makeVideoCall = function (toolObject) {
       var kb = UI.store
-      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.gen_uuid())
+      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.genUuid())
 
       if (kb.holds(meeting, ns.meeting('videoCallPage'))) {
         console.log('Ignored - already have a videoCallPage')
@@ -566,9 +578,10 @@ module.exports = {
           var tool = makeToolNode(target, ns.wf('attachment'), UI.utils.label(target), null)
           kb.add(tool, ns.meeting('view'), 'iframe', meetingDoc)
           saveBackMeetingDoc()
-        }).catch(function (e) {
-        complain('Error making new sub-meeting: ' + e)
-      })
+        })
+        .catch(function (e) {
+          complain('Error making new sub-meeting: ' + e)
+        })
     }
 
     var makeSharing = function (toolObject) {
@@ -587,18 +600,20 @@ module.exports = {
     var makeNewMeeting = function () { // @@@ make option of continuing series
       var appDetails = {noun: 'meeting'}
       var gotWS = function (ws, base) {
-        thisPane.mintNew({newBase: base}).then(function (options) {
-          var newInstance = options.newInstance
-          parameterCell.removeChild(mintUI)
-          var p = parameterCell.appendChild(dom.createElement('p'))
-          p.setAttribute('style', 'font-size: 140%;')
-          p.innerHTML =
-            "Your <a target='_blank' href='" + newInstance.uri + "'><b>new meeting</b></a> is ready to be set up. " +
-            "<br/><br/><a target='_blank' href='" + newInstance.uri + "'>Go to your new meeting.</a>"
-        }).catch(function (err) {
-          parameterCell.removeChild(mintUI)
-          parameterCell.appendChild(UI.widgets.errorMessageBlock(dom, err))
-        })
+        thisPane.mintNew({newBase: base})
+          .then(function (options) {
+            var newInstance = options.newInstance
+            parameterCell.removeChild(mintUI)
+            var p = parameterCell.appendChild(dom.createElement('p'))
+            p.setAttribute('style', 'font-size: 140%;')
+            p.innerHTML =
+              "Your <a target='_blank' href='" + newInstance.uri + "'><b>new meeting</b></a> is ready to be set up. " +
+              "<br/><br/><a target='_blank' href='" + newInstance.uri + "'>Go to your new meeting.</a>"
+          })
+          .catch(function (err) {
+            parameterCell.removeChild(mintUI)
+            parameterCell.appendChild(UI.widgets.errorMessageBlock(dom, err))
+          })
       }
       var mintUI = UI.widgets.selectWorkspace(dom, appDetails, gotWS)
       parameterCell.appendChild(mintUI)
@@ -627,9 +642,11 @@ module.exports = {
     var parameterCell = toolBar.appendChild(dom.createElement('td'))
     var star = iconCell.appendChild(dom.createElement('img'))
     var visible = false // the inividual tools tools
+
     star.setAttribute('src', UI.icons.iconBase + 'noun_19460_green.svg') //  noun_272948.svg
     star.setAttribute('style', iconStyle + 'opacity: 50%;')
     star.setAttribute('title', 'Add another tool to the meeting')
+
     var selectNewTool = function (event) {
       visible = !visible
       star.setAttribute('style', iconStyle + (visible ? 'background-color: yellow;' : ''))
@@ -637,30 +654,30 @@ module.exports = {
     }
 
     var loginOutButton
-    UI.widgets.checkUser(subject.doc(), function (id) {
-      if (id) {
-        star.addEventListener('click', selectNewTool)
-        star.setAttribute('style', iconStyle)
-        return
-      }
-      loginOutButton = UI.widgets.loginStatusBox(dom, function (webid) {
-        if (webid) {
-          tabulator.preferences.set('me', webid)
-          console.log('(Logged in as ' + webid + ')')
-          me = kb.sym(webid)
-          parameterCell.removeChild(loginOutButton)
-          // loginOutButton.setAttribute('',iconStyle) // make it match the icons
+    UI.authn.checkUser()
+      .then(webId => {
+        if (webId) {
+          me = webId
           star.addEventListener('click', selectNewTool)
           star.setAttribute('style', iconStyle)
-        } else {
-          tabulator.preferences.set('me', '')
-          console.log('(Logged out)')
-          me = null
+          return
         }
+
+        loginOutButton = UI.authn.loginStatusBox(dom, (webIdUri) => {
+          if (webIdUri) {
+            me = kb.sym(webIdUri)
+            parameterCell.removeChild(loginOutButton)
+            // loginOutButton.setAttribute('',iconStyle) // make it match the icons
+            star.addEventListener('click', selectNewTool)
+            star.setAttribute('style', iconStyle)
+          } else {
+            console.log('(Logged out)')
+            me = null
+          }
+        })
+        loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
+        parameterCell.appendChild(loginOutButton)
       })
-      loginOutButton.setAttribute('style', 'margin: 0.5em 1em;')
-      parameterCell.appendChild(loginOutButton)
-    })
 
     var iconArray = []
     for (var i = 0; i < toolIcons.length; i++) {
@@ -756,7 +773,9 @@ module.exports = {
             }
           }
           var target = kb.any(subject, ns.meeting('target'))
-          var ds = kb.statementsMatching(subject).concat(kb.statementsMatching(undefined, undefined, subject)).concat(kb.statementsMatching(meeting, undefined, target))
+          var ds = kb.statementsMatching(subject)
+            .concat(kb.statementsMatching(undefined, undefined, subject))
+            .concat(kb.statementsMatching(meeting, undefined, target))
           kb.remove(ds) // Remove all links to and from the tab node
           saveBackMeetingDoc()
         })
@@ -801,7 +820,7 @@ module.exports = {
         }
         selectedGroup = kb.any(meeting, ns.meeting('particpantGroup'))
 
-        UI.widgets.loadTypeIndexes(context).then(function (context) {
+        UI.authn.loadTypeIndexes(context).then(function (context) {
           // Assumes that the type index has an entry for addressbook
           var options = { defaultNewGroupName: 'Meeting Participants', selectedGroup: selectedGroup }
           var picker = new UI.widgets.PeoplePicker(context.div, context.index.private[0], groupPickedCb, options)
@@ -814,13 +833,12 @@ module.exports = {
         UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
         containerDiv.appendChild(tipDiv(
           'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
-        me = tabulator.preferences.get('me')
-        me = me ? kb.sym(me) : null
+        me = UI.authn.currentUser()
         if (me) {
           kb.add(meeting, ns.dc('author'), me, meetingDoc)
         }
         var context = {noun: 'meeting', me: me, statusArea: containerDiv, div: containerDiv, dom: dom}
-        UI.widgets.registrationControl(context, meeting, ns.meeting('Meeting')).then(function (context) {
+        UI.authn.registrationControl(context, meeting, ns.meeting('Meeting')).then(function (context) {
           console.log('Registration control finsished.')
         })
         var options = {}
@@ -865,8 +883,8 @@ module.exports = {
       } else if (subject.sameTerm(meeting)) { // self reference? force details form
         renderDetails()
       } else if (subject.sameTerm(subject.doc()) &&
-        !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
-        !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))) {
+                 !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('Chat')) &&
+                 !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))) {
       } else {
         table = containerDiv.appendChild(dom.createElement('table'))
         UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
@@ -892,5 +910,4 @@ module.exports = {
     return div
   }
 }
-
 // ends

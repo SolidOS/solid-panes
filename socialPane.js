@@ -135,11 +135,11 @@ module.exports = {
     var right = tr.appendChild(dom.createElement('td'))
 
     var tools = left
-    tools.style = navBlockStyle
+    tools.style.cssText = navBlockStyle
     var mainTable = middle.appendChild(dom.createElement('table'))
-    mainTable.style = mainBlockStyle
+    mainTable.style.cssText = mainBlockStyle
     var tips = right
-    tips.style = navBlockStyle
+    tips.style.cssText = navBlockStyle
 
     // Image top left
     var src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
@@ -147,25 +147,25 @@ module.exports = {
       var img = dom.createElement('IMG')
       img.setAttribute('src', src.uri) // w640 h480
       // img.className = 'foafPic'
-      img.style = foafPicStyle
+      img.style.cssText = foafPicStyle
       tools.appendChild(img)
     }
     var name = kb.anyValue(s, foaf('name')) || '???'
     var h3 = dom.createElement('H3')
     h3.appendChild(dom.createTextNode(name))
 
-    var listener = function (newIdURI) {
-      me = kb.sym(newIdURI)
+    var me = UI.authn.currentUser()
+    var meUri = me ? me.uri : null
+
+    // @@ Add: event handler to redraw the stuff below when me changes.
+    let loginOutButton = UI.authn.loginStatusBox(dom, (webIdUri) => {
+      me = kb.sym(webIdUri)
       // @@ To be written:   redraw as a function the new me
       // @@ refresh the sidebars
       UI.widgets.refreshTree(div) // this refreshes the middle at least
-    }
+    })
 
-    // @@ Addd: event handler to redraw the stuff below when me changes.
-    tips.appendChild(UI.widgets.loginStatusBox(dom, listener))
-
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri && kb.sym(me_uri)
+    tips.appendChild(loginOutButton)
 
     var thisIsYou = (me && kb.sameThings(me, s))
 
@@ -226,7 +226,7 @@ module.exports = {
         tools.appendChild(tr)
 
         var youAndThem = function () {
-          tr.appendChild(link(text('You'), me_uri))
+          tr.appendChild(link(text('You'), meUri))
           tr.appendChild(text(' and '))
           tr.appendChild(link(text(familiar), s.uri))
         }
@@ -236,7 +236,7 @@ module.exports = {
             youAndThem()
             tr.appendChild(text(' have not said you know each other.'))
           } else {
-            tr.appendChild(link(text('You'), me_uri))
+            tr.appendChild(link(text('You'), meUri))
             tr.appendChild(text(' know '))
             tr.appendChild(link(text(familiar), s.uri))
             tr.appendChild(text(' (unconfirmed)'))
@@ -245,7 +245,7 @@ module.exports = {
           if (!outgoing) {
             tr.appendChild(link(text(familiar), s.uri))
             tr.appendChild(text(' knows '))
-            tr.appendChild(link(text('you'), me_uri))
+            tr.appendChild(link(text('you'), meUri))
             tr.appendChild(text(' (unconfirmed).')) // @@
             tr.appendChild(text(' confirm you know '))
             tr.appendChild(link(text(familiar), s.uri))
@@ -417,7 +417,7 @@ module.exports = {
           a.setAttribute('href', uri)
           var d = dom.createElement('div')
           // d.className = 'social_linkButton'
-          d.style = 'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
+          d.style.cssText = 'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
           d.appendChild(a)
           tools.appendChild(d)
         }

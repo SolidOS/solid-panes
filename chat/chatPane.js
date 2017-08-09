@@ -34,23 +34,25 @@ module.exports = {
   */
 
   label: function (subject) {
-    var kb = UI.store, ns = UI.ns
+    var kb = UI.store
+    var ns = UI.ns
     var n = UI.store.each(subject, ns.wf('message')).length
     if (n > 0) return 'Chat (' + n + ')' // Show how many in hover text
 
 //  ns.meeting('Chat')
 
-if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
-  return 'Meeting chat'
-}
-if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // subject is the file
-  return 'IRC log' // contains anything of this type
-}
+    if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
+      return 'Meeting chat'
+    }
+    if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // subject is the file
+      return 'IRC log' // contains anything of this type
+    }
     return null // Suppress pane otherwise
   },
 
   render: function (subject, dom) {
-    var kb = UI.store, ns = UI.ns
+    var kb = UI.store
+    var ns = UI.ns
     var complain = function complain (message, color) {
       var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
@@ -58,61 +60,16 @@ if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // s
       pre.appendChild(dom.createTextNode(message))
     }
 
-    ////////////////////////////////////// Getting logged in with a WebId
-
-    var me = null;
-    var setUser = function(webid) {
-        if (webid) {
-            tabulator.preferences.set('me', webid);
-            console.log("(SetUser: Logged in as "+ webid+")")
-            me = kb.sym(webid);
-            // @@ Here enable all kinds of stuff
-        } else {
-            tabulator.preferences.set('me', '');
-            console.log("(SetUser: Logged out)")
-            me = null;
-        }
-    }
-
-
-    ////////// Who am I
-
-    var whoAmI = function() {
-        var me_uri = tabulator.preferences.get('me');
-        me = me_uri? kb.sym(me_uri) : null;
-        UI.widgets.checkUser(messageStore, setUser);
-
-        if (!tabulator.preferences.get('me')) {
-            console.log("(You do not have your Web Id set. Sign in or sign up to make changes.)");
-/*
-            if (tabulator.mode == 'webapp' && typeof document !== 'undefined' &&
-                document.location &&  ('' + document.location).slice(0,16) === 'http://localhost') {
-
-                me = kb.any(subject, UI.ns.dc('author')); // when testing on plane with no webid
-                console.log("Assuming user is " + me)
-            }
-*/
-        } else {
-            me = kb.sym(tabulator.preferences.get('me'))
-            // console.log("(Your webid is "+ tabulator.preferences.get('me')+")");
-        };
-
-    }
-
-//////////////////////////
-
-
     var div = dom.createElement('div')
     div.setAttribute('class', 'chatPane')
-    options = {} // Like newestFirst
+    let options = {} // Like newestFirst
     var messageStore
     if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
       messageStore = subject
     } else if (kb.any(subject, UI.ns.wf('message'))) {
       messageStore = UI.store.any(subject, UI.ns.wf('message')).doc()
-
-    } else if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)
-       || kb.holds(subject, ns.rdf('type'), ns.foaf('ChatChannel'))) { // subject is the file
+    } else if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject) ||
+               kb.holds(subject, ns.rdf('type'), ns.foaf('ChatChannel'))) { // subject is the file
       var ircLogQuery = function () {
         var query = new $rdf.Query('IRC log entries')
         var v = []
@@ -129,16 +86,14 @@ if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject)) { // s
       }
       messageStore = subject
       options.query = ircLogQuery()
-
     } else {
       complain('Unknown chat type')
     }
 
-    whoAmI()
+    UI.authn.checkUser()  // async op
+
     div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
 
     return div
   }
 }
-
-// ends

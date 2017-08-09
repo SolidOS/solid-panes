@@ -2,70 +2,42 @@
 **
 **
 */
+/* global alert */
 
-var UI = require('solid-ui')
-var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
+const UI = require('solid-ui')
+const $rdf = UI.rdf
+const ns = UI.ns
 
+// @@ Give other combos too-- see schedule ontology
+const possibleAvailabilities = [ ns.sched('No'), ns.sched('Maybe'), ns.sched('Yes') ]
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
   name: 'schedule',
 
-  // Does the subject deserve an contact pane?
+  // Does the subject deserve an Scheduler pane?
   label: function (subject) {
     var kb = UI.store
-    var ns = UI.ns
     var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) return 'Scheduling poll'
     return null // No under other circumstances
   },
 
-//////////////////////// Mint a new Schedule poll
-  mintClass: SCHED('SchedulableEvent'),
+  //  Mint a new Schedule poll
+  mintClass: ns.sched('SchedulableEvent'),
 
   mintNew: function (options) {
-
-    return new Promise(function(resolve, reject){
-
+    return new Promise(function (resolve, reject) {
       var ns = UI.ns
       var kb = UI.store
       var newBase = options.newBase
       var thisInstance = options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
-      var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-      var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-
-      var complainIfBad = function(ok, body){
-        if (ok) return;
-        console.log("Error in Schedule Pane: Error constructing new scheduler: " + body)
+      var complainIfBad = function (ok, body) {
+        if (ok) return
+        console.log('Error in Schedule Pane: Error constructing new scheduler: ' + body)
         reject(new Error(body))
-      }
-
-      var webOperation = function (method, uri, options, callback) {
-        var xhr = $rdf.Util.XMLHTTPFactory()
-        uri = UI.store.fetcher.proxyIfNecessary(uri)
-        xhr.onreadystatechange = function () {
-          if (xhr.readyState == 4) {
-            var success = (!xhr.status || (xhr.status >= 200 && xhr.status < 300))
-            callback(uri, success, xhr.responseText, xhr)
-          }
-        }
-        xhr.open(method, uri, true)
-        if (options.contentType) {
-          xhr.setRequestHeader('Content-type', options.contentType)
-        }
-        xhr.send(options.data ? options.data : undefined)
-      }
-
-      var webCopy = function (here, there, content_type, callback) {
-        webOperation('GET', here, {}, function (uri, success, body, xhr) {
-          if (success) {
-            webOperation('PUT', there, { data: xhr.responseText, contentType: content_type}, callback)
-          } else {
-            callback(uri, success, '(on read) ' + body, xhr)
-          }
-        })
       }
 
       // ////////////////////// Accesss control
@@ -74,8 +46,11 @@ module.exports = {
       // In all cases owner has read write control
 
       var genACLtext = function (docURI, aclURI, allWrite) {
-        var g = $rdf.graph(), auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
-        var a = g.sym(aclURI + '#a1'), acl = g.sym(aclURI), doc = g.sym(docURI)
+        var g = $rdf.graph()
+        var auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
+        var a = g.sym(aclURI + '#a1')
+        var acl = g.sym(aclURI)
+        var doc = g.sym(docURI)
         g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
         g.add(a, auth('accessTo'), doc, acl)
         g.add(a, auth('agent'), me, acl)
@@ -94,43 +69,55 @@ module.exports = {
         return $rdf.serialize(acl, g, aclURI, 'text/turtle')
       }
 
-  /*
-      var setACL3 = function (docURI, allWrite, callback) {
-        var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-        return UI.acl.setACL(docURI, aclText, callback)
-      }
-      */
+      /*
+          var setACL3 = function (docURI, allWrite, callback) {
+            var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+            return UI.acl.setACL(docURI, aclText, callback)
+          }
+          */
 
-      var setACL2 = function (docURI, allWrite, callback) {
-       var aclDoc = kb.any(kb.sym(docURI),
-         kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
-       if (aclDoc) { // Great we already know where it is
-         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-         webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
-       } else {
-         fetcher.nowOrWhenFetched(docURI, undefined, function (ok, body) {
-           if (!ok) return callback(ok, 'Gettting headers for ACL: ' + body)
-           var aclDoc = kb.any(kb.sym(docURI),
-             kb.sym('http://www.iana.org/assignments/link-relations/acl')); // @@ check that this get set by web.js
-           if (!aclDoc) {
-             // complainIfBad(false, "No Link rel=ACL header for " + docURI)
-             callback(false, 'No Link rel=ACL header for ' + docURI)
-           } else {
-             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-             webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle'}, callback)
-           }
-         })
-       }
-     }
+      var setACL2 = function setACL2 (docURI, allWrite, callback) {
+        var aclDoc = kb.any(kb.sym(docURI),
+          kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+
+        if (aclDoc) { // Great we already know where it is
+          var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+
+          return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+            .then(result => callback(true))
+            .catch(err => {
+              callback(false, err.message)
+            })
+        } else {
+          return fetcher.load(docURI)
+            .catch(err => {
+              callback(false, 'Getting headers for ACL: ' + err)
+            })
+            .then(() => {
+              var aclDoc = kb.any(kb.sym(docURI),
+                kb.sym('http://www.iana.org/assignments/link-relations/acl'))
+
+              if (!aclDoc) {
+                // complainIfBad(false, "No Link rel=ACL header for " + docURI)
+                throw new Error('No Link rel=ACL header for ' + docURI)
+              }
+
+              var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+
+              return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+            })
+            .then(result => callback(true))
+            .catch(err => {
+              callback(false, err.message)
+            })
+        }
+      }
 
       // Body of mintNew
-
-      var kb = UI.store
       var fetcher = kb.fetcher
       var updater = kb.updater
 
-      var me = tabulator.preferences.get('me')
-      me = me ? kb.sym(me) : null
+      var me = UI.authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
@@ -138,83 +125,76 @@ module.exports = {
       }
 
       var base = thisInstance.dir().uri
-      var newDetailsDoc, newInstance, newResultsDoc, newIndexDoc
+      var newDetailsDoc, newInstance // , newIndexDoc
 
-      if (options.useExisting){
+      if (options.useExisting) {
         newInstance = options.useExisting
         newBase = thisInstance.dir().uri
         newDetailsDoc = newInstance.doc()
-        newIndexDoc = null
-        if (options.newBase) throw "mint new scheduler: Illegal - have both new base and existing event"
+        // newIndexDoc = null
+        if (options.newBase) {
+          throw new Error('mint new scheduler: Illegal - have both new base and existing event')
+        }
       } else {
         newDetailsDoc = kb.sym(newBase + 'details.ttl')
-        newIndexDoc = kb.sym(newBase + 'index.html')
+        // newIndexDoc = kb.sym(newBase + 'index.html')
         newInstance = kb.sym(newDetailsDoc.uri + '#event')
       }
+
       var newResultsDoc = kb.sym(newBase + 'results.ttl')
 
-
-      var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html'}
+      var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html' }
 
       //   { local: 'forms.ttl', contentType: 'text/turtle'}
       //            { local: 'schedule.js', contentType: 'application/javascript'} ,
       //            { local: 'mashlib.js', contentType: 'application/javascript'} , //  @@ centrialize after testing?
       ]
 
-
       var agenda = []
 
-      var f, fi, fn; //   @@ This needs some form of visible progress bar
-      for (f = 0; f < toBeCopied.length; f++) {
+      //   @@ This needs some form of visible progress bar
+      for (var f = 0; f < toBeCopied.length; f++) {
         var item = toBeCopied[f]
         var fun = function copyItem (item) {
           agenda.push(function () {
             var newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
-            fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
-            .then(function(xhr){
 
-              xhr.resource = kb.sym(newURI);
-              kb.fetcher.parseLinkHeader(xhr, kb.bnode()); // Dont save the whole headers, just the links
+            var setThatACL = function () {
+              setACL2(newURI, false, function (ok, message) {
+                if (!ok) {
+                  complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
+                  console.log('FAILED to set ACL ' + newURI + ' : ' + message)
+                } else {
+                  agenda.shift()() // beware too much nesting
+                }
+              })
+            }
 
-              var setThatACL = function () {
-                setACL2(newURI, false, function (ok, message) {
-                  if (!ok) {
-                    complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
-                    console.log('FAILED to set ACL ' + newURI + ' : ' + message)
-                  } else {
-                    agenda.shift()() // beware too much nesting
-                  }
-                })
-              }
-              if (!me) {
-                console.log('Waiting to find out id user users to access ' + xhr.resource)
-                UI.widgets.checkUser(xhr.resource, function (webid) {
-                  me = kb.sym(webid)
-                  console.log('Got user id: ' + me)
-                  setThatACL()
-                })
-              } else {
+            kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
+              .then(() => UI.authn.checkUser())
+              .then(webId => {
+                me = webId
+
                 setThatACL()
-              }
-            })
-            .catch(function(e){
-              complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + e)
-              console.log('FAILED to copy ' + base + item.local + ' : ' + e)
-            });
-          }) // agenda.push
+              })
+              .catch(err => {
+                console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
+                complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + err.message)
+              })
+          })
         }
         fun(item)
       }
 
       agenda.push(function createDetailsFile () {
-        kb.add(newInstance, ns.rdf('type'), SCHED('SchedulableEvent'), newDetailsDoc)
+        kb.add(newInstance, ns.rdf('type'), ns.sched('SchedulableEvent'), newDetailsDoc)
         if (me) {
-          kb.add(newInstance, DC('author'), me, newDetailsDoc)
+          kb.add(newInstance, ns.dc('author'), me, newDetailsDoc)
         }
 
-        kb.add(newInstance, DC('created'), new Date(), newDetailsDoc)
-        kb.add(newInstance, SCHED('resultsDocument'), newDetailsDoc)
+        kb.add(newInstance, ns.dc('created'), new Date(), newDetailsDoc)
+        kb.add(newInstance, ns.sched('resultsDocument'), newDetailsDoc)
 
         updater.put(
           newDetailsDoc,
@@ -224,18 +204,21 @@ module.exports = {
             if (ok) {
               agenda.shift()()
             } else {
-              complainIfBad(ok, 'FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
-              console.log('FAILED to save new scheduler at: ' + there.uri + ' : ' + message)
+              complainIfBad(ok, 'FAILED to save new scheduler at: ' + newDetailsDoc + ' : ' + message)
+              console.log('FAILED to save new scheduler at: ' + newDetailsDoc + ' : ' + message)
             }
           }
         )
       })
 
       agenda.push(function () {
-        webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle'}, function (ok, body) {
-          complainIfBad(ok, 'Failed to initialize empty results file: ' + body)
-          if (ok) agenda.shift()()
-        })
+        kb.fetcher.webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle' })
+          .then(() => {
+            agenda.shift()()
+          })
+          .catch(err => {
+            complainIfBad(false, 'Failed to initialize empty results file: ' + err.message)
+          })
       })
 
       agenda.push(function () {
@@ -253,7 +236,7 @@ module.exports = {
       })
 
       agenda.push(function () { // give the user links to the new app
-        console.log("Finished minting new scheduler")
+        console.log('Finished minting new scheduler')
         resolve(options)
       })
 
@@ -262,11 +245,11 @@ module.exports = {
     }) // promise
   }, // mintNew
 
-  /////////////////////////////////////// Render one meeting schedule poll
-
+  //  Render one meeting schedule poll
   render: function (subject, dom) {
     var kb = UI.store
     var ns = UI.ns
+    var invitation = subject
     var appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     // ////////////////////////////////////////////
@@ -276,9 +259,6 @@ module.exports = {
     var waitingForLogin = false
 
     var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-    var SCHED = $rdf.Namespace('http://www.w3.org/ns/pim/schedule#')
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
 
     var thisInstance = subject
     var detailsDoc = subject.doc()
@@ -286,14 +266,14 @@ module.exports = {
     var base = baseDir.uri
 
     var resultsDoc = $rdf.sym(base + 'results.ttl')
-    //var forms_uri = base + 'forms.ttl'
+    // var forms_uri = base + 'forms.ttl'
     var forms_uri = 'https://linkeddata.github.io/solid-app-set/schedule/formsForSchedule.ttl'
 
     var form1 = kb.sym(forms_uri + '#form1')
     var form2 = kb.sym(forms_uri + '#form2')
     var form3 = kb.sym(forms_uri + '#form3')
 
-    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%;
+    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%
 
     // Utility functions
 
@@ -310,31 +290,26 @@ module.exports = {
       return ele
     }
 
-    // //////////////////////////////////// Getting logged in with a WebId
+    var refreshCellColor = function (cell, value) {
+      var bg = kb.any(value, UI.ns.ui('backgroundColor'))
+      if (bg) cell.setAttribute('style', 'padding: 0.3em; text-align: center; background-color: ' + bg + ';')
+    }
 
-    var setUser = function (webid) {
-      if (webid) {
-        tabulator.preferences.set('me', webid)
-        console.log('(SetUser: Logged in as ' + webid + ')')
-        me = kb.sym(webid)
-      // @@ Here enable all kinds of stuff
-      } else {
-        tabulator.preferences.set('me', '')
-        console.log('(SetUser: Logged out)')
-        me = null
-      }
+    var me
+
+    UI.authn.checkUser()
+    .then(webId => {
+      me = webId
+
       if (logInOutButton) {
         logInOutButton.refresh()
       }
-      if (webid && waitingForLogin) {
+      if (webId && waitingForLogin) {
         waitingForLogin = false
         showAppropriateDisplay()
       }
-    }
-
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri ? kb.sym(me_uri) : null
-    UI.widgets.checkUser(detailsDoc, setUser)
+    })
+    console.log('me: ' + me) // @@ curently not actually used elsewhere
 
     // //////////////////////////////  Reproduction: spawn a new instance
     //
@@ -342,7 +317,7 @@ module.exports = {
     //
 
     var newInstanceButton = function () {
-      var b = UI.widgets.newAppInstance(dom, { noun: 'scheduler'},
+      var b = UI.authn.newAppInstance(dom, { noun: 'scheduler' },
         initializeNewInstanceInWorkspace)
       b.firstChild.setAttribute('style', inputStyle)
       return b
@@ -358,7 +333,7 @@ module.exports = {
         newBase = newBase.value
       }
       if (newBase.slice(-1) !== '/') {
-        $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
+        $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase) // @@ paramater?
         newBase = newBase + '/'
       }
       var now = new Date()
@@ -369,17 +344,16 @@ module.exports = {
 
     var initializeNewInstanceAtBase = function (thisInstance, newBase) {
       var options = {thisInstance: thisInstance, newBase: newBase}
-      this.mintNew(options).then(function(options){
+      this.mintNew(options).then(function (options) {
         var p = div.appendChild(dom.createElement('p'))
         p.setAttribute('style', 'font-size: 140%;')
         p.innerHTML =
-          "Your <a href='" + result.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
-          "<br/><br/><a href='" + result.uri + "'>Say when you what days work for you.</a>"
-      }).catch(function(error){
-        complainIfBad(false, result)
-      });
+          "Your <a href='" + options.newInstance.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
+          "<br/><br/><a href='" + options.newInstance.uri + "'>Say when you what days work for you.</a>"
+      }).catch(function (error) {
+        complainIfBad(false, 'Error createing new scheduler at ' + options.newInstance + ': ' + error)
+      })
     }
-
 
     // ///////////////////////
 
@@ -393,7 +367,7 @@ module.exports = {
     }
 
     var getDetails = function () {
-      console.log('getDetails()'); // Looking for blank screen hang-up
+      console.log('getDetails()') // Looking for blank screen hang-up
       fetcher.nowOrWhenFetched(detailsDoc.uri, undefined, function (ok, body) {
         console.log('getDetails() ok? ' + ok)
         if (!ok) return complainIfBad(ok, body)
@@ -405,14 +379,14 @@ module.exports = {
       // Event listener for login (from child iframe)
       var eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent'
       var eventListener = window[eventMethod]
-      var messageEvent = eventMethod == 'attachEvent' ? 'onmessage' : 'message'
+      var messageEvent = eventMethod === 'attachEvent' ? 'onmessage' : 'message'
 
       // Listen to message from child window
       eventListener(messageEvent, function (e) {
-        if (e.data.slice(0, 5) == 'User:') {
+        if (e.data.slice(0, 5) === 'User:') {
           // the URI of the user (currently either http* or dns:* values)
           var user = e.data.slice(5, e.data.length)
-          if (user.slice(0, 4) == 'http') {
+          if (user.slice(0, 4) === 'http') {
             // we have an HTTP URI (probably a WebID), do something with the user variable
             // i.e. app.login(user)
             setUser(user)
@@ -421,31 +395,31 @@ module.exports = {
       }, false)
     }
 
-    var showAppropriateDisplay = function () {
+    var showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
-      var me_uri = tabulator.preferences.get('me')
-      var me = me_uri ? kb.sym(me_uri) : null
 
-      if (!me) {
-        showSignon()
-      } else {
-        // On gh-pages, the turtle will not load properly (bad mime type)
-        // but we can trap it as being a non-editable server.
+      UI.authn.checkUser()
+        .then(webId => {
+          if (!webId) { return showSignon() }
 
-        if (!UI.store.updater.editable(detailsDoc.uri, kb) ||
-          kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
-          // This is read-only example e.g. on github pages, etc
-          showBootstrap(div)
-          return
-        }
+          // On gh-pages, the turtle will not load properly (bad mime type)
+          // but we can trap it as being a non-editable server.
 
-        var ready = kb.any(subject, SCHED('ready'))
-        if (!ready) {
-          showForms()
-        } else { // no editing not author
-          getResults()
-        }
-      }
+          if (!UI.store.updater.editable(detailsDoc.uri, kb) ||
+            kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
+            // This is read-only example e.g. on github pages, etc
+            showBootstrap(div)
+            return
+          }
+
+          var ready = kb.any(subject, ns.sched('ready'))
+
+          if (!ready) {
+            showForms()
+          } else { // no editing not author
+            getResults()
+          }
+        })
     }
 
     var showSignon = function showSignon () {
@@ -464,10 +438,10 @@ module.exports = {
 
     var showBootstrap = function showBootstrap () {
       var div = clearElement(naviMain)
-      var na = div.appendChild(UI.widgets.newAppInstance(
-        dom, 'Start a new poll in a workspace', initializeNewInstanceInWorkspace))
+      div.appendChild(UI.authn.newAppInstance(
+        dom, {noun: 'poll'}, initializeNewInstanceInWorkspace))
 
-      var hr = div.appendChild(dom.createElement('hr')); // @@
+      div.appendChild(dom.createElement('hr')) // @@
 
       var p = div.appendChild(dom.createElement('p'))
       p.textContent = 'Where would you like to store the data for the poll?  ' +
@@ -478,7 +452,7 @@ module.exports = {
       baseField.label = 'base URL'
       baseField.autocomplete = 'on'
 
-      div.appendChild(dom.createElement('br')); // @@
+      div.appendChild(dom.createElement('br')) // @@
 
       var button = div.appendChild(dom.createElement('button'))
       button.setAttribute('style', inputStyle)
@@ -500,11 +474,11 @@ module.exports = {
       var currentSlide = 0
       var gotDoneButton = false
       if (wizard) {
-        forms = [ form1, form2, form3 ]
-        slides = []
-        var slide, currentSlide = 0
+        let forms = [ form1, form2, form3 ]
+        let slides = []
+        currentSlide = 0
         for (var f = 0; f < forms.length; f++) {
-          slide = dom.createElement('div')
+          let slide = dom.createElement('div')
           UI.widgets.appendForm(document, slide, {}, subject, forms[f], detailsDoc, complainIfBad)
           slides.push(slide)
         }
@@ -527,7 +501,6 @@ module.exports = {
           } else {
             b2.removeAttribute('disabled')
           }
-
         }
         var b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
         b1.setAttribute('style', inputStyle)
@@ -550,7 +523,6 @@ module.exports = {
         }, false)
 
         refresh()
-
       } else { // not wizard one big form
         // @@@ create the initial config doc if not exist
         var table = div.appendChild(dom.createElement('table'))
@@ -558,27 +530,26 @@ module.exports = {
         UI.widgets.appendForm(document, table, {}, subject, form2, detailsDoc, complainIfBad)
         UI.widgets.appendForm(document, table, {}, subject, form3, detailsDoc, complainIfBad)
         naviCenter.appendChild(doneButton) // could also check data shape
-
       }
       // @@@  link config to results
 
-      insertables = []
-      insertables.push($rdf.st(subject, SCHED('availabilityOptions'), SCHED('YesNoMaybe'), detailsDoc))
-      insertables.push($rdf.st(subject, SCHED('ready'), new Date(), detailsDoc))
-      insertables.push($rdf.st(subject, SCHED('results'), resultsDoc, detailsDoc)); // @@ also link in results
+      var insertables = []
+      insertables.push($rdf.st(subject, ns.sched('availabilityOptions'), ns.sched('YesNoMaybe'), detailsDoc))
+      insertables.push($rdf.st(subject, ns.sched('ready'), new Date(), detailsDoc))
+      insertables.push($rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)) // @@ also link in results
 
       var doneButton = dom.createElement('button')
       doneButton.setAttribute('style', inputStyle)
       doneButton.textContent = 'Go to poll'
       doneButton.addEventListener('click', function (e) {
-        if (kb.any(subject, SCHED('ready'))) { // already done
+        if (kb.any(subject, ns.sched('ready'))) { // already done
           getResults()
           naviRight.appendChild(emailButton)
         } else {
           naviRight.appendChild(emailButton)
-          UI.store.updater.update([], insertables, function (uri, success, error_body) {
+          UI.store.updater.update([], insertables, function (uri, success, errorBody) {
             if (!success) {
-              complainIfBad(success, error_body)
+              complainIfBad(success, errorBody)
             } else {
               // naviRight.appendChild(emailButton)
               getResults()
@@ -590,13 +561,13 @@ module.exports = {
       var emailButton = dom.createElement('button')
       emailButton.setAttribute('style', inputStyle)
       var emailIcon = emailButton.appendChild(dom.createElement('img'))
-      //emailIcon.setAttribute('src', scriptBase + 'envelope-icon.png') // noun_480183.svg
+      // emailIcon.setAttribute('src', scriptBase + 'envelope-icon.png') // noun_480183.svg
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
       emailButton.textContent = 'email invitations'
       emailButton.addEventListener('click', function (e) {
-        var title = '' + (kb.any(subject, DC('title')) || '')
+        var title = '' + (kb.any(subject, ns.dc('title')) || '')
         var mailto = 'mailto:' +
-          kb.each(subject, SCHED('invitee')).map(function (who) {
+          kb.each(subject, ns.sched('invitee')).map(function (who) {
             var mbox = kb.any(who, ns.foaf('mbox'))
             return mbox ? '' + mbox : ''
           }).join(',') +
@@ -608,49 +579,50 @@ module.exports = {
       }, false)
     } // showForms
 
-    // Ask for each day, what times
-
+    // Ask for each day, what times .. @@ to be added some time
+    /*
     var setTimesOfDay = function () {
-      var i, j, x, y, slot, cell, day, insertables = []
-      var possibleDays = kb.each(invitation, SCHED('option'))
+      var i, j, x, y, slot, cell, day
+      var insertables = []
+      var possibleDays = kb.each(invitation, ns.sched('option'))
         .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
       var cellLookup = []
-      var slots = kb.each(invitation, SCHED('slot'))
+      var slots = kb.each(invitation, ns.sched('slot'))
       if (slots.length === 0) {
         for (i = 0; i < 2; i++) {
           slot = UI.widgets.newThing(detailsDoc)
-          insertables.push($rdf.st(invitation, SCHED('slot'), slot))
-          insertables.push($rdf.st(slott, RDFS('label'), 'slot ' + (i + 1)))
+          insertables.push($rdf.st(invitation, ns.sched('slot'), slot))
+          insertables.push($rdf.st(slot, ns.rdfs('label'), 'slot ' + (i + 1)))
           for (j = 0; j < possibleDays.length; j++) {
             day - possibleDays[j]
-            x = kb.any(slot, RDFS('label'))
+            x = kb.any(slot, ns.rdfs('label'))
             y = kb.any(day, ICAL('dtstart'))
             cell = UI.widgets.newThing(detailsDoc)
             cellLookup[x.toNT() + y.toNT()] = cell
-            insertables.push($rdf.st(slot, SCHED('cell'), cell))
-            insertables.push($rdf.st(cell, SCHED('day'), possibleDays[j]))
+            insertables.push($rdf.st(slot, ns.sched('cell'), cell))
+            insertables.push($rdf.st(cell, ns.sched('day'), possibleDays[j]))
           }
         }
       }
 
       var query = new $rdf.Query('TimesOfDay')
       var v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
-        query.vars.push(v[x] = $rdf.variable(x))})
-      query.pat.add(invitation, SCHED('slot'), v.slot)
-      query.pat.add(v.slot, RDFS('label'), v.label)
-      query.pat.add(v.slot, SCHED('cell'), v.cell)
-      query.pat.add(v.cell, SCHED('timeOfDay'), v.value)
-      query.pat.add(v.cell, SCHED('day'), v.day)
+        query.vars.push(v[x] = $rdf.variable(x)) })
+      query.pat.add(invitation, ns.sched('slot'), v.slot)
+      query.pat.add(v.slot, ns.rdfs('label'), v.label)
+      query.pat.add(v.slot, ns.sched('cell'), v.cell)
+      query.pat.add(v.cell, ns.sched('timeOfDay'), v.value)
+      query.pat.add(v.cell, ns.sched('day'), v.day)
 
       var options = {}
-      options.set_x = kb.each(subject, SCHED('slot')); // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) {return kb.any(opt, RDFS('label'))})
+      options.set_x = kb.each(subject, ns.sched('slot')) // @@@@@ option -> dtstart in future
+      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.rdfs('label')) })
 
-      options.set_y = kb.each(subject, SCHED('option')); // @@@@@ option -> dtstart in future
-      options.set_y = options.set_y.map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+      options.set_y = kb.each(subject, ns.sched('option')); // @@@@@ option -> dtstart in future
+      options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
-      var possibleTimes = kb.each(invitation, SCHED('option'))
-        .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+      var possibleTimes = kb.each(invitation, ns.sched('option'))
+        .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var displayTheMatrix = function () {
         var matrix = div.appendChild(UI.matrix.matrixForQuery(
@@ -680,16 +652,16 @@ module.exports = {
       var dataPointForNT = []
 
       var doc = resultsDoc
-      options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me))})
+      options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me)) })
       options.set_y.push(me) // Put me on the end
 
       options.cellFunction = function (cell, x, y, value) {
-        var point = cellLookup[x.toNT() + y.toNT()]
+        // var point = cellLookup[x.toNT() + y.toNT()]
 
         if (y.sameTerm(me)) {
-          var callback = function () { refreshColor(); }; //  @@ may need that
+          var callback = function () { refreshCellColor(cell, value); }; //  @@ may need that
           var selectOptions = {}
-          var predicate = SCHED('timeOfDay')
+          var predicate = ns.sched('timeOfDay')
           var cellSubject = dataPointForNT[x.toNT()]
           var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
             possibleAvailabilities, selectOptions, resultsDoc, callback)
@@ -700,62 +672,56 @@ module.exports = {
 
       }
 
-      var responses = kb.each(invitation, SCHED('response'))
+      var responses = kb.each(invitation, ns.sched('response'))
       var myResponse = null
       responses.map(function (r) {
-        if (kb.holds(r, DC('author'), me)) {
+        if (kb.holds(r, ns.dc('author'), me)) {
           myResponse = r
         }
       })
 
-      var insertables = [] // list of statements to be stored
-
       var id = UI.widgets.newThing(doc).uri
       if (myResponse === null) {
         myResponse = $rdf.sym(id + '_response')
-        insertables.push($rdf.st(invitation, SCHED('response'), myResponse, doc))
-        insertables.push($rdf.st(myResponse, DC('author'), me, doc))
+        insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
+        insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
       } else {
-        var dps = kb.each(myResponse, SCHED('cell'))
+        var dps = kb.each(myResponse, ns.sched('cell'))
         dps.map(function (dataPoint) {
           var time = kb.any(dataPoint, ICAL('dtstart'))
           dataPointForNT[time.toNT()] = dataPoint
         })
       }
-      for (var j = 0; j < possibleTimes.length; j++) {
+      for (let j = 0; j < possibleTimes.length; j++) {
         if (dataPointForNT[possibleTimes[j].toNT()]) continue
         var dataPoint = $rdf.sym(id + '_' + j)
-        insertables.push($rdf.st(myResponse, SCHED('cell'), dataPoint, doc))
-        insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)); // @@
+        insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
+        insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
       }
       if (insertables.length) {
-        UI.store.updater.update([], insertables, function (uri, success, error_body) {
+        UI.store.updater.update([], insertables, function (uri, success, errorBody) {
           if (!success) {
-            complainIfBad(success, error_body)
+            complainIfBad(success, errorBody)
           } else {
             displayTheMatrix()
           }
         })
-
       } else { // no insertables
         displayTheMatrix()
       }
-
     }
+    */
+    // end setTimesOfDay
 
     // Read or create empty results file
-
     var getResults = function () {
-      var div = naviMain
-      fetcher.nowOrWhenFetched(resultsDoc.uri, undefined, function (ok, body, xhr) {
+      fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
         if (!ok) {
-          if (0 + xhr.status === 404) { // /  Check explictly for 404 error
-            console.log('Initializing deails file ' + resultsDoc)
-            updater.put(resultsDoc, [], 'text/turtle', function (uri2, ok, message, xhr) {
+          if (response.status === 404) { // /  Check explicitly for 404 error
+            console.log('Initializing details file ' + resultsDoc)
+            updater.put(resultsDoc, [], 'text/turtle', function (uri2, ok, message) {
               if (ok) {
-                kb.fetcher.saveRequestMetadata(xhr, kb, resultsDoc.uri)
-                kb.fetcher.saveResponseMetadata(xhr, kb) // Drives the isEditable question
                 clearElement(naviMain)
                 showResults()
               } else {
@@ -779,15 +745,15 @@ module.exports = {
 
       // div.appendChild(dom.createElement('hr'))
 
-      var invitation = subject
-      var title = kb.any(invitation, DC('title'))
+      // var invitation = subject
+      var title = kb.any(invitation, ns.dc('title'))
       var comment = kb.any(invitation, ns.rdfs('comment'))
       var location = kb.any(invitation, ICAL('location'))
       var div = naviMain
       if (title) div.appendChild(dom.createElement('h3')).textContent = title
       if (location) div.appendChild(dom.createElement('address')).textContent = location.value
       if (comment) div.appendChild(dom.createElement('p')).textContent = comment.value
-      var author = kb.any(invitation, DC('author'))
+      var author = kb.any(invitation, ns.dc('author'))
       if (author) {
         var authorName = kb.any(author, ns.foaf('name'))
         if (authorName) {
@@ -799,24 +765,25 @@ module.exports = {
       var v = {}
       var vs = ['time', 'author', 'value', 'resp', 'cell']
       vs.map(function (x) {
-        query.vars.push(v[x] = $rdf.variable(x))})
-      query.pat.add(invitation, SCHED('response'), v.resp)
-      query.pat.add(v.resp, DC('author'), v.author)
-      query.pat.add(v.resp, SCHED('cell'), v.cell)
-      query.pat.add(v.cell, SCHED('availabilty'), v.value)
+        query.vars.push(v[x] = $rdf.variable(x))
+      })
+      query.pat.add(invitation, ns.sched('response'), v.resp)
+      query.pat.add(v.resp, ns.dc('author'), v.author)
+      query.pat.add(v.resp, ns.sched('cell'), v.cell)
+      query.pat.add(v.cell, ns.sched('availabilty'), v.value)
       query.pat.add(v.cell, ICAL('dtstart'), v.time)
 
       // Sort by by person @@@
 
       var options = {}
-      options.set_x = kb.each(subject, SCHED('option')); // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+      options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
+      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
-      options.set_y = kb.each(subject, SCHED('response'))
-      options.set_y = options.set_y.map(function (resp) {return kb.any(resp, DC('author'))})
+      options.set_y = kb.each(subject, ns.sched('response'))
+      options.set_y = options.set_y.map(function (resp) { return kb.any(resp, ns.dc('author')) })
 
-      var possibleTimes = kb.each(invitation, SCHED('option'))
-        .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+      var possibleTimes = kb.each(invitation, ns.sched('option'))
+        .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
 
       var displayTheMatrix = function () {
         var matrix = div.appendChild(UI.matrix.matrixForQuery(
@@ -845,32 +812,29 @@ module.exports = {
       }
 
       // @@ Give other combos too-- see schedule ontology
-      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes')]
+      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      var me_uri = tabulator.preferences.get('me')
-      var me = me_uri ? kb.sym(me_uri) : null
+      var me = UI.authn.currentUser()
 
       var dataPointForNT = []
 
       if (me) {
         var doc = resultsDoc
-        options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me))})
+        options.set_y = options.set_y.filter(function (z) { return (!z.sameTerm(me)) })
         options.set_y.push(me) // Put me on the end
 
         options.cellFunction = function (cell, x, y, value) {
-          var refreshColor = function () {
-            var bg = kb.any(value, UI.ns.ui('backgroundColor'))
-            if (bg) cell.setAttribute('style', 'padding: 0.3em; text-align: center; background-color: ' + bg + ';')
-          }
           if (value !== null) {
             kb.fetcher.nowOrWhenFetched(value.uri.split('#')[0], undefined, function (uri, ok, error) {
-              refreshColor()
+              refreshCellColor(cell, value)
             })
           }
           if (y.sameTerm(me)) {
-            var callback = function () { refreshColor(); }; //  @@ may need that
+            var callback = function () {
+              refreshCellColor(cell, value)
+            } //  @@ may need that
             var selectOptions = {}
-            var predicate = SCHED('availabilty')
+            var predicate = ns.sched('availabilty')
             var cellSubject = dataPointForNT[x.toNT()]
             var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
               possibleAvailabilities, selectOptions, resultsDoc, callback)
@@ -880,10 +844,10 @@ module.exports = {
           }
         }
 
-        var responses = kb.each(invitation, SCHED('response'))
+        var responses = kb.each(invitation, ns.sched('response'))
         var myResponse = null
         responses.map(function (r) {
-          if (kb.holds(r, DC('author'), me)) {
+          if (kb.holds(r, ns.dc('author'), me)) {
             myResponse = r
           }
         })
@@ -893,10 +857,10 @@ module.exports = {
         var id = UI.widgets.newThing(doc).uri
         if (myResponse === null) {
           myResponse = $rdf.sym(id + '_response')
-          insertables.push($rdf.st(invitation, SCHED('response'), myResponse, doc))
-          insertables.push($rdf.st(myResponse, DC('author'), me, doc))
+          insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
+          insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
         } else {
-          var dps = kb.each(myResponse, SCHED('cell'))
+          var dps = kb.each(myResponse, ns.sched('cell'))
           dps.map(function (dataPoint) {
             var time = kb.any(dataPoint, ICAL('dtstart'))
             dataPointForNT[time.toNT()] = dataPoint
@@ -905,28 +869,26 @@ module.exports = {
         for (var j = 0; j < possibleTimes.length; j++) {
           if (dataPointForNT[possibleTimes[j].toNT()]) continue
           var dataPoint = $rdf.sym(id + '_' + j)
-          insertables.push($rdf.st(myResponse, SCHED('cell'), dataPoint, doc))
-          insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)); // @@
+          insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
+          insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
           dataPointForNT[possibleTimes[j].toNT()] = dataPoint
         }
         if (insertables.length) {
-          UI.store.updater.update([], insertables, function (uri, success, error_body) {
+          UI.store.updater.update([], insertables, function (uri, success, errorBody) {
             if (!success) {
-              complainIfBad(success, error_body)
+              complainIfBad(success, errorBody)
             } else {
               displayTheMatrix()
             }
           })
-
         } else { // no insertables
           displayTheMatrix()
         }
-
       } else {
         // pass me not defined
       }
 
-      var instanceAuthor = kb.any(subject, DC('author'))
+      var instanceAuthor = kb.any(subject, ns.dc('author'))
       if (!instanceAuthor || instanceAuthor.sameTerm(me)) {
         var editButton = dom.createElement('button')
         editButton.setAttribute('style', inputStyle)
@@ -943,21 +905,20 @@ module.exports = {
 
       clearElement(naviRight)
       naviRight.appendChild(newInstanceButton())
-
     } // showResults
 
     var div = dom.createElement('div')
-    var structure = div.appendChild(dom.createElement('table')); // @@ make responsive style
+    var structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.setAttribute('style', 'background-color: white; min-width: 40em; min-height: 13em;')
 
     var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
-    var naviLoginout1 = naviLoginoutTR.appendChild(dom.createElement('td'))
-    var naviLoginout2 = naviLoginoutTR.appendChild(dom.createElement('td'))
-    var naviLoginout3 = naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
 
     var logInOutButton = null
     /*
-    var logInOutButton = UI.widgets.loginStatusBox(dom, setUser)
+    var logInOutButton = UI.authn.loginStatusBox(dom, setUser)
     // floating divs lead to a mess
     // logInOutButton.setAttribute('style', 'float: right') // float the beginning of the end
     naviLoginout3.appendChild(logInOutButton)

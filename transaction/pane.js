@@ -66,8 +66,7 @@ module.exports = {
 
     var t = kb.findTypeURIs(subject)
 
-    var me_uri = tabulator.preferences.get('me')
-    var me = me_uri ? kb.sym(me_uri) : null
+    var me = UI.authn.currentUser()
     var predicateURIsDone = {}
     var donePredicate = function (pred) {predicateURIsDone[pred.uri] = true}
 
@@ -216,7 +215,6 @@ module.exports = {
       return table
     }
 
-
     //              Render a single transaction
 
     // This works only if enough metadata about the properties can drive the RDFS
@@ -305,7 +303,7 @@ module.exports = {
 
           var calendarYear = kb.any(store, ns.qu('calendarYear'))
 
-          var renderCatgorySelectors = function(){
+          var renderCatgorySelectors = function () {
             div.insertBefore(
               UI.widgets.makeSelectForNestedCategory(dom, kb,
                 subject, UI.ns.qu('Classified'), store, complainIfBad),

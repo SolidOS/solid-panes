@@ -9,7 +9,9 @@
 ** relevant to a given subhect, returning null if not.
 ** If it is relevant, then it returns a suitable tooltip for a control which selects the pane
 */
-
+var dump = function(msg) {
+  console.log(msg.slice(0,-1))
+}
 
 var paneModule = module.exports = {}
 
@@ -49,7 +51,7 @@ paneModule.byName = function (name) {
   return undefined
 }
 
-// This has comon outline mode functionality for the default and other other panes
+// This has common outline mode functionality for the default and other other panes
 paneModule.OutlineManager = require('./outline/manager.js')
 
 paneModule.getOutliner = function(dom){
@@ -93,6 +95,7 @@ paneModule.register(require('./video/videoPane.js')) // Video clip player
 paneModule.register(require('./audio/audioPane.js')) // Audio clip player
 
 
+paneModule.register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
 paneModule.register(require('./classInstancePane.js')) // Should be above dataContentPane
 paneModule.register(require('./dynamic/dynamicPanes.js')) // warp etc
 paneModule.register(require('./slideshow/slideshowPane.js'))
