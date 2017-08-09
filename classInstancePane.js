@@ -74,7 +74,7 @@ module.exports = {
 
     var noHiddenFiles = function (st) { // @@ This hiddenness should actually be server defined
       var pathEnd = st.object.uri.slice(st.object.dir().uri.length)
-      return !(pathEnd.startsWith('.') || pathEnd.endsWith('.acl'))
+      return !(pathEnd.startsWith('.') || pathEnd.endsWith('.acl') || pathEnd.endsWith('~'))
     }
     var contentsStatements = kb.statementsMatching(subject, ns.ldp('contains'))
     contentsStatements = contentsStatements.filter(noHiddenFiles)
@@ -83,7 +83,7 @@ module.exports = {
     if (kb.holds(subject, ns.ldp('contains'), indexThing.doc())) {
       console.log('View of folder with be view of indexThing. Loading ' + indexThing)
       let packageDiv = div.appendChild(dom.createElement('div'))
-      packageDiv.style = 'border-top: 0.2em solid #ccc;' // Separate folder views above from package views below
+      packageDiv.style.cssText = 'border-top: 0.2em solid #ccc;' // Separate folder views above from package views below
       kb.fetcher.load(indexThing.doc()).then(function () {
         let table = packageDiv.appendChild(dom.createElement('table'))
         UI.outline.GotoSubject(indexThing, true, undefined, false, undefined, table)
@@ -177,7 +177,7 @@ module.exports = {
 
     var target = div.appendChild(dom.createElement('img'))
     target.setAttribute('src', UI.icons.iconBase + 'noun_25830.svg')
-    target.style = 'width: 2em; height: 2em'
+    target.setAttribute('style', 'width: 2em; height: 2em') // Safari says target.style is read-only
 
     UI.widgets.makeDropTarget(target, null, droppedFileHandler)
 

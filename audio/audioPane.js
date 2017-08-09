@@ -161,11 +161,11 @@ module.exports =  {
     var table = div.appendChild(dom.createElement('table'))
     var labelStyle = 'padding: 0.3em; color:white; background-color: black;'
     var artistRow = table.appendChild( dom.createElement('tr'))
-    artistRow.style = labelStyle
+    artistRow.style.cssText = labelStyle
     var albumRow = table.appendChild( dom.createElement('tr'))
-    albumRow.style = labelStyle
+    albumRow.style.cssText = labelStyle
     var trackRow = table.appendChild( dom.createElement('tr'))
-    trackRow.style = labelStyle
+    trackRow.style.cssText = labelStyle
     var controlRow = table.appendChild( dom.createElement('tr'))
     guessNames(subject)
     controlRow.appendChild(audioControl(subject, options.autoplay))

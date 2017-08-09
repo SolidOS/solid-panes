@@ -66,7 +66,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
 
   var loadIndexButton = pane.appendChild(dom.createElement('button'))
   loadIndexButton.textContent = 'Load main index'
-  loadIndexButton.style = buttonStyle
+  loadIndexButton.style.cssText = buttonStyle
   loadIndexButton.addEventListener('click', function (e) {
     loadIndexButton.setAttribute('style', 'background-color: #ffc;')
 
@@ -84,12 +84,12 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
 
   var statButton = pane.appendChild(dom.createElement('button'))
   statButton.textContent = 'Statistics'
-  statButton.style = buttonStyle
+  statButton.style.cssText = buttonStyle
   statButton.addEventListener('click', stats)
 
   var checkAccessButton = MainRow.appendChild(dom.createElement('button'))
   checkAccessButton.textContent = 'Check inidividual card access of selected groups'
-  checkAccessButton.style = buttonStyle
+  checkAccessButton.style.cssText = buttonStyle
   checkAccessButton.addEventListener('click', function (event) {
     var gg = [], g
     for (g in selectedGroups) {
@@ -122,7 +122,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
   //      DUPLICATES CHECK
   var checkDuplicates = MainRow.appendChild(dom.createElement('button'))
   checkDuplicates.textContent = 'Find duplicate cards'
-  checkDuplicates.style = buttonStyle
+  checkDuplicates.style.cssText = buttonStyle
   checkDuplicates.addEventListener('click', function (event) {
 
     var stats = {} // global god context
@@ -560,7 +560,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
   })
 
   var checkGroupless = MainRow.appendChild(dom.createElement('button'))
-  checkGroupless.style = buttonStyle
+  checkGroupless.style.cssText = buttonStyle
   checkGroupless.textContent = 'Find inidividuals with no group'
   checkGroupless.addEventListener('click', function (event) {
     log('Loading groups...')

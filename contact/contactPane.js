@@ -418,7 +418,7 @@ module.exports = {
 
         var cancel = form.appendChild(dom.createElement('button'))
         cancel.setAttribute('type', 'button')
-        cancel.style = buttonStyle
+        cancel.style.cssText = buttonStyle
         cancel.innerHTML = 'Cancel'
         cancel.addEventListener('click', function (e) {
           form.parentNode.removeChild(form)
@@ -739,9 +739,9 @@ module.exports = {
                       if (!ok) cardMain.innerHTML = 'Failed: ' + body
                     })
                     var sharingButton = cardMain.appendChild(dom.createElement('button'))
-                    sharingButton.style = 'padding: 1em; margin: 1em'
+                    sharingButton.style.cssText = 'padding: 1em; margin: 1em'
                     var img = sharingButton.appendChild(dom.createElement('img'))
-                    img.style = 'width: 1.5em; height: 1.5em'
+                    img.style.cssText = 'width: 1.5em; height: 1.5em'
                     img.setAttribute('src', UI.icons.iconBase + 'noun_123691.svg')
                     sharingButton.addEventListener('click', function () {
                       visible = !visible
