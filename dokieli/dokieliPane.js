@@ -6,13 +6,17 @@
 */
 var UI = require('solid-ui')
 
-var DOKIELI_TEMPLATE = 'https://dokie.li/new.html' // Copy to make new dok
+const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
+
+const DOKIELI_TEMPLATE = require('./new.js') // Distributed with this library
 
 module.exports = {
 
     icon: UI.icons.iconBase + 'dokieli-logo.png', // @@ improve? more like doccument?
 
     name: 'Dokieli',
+
+    mintClass: UI.ns.solid('DokieliDocument'), // @@ A better class?
 
     label: function(subject, myDocument) {
         // Prevent infinite recursion with iframe loading a web page which uses tabulator which shows iframe...
@@ -70,13 +74,19 @@ module.exports = {
       var kb = UI.store
       var updater = kb.updater
       var newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase)
+      console.log('New dok called with ' + newInstance)
       var u = newInstance.uri
       if (u.endsWith('/')) {
-        newPaneOptions.newInstance = kb.sym(u + 'index.html')
+        u = u + 'index.html'
       }
-
+      if (!u.endsWith('.html')) {
+        u = u + '.html'
+      }
+      newPaneOptions.newInstance = newInstance = kb.sym(u)
+      console.log('New dok will make: ' + newInstance)
+      /*
       return new Promise(function(resolve, reject){
-        kb.fetcher.webCopy(DOKIELI_TEMPLATE, newInstance.uri + "text/html")
+        kb.fetcher.webCopy(DOKIELI_TEMPLATE_URI, newInstance.uri, 'text/html')
         .then(function(){
           console.log('new Dokieli document created at ' + newPaneOptions.newInstance)
           resolve(newPaneOptions)
@@ -85,6 +95,19 @@ module.exports = {
               newPaneOptions.newInstance + ': ' + err )
         })
       })
+      */
+
+      return new Promise(function(resolve, reject){
+        kb.fetcher.webOperation('PUT', newInstance.uri,  { data: DOKIELI_TEMPLATE, contentType: 'text/html' })
+        .then(function(){
+          console.log('new Dokieli document created at ' + newPaneOptions.newInstance)
+          resolve(newPaneOptions)
+        }).catch(function(err){
+          console.log('Error creating dokelili dok at ' +
+              newPaneOptions.newInstance + ': ' + err )
+        })
+      })
+
     },
 
 

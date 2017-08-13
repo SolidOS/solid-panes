@@ -131,7 +131,7 @@ module.exports = {
               return reject(new Error('Error writing new file ' + task.to))
             }
 
-            UI.widgets.setACLUserPublic(dest, me, aclOptions)
+            UI.authn.setACLUserPublic(dest, me, aclOptions)
               .then(() => doNextTask())
               .catch(err => {
                 let message = 'Error setting access permissions for ' +
@@ -427,6 +427,7 @@ module.exports = {
         var b = form.appendChild(dom.createElement('button'))
         b.setAttribute('type', 'button')
         b.innerHTML = 'Continue'
+        b.style.cssText = buttonStyle
         b.addEventListener('click', function (e) {
           gotName()
         }, false)
