@@ -195,7 +195,7 @@ module.exports = function(doc) {
       var img = UI.utils.AJARImage(icon, alt,
         outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri), dom)
       img.setAttribute('uri', uri);
-      img.addEventListener(listener) // @@ seemed to be missing 2017-08
+      img.addEventListener('click', listener) // @@ seemed to be missing 2017-08
       addButtonCallbacks(img, docuri)
       node.appendChild(img)
       return img
@@ -1602,7 +1602,7 @@ module.exports = function(doc) {
         try {
           if (YAHOO.util.Event.off) YAHOO.util.Event.off(p, 'mousedown', 'dragMouseDown');
         } catch (e) {
-          console.log('YAHOO')
+          console.log('YAHOO ' + e)
         }
         UI.utils.emptyNode(p).appendChild(newTable)
         thisOutline.focusTd = p; //I don't know why I couldn't use 'this'...because not defined in callbacks

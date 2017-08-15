@@ -62,8 +62,11 @@ module.exports = {
   render: function (subject, dom) {
     var outliner = UI.panes.getOutliner(dom)
     var kb = UI.store
+    var mainTable // This is a live synced table
+
     var complain = function complain (message, color) {
       var pre = dom.createElement('pre')
+      console.log(message)
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
@@ -74,12 +77,10 @@ module.exports = {
 
     // If this is an LDP container just list the directory
 
-    var noHiddenFiles = function (st) { // @@ This hiddenness should actually be server defined
-      var pathEnd = st.object.uri.slice(st.object.dir().uri.length)
+    var noHiddenFiles = function (obj) { // @@ This hiddenness should actually be server defined
+      var pathEnd = obj.uri.slice(obj.dir().uri.length)
       return !(pathEnd.startsWith('.') || pathEnd.endsWith('.acl') || pathEnd.endsWith('~'))
     }
-    var contentsStatements = kb.statementsMatching(subject, ns.ldp('contains'))
-    contentsStatements = contentsStatements.filter(noHiddenFiles)
     let thisDir = subject.uri.endsWith('/') ? subject.uri : subject.uri + '/'
     let indexThing = kb.sym(thisDir + 'index.ttl#this')
     if (kb.holds(subject, ns.ldp('contains'), indexThing.doc())) {
@@ -87,14 +88,36 @@ module.exports = {
       let packageDiv = div.appendChild(dom.createElement('div'))
       packageDiv.style.cssText = 'border-top: 0.2em solid #ccc;' // Separate folder views above from package views below
       kb.fetcher.load(indexThing.doc()).then(function () {
-        let table = packageDiv.appendChild(dom.createElement('table'))
-        UI.outline.GotoSubject(indexThing, true, undefined, false, undefined, table)
+        mainTable = packageDiv.appendChild(dom.createElement('table'))
+        UI.outline.GotoSubject(indexThing, true, undefined, false, undefined, mainTable)
       })
 
       return div
     } else {
-      if (contentsStatements.length) {
-        outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) { return true })
+      if (true) {
+
+        // outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) { return true })
+
+        mainTable = div.appendChild(dom.createElement('table'))
+        var refresh = function(){
+          var objs = kb.each(subject, ns.ldp('contains')).filter(noHiddenFiles)
+          objs = objs.map(obj => [ UI.utils.label(obj).toLowerCase(), obj])
+          objs.sort() // Sort by label case-insensitive
+          objs = objs.map(pair => pair[1])
+          UI.utils.syncTableToArray(mainTable, objs, function(obj){
+            let st = kb.statementsMatching(subject,ns.ldp('contains'), obj)[0]
+            let defaultpropview = outliner.VIEWAS_boring_default
+            let tr = outliner.propertyTR(dom,
+              st, false)
+            tr.firstChild.textContent = '' // Was initialized to 'Contains'
+            tr.firstChild.style.cssText += 'min-width: 3em;'
+            tr.appendChild(outliner.outline_objectTD(obj, defaultpropview, undefined, st));
+            // UI.widgets.makeDraggable(tr, obj)
+            return tr
+          })
+        }
+        mainTable.refresh = refresh
+        refresh()
       }
     }
 
@@ -102,6 +125,7 @@ module.exports = {
     var creationDiv = div.appendChild(dom.createElement('div'))
     var me = UI.authn.currentUser()
     var creationContext = {folder: subject, div: creationDiv, dom: dom, statusArea: creationDiv, me: me}
+    creationContext.refreshTarget = mainTable
     var newUI = UI.create.newThingUI(creationContext, UI.panes) // Have to pass panes down
 
     // /////////// Allow new file to be Uploaded
@@ -126,19 +150,20 @@ module.exports = {
             // Check it does not already exist
             var destination = kb.sym(subject.uri + theFile.name)
             if (kb.holds(subject, ns.ldp('contains'), destination)) {
-              alert('Sorry, ' + subject.uri + ' already has something called ' + theFile.name)
+              complain('Sorry, ' + subject.uri + ' already has something called ' + theFile.name)
               console.log('Drag-drop upload aborted: resource already exists: ' + destination)
               return
             }
             UI.store.fetcher.webOperation('PUT', destination, {data: data, contentType: theFile.type})
               .then(function () {
                 console.log(' Upload: put OK: ' + destination)
+                kb.add(subject, ns.ldp('contains'), destination, subject.doc())
+                mainTable.refresh()
                 // @@ reload the container file?
-              // @@ Restore the target style
-              // @@ refresh the display from the container!
+              // @@ Restore the target style after ALL files are done
               })
               .catch(function (error) {
-                console.log(' Upload: FAIL ' + destination + ', Error: ' + error)
+                complain(' Upload: FAILED ' + destination + ', Error: ' + error)
               })
           }
         })(f)

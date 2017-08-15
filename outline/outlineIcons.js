@@ -3,6 +3,7 @@
 
 
 var outlineIcons = module.exports = {} // was tabulator.Icon
+var UI = require('solid-ui')
 
 outlineIcons.src = [] // collect the URIs of the icon filterColumns
 outlineIcons.tooltips = [] // look up tool tips from URL
