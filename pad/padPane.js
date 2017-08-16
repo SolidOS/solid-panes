@@ -26,6 +26,8 @@ module.exports = {
     var kb = UI.store
     var ns = UI.ns
     var updater = kb.updater
+    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error ("notepad mintNew:  Invalid userid")
+
     var newInstance = newPaneOptions.newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase + 'index.ttl#this')
     // var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
     var newPadDoc = newInstance.doc()
@@ -314,6 +316,8 @@ module.exports = {
     //  Update on incoming changes
     var showResults = function (exists) {
       console.log('showResults()')
+
+      me = UI.authn.currentUser()
 
       UI.authn.checkUser()
         .then(webId => {
