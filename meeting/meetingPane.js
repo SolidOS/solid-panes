@@ -387,7 +387,7 @@ module.exports = {
       }
       var newPaneOptions = {
         newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
-        pane: UI.panes.classInstance, // @@ slideshow??
+        pane: UI.panes.folder, // @@ slideshow??
         predicate: ns.meeting('pictures'),
         tabTitle: folderName,
         noIndexHTML: true
@@ -403,7 +403,7 @@ module.exports = {
       }
       var options = {
         newInstance: kb.sym(meeting.dir().uri + 'Files/'),
-        pane: UI.panes.classInstance,
+        pane: UI.panes.folder,
         predicate: ns.meeting('materialsFolder'),
         tabTitle: 'Materials',
         noIndexHTML: true

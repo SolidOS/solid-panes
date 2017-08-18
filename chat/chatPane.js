@@ -90,17 +90,11 @@ module.exports = {
       complain('Unknown chat type')
     }
 
-    var me = UI.authn.currentUser()
-    if (!me){
-      UI.authn.checkUser().then( user => {
-        me = user
-        div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
-      })
-     } else {
-       div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
-     }
-      // async op
+    var context = {dom, div}
 
+    UI.authn.logIn(context).then( context => {
+      div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
+    })
 
     return div
   }
