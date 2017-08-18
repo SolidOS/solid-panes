@@ -96,8 +96,9 @@ paneModule.register(require('./audio/audioPane.js')) // Audio clip player
 
 
 paneModule.register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
+paneModule.register(require('./folderPane.js')) // Should be above dataContentPane
 paneModule.register(require('./classInstancePane.js')) // Should be above dataContentPane
-paneModule.register(require('./dynamic/dynamicPanes.js')) // warp etc
+// paneModule.register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
 paneModule.register(require('./slideshow/slideshowPane.js'))
 
 paneModule.register(require('./socialPane.js'))

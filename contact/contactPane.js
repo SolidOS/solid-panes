@@ -131,7 +131,7 @@ module.exports = {
               return reject(new Error('Error writing new file ' + task.to))
             }
 
-            UI.widgets.setACLUserPublic(dest, me, aclOptions)
+            UI.authn.setACLUserPublic(dest, me, aclOptions)
               .then(() => doNextTask())
               .catch(err => {
                 let message = 'Error setting access permissions for ' +
@@ -427,6 +427,7 @@ module.exports = {
         var b = form.appendChild(dom.createElement('button'))
         b.setAttribute('type', 'button')
         b.innerHTML = 'Continue'
+        b.style.cssText = buttonStyle
         b.addEventListener('click', function (e) {
           gotName()
         }, false)
@@ -868,7 +869,10 @@ module.exports = {
 
       UI.authn.checkUser()
         .then(webId => {
-          if (webId) { newContactButton.removeAttribute('disabled') }
+          if (webId) {
+            me = webId
+            newContactButton.removeAttribute('disabled')
+           }
         })
 
       container.appendChild(newContactButton)
@@ -956,7 +960,8 @@ module.exports = {
         toolsButton.innerHTML = 'Tools'
         toolsButton.addEventListener('click', function (e) {
           cardMain.innerHTML = ''
-          cardMain.appendChild(toolsPane(selectAllGroups, selectedGroups, groupsMainTable, book, dom, me))
+          cardMain.appendChild(toolsPane(selectAllGroups, selectedGroups,
+            groupsMainTable, book, dom, me))
         })
       } // if book
 
@@ -996,20 +1001,79 @@ module.exports = {
         })
       }
 
+
+      var uploadFileToContact = function(filename, contentType, data){
+        // var fileExtension = filename.split('.').pop() // .toLowerCase()
+        var extension = mime.extension(contentType)
+        if (contentType !== mime.lookup(filename)) {
+          filename += '_.' + extension
+          console.log('MIME TYPE MISMATCH -- adding extension: ' + filename)
+        }
+        let prefix, predicate, isImage
+        if (contentType.startsWith('image')){
+          prefix = 'image_'
+          predicate = ns.vcard('hasPhoto')
+          isImage = true
+        } else {
+          prefix = 'attachment_'
+          predicate = ns.wf('attachment')
+          isImage = false
+        }
+
+        var n, pic
+        for (n = 0; ; n++) { // Check filename is not used or invent new one
+          pic = kb.sym(card.dir().uri + filename)
+          if (!kb.holds(subject, ns.vcard('hasPhoto'), pic)) {
+            break
+          }
+          filename = prefix + n + '.' + extension
+        }
+        kb.add(subject, predicate, pic, subject.doc())
+        console.log('Putting ' + data.length + ' bytes of ' + contentType + ' to ' + pic)
+        kb.fetcher.webOperation('PUT', pic, { data: data, contentType: contentType})
+          .then(function (response) {
+            if (!response.ok){
+              complain('Error uploading ' + pic + ':' + response.status)
+              return
+            }
+            console.log(' Upload: put OK: ' + pic)
+            return kb.fetcher.putBack(subject.doc())
+          })
+          .then(function () {
+            if (isImage){
+              mainImage.setAttribute('src', pic.uri)
+            }
+          })
+          .catch(function (status) {
+            console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
+          })
+      }
+
       // When a set of URIs are dropped on
       var handleURIsDroppedOnMugshot = function (uris) {
         uris.map(function (u) {
           var thing = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
-          console.log('Dropped on thing ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+          console.log('Dropped on mugshot thing ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
           var thing = kb.sym(u)
           if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
-            kb.add(subject, UI.ns.vcard('url'), thing, subject.doc())
-            kb.fetcher.putBack(subject.doc()).then(function (xhr) {
-              // @@@ Refresh UI
-              // mainImage.setAttribute('src', pic.uri)
-              // UI.widgets.setImage(mainImage, subject)// try again
+
+            // Take a copy of a photo on the web:
+            kb.fetcher.webOperation('GET', thing.uri).then( result => {
+              let contentType =  result.headers.get('Content-Type')
+              // let data = result.responseText
+              let pathEnd = thing.uri.split('/').slice(-1)[0] // last segment as putative filename
+              pathEnd = pathEnd.split('?')[0] // chop off any query params
+              result.arrayBuffer().then(function(data) { // read text stream
+                if (!response.ok){
+                  complain('Error downloading ' + thing + ':' + response.status)
+                  return
+                }
+                uploadFileToContact (pathEnd, contentType, data)
+              })
             })
             return
+          } else {
+            console.log('Not a web document URI, cannot copy as picture: ' + thing)
           }
           handleDroppedThing(thing)
         })
@@ -1029,36 +1093,9 @@ module.exports = {
             return function (e) {
               var data = e.target.result
               console.log(' File read byteLength : ' + data.byteLength)
-              // var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
               var filename = encodeURIComponent(theFile.name)
-              var extension = mime.extension(theFile.type)
-              if (theFile.type !== mime.lookup(theFile.name)) {
-                filename += '_.' + extension
-                console.log('MIME TYPE MISMATCH -- adding extension: ' + filename)
-              }
-              var photos = kb.any(subject, ns.vcard('hasPhoto'))
-              var n, pic
-              for (n = 0; ; n++) {
-                pic = kb.sym(card.dir().uri + filename)
-                if (!kb.holds(subject, ns.vcard('hasPhoto'), pic)) {
-                  break
-                }
-                filename = 'image' + n + extension
-              }
-              kb.add(subject, ns.vcard('hasPhoto'), pic, subject.doc())
-              kb.fetcher.webOperation('PUT', pic, { data: data, contentType: theFile.type })
-                .then(function () {
-                  console.log(' Upload: put OK: ' + pic)
-
-                  return kb.fetcher.putBack(subject.doc())
-                })
-                .then(function () {
-                  mainImage.setAttribute('src', pic.uri)
-                  // UI.widgets.setImage(mainImage, subject)// try again
-                })
-                .catch(function (status) {
-                  console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
-                })
+              var contentType = theFile.type
+              uploadFileToContact (filename, contentType, data)
             }
           })(f)
           reader.readAsArrayBuffer(f)

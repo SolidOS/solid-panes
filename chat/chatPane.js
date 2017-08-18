@@ -4,7 +4,9 @@
 ** and investigate the interop between them.
 */
 
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const ns = UI.ns
+const kb = UI.store
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_346319.svg',
@@ -34,12 +36,8 @@ module.exports = {
   */
 
   label: function (subject) {
-    var kb = UI.store
-    var ns = UI.ns
     var n = UI.store.each(subject, ns.wf('message')).length
     if (n > 0) return 'Chat (' + n + ')' // Show how many in hover text
-
-//  ns.meeting('Chat')
 
     if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
       return 'Meeting chat'
@@ -50,9 +48,40 @@ module.exports = {
     return null // Suppress pane otherwise
   },
 
+
+  mintClass: ns.meeting('Chat'),
+
+  mintNew: function (newPaneOptions) {
+    var updater = kb.updater
+    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error ("chat mintNew:  Invalid userid")
+
+    var newInstance = newPaneOptions.newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase + 'index.ttl#this')
+    var newChatDoc = newInstance.doc()
+
+    kb.add(newInstance, ns.rdf('type'), ns.meeting('Chat'), newChatDoc)
+    kb.add(newInstance, ns.dc('title'), 'Chat', newChatDoc)
+    kb.add(newInstance, ns.dc('created'), new Date(), newChatDoc)
+    if (newPaneOptions.me) {
+      kb.add(newInstance, ns.dc('author'), newPaneOptions.me, newChatDoc)
+    }
+
+    return new Promise(function (resolve, reject) {
+      updater.put(
+        newChatDoc,
+        kb.statementsMatching(undefined, undefined, undefined, newChatDoc),
+        'text/turtle',
+        function (uri2, ok, message) {
+          if (ok) {
+            resolve(newPaneOptions)
+          } else {
+            reject(new Error('FAILED to save new tool at: ' + uri2 + ' : ' +
+              message))
+          };
+        })
+    })
+  },
+
   render: function (subject, dom) {
-    var kb = UI.store
-    var ns = UI.ns
     var complain = function complain (message, color) {
       var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
@@ -64,8 +93,8 @@ module.exports = {
     div.setAttribute('class', 'chatPane')
     let options = {} // Like newestFirst
     var messageStore
-    if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject is the file
-      messageStore = subject
+    if (kb.holds(subject, ns.rdf('type'), ns.meeting('Chat'))) { // subject may be the file
+      messageStore = subject.doc()
     } else if (kb.any(subject, UI.ns.wf('message'))) {
       messageStore = UI.store.any(subject, UI.ns.wf('message')).doc()
     } else if (kb.holds(undefined, ns.rdf('type'), ns.foaf('ChatChannel'), subject) ||
@@ -90,9 +119,12 @@ module.exports = {
       complain('Unknown chat type')
     }
 
-    UI.authn.checkUser()  // async op
+    var context = {dom, div}
 
-    div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
+    UI.authn.logIn(context).then( context => {
+      div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
+      kb.updater.addDownstreamChangeListener(messageStore, function () {UI.widgets.refreshTree(div)}) // Live update
+    })
 
     return div
   }

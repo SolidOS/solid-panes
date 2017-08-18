@@ -2,6 +2,7 @@
 **
 **  Putting together some of the tools we have to manage a Meeting
 */
+/* global FileReader */
 
 var UI = require('solid-ui')
 var mime = require('mime-types')
@@ -91,7 +92,7 @@ module.exports = {
     var div = dom.createElement('div')
     var table = div.appendChild(dom.createElement('table'))
     var topTR = table.appendChild(dom.createElement('tr'))
-    var topDiv = topTR.appendChild(dom.createElement('div'))
+    topTR.appendChild(dom.createElement('div')) // topDiv
     var mainTR = table.appendChild(dom.createElement('tr'))
 
     var toolBar0 = table.appendChild(dom.createElement('td'))
@@ -280,7 +281,8 @@ module.exports = {
     }
 
     var droppedFileHandler = function (files) {
-      for (var i = 0, f; f = files[i]; i++) {
+      for (var i = 0; files[i]; i++) {
+        let f = files[i]
         console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
           ' size: ' + f.size + ' bytes, last modified: ' +
           (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
@@ -333,7 +335,7 @@ module.exports = {
       kb.add(tool, UI.ns.meeting('view'), 'peoplePicker', meetingDoc)
       saveBackMeetingDoc()
     }
-
+    /*
     var makeAddressBook = function (toolObject) {
       var newBase = meetingBase + 'Group/'
       var kb = UI.store
@@ -362,7 +364,7 @@ module.exports = {
         }
       )
     }
-
+    */
     var makePoll = function (toolObject) {
       var newPaneOptions = {
         useExisting: meeting, // Regard the meeting as being the schedulable event itself.
@@ -385,7 +387,7 @@ module.exports = {
       }
       var newPaneOptions = {
         newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
-        pane: UI.panes.classInstance, // @@ slideshow??
+        pane: UI.panes.folder, // @@ slideshow??
         predicate: ns.meeting('pictures'),
         tabTitle: folderName,
         noIndexHTML: true
@@ -401,7 +403,7 @@ module.exports = {
       }
       var options = {
         newInstance: kb.sym(meeting.dir().uri + 'Files/'),
-        pane: UI.panes.classInstance,
+        pane: UI.panes.folder,
         predicate: ns.meeting('materialsFolder'),
         tabTitle: 'Materials',
         noIndexHTML: true
@@ -473,7 +475,7 @@ module.exports = {
         if (!options.useExisting) { // useExisting means use existing object in new role
           var existing = kb.any(meeting, options.predicate)
           if (existing) {
-            complain('Already have ' + existing + ' as ' +  UI.utils.label(options.predicate))
+            complain('Already have ' + existing + ' as ' + UI.utils.label(options.predicate))
             if (toolObject.limit && toolObject.limit === 1) {
               complain('Cant have two')
               return resolve(null)
@@ -490,7 +492,7 @@ module.exports = {
           .then(function (options) {
             var tool = makeToolNode(options.newInstance, options.predicate,
               options.tabTitle, options.pane.icon)
-            if (options.view){
+            if (options.view) {
               kb.add(tool, UI.ns.meeting('view'), options.view, meetingDoc)
             }
             saveBackMeetingDoc()
@@ -573,7 +575,8 @@ module.exports = {
           if (!uri) {
             return resetTools()
           }
-          var kb = UI.store, ns = UI.ns
+          var kb = UI.store
+          var ns = UI.ns
           var target = kb.sym(uri)
           var tool = makeToolNode(target, ns.wf('attachment'), UI.utils.label(target), null)
           kb.add(tool, ns.meeting('view'), 'iframe', meetingDoc)
@@ -737,7 +740,7 @@ module.exports = {
           // var img = div.appendChild(dom.createElement('img'))
           var img = left.appendChild(dom.createElement('img'))
           img.setAttribute('src', icon.uri)
-          //img.setAttribute('style', 'max-width: 1.5em; max-height: 1.5em;') // @@ SVG shrinks to 0
+          // img.setAttribute('style', 'max-width: 1.5em; max-height: 1.5em;') // @@ SVG shrinks to 0
           img.setAttribute('style', 'width: 1.5em; height: 1.5em;') // @
           img.setAttribute('title', label)
           right.appendChild(s)
