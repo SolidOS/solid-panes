@@ -330,19 +330,6 @@ module.exports = {
       var stateStore = kb.any(tracker, WF('stateStore'))
       var store = kb.sym(subject.uri.split('#')[0])
 
-      // Unfinished -- need this for speed to save the reloadStore below
-      /*
-      var incommingPatch = function (xhr, text) {
-        var contentType = xhr.headers['content-type'].trim()
-        var patchKB = $rdf.graph()
-        $rdf.parse(patchText, patchKB, doc.uri, contentType)
-        // @@ TBC: check this patch isn't one of ours
-        // @@ TBC: kb.applyPatch();  @@@@@ code me
-        setPaneStyle()
-        refreshTree(div)
-      }
-      */
-
       UI.authn.checkUser()  // kick off async operation
 
       var states = kb.any(tracker, WF('issueClass'))
