@@ -12,6 +12,7 @@ to change its state according to an ontology, comment on it, etc.
 ** where internationalization ("i18n") is not a problem, and double quoted
 ** like "this" where the string is seen by the user and so I18n is an issue.
 */
+/* global alert, confirm, FileReader */
 
 var UI = require('solid-ui')
 var mime = require('mime-types')
@@ -280,10 +281,23 @@ module.exports = {
           .catch(function (err) { UI.widgets.complain(context, err) })
       }
 
-      // var cats = kb.each(book, ns.wf('contactCategory')) // zero or more
+      // The book could be the main subject, or linked from a group we are dealing with
+      var findBookFromGroups = function findBookFromGroups(book) {
+        if (book) {
+          return book
+        }
+        var g
+        for (let gu in selectedGroups) {
+          g = kb.sym(gu)
+          let b = kb.any(undefined, ns.vcard('includesGroup'), g)
+          if (b) return b
+        }
+        throw new Error('findBookFromGroups: Cant find address book which this group is part of')
+      }
 
       //  Write a new contact to the web
       var createNewContact = function (book, name, selectedGroups, callback) {
+        book = findBookFromGroups(book)
         var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
 
         var uuid = UI.utils.genUuid()
@@ -309,20 +323,20 @@ module.exports = {
 
         var updateCallback = function (uri, success, body) {
           if (!success) {
-            dump("Error: can't update " + uri + ' for new contact:' + body + '\n')
+            console.log("Error: can't update " + uri + ' for new contact:' + body + '\n')
             callback(false, "Error: can't update " + uri + ' for new contact:' + body)
           } else {
             if (agenda.length > 0) {
-              dump('Patching ' + agenda[0] + '\n')
+              console.log('Patching ' + agenda[0] + '\n')
               updater.update([], agenda.shift(), updateCallback)
             } else { // done!
-              dump('Done patching. Now reading back in.\n')
+              console.log('Done patching. Now reading back in.\n')
               UI.store.fetcher.nowOrWhenFetched(doc, undefined, function (ok, body) {
                 if (ok) {
-                  dump('Read back in OK.\n')
+                  console.log('Read back in OK.\n')
                   callback(true, person)
                 } else {
-                  dump('Read back in FAILED: ' + body + '\n')
+                  console.log('Read back in FAILED: ' + body + '\n')
                   callback(false, body)
                 }
               })
@@ -332,13 +346,13 @@ module.exports = {
 
         UI.store.fetcher.nowOrWhenFetched(nameEmailIndex, undefined, function (ok, message) {
           if (ok) {
-            dump(' People index must be loaded\n')
+            console.log(' People index must be loaded\n')
             updater.put(doc, [
                 $rdf.st(person, ns.vcard('fn'), name, doc),
                 $rdf.st(person, ns.rdf('type'), ns.vcard('Individual'), doc) ],
               'text/turtle', updateCallback)
           } else {
-            dump('Error loading people index!' + nameEmailIndex.uri + ': ' + message)
+            console.log('Error loading people index!' + nameEmailIndex.uri + ': ' + message)
             callback(false, 'Error loading people index!' + nameEmailIndex.uri + ': ' + message + '\n')
           }
         })
@@ -354,11 +368,11 @@ module.exports = {
         var gname = name.replace(' ', '_')
         var doc = kb.sym(x.slice(0, x.lastIndexOf('/') + 1) + 'Group/' + gname + '.ttl')
         var group = kb.sym(doc.uri + '#this')
-        dump(' New group will be: ' + group + '\n')
+        console.log(' New group will be: ' + group + '\n')
 
         UI.store.fetcher.nowOrWhenFetched(gix, function (ok, message) {
           if (ok) {
-            dump(' Group index must be loaded\n')
+            console.log(' Group index must be loaded\n')
 
             var insertTriples = [
               $rdf.st(book, ns.vcard('includesGroup'), group, gix),
@@ -368,6 +382,7 @@ module.exports = {
             updater.update([], insertTriples, function (uri, success, body) {
               if (ok) {
                 var triples = [
+                  $rdf.st(book, ns.vcard('includesGroup'), group, gix), // Pointer back to book
                   $rdf.st(group, ns.rdf('type'), ns.vcard('Group'), doc),
                   $rdf.st(group, ns.vcard('fn'), name, doc)
                 ]
@@ -379,7 +394,7 @@ module.exports = {
               }
             })
           } else {
-            dump('Error loading people index!' + gix.uri + ': ' + message)
+            console.log('Error loading people index!' + gix.uri + ': ' + message)
             callback(false, 'Error loading people index!' + gix.uri + ': ' + message + '\n')
           }
         })
@@ -538,7 +553,7 @@ module.exports = {
         var agenda = [] // sets of statements of same dcoument to delete
         for (var target in targets) {
           agenda.push(ds.filter(function (st) { return st.why.uri === target }))
-          dump('Deleting ' + agenda[agenda.length - 1].length + ' from ' + target)
+          console.log('Deleting ' + agenda[agenda.length - 1].length + ' from ' + target)
         }
         function nextOne () {
           if (agenda.length > 0) {
@@ -550,7 +565,7 @@ module.exports = {
               nextOne()
             })
           } else {
-            dump('Deleting resoure ' + x.doc())
+            console.log('Deleting resoure ' + x.doc())
             kb.fetcher.delete(x.doc())
               .then(function () {
                 console.log('Delete thing ' + x + ': complete.')
@@ -580,7 +595,7 @@ module.exports = {
         for (var u in selectedGroups) {
           if (selectedGroups[u]) {
             var a = kb.each(kb.sym(u), ns.vcard('hasMember'))
-            // dump('Adding '+ a.length + ' people from ' + u + '\n')
+            // console.log('Adding '+ a.length + ' people from ' + u + '\n')
             cards = cards.concat(a)
             ng += 1
           }
@@ -621,7 +636,7 @@ module.exports = {
               UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
                 cardMain.innerHTML = ''
                 if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
-                // dump("Loaded card " + local + '\n')
+                // console.log("Loaded card " + local + '\n')
                 cardMain.appendChild(cardPane(dom, local, 'contact'))
                 cardMain.appendChild(dom.createElement('br'))
 
@@ -880,7 +895,7 @@ module.exports = {
       peopleFooter.appendChild(container)
 
       var createdNewContactCallback1 = function (ok, person) {
-        dump('createdNewContactCallback1 ' + ok + ' - ' + person + '\n')
+        console.log('createdNewContactCallback1 ' + ok + ' - ' + person + '\n')
         cardMain.innerHTML = ''
         if (ok) {
           cardMain.appendChild(cardPane(dom, person, 'contact'))
@@ -891,15 +906,15 @@ module.exports = {
         // b.setAttribute('disabled', 'true');  (do we need o do this?)
         cardMain.innerHTML = ''
 
-        var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
-        UI.store.fetcher.nowOrWhenFetched(nameEmailIndex, undefined, function (ok, message) {
-          if (ok) {
-            dump(' People index has been loaded\n')
-          } else {
-            dump('Error: People index has NOT been loaded' + message + '\n')
-          }
-          // Just a heads up, actually used later.
-        })
+        var ourBook = findBookFromGroups(book)
+        kb.fetcher.load(ourBook)
+        .then(function(response){
+          if (!response.ok) throw new Error('Book won\'t load:' + ourBook)
+          var nameEmailIndex = kb.any(ourBook, ns.vcard('nameEmailIndex'))
+          if (!nameEmailIndex) throw new Error('Wot no nameEmailIndex?')
+          return kb.fetcher.load(nameEmailIndex)})
+        .then(function(response){ console.log('Name index loaded async' + response.url)})
+
         // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
         cardMain.appendChild(getNameForm(dom, kb, 'Contact',
           function (ok, name) {
@@ -927,9 +942,9 @@ module.exports = {
           var groupIndex = kb.any(book, ns.vcard('groupIndex'))
           UI.store.fetcher.nowOrWhenFetched(groupIndex, undefined, function (ok, message) {
             if (ok) {
-              dump(' Group index has been loaded\n')
+              console.log(' Group index has been loaded\n')
             } else {
-              dump('Error: Group index has NOT been loaded' + message + '\n')
+              console.log('Error: Group index has NOT been loaded' + message + '\n')
             }
           })
 
@@ -989,13 +1004,16 @@ module.exports = {
             console.log('Error looking up dropped thing ' + thing + ': ' + mess)
           } else {
             var types = kb.findTypeURIs(thing)
-            for (ty in types) {
+            for (var ty in types) {
               console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
             }
-            console.log('Default: assume web page  ' + u) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+            console.log('Default: assume web page  ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
             var b = kb.bnode()
+            kb.add(card, ns.wf('attachment'), thing, card.doc())
+            /*
             kb.add(card, UI.ns.vcard('url'), b, card.doc())
             kb.add(b, UI.ns.vcard('value'), kb.sym(u), card.doc())
+            */
             // @@ refresh UI
           }
         })
@@ -1064,8 +1082,8 @@ module.exports = {
               let pathEnd = thing.uri.split('/').slice(-1)[0] // last segment as putative filename
               pathEnd = pathEnd.split('?')[0] // chop off any query params
               result.arrayBuffer().then(function(data) { // read text stream
-                if (!response.ok){
-                  complain('Error downloading ' + thing + ':' + response.status)
+                if (!result.ok){
+                  complain('Error downloading ' + thing + ':' + result.status)
                   return
                 }
                 uploadFileToContact (pathEnd, contentType, data)
