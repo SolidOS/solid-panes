@@ -5,10 +5,7 @@
   "main": "./index.js",
   "scripts": {
     "build-browserified": "npm run build",
-    "build-browserified-old": "browserify -r ./index.js:solidAppSet --exclude 'xhr2' > dist/mashup-node-2.js",
-    "build-minified": "browserify -r ./index.js:solid-ui --exclude 'xhr2' --exclude 'rdflib' -d -p [minifyify --no-map] > mashup/mashup-node.min.js",
     "build-dist": "webpack --progress --colors",
-    "build-old": "npm run clean && mkdir -p dist/ && npm run build-browserified && npm run build-minified",
     "build": "npm run clean && mkdir -p dist/ && npm run build-dist",
     "clean": "rm -rf dist/",
     "standard": "standard chat/*.js",
@@ -38,9 +35,9 @@
   },
   "homepage": "https://github.com/linkeddata/solid-app-set",
   "dependencies": {
-    "better-simple-slideshow": "git://github.com/linkeddata/better-simple-slideshow.git#gh-pages",
+    "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
-    "solid-ui": "^0.6.0"
+    "solid-ui": "^0.7.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
