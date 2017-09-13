@@ -8,6 +8,7 @@ var UI = require('solid-ui')
 // var Solid = require('solid-client')
 
 var ns = UI.ns
+console.log('@@@@ Solid app set folder pane -- -- LOADING @@@@@')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
@@ -148,10 +149,10 @@ module.exports = {
               return
             }
             // Check it does not already exist
-            var destination = kb.sym(subject.uri + theFile.name)
+            var destination = kb.sym(subject.uri + encodeURIComponent(theFile.name)) // encode spaces etc
             if (kb.holds(subject, ns.ldp('contains'), destination)) {
               complain('Sorry, ' + subject.uri + ' already has something called ' + theFile.name)
-              console.log('Drag-drop upload aborted: resource already exists: ' + destination)
+              console.log('Drag-drop upload aborted: folder already contains ' + destination)
               return
             }
             UI.store.fetcher.webOperation('PUT', destination, {data: data, contentType: theFile.type})
