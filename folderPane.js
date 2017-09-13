@@ -8,7 +8,6 @@ var UI = require('solid-ui')
 // var Solid = require('solid-client')
 
 var ns = UI.ns
-console.log('@@@@ Solid app set folder pane -- -- LOADING @@@@@')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
