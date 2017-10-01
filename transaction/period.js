@@ -41,25 +41,24 @@ module.exports = {
     var complain = function complain (message) {
       return mention(message, 'color: #100; background-color: #fee')
     }
-    var thisPane = this
-
+/*
     var rerender = function (div) {
       var parent = div.parentNode
       var div2 = thisPane.render(subject, dom)
       parent.replaceChild(div2, div)
     }
-
-    var renderPeriod = function(){
+*/
+    var renderPeriod = function () {
       var dtstart = kb.any(subject, ns.cal('dtstart'))
       if (dtstart === undefined) {
-        complain('(Error: There is no start date known for this period <'
-          + subject.uri + '>,\n -- every period needs one.)')
+        complain('(Error: There is no start date known for this period <' +
+          subject.uri + '>,\n -- every period needs one.)')
       };
 
       var dtend = kb.any(subject, ns.cal('dtend'))
       if (dtend === undefined) {
-        complain('(Error: There is no end date known for this period <'
-          + subject.uri + '>,\n -- every period needs one.)')
+        complain('(Error: There is no end date known for this period <' +
+          subject.uri + '>,\n -- every period needs one.)')
       };
 
       // var store = kb.any(subject, UI.ns.qu('annotationStore')) || null
@@ -95,7 +94,7 @@ module.exports = {
         if (x.uri > y.uri) return 1
         return 0
       }
-
+/*
       var setPaneStyle = function (account) {
         var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
         if (account) {
@@ -107,7 +106,7 @@ module.exports = {
         div.setAttribute('style', mystyle)
       }
       // setPaneStyle();
-
+*/
       var h2 = div.appendChild(dom.createElement('h2'))
       h2.textContent = 'Period ' + dtstart.value.slice(0, 10) + ' - ' + dtend.value.slice(0, 10)
 
@@ -204,9 +203,6 @@ module.exports = {
         }
         return table
       }
-
-
-
 
       // List unclassified transactions
 
@@ -325,8 +321,8 @@ module.exports = {
     var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) {
       let needed = kb.each(subject, ns.rdfs('seeAlso'))
-      console.log("Loading before render: " + needed.length)
-      kb.fetcher.load(needed).then(function(responses){
+      console.log('Loading before render: ' + needed.length)
+      kb.fetcher.load(needed).then(function (responses) {
         renderPeriod()
       })
     }
