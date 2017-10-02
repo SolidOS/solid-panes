@@ -228,9 +228,15 @@ module.exports = {
           return resolve(target)
         }
         kb.fetcher.nowOrWhenFetched(target, function (ok, mess) {
+          var addAttachmentTab = function (target) {
+            console.log('make web page attachement tab ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
+            var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
+            kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
+            return resolve(target)
+          }
           if (!ok) {
-            console.log('Error looking up dropped thing ' + target + ': ' + mess)
-            return resolve(null) // allow others to continue
+            console.log('Error looking up dropped thing, will just add it anyway. ' + target + ': ' + mess)
+            return addAttachmentTab(target) // You can still try iframing it.  (Could also add to list of links in PersonTR widgets)
           } else {
             var obj = target
             var types = kb.findTypeURIs(obj)
@@ -262,9 +268,7 @@ module.exports = {
               }
             } // Something we cannot iframe, and must link to:
             console.log('Default: assume web page attachement ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
-            var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
-            kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
-            return resolve(target)
+            return addAttachmentTab(target)
           }
         })
       }) // promise
