@@ -817,7 +817,7 @@ module.exports = {
         containerDiv.appendChild(dom.createElement('h4')).textContent = 'Meeting Participants'
         var groupPickedCb = function (group) {
           var toIns = [$rdf.st(meeting, ns.meeting('particpantGroup'), group, meeting.doc())]
-          kb.updater.update([], toIns, {}, function (uri, ok, message) {
+          kb.updater.update([], toIns, function (uri, ok, message) {
             if (ok) {
               selectedGroup = group
             } else {
@@ -842,7 +842,7 @@ module.exports = {
           'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
         me = UI.authn.currentUser()
         if (me) {
-          kb.add(meeting, ns.dc('author'), me, meetingDoc)
+          kb.add(meeting, ns.dc('author'), me, meetingDoc) // @@ should nly be on initial creation?
         }
         var context = {noun: 'meeting', me: me, statusArea: containerDiv, div: containerDiv, dom: dom}
         UI.authn.registrationControl(context, meeting, ns.meeting('Meeting')).then(function (context) {
@@ -851,6 +851,7 @@ module.exports = {
         var options = {}
         UI.pad.manageParticipation(dom, containerDiv, meetingDoc, meeting, me, options)
 
+        // "Make a new meeting" button
         var imageStyle = 'height: 2em; width: 2em; margin:0.5em;'
         var detailsBottom = containerDiv.appendChild(dom.createElement('div'))
         var spawn = detailsBottom.appendChild(dom.createElement('img'))
@@ -859,6 +860,7 @@ module.exports = {
         spawn.addEventListener('click', makeNewMeeting)
         spawn.setAttribute('style', imageStyle)
 
+        // "Fork me on Github" button
         var forka = detailsBottom.appendChild(dom.createElement('a'))
         forka.setAttribute('href', 'https://github.com/linkeddata/solid-app-set') // @@ Move when code moves
         forka.setAttribute('target', '_blank') // @@ Move when code moves
