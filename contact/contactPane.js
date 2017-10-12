@@ -74,15 +74,16 @@ module.exports = {
         div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
       }
 
-      var bookContents = '@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.\n\
-  @prefix ab: <http://www.w3.org/ns/pim/ab#>.\n\
-  @prefix dc: <http://purl.org/dc/elements/1.1/>.\n\
-  @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.\n\
-  \n\
-  <#this> a vcard:AddressBook;\n\
-      dc:title "New address Book";\n\
-      vcard:nameEmailIndex <people.ttl>;\n\
-      vcard:groupIndex <groups.ttl>. \n\n'
+      var bookContents = `@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+  @prefix ab: <http://www.w3.org/ns/pim/ab#>.
+  @prefix dc: <http://purl.org/dc/elements/1.1/>.
+  @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+
+  <#this> a vcard:AddressBook;
+      dc:title "New address Book";
+      vcard:nameEmailIndex <people.ttl>;
+      vcard:groupIndex <groups.ttl>.
+`
 
       bookContents += '<#this> <http://www.w3.org/ns/auth/acl#owner> <' + me.uri + '>.\n\n'
 
@@ -174,12 +175,6 @@ module.exports = {
 
     div.setAttribute('class', 'contactPane')
 
-    var commentFlter = function (pred, inverse) {
-      if (!inverse && pred.uri ===
-        'http://www.w3.org/2000/01/rdf-schema#comment') return true
-      return false
-    }
-
     var complain = function (message) {
       console.log(message)
       div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
@@ -192,12 +187,6 @@ module.exports = {
 
     var thisPane = this
 
-    var timestring = function timestring () {
-      var now = new Date()
-      return '' + now.getTime()
-      // http://www.w3schools.com/jsref/jsref_obj_date.asp
-    }
-
     //  Reproduction: Spawn a new instance of this app
     var newAddressBookButton = function (thisAddressBook) {
       return UI.authn.newAppInstance(dom,
@@ -208,9 +197,6 @@ module.exports = {
 
     var updater = UI.store.updater
     UI.aclControl.preventBrowserDropEvents(dom)
-
-    var plist = kb.statementsMatching(subject)
-    var qlist = kb.statementsMatching(undefined, undefined, subject)
 
     var t = kb.findTypeURIs(subject)
 
@@ -223,18 +209,6 @@ module.exports = {
       div: div,
       dom: dom
     } // missing: statusRegion
-
-    // Reload resource then
-    var reloadStore = function (store, callBack) {
-      UI.store.fetcher.unload(store)
-      UI.store.fetcher.nowOrWhenFetched(store.uri, undefined, function (ok, body) {
-        if (!ok) {
-          console.log('Cant refresh data:' + body)
-        } else {
-          callBack()
-        }
-      })
-    }
 
     // Refresh the DOM tree
     var refreshTree = function (root) {
@@ -255,7 +229,7 @@ module.exports = {
     }
     var renderThreeColumnBrowser2 = function (books, context, options) {
       var classLabel = UI.utils.label(ns.vcard('AddressBook'))
-      var IndividualClassLabel = UI.utils.label(ns.vcard('Individual'))
+      // var IndividualClassLabel = UI.utils.label(ns.vcard('Individual'))
 
       var book = books[0] // for now
       var groupIndex = kb.any(book, ns.vcard('groupIndex'))
@@ -269,20 +243,8 @@ module.exports = {
       }
       title = title ? title.value : classLabel
 
-      var doGroupsForBook = function (book) {
-        kb.load(book).then(function (xhr) {
-          var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
-          var groupIndex = kb.any(book, ns.vcard('groupIndex'))
-          var selectedGroups = {}
-          var title = kb.any(book, ns.dc('title'))
-          title = title ? title.value : classLabel
-          // @@ Todo
-        })
-          .catch(function (err) { UI.widgets.complain(context, err) })
-      }
-
       // The book could be the main subject, or linked from a group we are dealing with
-      var findBookFromGroups = function findBookFromGroups(book) {
+      var findBookFromGroups = function findBookFromGroups (book) {
         if (book) {
           return book
         }
@@ -348,8 +310,8 @@ module.exports = {
           if (ok) {
             console.log(' People index must be loaded\n')
             updater.put(doc, [
-                $rdf.st(person, ns.vcard('fn'), name, doc),
-                $rdf.st(person, ns.rdf('type'), ns.vcard('Individual'), doc) ],
+              $rdf.st(person, ns.vcard('fn'), name, doc),
+              $rdf.st(person, ns.rdf('type'), ns.vcard('Individual'), doc) ],
               'text/turtle', updateCallback)
           } else {
             console.log('Error loading people index!' + nameEmailIndex.uri + ': ' + message)
@@ -428,7 +390,7 @@ module.exports = {
         }, false)
         form.appendChild(namefield)
 
-        var br = form.appendChild(dom.createElement('br'))
+        form.appendChild(dom.createElement('br'))
 
         var cancel = form.appendChild(dom.createElement('button'))
         cancel.setAttribute('type', 'button')
@@ -505,7 +467,6 @@ module.exports = {
       }
 
       var sortGroups = function () {
-        var gs = []
         groups = []
         if (options.foreignGroup) {
           groups.push(['', kb.any(options.foreignGroup, ns.vcard('fn')), options.foreignGroup])
@@ -640,7 +601,7 @@ module.exports = {
                 cardMain.appendChild(cardPane(dom, local, 'contact'))
                 cardMain.appendChild(dom.createElement('br'))
 
-                var anchor = cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
+                cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
               })
             })
           }
@@ -671,7 +632,7 @@ module.exports = {
         }
 
         for (var g = 0; g < groups.length; g++) {
-          var book = groups[g][0]
+          // var book = groups[g][0]
           var name = groups[g][1]
           var group = groups[g][2]
 
@@ -679,7 +640,7 @@ module.exports = {
           foundOne = false
 
           for (i = 0; i < groupsMainTable.children.length; i++) {
-            var row = groupsMainTable.children[i]
+            let row = groupsMainTable.children[i]
             if (row.subject && row.subject.sameTerm(group)) {
               row.trashMe = false
               foundOne = true
@@ -699,7 +660,7 @@ module.exports = {
                 uris.forEach(function (u) {
                   console.log('Dropped on group: ' + u)
                   var thing = kb.sym(u)
-                  var toBeFetched = [ thing.doc(), group.doc()]
+                  var toBeFetched = [thing.doc(), group.doc()]
 
                   kb.fetcher.load(toBeFetched).then(function (xhrs) {
                     var types = kb.findTypeURIs(thing)
@@ -775,9 +736,9 @@ module.exports = {
         } // loop g
 
         for (i = 0; i < groupsMainTable.children.length; i++) {
-          var row = groupsMainTable.children[i]
-          if (row.trashMe) {
-            groupsMainTable.removeChild(row)
+          let r = groupsMainTable.children[i]
+          if (r.trashMe) {
+            groupsMainTable.removeChild(r)
           }
         }
         refreshGroupsSelected()
@@ -808,7 +769,7 @@ module.exports = {
       var peopleFooter = bookFooter.appendChild(dom.createElement('td'))
       var cardFooter = bookFooter.appendChild(dom.createElement('td'))
 
-      var searchDiv = cardHeader.appendChild(dom.createElement('div'))
+      cardHeader.appendChild(dom.createElement('div')) // searchDiv
       // searchDiv.setAttribute('style', 'border: 0.1em solid #888; border-radius: 0.5em')
       var searchInput = cardHeader.appendChild(dom.createElement('input'))
       searchInput.setAttribute('type', 'text')
@@ -887,20 +848,12 @@ module.exports = {
           if (webId) {
             me = webId
             newContactButton.removeAttribute('disabled')
-           }
+          }
         })
 
       container.appendChild(newContactButton)
       newContactButton.innerHTML = 'New Contact' // + IndividualClassLabel
       peopleFooter.appendChild(container)
-
-      var createdNewContactCallback1 = function (ok, person) {
-        console.log('createdNewContactCallback1 ' + ok + ' - ' + person + '\n')
-        cardMain.innerHTML = ''
-        if (ok) {
-          cardMain.appendChild(cardPane(dom, person, 'contact'))
-        } // else no harm done delete form
-      }
 
       newContactButton.addEventListener('click', function (e) {
         // b.setAttribute('disabled', 'true');  (do we need o do this?)
@@ -908,14 +861,14 @@ module.exports = {
 
         var ourBook = findBookFromGroups(book)
         kb.fetcher.load(ourBook)
-        .then(function(response){
+        .then(function (response) {
           if (!response.ok) throw new Error('Book won\'t load:' + ourBook)
           var nameEmailIndex = kb.any(ourBook, ns.vcard('nameEmailIndex'))
           if (!nameEmailIndex) throw new Error('Wot no nameEmailIndex?')
-          return kb.fetcher.load(nameEmailIndex)})
-        .then(function(response){ console.log('Name index loaded async' + response.url)})
+          return kb.fetcher.load(nameEmailIndex)
+        })
+        .then(function (response) { console.log('Name index loaded async' + response.url) })
 
-        // cardMain.appendChild(newContactForm(dom, kb, selectedGroups, createdNewContactCallback1))
         cardMain.appendChild(getNameForm(dom, kb, 'Contact',
           function (ok, name) {
             if (!ok) return // cancelled by user
@@ -1008,9 +961,9 @@ module.exports = {
               console.log('    drop object type includes: ' + ty) // @@ Allow email addresses and phone numbers to be dropped?
             }
             console.log('Default: assume web page  ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
-            var b = kb.bnode()
             kb.add(card, ns.wf('attachment'), thing, card.doc())
             /*
+            var b = kb.bnode()
             kb.add(card, UI.ns.vcard('url'), b, card.doc())
             kb.add(b, UI.ns.vcard('value'), kb.sym(u), card.doc())
             */
@@ -1019,8 +972,7 @@ module.exports = {
         })
       }
 
-
-      var uploadFileToContact = function(filename, contentType, data){
+      var uploadFileToContact = function (filename, contentType, data) {
         // var fileExtension = filename.split('.').pop() // .toLowerCase()
         var extension = mime.extension(contentType)
         if (contentType !== mime.lookup(filename)) {
@@ -1028,7 +980,7 @@ module.exports = {
           console.log('MIME TYPE MISMATCH -- adding extension: ' + filename)
         }
         let prefix, predicate, isImage
-        if (contentType.startsWith('image')){
+        if (contentType.startsWith('image')) {
           prefix = 'image_'
           predicate = ns.vcard('hasPhoto')
           isImage = true
@@ -1048,9 +1000,9 @@ module.exports = {
         }
         kb.add(subject, predicate, pic, subject.doc())
         console.log('Putting ' + data.length + ' bytes of ' + contentType + ' to ' + pic)
-        kb.fetcher.webOperation('PUT', pic, { data: data, contentType: contentType})
+        kb.fetcher.webOperation('PUT', pic, {data: data, contentType: contentType})
           .then(function (response) {
-            if (!response.ok){
+            if (!response.ok) {
               complain('Error uploading ' + pic + ':' + response.status)
               return
             }
@@ -1058,7 +1010,7 @@ module.exports = {
             return kb.fetcher.putBack(subject.doc())
           })
           .then(function () {
-            if (isImage){
+            if (isImage) {
               mainImage.setAttribute('src', pic.uri)
             }
           })
@@ -1072,21 +1024,20 @@ module.exports = {
         uris.map(function (u) {
           var thing = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
           console.log('Dropped on mugshot thing ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
-          var thing = kb.sym(u)
           if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
 
             // Take a copy of a photo on the web:
-            kb.fetcher.webOperation('GET', thing.uri).then( result => {
-              let contentType =  result.headers.get('Content-Type')
+            kb.fetcher.webOperation('GET', thing.uri).then(result => {
+              let contentType = result.headers.get('Content-Type')
               // let data = result.responseText
               let pathEnd = thing.uri.split('/').slice(-1)[0] // last segment as putative filename
               pathEnd = pathEnd.split('?')[0] // chop off any query params
-              result.arrayBuffer().then(function(data) { // read text stream
-                if (!result.ok){
+              result.arrayBuffer().then(function (data) { // read text stream
+                if (!result.ok) {
                   complain('Error downloading ' + thing + ':' + result.status)
                   return
                 }
-                uploadFileToContact (pathEnd, contentType, data)
+                uploadFileToContact(pathEnd, contentType, data)
               })
             })
             return
@@ -1099,7 +1050,8 @@ module.exports = {
 
       // Drop an image file to set up the mugshot
       var droppedFileHandler = function (files) {
-        for (var i = 0, f; f = files[i]; i++) {
+        for (var i = 0; i < files.length; i++) {
+          let f = files[i]
           console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
             ' size: ' + f.size + ' bytes, last modified: ' +
             (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
@@ -1113,7 +1065,7 @@ module.exports = {
               console.log(' File read byteLength : ' + data.byteLength)
               var filename = encodeURIComponent(theFile.name)
               var contentType = theFile.type
-              uploadFileToContact (filename, contentType, data)
+              uploadFileToContact(filename, contentType, data)
             }
           })(f)
           reader.readAsArrayBuffer(f)
@@ -1191,7 +1143,7 @@ module.exports = {
                 formTD.appendChild(UI.widgets.errorMessageBlock(dom, e, 'pink'))
               })
 
-            var anchor = formTD.appendChild(UI.widgets.linkIcon(dom, x))
+            formTD.appendChild(UI.widgets.linkIcon(dom, x))
           }
 
           var table = div.appendChild(dom.createElement('table'))
@@ -1207,12 +1159,12 @@ module.exports = {
             }
           }
 
-          var attachementControl = UI.widgets.attachmentList(dom, subject, div, {
+          UI.widgets.attachmentList(dom, subject, div, {
             // promptIcon: UI.icons.iconBase +  'noun_681601.svg',
             predicate: UI.ns.vcard('url') // @@@@@@@@@ ,--- no, the actual structure uses a bnode.
           })
 
-          var hr = div.appendChild(dom.createElement('hr'))
+          div.appendChild(dom.createElement('hr'))
 
           var pages = kb.each(subject, ns.vcard('url')) // vcard:url [ a vcard:HomePage; vcard:value <http://www.w3.org/People/Berners-Lee>],
           pages.forEach(function (p) {
