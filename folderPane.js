@@ -38,10 +38,11 @@ module.exports = {
       })
       .then(function () {
         console.log('Dummy file deleted : ' + newInstance.uri + '.dummy')
-
-        return kb.fetcher.createContainer(parentURI, folderName)
+/*
+        return kb.fetcher.createContainer(parentURI, folderName) // Not BOTH ways
       })
       .then(function () {
+*/
         console.log('New container created: ' + newInstance.uri)
         return newPaneOptions
       })

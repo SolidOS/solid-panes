@@ -834,6 +834,7 @@ module.exports = {
           picker.render()
         })
       }
+      
       var renderDetails = function () {
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')

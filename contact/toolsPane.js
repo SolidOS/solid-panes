@@ -1,19 +1,16 @@
 //  The tools pane is for managing and debugging and maintaining solid contacts databases
 //
+/* global confirm, alert */
+
 var UI = require('solid-ui')
-var mime = require('mime-types')
 
 // var toolsPane
 var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book, dom, me) {
   var kb = UI.store
-  var ns = UI.ns
-  var updater = UI.store.updater
-  var ACL = UI.ns.acl
-  var VCARD = UI.ns.vcard
-  var doc = $rdf.sym(book.uri.split('#')[0]) // The ACL is actually to the doc describing the thing
+  const ns = UI.ns
+  const VCARD = ns.vcard
 
-  var buttonStyle = 'font-size: 100%; margin: 0.8em; padding:0.5em;'
-
+  const buttonStyle = 'font-size: 100%; margin: 0.8em; padding:0.5em;'
   var pane = dom.createElement('div')
   var table = pane.appendChild(dom.createElement('table'))
   table.setAttribute('style', 'font-size:120%; margin: 1em; border: 0.1em #ccc ;')
@@ -150,6 +147,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
         //
         var eraseOne = function(card){
           return new Promise(function (resolve, reject) {
+
             var removeFromMainIndex = function() {
               var indexBit = kb.connectedStatements(card, stats.nameEmailIndex)
               log('Bits of the name index file:' + indexBit)
@@ -164,46 +162,47 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
                 }
               })
             }
-          })
-
-          var filesToDelete = [ card.doc() ]
-          var photo = kb.any(card, ns.vcard('hasPhoto'))
-          if (photo) filesToDelete.push(photo)
-          filesToDelete.push(card.dir()) // the folder last
-          log('Files to delete: ' + filesToDelete)
-          if (!confirm('DELETE card ' + card.dir() + ' for ' + name + ', with ' + desc.length + 'statements?')){
-            return resolve('Cancelled by user')
-          }
-
-          var deleteOneFile = function() {
-            var resource = filesToDelete.shift()
-            if (!resource) {
-              log('All deleted')
-              removeFromMainIndex()
-              return
+            var filesToDelete = [ card.doc() ]
+            var photos = kb.each(card, ns.vcard('hasPhoto')) // could be > 1
+            if (photos.length) {
+              filesToDelete = filesToDelete.concat(photos)
             }
-            log('Deleting ... ' + resource)
-            kb.fetcher.delete(resource)
-              .then(function () {
-                log('Deleted ok: ' + resource)
-                deleteOneFile()
-              })
-              .catch(function (e) {
-                var err = '*** ERROR deleteing ' + resource + ': ' + e
-                log(err)
-                if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card DELETE errors?')) {
-                  removeFromMainIndex()
-                } else {
-                  reject(err)
-                }
-              })
-          }
-          deleteOneFile()
+            filesToDelete.push(card.dir()) // the folder last
+            log('Files to delete: ' + filesToDelete)
+            if (!confirm('DELETE card ' + card.dir() + ' for "' + kb.any(card, VCARD('fn')) + '", with ' + kb.each(card).length + 'statements?')){
+              return resolve('Cancelled by user')
+            }
+
+            var deleteNextFile = function () {
+              var resource = filesToDelete.shift()
+              if (!resource) {
+                log('All deleted')
+                removeFromMainIndex()
+                resolve()
+              }
+              log('Deleting ... ' + resource)
+              kb.fetcher.delete(resource)
+                .then(function () {
+                  log('Deleted ok: ' + resource)
+                  deleteNextFile()
+                })
+                .catch(function (e) {
+                  var err = '*** ERROR deleteing ' + resource + ': ' + e
+                  log(err)
+                  if (confirm('Patch out index file for card ' + card.dir() + ' EVEN THOUGH card DELETE errors?')) {
+                    removeFromMainIndex()
+                  } else {
+                    reject(err)
+                  }
+                })
+            }
+            deleteNextFile()
+          }) // Promise
         } // erase one
 
         //   Check actual recorrds to see which are exact matches - slow
-        stats.nameDupLog = kb.sym(book.dir().uri + "dedup-nameDupLog.ttl")
-        stats.exactDupLog = kb.sym(book.dir().uri + "dedup-exactDupLog.ttl")
+        stats.nameDupLog = kb.sym(book.dir().uri + 'dedup-nameDupLog.ttl')
+        stats.exactDupLog = kb.sym(book.dir().uri + 'dedup-exactDupLog.ttl')
 
         var checkOne = function (card) {
           return new Promise(function (resolve, reject) {
@@ -214,7 +213,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               exclude[ns.vcard('hasUID').uri] = true
               exclude[ns.dc('created').uri] = true
               exclude[ns.dc('modified').uri] = true
-              var filtered = function(x){
+              var filtered = function (x) {
                 return kb.statementsMatching(null, null, null, x.doc()).filter(function (st) {
                   return !exclude[st.predicate.uri]
                 })
@@ -248,7 +247,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               log('___________________________________________')
 */
               if (cardText !== otherText){
-                log("Texts differ")
+                log('Texts differ')
                 stats.nameOnlyDuplicates.push(card)
                 return resolve(false)
               }
@@ -270,7 +269,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               console.log('Group check done -- exact duplicate: ' + card)
               stats.exactDuplicates.push(card)
               resolve(true)
-            }).catch(function(e){
+            }).catch(function (e) {
               log('Cant load a card! ' + [card, other] + ': ' + e)
               stats.nameOnlyDuplicates.push(card)
               resolve(false)
@@ -304,12 +303,12 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               var desc = filtered(card)
               // var desc = connectedStatements(card, card.doc(), exclude)
               // var desc2 = connectedStatements(other, other.doc(), exclude)
-              if (!desc.length){
+              if (!desc.length) {
                 log('  Zero length ' + card)
                 stats.nameLessZeroData.push(card)
                 return resolve(false)
               }
-              ////////// Compare the two
+              // Compare the two
               // Cheat: serialize and compare
               // var cardText = $rdf.serialize(card.doc(), kb, card.doc().uri, 'text/turtle')
               // var otherText = $rdf.serialize(other.doc(), kb, other.doc().uri, 'text/turtle')
@@ -319,12 +318,12 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
                 log('  Matches with ' + other)
                 var cardGroups = kb.each(null, ns.vcard('hasMember'), card)
                 var otherGroups = kb.each(null, ns.vcard('hasMember'), other)
-                for (var j=0; j< cardGroups.length; j++){
+                for (var j=0; j< cardGroups.length; j++) {
                   var found = false
-                  for (var k=0; k < otherGroups.length; k++){
-                    if (otherGroups[k].sameTerm(cardGroups[j])) found = true;
+                  for (var k = 0; k < otherGroups.length; k++) {
+                    if (otherGroups[k].sameTerm(cardGroups[j])) found = true
                   }
-                  if (!found){
+                  if (!found) {
                     log('This one groups: ' + cardGroups)
                     log('Other one groups: ' + otherGroups)
                     log('Cant skip this one because it has a group, ' + cardGroups[j] + ', which the other does not.')
@@ -334,16 +333,16 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
                 }
                 console.log('Group check done -- exact duplicate: ' + card)
               } else {
-                log('First nameless like: ' + card.doc());
+                log('First nameless like: ' + card.doc())
                 log('___________________________________________')
                 log(cardText)
                 log('___________________________________________')
-                 stats.nameLessIndex[cardText] = card
-                 stats.namelessUniques.push(card)
+                stats.nameLessIndex[cardText] = card
+                stats.namelessUniques.push(card)
               }
               resolve(true)
             }).catch(function (e) {
-              log('Cant load a nameless card! ' + other + ': ' + e)
+              log('Cant load a nameless card!: ' + e)
               stats.nameOnlyErrors.push(card)
               resolve(false)
             })
@@ -356,31 +355,31 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
             var x = duplicatesToCheck.shift()
             if (!x) return resolve(true)
             checkOne(x).then(function (exact) {
-              var logg = exact? exactDupLog : nameDupLog
+              var logg = exact ? stats.exactDupLog : stats.nameDupLog
               var klass = exact ? 'ExactDuplicate' : 'NameOnlyDuplicate'
               kb.updater.update([], $rdf.st(x, ns.rdf('type'), ns.vcard(klass), logg),
-                function(uri, ok, error_body){
+                function (uri, ok, error_body) {
                   if (ok) {
                     checkAll() // loop
                   } else {
-                    log('Stop: log write failure ' +  error_body)
+                    log('Stop: log write failure ' + error_body)
                   }
                 })
-              })
+            })
           })
         }
 
         var checkAllNameless = function () {
-          stats.namelessToCheck = stats.namelessToCheck  || stats.nameless.slice()
+          stats.namelessToCheck = stats.namelessToCheck || stats.nameless.slice()
           log('Nameless check left: ' + stats.namelessToCheck.length)
           return new Promise(function (resolve, reject) {
             var x = stats.namelessToCheck.shift()
             if (!x) {
               log('namelessUniques: ' + stats.namelessUniques.length)
               log('namelessUniques: ' + stats.namelessUniques)
-              if (confirm("Add all " + stats.namelessUniques.length + " nameless cards to the rescued set?")){
+              if (confirm('Add all ' + stats.namelessUniques.length + ' nameless cards to the rescued set?')) {
                 stats.uniques = stats.uniques.concat(stats.namelessUniques)
-                for (var k=0; k < stats.namelessUniques.length; k++) {
+                for (var k = 0; k < stats.namelessUniques.length; k++) {
                   stats.uniqueSet[stats.namelessUniques[k].uri] = true
                 }
               }
@@ -394,12 +393,11 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
           })
         }
 
-
         var checkGroupMembers = function () {
           return new Promise(function (resolve, reject) {
-            var i, inUniques = 0
+            var inUniques = 0
             log('Groups loaded')
-            for (i = 0; i < stats.uniques.length; i++) {
+            for (let i = 0; i < stats.uniques.length; i++) {
               stats.uniquesSet[stats.uniques[i].uri] = true
             }
             stats.groupMembers = kb.statementsMatching(null, ns.vcard('hasMember')).map(st => st.object)
@@ -415,7 +413,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
             log('  Compact group members ' + stats.groupMembers2.length)
 
             if (false) { // Don't inspect as seems groups membership is complete
-              for (i = 0; i < stats.groupMembers.length; i++) {
+              for (let i = 0; i < stats.groupMembers.length; i++) {
                 var card = stats.groupMembers[i]
                 if (stats.uniquesSet[card.uri]) {
                   inUniques += 1
@@ -441,7 +439,6 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
             log('' + stats.cards.length + ' total cards')
 
             var c, card, name
-            var count = 0
             for (c = 0; c < stats.cards.length; c++) {
               card = stats.cards[c]
               name = kb.anyValue(card, ns.vcard('fn'))
@@ -495,7 +492,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
             .then(() => {
               cleanPeople = kb.sym(stats.book.dir().uri + 'clean-people.ttl')
               var sts = []
-              for (i = 0; i < stats.uniques.length; i++) {
+              for (let i = 0; i < stats.uniques.length; i++) {
                 sts = sts.concat(kb.connectedStatements(stats.uniques[i], stats.nameEmailIndex))
               }
               var sz = (new $rdf.Serializer(kb)).setBase(stats.nameEmailIndex.uri)
@@ -521,14 +518,14 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               var s = g.uri.replace('/Group/', '/NewGroup/')
               cleanGroup = kb.sym(s)
               var sts = []
-              for (i = 0; i < stats.uniques.length; i++) {
+              for (let i = 0; i < stats.uniques.length; i++) {
                 sts = sts.concat(kb.connectedStatements(stats.uniques[i], g.doc()))
               }
               var sz = (new $rdf.Serializer(kb)).setBase(g.uri)
               log('   Regenerating group of uniques...' + cleanGroup)
               var data = sz.statementsToN3(sts)
 
-              return kb.fetcher.webOperation('PUT', cleanGroup, { data})
+              return kb.fetcher.webOperation('PUT', cleanGroup, {data})
             })
             .then(() => {
               log('     Done uniques group ' + cleanGroup)
@@ -550,7 +547,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
           .then(scanForDuplicates)
           .then(checkGroupMembers)
           .then(checkAllNameless)
-          .then((resolve, reject) => { if (confirm("Write new clean versions?")) { resolve(true) } else { reject() } })
+          .then((resolve, reject) => { if (confirm('Write new clean versions?')) { resolve(true) } else { reject() } })
           .then(saveCleanPeople)
           .then(saveAllGroups)
           .then(function (resolve, reject) {
@@ -592,8 +589,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
 
           var cards = kb.each(undefined, VCARD('inAddressBook'), book)
           log('' + cards.length + ' total cards')
-          var c, card
-          for (c = 0; c < cards.length; c++) {
+          for (let c = 0; c < cards.length; c++) {
             if (!reverseIndex[cards[c].uri]) {
               groupless.push(cards[c])
               log('   groupless ' + UI.utils.label(cards[c]))

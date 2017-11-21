@@ -539,6 +539,23 @@ module.exports = {
         nextOne()
       }
 
+      var deleteFolder = function (kb, folder) {
+        kb.load(folder).then(function(){
+          promises = kb.each(folder, ns.ldp('contains')).map(file => {
+            if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))){
+              return deleteFolder(file)
+            } else {
+              return deleteFile(file)
+            }
+          })
+          Promise.all(promises).then( res => {
+            deleteFile(folder).then( r => {
+
+            })
+          })
+        })
+      }
+
       var localNode = function (person, div) {
         var aliases = kb.allAliases(person)
         var prefix = book.dir().uri
@@ -1184,12 +1201,21 @@ module.exports = {
               span.textContent = val.uri
             }
           })
+
+          var deleteButton = UI.widgets.deleteButtonWithCheck(dom, div, 'contact', function () {
+            if (confirm("Delete this contact?")) {
+              deleteThing(subject)
+              console.log("Deleteing a contect... @@ fix me")
+              // @@ Todo: Recursively delete the directory for the contact + bookContents
+              //  - delete the references to it in group files and save them background
+              //   - delete the reference in people.ttl and save it back
+              refreshNames()
+              cardMain.innerHTML = ''
+            }
+          })
+          deleteButton.style = 'height: 2em;'
+
         })
-      /*
-            .catch(function(e){
-              console.log('Error: Failed to load form or ontology: ' + e)
-            }) // load.then
-      */
     } // renderIndividual
 
     //              Render a single contact Individual
