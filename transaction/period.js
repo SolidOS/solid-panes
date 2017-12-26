@@ -28,14 +28,8 @@ module.exports = {
     var div = dom.createElement('div')
     div.setAttribute('class', 'periodPane')
 
-    var commentFlter = function (pred, inverse) {
-      if (!inverse && pred.uri ==
-        'http://www.w3.org/2000/01/rdf-schema#comment') return true
-      return false
-    }
-
     var mention = function mention (message, style) {
-      if (style == undefined) style = 'color: grey'
+      if (!style) style = 'color: grey;'
       var pre = dom.createElement('pre')
       pre.setAttribute('style', style)
       div.appendChild(pre)
@@ -47,43 +41,27 @@ module.exports = {
     var complain = function complain (message) {
       return mention(message, 'color: #100; background-color: #fee')
     }
-    var thisPane = this
+/*
     var rerender = function (div) {
       var parent = div.parentNode
       var div2 = thisPane.render(subject, dom)
       parent.replaceChild(div2, div)
     }
-
-    // //////////////////////////////////////////////////////////////////////////////
-    var sparqlService = UI.store.updater
-
-    var plist = kb.statementsMatching(subject)
-    var qlist = kb.statementsMatching(undefined, undefined, subject)
-
-    var t = kb.findTypeURIs(subject)
-
-    // var me = UI.authn.currentUser()
-
-    //              Render a single Period
-
-    // This works only if enough metadata about the properties can drive the RDFS
-    // (or actual type statements whichtypically are NOT there on)
-    if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) {
+*/
+    var renderPeriod = function () {
       var dtstart = kb.any(subject, ns.cal('dtstart'))
       if (dtstart === undefined) {
-        complain('(Error: There is no start date known for this period <'
-          + subject.uri + '>,\n -- every period needs one.)')
+        complain('(Error: There is no start date known for this period <' +
+          subject.uri + '>,\n -- every period needs one.)')
       };
 
       var dtend = kb.any(subject, ns.cal('dtend'))
       if (dtend === undefined) {
-        complain('(Error: There is no end date known for this period <'
-          + subject.uri + '>,\n -- every period needs one.)')
+        complain('(Error: There is no end date known for this period <' +
+          subject.uri + '>,\n -- every period needs one.)')
       };
 
-      var store = kb.any(subject, UI.ns.qu('annotationStore')) || null
-
-      var needed = kb.each(subject, ns.rdfs('seeAlso'))
+      // var store = kb.any(subject, UI.ns.qu('annotationStore')) || null
 
       var predicateURIsDone = {}
       var donePredicate = function (pred) { predicateURIsDone[pred.uri] = true }
@@ -106,8 +84,8 @@ module.exports = {
       }
 
       var oderByDate = function (x, y) {
-        dx = UI.store.any(x, ns.qu('date'))
-        dy = UI.store.any(y, ns.qu('date'))
+        let dx = UI.store.any(x, ns.qu('date'))
+        let dy = UI.store.any(y, ns.qu('date'))
         if (dx !== undefined && dy !== undefined) {
           if (dx.value < dy.value) return -1
           if (dx.value > dy.value) return 1
@@ -116,20 +94,19 @@ module.exports = {
         if (x.uri > y.uri) return 1
         return 0
       }
-
-      var setPaneStyle = function () {
+/*
+      var setPaneStyle = function (account) {
         var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
         if (account) {
           var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
           if (backgroundColor) {
-            mystyle += 'background-color: '
-            + backgroundColor.value + '; '
+            mystyle += 'background-color: ' + backgroundColor.value + '; '
           }
         }
         div.setAttribute('style', mystyle)
       }
       // setPaneStyle();
-
+*/
       var h2 = div.appendChild(dom.createElement('h2'))
       h2.textContent = 'Period ' + dtstart.value.slice(0, 10) + ' - ' + dtend.value.slice(0, 10)
 
@@ -185,8 +162,7 @@ module.exports = {
             if (account) {
               var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
               if (backgroundColor) {
-                mystyle += 'background-color: '
-                + backgroundColor.value + '; '
+                mystyle += 'background-color: ' + backgroundColor.value + '; '
               }
             }
             tr.setAttribute('style', mystyle)
@@ -237,14 +213,16 @@ module.exports = {
         'http://www.w3.org/2000/10/swap/pim/qif#UnclassifiedIncome': true
       }
       var xURIs = kb.findMemberURIs(ns.qu('Transaction'))
-      var unc_in = [], unc_out = [], usd, z, tt, t, j
+      var unc_in = []
+      var unc_out = []
+      var usd, z
       for (var y in xURIs) { // For each thing which can be inferred to be a transaction
         if (xURIs.hasOwnProperty(y)) {
           z = kb.sym(y)
-          tt = kb.each(z, ns.rdf('type')) // What EXPLICIT definitions
-          classified = false
-          for (j = 0; j < tt.length; j++) {
-            t = tt[j]
+          let tt = kb.each(z, ns.rdf('type')) // What EXPLICIT definitions
+          var classified = false
+          for (let j = 0; j < tt.length; j++) {
+            let t = tt[j]
             if (dummies[t.uri] === undefined) {
               classified = true
             }
@@ -285,8 +263,8 @@ module.exports = {
       // ///////////////  Check some categories of transaction for having given fields
 
       var catSymbol = function (catTail) {
-        var cat, cats = kb.findSubClassesNT(ns.qu('Transaction'))
-        for (cat in cats) {
+        var cats = kb.findSubClassesNT(ns.qu('Transaction'))
+        for (var cat in cats) {
           if (cats.hasOwnProperty(cat)) {
             if (cat.slice(1, -1).split('#')[1] === catTail) {
               return kb.sym(cat.slice(1, -1))
@@ -297,8 +275,10 @@ module.exports = {
       }
 
       var checkCatHasField = function (catTail, pred) {
-        var cat = catSymbol(catTail), tab, count
-        var guilty = [], count = 0
+        var cat = catSymbol(catTail)
+        var tab
+        var guilty = []
+        var count = 0
         if (!cat) {
           complain('Error: No category correspnding to ' + catTail)
           return null
@@ -312,8 +292,8 @@ module.exports = {
         if (guilty.length) {
           tab = transactionTable(dom, guilty)
           count = tab.children.length
-          div.appendChild(dom.createElement('h3')).textContent = UI.utils.label(cat)
-            + ' with no ' + UI.utils.label(pred) +
+          div.appendChild(dom.createElement('h3')).textContent = UI.utils.label(cat) +
+            ' with no ' + UI.utils.label(pred) +
             (count < 4 ? '' : ' (' + count + ')')
           div.appendChild(tab)
         }
@@ -328,6 +308,23 @@ module.exports = {
         happy('Speaking income all has trips')
       }
       // end of render period instance
+    } // renderPeriod
+
+    // //////////////////////////////////////////////////////////////////////////////
+
+    // var me = UI.authn.currentUser()
+
+    //              Render a single Period
+
+    // This works only if enough metadata about the properties can drive the RDFS
+    // (or actual type statements whichtypically are NOT there on)
+    var t = kb.findTypeURIs(subject)
+    if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) {
+      let needed = kb.each(subject, ns.rdfs('seeAlso'))
+      console.log('Loading before render: ' + needed.length)
+      kb.fetcher.load(needed).then(function (responses) {
+        renderPeriod()
+      })
     }
 
     // if (!me) complain("You do not have your Web Id set. Set your Web ID to make changes.");

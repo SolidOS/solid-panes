@@ -6,6 +6,7 @@
 */
 
 var UI = require('solid-ui')
+const ns = UI.ns
 
 module.exports = {
   // icon:  (module.__dirname || __dirname) + '22-pixel-068010-3d-transparent-glass-icon-alphanumeric-dollar-sign.png',
@@ -24,15 +25,12 @@ module.exports = {
 
     if (t['http://www.w3.org/ns/pim/trip#Trip']) return 'Trip $'
 
-    return null; // No under other circumstances (while testing at least!)
+    return null // No under other circumstances (while testing at least!)
   },
 
   render: function (subject, dom) {
     var kb = UI.store
     var fetcher = kb.fetcher
-    var ns = UI.ns
-    var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
     var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
 
@@ -40,7 +38,7 @@ module.exports = {
     div.setAttribute('class', 'transactionPane')
 
     var mention = function mention (message, style) {
-      if (style == undefined) style = 'color: grey'
+      if (style === undefined) style = 'color: grey'
       var pre = dom.createElement('pre')
       pre.setAttribute('style', style)
       div.appendChild(pre)
@@ -50,32 +48,32 @@ module.exports = {
       return mention(message, 'color: #100; background-color: #fee')
     }
 
+    /*
     var thisPane = this
     var rerender = function (div) {
       var parent = div.parentNode
       var div2 = thisPane.render(subject, dom)
       parent.replaceChild(div2, div)
     }
-
+    */
     // //////////////////////////////////////////////////////////////////////////////
-
-    var sparqlService = UI.store.updater
 
     var plist = kb.statementsMatching(subject)
     var qlist = kb.statementsMatching(undefined, undefined, subject)
 
     var t = kb.findTypeURIs(subject)
 
-    var me = UI.authn.currentUser()
+    // var me = UI.authn.currentUser()
     var predicateURIsDone = {}
-    var donePredicate = function (pred) {predicateURIsDone[pred.uri] = true}
+    var donePredicate = function (pred) { predicateURIsDone[pred.uri] = true }
 
-    var setPaneStyle = function () {
+    var setPaneStyle = function (account) {
       var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
       if (account) {
         var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
-        if (backgroundColor) mystyle += 'background-color: '
-            + backgroundColor.value + '; '
+        if (backgroundColor) {
+          mystyle += 'background-color: ' + backgroundColor.value + '; '
+        }
       }
       div.setAttribute('style', mystyle)
     }
@@ -111,8 +109,8 @@ module.exports = {
     }
 
     var oderByDate = function (x, y) {
-      dx = UI.store.any(x, ns.qu('date'))
-      dy = UI.store.any(y, ns.qu('date'))
+      let dx = UI.store.any(x, ns.qu('date'))
+      let dy = UI.store.any(y, ns.qu('date'))
       if (dx !== undefined && dy !== undefined) {
         if (dx.value < dy.value) return -1
         if (dx.value > dy.value) return 1
@@ -173,8 +171,9 @@ module.exports = {
           var mystyle = "'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;"
           if (account) {
             var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
-            if (backgroundColor) mystyle += 'background-color: '
-                + backgroundColor.value + '; '
+            if (backgroundColor) {
+              mystyle += 'background-color: ' + backgroundColor.value + '; '
+            }
           }
           tr.setAttribute('style', mystyle)
         }
@@ -198,7 +197,7 @@ module.exports = {
         var c3 = tr.appendChild(dom.createElement('td'))
         var amount = kb.any(x, ns.qu('in_USD'))
         c3.textContent = amount ? d2(amount.value) : '???'
-        c3.setAttribute('style', 'width: 6em; text-align: right; '); // @@ decimal alignment?
+        c3.setAttribute('style', 'width: 6em; text-align: right; ') // @@ decimal alignment?
         tr.addEventListener('click', function (e) { // solo unless shift key
           expandAfterRowOrCollapse(dom, tr, x, 'transaction', !e.shiftKey)
         }, false)
@@ -206,7 +205,7 @@ module.exports = {
         return tr
       }
 
-      var list2 = filter ? list.filter(filter) : list.slice(); // don't sort a paramater passed in place
+      var list2 = filter ? list.filter(filter) : list.slice() // don't sort a paramater passed in place
       list2.sort(oderByDate)
 
       for (var i = 0; i < list2.length; i++) {
@@ -220,37 +219,26 @@ module.exports = {
     // This works only if enough metadata about the properties can drive the RDFS
     // (or actual type statements whichtypically are NOT there on)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction'] || kb.any(subject, ns.qu('toAccount'))) {
-      var trip = kb.any(subject, WF('trip'))
-      var ns = UI.ns
+      // var trip = kb.any(subject, WF('trip'))
       donePredicate(ns.rdf('type'))
-
-      var setPaneStyle = function (account) {
-        var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
-        if (account) {
-          var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
-          if (backgroundColor) mystyle += 'background-color: '
-              + backgroundColor.value + '; '
-        }
-        div.setAttribute('style', mystyle)
-      }
 
       var account = kb.any(subject, UI.ns.qu('toAccount'))
       setPaneStyle(account)
-      if (account == undefined) {
-        complain('(Error: There is no bank account known for this transaction <'
-          + subject.uri + '>,\n -- every transaction needs one.)')
+      if (!account) {
+        complain('(Error: There is no bank account known for this transaction <' +
+          subject.uri + '>,\n -- every transaction needs one.)')
       }
 
       var store = null
       var statement = kb.any(subject, UI.ns.qu('accordingTo'))
-      if (statement == undefined) {
-        complain('(Error: There is no back link to the original data source foir this transaction <'
-          + subject.uri + ">,\nso I can't tell how to annotate it.)")
+      if (statement === undefined) {
+        complain('(Error: There is no back link to the original data source foir this transaction <' +
+          subject.uri + ">,\nso I can't tell how to annotate it.)")
       } else {
-        store = statement != undefined ? kb.any(statement, UI.ns.qu('annotationStore')) : null
-        if (store == undefined) {
-          complain('(There is no annotation document for this statement\n<'
-            + statement.uri + '>,\nso you cannot classify this transaction.)')
+        store = statement !== undefined ? kb.any(statement, UI.ns.qu('annotationStore')) : null
+        if (store === undefined) {
+          complain('(There is no annotation document for this statement\n<' +
+            statement.uri + '>,\nso you cannot classify this transaction.)')
         }
       }
 
@@ -265,7 +253,7 @@ module.exports = {
         var a = dom.createElement('a')
         a.setAttribute('href', obj.uri)
         a.setAttribute('style', 'float:right')
-        nav.appendChild(a).textContent = label ? label : UI.utils.label(obj)
+        nav.appendChild(a).textContent = label || UI.utils.label(obj)
         nav.appendChild(dom.createElement('br'))
       }
 
@@ -313,13 +301,13 @@ module.exports = {
           if (kb.any(undefined, ns.rdfs('subClassOf'), ns.qu.Classified)) {
             renderCatgorySelectors()
           } else if (calendarYear) {
-            fetcher.load(calendarYear).then(function(xhrs){
-              fetcher.load(kb.each(calendarYear, ns.rdfs('seeAlso'))).then(function(){
+            fetcher.load(calendarYear).then(function (xhrs) {
+              fetcher.load(kb.each(calendarYear, ns.rdfs('seeAlso'))).then(function () {
                 renderCatgorySelectors()
-              }).catch(function(e){
+              }).catch(function (e) {
                 console.log('Error loading background data: ' + e)
               })
-            }).catch(function(e){
+            }).catch(function (e) {
               console.log('Error loading calendarYear: ' + e)
             })
           } else {
@@ -329,33 +317,36 @@ module.exports = {
             UI.ns.rdfs('comment'), store, complainIfBad))
 
           var trips = kb.statementsMatching(undefined, TRIP('trip'), undefined, store)
-            .map(function (st) {return st.object}); // @@ Use rdfs
+            .map(function (st) { return st.object }) // @@ Use rdfs
           var trips2 = kb.each(undefined, UI.ns.rdf('type'), TRIP('Trip'))
-          trips = trips.concat(trips2).sort(); // @@ Unique
+          trips = trips.concat(trips2).sort() // @@ Unique
 
           var sortedBy = function (kb, list, pred, reverse) {
-            l2 = list.map(function (x) {
+            let l2 = list.map(function (x) {
               var key = kb.any(x, pred)
               key = key ? key.value : '9999-12-31'
               return [ key, x ]
             })
             l2.sort()
             if (reverse) l2.reverse()
-            return l2.map(function (pair) {return pair[1]})
+            return l2.map(function (pair) { return pair[1] })
           }
 
           trips = sortedBy(kb, trips, UI.ns.cal('dtstart'), true) // Reverse chron
 
-          if (trips.length > 1) div.appendChild(UI.widgets.makeSelectForOptions(
-              dom, kb, subject, TRIP('trip'), trips,
-              { 'multiple': false, 'nullLabel': '-- what trip? --', 'mint': 'New Trip *',
-                'mintClass': TRIP('Trip'),
-                'mintStatementsFun': function (trip) {
-                  var is = []
-                  is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc()))
-                return is}},
-              store, complainIfBad))
-
+          if (trips.length > 1) {
+            div.appendChild(UI.widgets.makeSelectForOptions(
+                dom, kb, subject, TRIP('trip'), trips,
+                { 'multiple': false, 'nullLabel': '-- what trip? --', 'mint': 'New Trip *',
+                  'mintClass': TRIP('Trip'),
+                  'mintStatementsFun': function (trip) {
+                    var is = []
+                    is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc()))
+                    return is
+                  }
+                },
+                store, complainIfBad))
+          }
 
           div.appendChild(dom.createElement('br'))
 
@@ -365,7 +356,7 @@ module.exports = {
 
           donePredicate(ns.rdfs('comment')) // Done above
 
-          var a = UI.widgets.attachmentList(dom, subject, div)
+          UI.widgets.attachmentList(dom, subject, div)
           donePredicate(ns.wf('attachment'))
 
           div.appendChild(dom.createElement('tr'))
@@ -380,14 +371,9 @@ module.exports = {
             function (pred, inverse) {
               return !(pred.uri in predicateURIsDone)
             })
-
-
-
         }) // fetch
       }
-
-
-        // end of render tranasaction instance
+      // end of render tranasaction instance
 
     // ////////////////////////////////////////////////////////////////////
     //
@@ -425,14 +411,12 @@ module.exports = {
         var yearTotal = {}
         var yearCategoryTotal = {}
         var trans = kb.each(undefined, TRIP('trip'), subject)
-        var bankStatements = trans.map(function(t){return t.doc()})
-        kb.fetcher.load(bankStatements).then(function(){
-
+        var bankStatements = trans.map(function (t) { return t.doc() })
+        kb.fetcher.load(bankStatements).then(function () {
           trans.map(function (t) {
-
             var date = kb.the(t, ns.qu('date'))
             var year = date ? ('' + date.value).slice(0, 4) : '????'
-            var ty = kb.the(t, ns.rdf('type')); // @@ find most specific type
+            var ty = kb.the(t, ns.rdf('type')) // @@ find most specific type
             // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')))
             if (!ty) ty = UI.ns.qu('ErrorNoType')
             if (ty && ty.uri) {
@@ -453,12 +437,12 @@ module.exports = {
                 yearTotal[year] += amount
               }
             }
-
           })
 
           var types = []
           var grandTotal = 0.0
-          var years = [], i
+          var years = []
+          var i
 
           for (var y in yearCategoryTotal) {
             if (yearCategoryTotal.hasOwnProperty(y)) {
@@ -466,7 +450,8 @@ module.exports = {
             }
           }
           years.sort()
-          var ny = years.length, cell
+          var ny = years.length
+          var cell
 
           var table = div.appendChild(dom.createElement('table'))
           table.setAttribute('style', 'font-size: 120%; margin-left:auto; margin-right:1em; margin-top: 1em; border: 0.05em solid gray; padding: 1em;')
@@ -481,8 +466,8 @@ module.exports = {
           }
 
           for (var uri in total) if (total.hasOwnProperty(uri)) {
-              types.push(uri)
-              grandTotal += total[uri]
+            types.push(uri)
+            grandTotal += total[uri]
           }
           types.sort()
           var row, label, z
@@ -519,19 +504,10 @@ module.exports = {
           div.appendChild(tab)
 
           UI.widgets.attachmentList(dom, subject, div)
-
-
-        }).catch(function(e){complain('Error loading transactions: ' + e)})
-
+        }).catch(function (e) { complain('Error loading transactions: ' + e) })
       }
-
       calculations()
-
-
-
     } // if
-
-    // if (!me) complain("You do not have your Web Id set. Set your Web ID to make changes.")
 
     return div
   }

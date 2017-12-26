@@ -825,8 +825,8 @@ module.exports = {
 
         options.cellFunction = function (cell, x, y, value) {
           if (value !== null) {
-            kb.fetcher.nowOrWhenFetched(value.uri.split('#')[0], undefined, function (uri, ok, error) {
-              refreshCellColor(cell, value)
+            kb.fetcher.nowOrWhenFetched(value.uri.split('#')[0], undefined, function (ok, error) {
+              if (ok) refreshCellColor(cell, value)
             })
           }
           if (y.sameTerm(me)) {
