@@ -4,8 +4,7 @@
 
 var UI = require('solid-ui')
 
-// var toolsPane
-var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book, dom, me) {
+function toolsPane (selectAllGroups, selectedGroups, groupsMainTable, book, dom, me) {
   var kb = UI.store
   const ns = UI.ns
   const VCARD = ns.vcard
@@ -25,8 +24,8 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
   var box = MainRow.appendChild(dom.createElement('table'))
   var bottomRow = table.appendChild(dom.createElement('tr'))
 
-  context = { target: book, me: me, noun: 'address book',
-  div: pane, dom: dom, statusRegion: statusBlock }
+  let context = { target: book, me: me, noun: 'address book',
+            div: pane, dom: dom, statusRegion: statusBlock }
 
   box.appendChild(UI.aclControl.ACLControlBox5(book.dir(), dom, 'book', kb, function (ok, body) {
     if (!ok) box.innerHTML = 'ACL control box Failed: ' + body
@@ -44,12 +43,12 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
 
   //  Output stats in line mode form
   var logSpace = MainRow.appendChild(dom.createElement('pre'))
-  var log = function (message) {
+  function log (message) {
     console.log(message)
     logSpace.textContent += message + '\n'
   }
 
-  var stats = function () {
+  function stats () {
     var totalCards = kb.each(undefined, VCARD('inAddressBook'), book).length
     log('' + totalCards + ' cards loaded. ')
     var groups = kb.each(book, VCARD('includesGroup'))
@@ -145,10 +144,10 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
 
         // Erase one card and all its files  -> (err)
         //
-        var eraseOne = function(card){
+        function eraseOne (card){
           return new Promise(function (resolve, reject) {
 
-            var removeFromMainIndex = function() {
+            function removeFromMainIndex () {
               var indexBit = kb.connectedStatements(card, stats.nameEmailIndex)
               log('Bits of the name index file:' + indexBit)
               log('Patching main index file...')
@@ -173,7 +172,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               return resolve('Cancelled by user')
             }
 
-            var deleteNextFile = function () {
+            function deleteNextFile() {
               var resource = filesToDelete.shift()
               if (!resource) {
                 log('All deleted')
@@ -204,16 +203,16 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
         stats.nameDupLog = kb.sym(book.dir().uri + 'dedup-nameDupLog.ttl')
         stats.exactDupLog = kb.sym(book.dir().uri + 'dedup-exactDupLog.ttl')
 
-        var checkOne = function (card) {
+        function checkOne(card) {
           return new Promise(function (resolve, reject) {
             var name = kb.anyValue(card, ns.vcard('fn'))
-            var other = definitive[name]
+            var other = stats.definitive[name]
             kb.fetcher.load([card, other]).then(function (xhrs) {
               var exclude = {}
               exclude[ns.vcard('hasUID').uri] = true
               exclude[ns.dc('created').uri] = true
               exclude[ns.dc('modified').uri] = true
-              var filtered = function (x) {
+              function filtered(x) {
                 return kb.statementsMatching(null, null, null, x.doc()).filter(function (st) {
                   return !exclude[st.predicate.uri]
                 })
@@ -258,7 +257,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
                 for (var k=0; k < otherGroups.length; k++) {
                   if (otherGroups[k].sameTerm(cardGroups[j])) { found = true }
                 }
-                if (!found){
+                if (!found) {
                   log('This one groups: ' + cardGroups)
                   log('Other one groups: ' + otherGroups)
                   log('Cant delete this one because it has a group, ' + cardGroups[j] + ', which the other does not.')
@@ -286,7 +285,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
         stats.namelessUniques = []
         stats.nameOnlyDuplicatesGroupDiff = []
 
-        var checkOneNameless = function (card) {
+        function checkOneNameless (card) {
           return new Promise(function (resolve, reject) {
             kb.fetcher.load(card).then(function (xhr) {
               log(' Nameless check ' + card)
@@ -294,7 +293,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
               exclude[ns.vcard('hasUID').uri] = true
               exclude[ns.dc('created').uri] = true
               exclude[ns.dc('modified').uri] = true
-              var filtered = function(x){
+              function filtered(x){
                 return kb.statementsMatching(null, null, null, x.doc()).filter(function (st) {
                   return !exclude[st.predicate.uri]
                 })
@@ -350,7 +349,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
         } // checkOneNameless
 
         var duplicatesToCheck = stats.duplicates.slice() // copy
-        var checkAll = function () {
+        function checkAll() {
           return new Promise(function (resolve, reject) {
             var x = duplicatesToCheck.shift()
             if (!x) return resolve(true)
@@ -369,7 +368,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
           })
         }
 
-        var checkAllNameless = function () {
+        function checkAllNameless () {
           stats.namelessToCheck = stats.namelessToCheck || stats.nameless.slice()
           log('Nameless check left: ' + stats.namelessToCheck.length)
           return new Promise(function (resolve, reject) {
@@ -393,7 +392,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
           })
         }
 
-        var checkGroupMembers = function () {
+        function checkGroupMembers () {
           return new Promise(function (resolve, reject) {
             var inUniques = 0
             log('Groups loaded')
@@ -433,7 +432,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
           })
         } //  checkGroupMembers
 
-        var scanForDuplicates = function () {
+        function scanForDuplicates () {
           return new Promise(function (resolve, reject) {
             stats.cards = kb.each(undefined, VCARD('inAddressBook'), stats.book)
             log('' + stats.cards.length + ' total cards')
@@ -485,7 +484,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
         }
 
         // Save a new clean version
-        var saveCleanPeople = function () {
+        function saveCleanPeople () {
           var cleanPeople
 
           return Promise.resolve()
@@ -510,7 +509,7 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
             })
         }
 
-        var saveCleanGroup = function (g) {
+        function saveCleanGroup (g) {
           var cleanGroup
 
           return Promise.resolve()
@@ -536,10 +535,25 @@ var toolsPane = function (selectAllGroups, selectedGroups, groupsMainTable, book
             })
         }
 
-        var saveAllGroups = function () {
+        function saveAllGroups () {
           log('Saving ALL GROUPS')
           return Promise.all(stats.groupObjects.map(saveCleanGroup))
         }
+
+        var getAndSortGroups = function () {
+          let groups = []
+          if (stats.book) {
+            let books = [ stats.book ]
+            books.map(function (book) {
+              var gs = book ? kb.each(book, ns.vcard('includesGroup')) : []
+              var gs2 = gs.map(function (g) { return [ book, kb.any(g, ns.vcard('fn')), g ] })
+              groups = groups.concat(gs2)
+            })
+            groups.sort()
+          }
+          return groups
+        }
+        var groups = getAndSortGroups() // Needed?
 
         stats.groupObjects = groups.map(gstr => gstr[2])
         log('Loading ' + stats.groupObjects.length + ' groups... ')
