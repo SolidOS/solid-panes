@@ -1,6 +1,6 @@
 {
   "name": "solid-app-set",
-  "version": "0.7.3",
+  "version": "0.8.0",
   "description": "Solid-compatible App set",
   "main": "./index.js",
   "scripts": {
