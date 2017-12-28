@@ -18,7 +18,6 @@ module.exports = {
 
   // Does the subject deserve this pane?
   label: function (subject) {
-    var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var kb = UI.store
     var t = kb.findTypeURIs(subject)
 
@@ -35,53 +34,34 @@ module.exports = {
     var kb = UI.store
     var ns = UI.ns
     var CAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-    var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
-    var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
 
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'transactionPane')
     div.innerHTML = '<h2>Trip transactions</h2>'
 
-    var commentFlter = function (pred, inverse) {
-      if (!inverse && pred.uri ==
-        'http://www.w3.org/2000/01/rdf-schema#comment') return true
-      return false
-    }
-
     var complain = function complain (message, style) {
-      if (style == undefined) style = 'color: grey'
+      if (style === undefined) style = 'color: grey'
       var pre = myDocument.createElement('pre')
       pre.setAttribute('style', style)
       div.appendChild(pre)
       pre.appendChild(myDocument.createTextNode(message))
-    }
-    var thisPane = this
-    var rerender = function (div) {
-      var parent = div.parentNode
-      var div2 = thisPane.render(subject, myDocument)
-      parent.replaceChild(div2, div)
     }
 
 // //////////////////////////////////////////////////////////////////////////////
 //
 //   Body of trip pane
 
-    var plist = kb.statementsMatching(subject)
-    var qlist = kb.statementsMatching(undefined, undefined, subject)
-
     var t = kb.findTypeURIs(subject)
 
-    var me = UI.authn.currentUser()
+    // var me = UI.authn.currentUser()
 
     //      Function: Render a single trip
 
     var renderTrip = function renderTrip (subject, thisDiv) {
       var query = new $rdf.Query(UI.utils.label(subject))
-      var vars = [ 'date', 'transaction', 'comment', 'type', 'in_USD']
-      var v = {}
+      var vars = [ 'date', 'transaction', 'comment', 'type', 'in_USD' ]
+      var v = { }
       vars.map(function (x) { query.vars.push(v[x] = $rdf.variable(x)) }) // Only used by UI
       query.pat.add(v['transaction'], TRIP('trip'), subject)
 
@@ -91,7 +71,6 @@ module.exports = {
 
       query.pat.add(v['transaction'], UI.ns.qu('date'), v['date'])
 
-      var opt = kb.formula()
       opt.add(v['transaction'], ns.rdfs('comment'), v['comment'])
       query.pat.optional.push(opt)
 
@@ -139,8 +118,8 @@ module.exports = {
     //          Render the set of trips which have transactions in this class
 
     if (UI.ns.qu('Transaction') in kb.findSuperClassesNT(subject)) {
-      ts = kb.each(undefined, ns.rdf('type'), subject)
-      var tripless = []
+      let ts = kb.each(undefined, ns.rdf('type'), subject)
+      let tripless = []
       var index = []
       for (var i = 0; i < ts.length; i++) {
         var trans = ts[i]
@@ -160,7 +139,7 @@ module.exports = {
                               new Date(kb.any(b, CAL('dtstart')));
                   }
       */
-      var list = [], x
+      var list = []
       for (var h1 in index) {
         var t1 = kb.fromNT(h1)
         list.push([kb.any(t1, CAL('dtstart')), t1])
