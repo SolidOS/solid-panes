@@ -2,10 +2,9 @@
 **
 **  This outline pane lists the members of a folder
 */
-/* global FileReader, alert */
+/* global FileReader */
 
 var UI = require('solid-ui')
-// var Solid = require('solid-client')
 
 var ns = UI.ns
 
@@ -23,10 +22,6 @@ module.exports = {
       u = u.slice(0, -1) // chop off trailer
     }// { throw new Error('URI of new folder must end in "/" :' + u) }
     newPaneOptions.newInstance = kb.sym(u + '/')
-
-    var parentURI = newInstance.dir().uri // ends in /
-    var slash = u.lastIndexOf('/')
-    var folderName = u.slice(slash + 1)
 
     // @@@@ kludge until we can get the solid-client version working
     // Force the folder by saving a dummy file insie it
@@ -59,6 +54,8 @@ module.exports = {
     }
     return null // Suppress pane otherwise
   },
+
+  // Render a file folder in a LDP/solid system
 
   render: function (subject, dom) {
     var outliner = UI.panes.getOutliner(dom)
@@ -96,23 +93,22 @@ module.exports = {
       return div
     } else {
       if (true) {
-
         // outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) { return true })
 
         mainTable = div.appendChild(dom.createElement('table'))
-        var refresh = function(){
+        var refresh = function () {
           var objs = kb.each(subject, ns.ldp('contains')).filter(noHiddenFiles)
-          objs = objs.map(obj => [ UI.utils.label(obj).toLowerCase(), obj])
+          objs = objs.map(obj => [ UI.utils.label(obj).toLowerCase(), obj ])
           objs.sort() // Sort by label case-insensitive
           objs = objs.map(pair => pair[1])
-          UI.utils.syncTableToArray(mainTable, objs, function(obj){
-            let st = kb.statementsMatching(subject,ns.ldp('contains'), obj)[0]
+          UI.utils.syncTableToArray(mainTable, objs, function (obj) {
+            let st = kb.statementsMatching(subject, ns.ldp('contains'), obj)[0]
             let defaultpropview = outliner.VIEWAS_boring_default
             let tr = outliner.propertyTR(dom,
               st, false)
             tr.firstChild.textContent = '' // Was initialized to 'Contains'
             tr.firstChild.style.cssText += 'min-width: 3em;'
-            tr.appendChild(outliner.outline_objectTD(obj, defaultpropview, undefined, st));
+            tr.appendChild(outliner.outline_objectTD(obj, defaultpropview, undefined, st))
             // UI.widgets.makeDraggable(tr, obj)
             return tr
           })
@@ -127,7 +123,7 @@ module.exports = {
     var me = UI.authn.currentUser()
     var creationContext = {folder: subject, div: creationDiv, dom: dom, statusArea: creationDiv, me: me}
     creationContext.refreshTarget = mainTable
-    var newUI = UI.create.newThingUI(creationContext, UI.panes) // Have to pass panes down
+    UI.create.newThingUI(creationContext, UI.panes) // Have to pass panes down  newUI
 
     // /////////// Allow new file to be Uploaded
     var droppedFileHandler = function (files) {
@@ -176,9 +172,9 @@ module.exports = {
 
     const explictDropIcon = false
     var target
-    if (explictDropIcon){
+    if (explictDropIcon) {
       let iconStyleFound = creationDiv.firstChild.style.cssText
-      arget = creationDiv.insertBefore(dom.createElement('img'), creationDiv.firstChild)
+      target = creationDiv.insertBefore(dom.createElement('img'), creationDiv.firstChild)
       target.style.cssText = iconStyleFound
       target.setAttribute('src', UI.icons.iconBase + 'noun_748003.svg')
       target.setAttribute('style', 'width: 2em; height: 2em') // Safari says target.style is read-only
