@@ -121,7 +121,8 @@ module.exports = {
     var kb = UI.store
     var div = dom.createElement('div')
     div.setAttribute('class', 'socialPane')
-    var foaf = UI.ns.foaf
+    const foaf = UI.ns.foaf
+    const vcard = UI.ns.vcard
 
     // extracted from tabbedtab.css 2017-03-21
     const navBlockStyle = 'background-color: #eee; width: 25%; border: 0; padding: 0.5em; margin: 0;'
@@ -222,7 +223,7 @@ module.exports = {
           if (!profile) profile = outgoingSt[0].why
         }
 
-        var tr = dom.createElement('tr')
+        let tr = dom.createElement('tr')
         tools.appendChild(tr)
 
         var youAndThem = function () {
@@ -262,7 +263,7 @@ module.exports = {
           tools.appendChild(f)
         } // editable
 
-        ////////////////// Mutual friends
+        // //////////////// Mutual friends
         if (friends) {
           var myFriends = kb.each(me, foaf('knows'))
           if (myFriends.length) {
@@ -288,14 +289,12 @@ module.exports = {
 
     // div.appendChild(dom.createTextNode(plural(friends.length, 'acqaintance') +'. '))
 
-    ///////////////////////////////////////////////  Main block
+    // /////////////////////////////////////////////  Main block
     //
     // Find the intersection and difference sets
 
-
-
     if (true) {
-      var al = UI.widgets.attachmentList(dom, s, mainTable, {
+      UI.widgets.attachmentList(dom, s, mainTable, {
         doc: profile,
         modify: !!editable,
         predicate: foaf('knows'),
@@ -367,9 +366,7 @@ module.exports = {
       }
     }
 
-
-
-    ////////////////////////////////////// Basic info on left
+    // //////////////////////////////////// Basic info on left
 
     h3 = dom.createElement('h3')
     h3.appendChild(dom.createTextNode('Basic Information'))
