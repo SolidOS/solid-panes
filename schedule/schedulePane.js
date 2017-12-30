@@ -375,26 +375,6 @@ module.exports = {
       })
     }
 
-    var listenToIframe = function () {
-      // Event listener for login (from child iframe)
-      var eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent'
-      var eventListener = window[eventMethod]
-      var messageEvent = eventMethod === 'attachEvent' ? 'onmessage' : 'message'
-
-      // Listen to message from child window
-      eventListener(messageEvent, function (e) {
-        if (e.data.slice(0, 5) === 'User:') {
-          // the URI of the user (currently either http* or dns:* values)
-          var user = e.data.slice(5, e.data.length)
-          if (user.slice(0, 4) === 'http') {
-            // we have an HTTP URI (probably a WebID), do something with the user variable
-            // i.e. app.login(user)
-            setUser(user)
-          }
-        }
-      }, false)
-    }
-
     var showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
 
@@ -423,17 +403,13 @@ module.exports = {
     }
 
     var showSignon = function showSignon () {
-      var d = clearElement(naviMain)
-      // var d = div.appendChild(dom.createElement('div'))
-      var origin = window && window.location ? window.location.origin : ''
-      d.innerHTML = '<p style="font-size: 120%; background-color: #ffe; padding: 2em; margin: 1em; border-radius: 1em;">' +
-        'You need to be logged in.<br />To be able to use this app' +
-        ' you need to log in with webid account at a storage provider.</p> ' +
-        '<iframe class="text-center" src="https://solid.github.io/solid-idps/?origin=' + origin + '" ' +
-        'style="margin-left: 1em; margin-right: 1em; width: 95%; height: 40em;" ' +
-        ' sandbox="allow-same-origin allow-scripts allow-forms" frameborder="0"></iframe>'
-      listenToIframe()
-      waitingForLogin = true // hack
+      clearElement(naviMain)
+      let context = {div: div, dom: dom}
+      UI.authn.logIn(context).then(context => {
+        me = context.me
+        waitingForLogin = false // untested
+        showAppropriateDisplay()
+      })
     }
 
     var showBootstrap = function showBootstrap () {
@@ -812,7 +788,7 @@ module.exports = {
       }
 
       // @@ Give other combos too-- see schedule ontology
-      var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
+      // var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
       var me = UI.authn.currentUser()
 
