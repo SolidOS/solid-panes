@@ -26,7 +26,7 @@ module.exports = {
     var kb = UI.store
     var ns = UI.ns
     var updater = kb.updater
-    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error ("notepad mintNew:  Invalid userid")
+    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error('notepad mintNew:  Invalid userid')
 
     var newInstance = newPaneOptions.newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase + 'index.ttl#this')
     // var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
@@ -164,11 +164,11 @@ module.exports = {
     // Option of either using the workspace system or just typing in a URI
     var showBootstrap = function showBootstrap (thisInstance, container, noun) {
       var div = clearElement(container)
-      var appDetails= {'noun': 'notepad'}
-      var na = div.appendChild(UI.authn.newAppInstance(
+      var appDetails = {'noun': 'notepad'}
+      div.appendChild(UI.authn.newAppInstance(
         dom, appDetails, initializeNewInstanceInWorkspace))
 
-      var hr = div.appendChild(dom.createElement('hr')) // @@
+      div.appendChild(dom.createElement('hr')) // @@
 
       var p = div.appendChild(dom.createElement('p'))
       p.textContent = 'Where would you like to store the data for the ' + noun + '?  ' +
@@ -212,24 +212,24 @@ module.exports = {
 
     var initializeNewInstanceAtBase = function (thisInstance, newBase) {
       var here = $rdf.sym(thisInstance.uri.split('#')[0])
+      var base = here // @@ ???
 
-      var sp = UI.ns.space
       var kb = UI.store
 
       var newPadDoc = kb.sym(newBase + 'pad.ttl')
       var newIndexDoc = kb.sym(newBase + 'index.html')
 
-      toBeCopied = [
+      var toBeCopied = [
         { local: 'index.html', contentType: 'text/html' }
       ]
 
-      newInstance = kb.sym(newPadDoc.uri + '#thisPad')
+      let newInstance = kb.sym(newPadDoc.uri + '#thisPad')
 
       // $rdf.log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
 
-      agenda = []
+      var agenda = []
 
-      var f, fi, fn //   @@ This needs some form of visible progress bar
+      var f //   @@ This needs some form of visible progress bar
       for (f = 0; f < toBeCopied.length; f++) {
         var item = toBeCopied[f]
         var fun = function copyItem (item) {
@@ -285,8 +285,8 @@ module.exports = {
             if (ok) {
               agenda.shift()()
             } else {
-              complainIfBad(ok, 'FAILED to save new notepad at: ' + there.uri + ' : ' + message)
-              console.log('FAILED to save new notepad at: ' + there.uri + ' : ' + message)
+              complainIfBad(ok, 'FAILED to save new notepad at: ' + newPadDoc.uri + ' : ' + message)
+              console.log('FAILED to save new notepad at: ' + newPadDoc.uri + ' : ' + message)
             }
           }
         )
@@ -335,7 +335,7 @@ module.exports = {
       var partipationTarget = kb.any(subject, ns.meeting('parentMeeting')) || subject
       UI.pad.manageParticipation(dom, naviMiddle2, padDoc, partipationTarget, me, options)
 
-      var initiated = UI.store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync)
+      UI.store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
     }
 
     // Read or create empty data file
@@ -390,11 +390,9 @@ module.exports = {
     structure.setAttribute('style', 'background-color: white; min-width: 94%; margin-right:3% margin-left: 3%; min-height: 13em;')
 
     var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
-    var naviLoginout1 = naviLoginoutTR.appendChild(dom.createElement('td'))
-    var naviLoginout2 = naviLoginoutTR.appendChild(dom.createElement('td'))
-    var naviLoginout3 = naviLoginoutTR.appendChild(dom.createElement('td'))
-
-    var logInOutButton = null
+    naviLoginoutTR.appendChild(dom.createElement('td')) // naviLoginout1
+    naviLoginoutTR.appendChild(dom.createElement('td'))
+    naviLoginoutTR.appendChild(dom.createElement('td'))
 
     var naviTop = structure.appendChild(dom.createElement('tr')) // stuff
     var naviMain = naviTop.appendChild(dom.createElement('td'))
@@ -414,9 +412,9 @@ module.exports = {
     var naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.setAttribute('class', 'naviMenu')
 //    naviMenu.setAttribute('style', 'margin-top: 3em;');
-    var naviLeft = naviMenu.appendChild(dom.createElement('td'))
-    var naviCenter = naviMenu.appendChild(dom.createElement('td'))
-    var naviRight = naviMenu.appendChild(dom.createElement('td'))
+    naviMenu.appendChild(dom.createElement('td')) // naviLeft
+    naviMenu.appendChild(dom.createElement('td'))
+    naviMenu.appendChild(dom.createElement('td'))
 
     var options = { statusArea: statusArea, timingArea: naviMiddle1 }
 
