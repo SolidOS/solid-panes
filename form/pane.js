@@ -21,19 +21,16 @@ module.exports = {
   render: function (subject, dom) {
     var kb = UI.store
     var ns = UI.ns
-    var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
 
     var mention = function complain (message, style) {
       var pre = dom.createElement('p')
-      pre.setAttribute('style', style ? style : 'color: grey; background-color: white')
+      pre.setAttribute('style', style || 'color: grey; background-color: white')
       box.appendChild(pre).textContent = message
       return pre
     }
 
     var complain = function complain (message, style) {
-      mention(message, 'style', style ? style : 'color: grey; background-color: #fdd;')
+      mention(message, 'style', style || 'color: grey; background-color: #fdd;')
     }
 
     var complainIfBad = function (ok, body) {
@@ -43,20 +40,11 @@ module.exports = {
       } else complain('Sorry, failed to save your change:\n' + body)
     }
 
-    var thisPane = this
-    var rerender = function (box) {
-      var parent = box.parentNode
-      var box2 = thisPane.render(subject, dom)
-      parent.replaceChild(box2, box)
-    }
-
-    // kb.statementsMatching(undefined, undefined, subject);
-
     // The question of where to store this data about subject
     // This in general needs a whole lot more thought
     // and it connects to the discoverbility through links
 
-    var t = kb.findTypeURIs(subject)
+    // var t = kb.findTypeURIs(subject)
 
     var me = UI.authn.currentUser()
 
@@ -64,15 +52,15 @@ module.exports = {
     box.setAttribute('class', 'formPane')
 
     if (!me) {
-      mention('You are not logged in. If you log in and have \
-workspaces then you would be able to select workspace in which \
-to put this new information')
+      mention('You are not logged in. If you log in and have ' +
+        'workspaces then you would be able to select workspace in which ' +
+        'to put this new information')
     } else {
       var ws = kb.each(me, ns.ui('workspace'))
-      if (ws.length = 0) {
-        mention("You don't seem to have any workspaces defined.  \
-A workspace is a place on the web (http://..) or in \
-the file system (file:///) to store application data.\n")
+      if (ws.length === 0) {
+        mention('You don\'t seem to have any workspaces defined.  ' +
+      'A workspace is a place on the web (http://..) or in ' +
+      'the file system (file:///) to store application data.\n')
       } else {
         // @@
       }
@@ -131,12 +119,11 @@ the file system (file:///) to store application data.\n")
     // 1. The document URI of the subject itself
     var docuri = $rdf.Util.uri.docpart(subject.uri)
     if (subject.uri !== docuri && kb.updater.editable(docuri, kb)) {
-      store = kb.sym($rdf.Util.uri.docpart(subject.uri))
+      store = subject.doc()
     } // an editable data file with hash
 
-    else if (store = kb.any(kb.sym(docuri), ns.link('annotationStore'))) {
-      //
-    }
+    store = store || kb.any(kb.sym(docuri), ns.link('annotationStore'))
+
     // 2. where stuff is already stored
     if (!store) {
       var docs = {}
@@ -158,7 +145,7 @@ the file system (file:///) to store application data.\n")
 
     var followeach = function (kb, subject, path) {
       if (path.length === 0) return [ subject ]
-      var oo = kb.each(subj, path[0])
+      var oo = kb.each(subject, path[0])
       var res = []
       for (var i = 0; i < oo.length; i++) {
         res = res.concat(followeach(kb, oo[i], path.slice(1)))
