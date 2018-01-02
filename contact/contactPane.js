@@ -507,8 +507,8 @@ module.exports = {
       // beware of other dta picked up from other places being smushed
       // together and then deleted.
 
-      var deleteThing = function (x) {
-        var ds = kb.statementsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
+      function deleteThing (x) {
+        var ds = kb.statexmentsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
         var targets = {}
         ds.map(function (st) { targets[st.why.uri] = st })
         var agenda = [] // sets of statements of same dcoument to delete
@@ -539,19 +539,20 @@ module.exports = {
         nextOne()
       }
 
-      var deleteFolder = function (kb, folder) {
-        kb.load(folder).then(function(){
-          promises = kb.each(folder, ns.ldp('contains')).map(file => {
-            if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))){
-              return deleteFolder(file)
-            } else {
-              return deleteFile(file)
-            }
-          })
-          Promise.all(promises).then( res => {
-            deleteFile(folder).then( r => {
+//  For deleting an addressbook sub-folder eg person - use with care!
 
+      function deleteRecursive (kb, folder) {
+        return new Promise(function (resolve, reject) {
+          kb.load(folder).then(function () {
+            let promises = kb.each(folder, ns.ldp('contains')).map(file => {
+              if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
+                return deleteRecursive(file)
+              } else {
+                return kb.fetcher.webOperation(file, 'DELETE')
+              }
             })
+            promises.push(kb.fetcher.webOperation(folder, 'DELETE'))
+            Promise.all(promises).then(res => { resolve() })
           })
         })
       }
@@ -619,6 +620,24 @@ module.exports = {
                 cardMain.appendChild(dom.createElement('br'))
 
                 cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
+
+                // Add in a delete button to delete from AB
+                var deleteButton = UI.widgets.deleteButtonWithCheck(dom, cardMain, 'contact', function () {
+                  let container = subject.dir()
+                  function warn (message) { return UI.widgets.errorMessageBlock(dom, message, 'straw') }
+                  warn('Conatiner to delete is ' + container)
+                  if (confirm('Delete this contact completely??')) {
+                    deleteThing(subject)
+                    console.log('Deleting a contact... @@ fix me')
+                    //  - delete the references to it in group files and save them background
+                    //   - delete the reference in people.ttl and save it back
+                    deleteRecursive(container).then(res => {
+                      refreshNames()
+                      cardMain.innerHTML = 'Contact Data Deleted.'
+                    })
+                  }
+                })
+                deleteButton.style = 'height: 2em;'
               })
             })
           }
@@ -895,6 +914,7 @@ module.exports = {
               } else {
                 cardMain.innerHTML = ''
                 refreshNames() // Add name to list of group
+                // @@@ SELECT THE NAME JUST MADE
                 cardMain.appendChild(cardPane(dom, body, 'contact'))
               }
             })
@@ -1201,20 +1221,6 @@ module.exports = {
               span.textContent = val.uri
             }
           })
-
-          var deleteButton = UI.widgets.deleteButtonWithCheck(dom, div, 'contact', function () {
-            if (confirm("Delete this contact?")) {
-              deleteThing(subject)
-              console.log("Deleteing a contect... @@ fix me")
-              // @@ Todo: Recursively delete the directory for the contact + bookContents
-              //  - delete the references to it in group files and save them background
-              //   - delete the reference in people.ttl and save it back
-              refreshNames()
-              cardMain.innerHTML = ''
-            }
-          })
-          deleteButton.style = 'height: 2em;'
-
         })
     } // renderIndividual
 
