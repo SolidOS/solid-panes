@@ -71,7 +71,7 @@ paneModule.register(require('./issue/pane.js'))
 paneModule.register(require('./contact/contactPane.js'))
 
 paneModule.register(require('./pad/padPane.js'))
-paneModule.register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
+// paneModule.register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
 
 paneModule.register(require('./transaction/pane.js'))
 paneModule.register(require('./transaction/period.js'))
@@ -110,7 +110,7 @@ paneModule.register(require('./n3Pane.js'))
 paneModule.register(require('./RDFXMLPane.js'))
 
 
-// User configured:
+// User configured - data driven
 paneModule.register(require('./form/pane.js'))
 
 // Generic:
@@ -121,8 +121,8 @@ paneModule.register(require('./tableViewPane.js'))
 // Fallback totally generic:
 paneModule.register(require('./defaultPane.js'))
 
-// paneModule.register(require("newOutline.js"))
 paneModule.register(require('./ui/pane.js'))
+
 // paneModule.register(require("categoryPane.js"))  // Not useful enough
 // paneModule.register(require("pubsPane.js")) // not finished
 
