@@ -28,7 +28,7 @@ module.exports = {
     var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
     if (t['http://www.w3.org/ns/pim/trip#Trip'] || // If in any subclass
-      subject.uri == 'http://www.w3.org/ns/pim/trip#Trip' ||
+      subject.uri === 'http://www.w3.org/ns/pim/trip#Trip' ||
       t['http://www.w3.org/2005/01/wf/flow#Task'] ||
       t['http://www.w3.org/2000/10/swap/pim/qif#Transaction'] ||
       // subject.uri == 'http://www.w3.org/2000/10/swap/pim/qif#Transaction' ||
@@ -39,35 +39,16 @@ module.exports = {
 
   render: function (subject, dom) {
     var kb = UI.store
-    var ns = UI.ns
     var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
-    var CAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-    var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
-    var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
     var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
 
     // ////////////////////////////////////////////////////////////////////////////
-
-    var setModifiedDate = function (subj, kb, doc) {
-      var deletions = kb.statementsMatching(subject, DCT('modified'))
-      var deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')))
-      var insertions = [ $rdf.st(subject, DCT('modified'), new Date(), doc) ]
-      if (me) insertions.push($rdf.st(subject, WF('modifiedBy'), me, doc))
-      sparqlService.update(deletions, insertions, function (uri, ok, body) {})
-    }
 
     var complain = function complain (message) {
       var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: pink')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
-    }
-    var thisPane = this
-    var rerender = function (div) {
-      var parent = div.parentNode
-      var div2 = thisPane.render(subject, dom)
-      parent.replaceChild(div2, div)
     }
 
     // Where can we write about this thing?
@@ -88,12 +69,11 @@ module.exports = {
     var predicate = WF('attachment')
     var range = QU('SupportingDocument')
 
-    var subjects
-    var multi
+    var subjects, multi
     var options = {}
-    var currentMode = 0; // 0 -> Show all;  1 -> Attached;    2 -> unattached
-    var currentSubject = null, currentObject = null
-    var currentSubjectItem = null, currentObjectItem = null
+    var currentMode = 0 // 0 -> Show all;  1 -> Attached;    2 -> unattached
+    var currentSubject = null
+    var currentObject = null
     var objectType = QU('SupportingDocument')
 
     // Find all members of the class which we know about
@@ -106,7 +86,7 @@ module.exports = {
         'http://www.w3.org/ns/pim/trip#Trip': // @@ put this into the ontologies
         'http://www.w3.org/2002/12/cal/ical#dtstart',
         'http://www.w3.org/2000/10/swap/pim/qif#Transaction': 'http://www.w3.org/2000/10/swap/pim/qif#date',
-      'http://www.w3.org/2000/10/swap/pim/qif#SupportingDocument': 'http://purl.org/dc/elements/1.1/date'}[subject.uri])
+        'http://www.w3.org/2000/10/swap/pim/qif#SupportingDocument': 'http://purl.org/dc/elements/1.1/date'}[subject.uri])
 
       if (!sortBy) {
         sortBy = kb.any(subject, UI.ns.ui('sortBy'))
@@ -127,8 +107,10 @@ module.exports = {
 
     var getMembersAndSort = function (subject) {
       var sortBy = getSortKey(subject)
-      var u, x, key, uriHash = kb.findMemberURIs(subject)
-      var pairs = [], subjects = []
+      var u, x, key
+      var uriHash = kb.findMemberURIs(subject)
+      var pairs = []
+      var subjects = []
       for (u in uriHash) if (uriHash.hasOwnProperty(u)) {
         x = kb.sym(u)
         if (sortBy) {
@@ -148,7 +130,7 @@ module.exports = {
         pairs.push([key, x])
       }
       pairs.sort()
-      pairs.reverse(); // @@ Descending order .. made a toggle?
+      pairs.reverse() // @@ Descending order .. made a toggle?
       for (var i = 0; i < pairs.length; i++) {
         subjects.push(pairs[i][1])
       }
@@ -156,7 +138,7 @@ module.exports = {
     }
 
     // Set up a triage of many class members against documents or just one
-    if (subject.uri == 'http://www.w3.org/ns/pim/trip#Trip' ||
+    if (subject.uri === 'http://www.w3.org/ns/pim/trip#Trip' ||
       QU('Transaction') in kb.findSuperClassesNT(subject)
     // subject.uri == 'http://www.w3.org/2000/10/swap/pim/qif#Transaction'
     ) {
@@ -164,7 +146,7 @@ module.exports = {
       subjects = getMembersAndSort(subject)
     } else {
       currentSubject = subject
-      currentMode = 1; // Show attached only.
+      currentMode = 1 // Show attached only.
       subjects = [ subject ]
       multi = false
     }
@@ -182,23 +164,23 @@ module.exports = {
     }
 
     var showFiltered = function (mode) {
-      var filtered = (mode == 0) ? objects :
-        (mode == 1) ? (currentSubject === null
-          ? objects.filter(function (y) {return !!kb.holds(undefined, predicate, y)})
-          : objects.filter(function (y) {return !!kb.holds(currentSubject, predicate, y)}))
-          : objects.filter(function (y) {return kb.each(undefined, predicate, y).length == 0})
+      var filtered = (mode === 0) ? objects
+        : (mode === 1) ? (currentSubject === null
+          ? objects.filter(function (y) { return !!kb.holds(undefined, predicate, y) })
+          : objects.filter(function (y) { return !!kb.holds(currentSubject, predicate, y) }))
+          : objects.filter(function (y) { return kb.each(undefined, predicate, y).length === 0 })
       UI.widgets.selectorPanelRefresh(objectList,
         dom, kb, objectType, predicate, true, filtered, options, showObject, linkClicked)
-      if (filtered.length == 1) {
+      if (filtered.length === 1) {
         currentObject = filtered[0]
-        showObject(currentObject, null, true); // @@ (Sure?) if only one select it.
+        showObject(currentObject, null, true) // @@ (Sure?) if only one select it.
       } else {
         deselectObject()
       }
     }
 
     var setAttachment = function (x, y, value, refresh) {
-      if (kb.holds(x, predicate, y) == value) return
+      if (kb.holds(x, predicate, y) === value) return
       var verb = value ? 'attach' : 'detach'
       // complain("Info: starting to "+verb+" " + y.uri + " to "+x.uri+ ":\n")
       var linkDone3 = function (uri, ok, body) {
@@ -233,7 +215,6 @@ module.exports = {
           s = currentSubject
           o = x
         }
-
       } else { // Subjectlist
         if (!currentObject) {
           complain('No object for the link has been selected')
@@ -243,7 +224,7 @@ module.exports = {
           o = currentObject
         }
       }
-      setAttachment(s, o, !kb.holds(s, predicate, o), refresh); // @@ toggle
+      setAttachment(s, o, !kb.holds(s, predicate, o), refresh) // @@ toggle
     }
 
     // When you click on a subject, filter the objects connected to the subject in Mode 1
@@ -275,11 +256,10 @@ module.exports = {
       currentObject = x
       try {
         /*
-        */
         var dispalyable = function (kb, x) {
           var cts = kb.fetcher.getHeader(x, 'content-type')
           if (cts) {
-            var displayables = [ 'text/html', 'image/png', 'application/pdf']
+            var displayables = ['text/html', 'image/png', 'application/pdf']
             for (var j = 0; j < cts.length; j++) {
               for (var k = 0; k < displayables.length; k++) {
                 if (cts[j].indexOf(displayables[k]) >= 0) {
@@ -290,7 +270,7 @@ module.exports = {
           }
           return false
         }
-
+        */
         preview.innerHTML = 'Loading ....'
         if (x.uri) {
           kb.fetcher.load(x.uri)
@@ -304,7 +284,6 @@ module.exports = {
               preview.textContent = 'Error loading ' + x.uri + ': ' + err
             })
         }
-
           /*
               if (dispalyable(kb, x) || x.uri.slice(-4) == ".pdf" || x.uri.slice(-4) == ".png" || x.uri.slice(-5) == ".html" ||
                       x.uri.slice(-5) == ".jpeg") { // @@@@@@ MAJOR KLUDGE! use metadata after HEAD
@@ -313,9 +292,8 @@ module.exports = {
               } else {
               }
           */
-
-      } catch(e) {
-        preview.innerHTML = '<span style="background-color: pink;">' + 'Error:' + e + '</span>'; // @@ enc
+      } catch (e) {
+        preview.innerHTML = '<span style="background-color: pink;">' + 'Error:' + e + '</span>' // @@ enc
       }
     }
 
@@ -331,10 +309,11 @@ module.exports = {
       head.appendChild(tr)
       var setStyles = function () {
         for (i = 0; i < labels.length; i++) {
-          buttons[i].setAttribute('style', i == current ? style1 : style0)
+          buttons[i].setAttribute('style', i === current ? style1 : style0)
         }
       }
-      var i, b, buttons = []
+      var i, b
+      var buttons = []
       for (i = 0; i < labels.length; i++) {
         b = buttons[i] = dom.createElement('td')
         b.textContent = labels[i]
@@ -364,17 +343,17 @@ module.exports = {
     wrapper.setAttribute('style', ' width: 30em; height: 100%;  padding: 0em; float:left;')
     // wrapper.appendChild(head)
     div.appendChild(wrapper)
-    wrapper.appendChild(headerButtons(dom, [ 'all', 'attached', 'not attached',], currentMode, setMode))
+    wrapper.appendChild(headerButtons(dom, ['all', 'attached', 'not attached'], currentMode, setMode))
 
     var objectList = UI.widgets.selectorPanel(dom, kb, objectType, predicate, true, objects, options, showObject, linkClicked)
     objectList.setAttribute('style',
-      'background-color: #ffe;  width: 30em; height: 100%; padding: 0em; overflow:scroll;'); // float:left
+      'background-color: #ffe;  width: 30em; height: 100%; padding: 0em; overflow:scroll;') // float:left
     wrapper.appendChild(objectList)
 
     // objectList.insertBefore(head, objectList.firstChild)
 
     var preview = dom.createElement('div')
-    preview.setAttribute('style', /*background-color: black; */ 'padding: 0em; margin: 0;  height: 100%; overflow:scroll;')
+    preview.setAttribute('style', /* background-color: black; */ 'padding: 0em; margin: 0;  height: 100%; overflow:scroll;')
     div.appendChild(preview)
     showFiltered(currentMode)
 
@@ -387,7 +366,7 @@ module.exports = {
       }
       for (var storeURI in stores) {
         // var store = findStore(kb,subjects[subjectList.length-1])
-        var store = kb.sym(storeURI)
+        let store = kb.sym(storeURI)
         var mintBox = dom.createElement('div')
         mintBox.setAttribute('style', 'clear: left; width: 20em; margin-top:2em; background-color:#ccc; border-radius: 1em; padding: 1em; font-weight: bold;')
         mintBox.textContent = '+ New ' + UI.utils.label(subject)
@@ -416,11 +395,10 @@ module.exports = {
             })
           try {
             div.insertBefore(thisForm, mintBox.nextSibling) // Sigh no insertAfter
-          } catch(e) {
+          } catch (e) {
             div.appendChild(thisForm)
           }
-          var newObject = thisForm.AJAR_subject
-
+          // var newObject = thisForm.AJAR_subject
         }, false)
         div.appendChild(mintBox)
       }
