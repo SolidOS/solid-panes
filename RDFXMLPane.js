@@ -17,7 +17,7 @@ module.exports = {
 
     var n = UI.store.statementsMatching(
       undefined, undefined, undefined, subject).length
-    if (n == 0) return null
+    if (n === 0) return null
     return 'As RDF/XML (' + n + ')'
   },
 
@@ -28,7 +28,7 @@ module.exports = {
     // Because of smushing etc, this will not be a copy of the original source
     // We could instead either fetch and re-parse the source,
     // or we could keep all the pre-smushed triples.
-    var sts = kb.statementsMatching(undefined, undefined, undefined, subject); // @@ slow with current store!
+    var sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
     /*
     var kludge = kb.formula([]) // No features
     for (var i=0; i< sts.length; i++) {
