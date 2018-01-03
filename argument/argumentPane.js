@@ -31,7 +31,7 @@ module.exports = {
     var arg = UI.ns.arg
 
     subject = kb.canon(subject)
-    var types = kb.findTypeURIs(subject)
+    // var types = kb.findTypeURIs(subject)
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'argumentPane')

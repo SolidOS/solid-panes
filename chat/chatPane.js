@@ -48,12 +48,11 @@ module.exports = {
     return null // Suppress pane otherwise
   },
 
-
   mintClass: ns.meeting('Chat'),
 
   mintNew: function (newPaneOptions) {
     var updater = kb.updater
-    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error ("chat mintNew:  Invalid userid")
+    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error('chat mintNew:  Invalid userid ' + newPaneOptions.me)
 
     var newInstance = newPaneOptions.newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase + 'index.ttl#this')
     var newChatDoc = newInstance.doc()
@@ -119,9 +118,9 @@ module.exports = {
       complain('Unknown chat type')
     }
 
-    var context = {dom, div}
+//    var context = {dom, div}
+//    UI.authn.logIn(context).then( context => { // The widget itself sees to login
 
-//    UI.authn.logIn(context).then( context => { // The widget itself sees to login 
     div.appendChild(UI.messageArea(dom, kb, subject, messageStore, options))
     kb.updater.addDownstreamChangeListener(messageStore, function () {
       UI.widgets.refreshTree(div)
