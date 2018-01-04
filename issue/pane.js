@@ -7,7 +7,9 @@
 ** I am using in places single quotes strings like 'this'
 ** where internationalization ("i18n") is not a problem, and double quoted
 ** like "this" where the string is seen by the user and so I18n is an issue.
+**
 */
+/* global confirm */
 
 var UI = require('solid-ui')
 
@@ -36,23 +38,17 @@ module.exports = {
     var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
     var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
     var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
-    var div = dom.createElement('div')
     var outliner = UI.panes.getOutliner(dom)
 
+    var div = dom.createElement('div')
     div.setAttribute('class', 'issuePane')
-
-    var commentFlter = function (pred, inverse) {
-      if (!inverse && pred.uri ===
-        'http://www.w3.org/2000/01/rdf-schema#comment') return true
-      return false
-    }
 
     // Don't bother changing the last modified dates of things: save time
     var setModifiedDate = function (subj, kb, doc) {
       if (SET_MODIFIED_DATES) {
         if (!getOption(tracker, 'trackLastModified')) return
         var deletions = kb.statementsMatching(subject, DCT('modified'))
-        var deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')))
+        deletions = deletions.concat(kb.statementsMatching(subject, WF('modifiedBy')))
         var insertions = [ $rdf.st(subject, DCT('modified'), new Date(), doc) ]
         if (me) insertions.push($rdf.st(subject, WF('modifiedBy'), me, doc))
         updater.update(deletions, insertions, function (uri, ok, body) {})
@@ -61,7 +57,7 @@ module.exports = {
 
     var say = function say (message, style) {
       var pre = dom.createElement('pre')
-      pre.setAttribute('style', style ? style : 'color: grey')
+      pre.setAttribute('style', style || 'color: grey')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
       return pre
@@ -72,7 +68,7 @@ module.exports = {
       }
       else console.log('Sorry, failed to save your change:\n' + body, 'background-color: pink;')
     }
-    var complain = function (message) {
+    function complain (message) {
       console.warn(message)
       div.appendChild(UI.widgets.errorMessageBlock(dom, message))
     }
@@ -159,7 +155,7 @@ module.exports = {
       // form.addEventListener('submit', function() {try {sendNewIssue} catch(e){console.log('sendNewIssue: '+e)}}, false)
       // form.setAttribute('onsubmit', "function xx(){return false;}")
 
-      UI.store.fetcher.removeCallback('done', 'expand'); // @@ experimental -- does this kill the re-paint? no
+      UI.store.fetcher.removeCallback('done', 'expand') // @@ experimental -- does this kill the re-paint? no
       UI.store.fetcher.removeCallback('fail', 'expand')
 
       var states = kb.any(tracker, WF('issueClass'))
@@ -194,7 +190,7 @@ module.exports = {
             base = base + '/'
           }
           base += appPathSegment + '/' + timestring() + '/' // unique id
-          if (!confirm("Make new tracker at " + base + "?")) {
+          if (!confirm('Make new tracker at ' + base + '?')) {
             return
           }
         }
@@ -258,11 +254,11 @@ module.exports = {
           }
         )
 
-        // Created new data files.
-        // @@ Now create initial files - html skin, (Copy of mashlib, css?)
-        // @@ Now create form to edit configuation parameters
-        // @@ Optionally link new instance to list of instances -- both ways? and to child/parent?
-        // @@ Set up access control for new config and store.
+      // Created new data files.
+      // @@ Now create initial files - html skin, (Copy of mashlib, css?)
+      // @@ Now create form to edit configuation parameters
+      // @@ Optionally link new instance to list of instances -- both ways? and to child/parent?
+      // @@ Set up access control for new config and store.
       }) // callback to newAppInstance
 
       button.setAttribute('style', 'margin: 0.5em 1em;')
@@ -272,25 +268,9 @@ module.exports = {
     // /////////////////////////////////////////////////////////////////////////////
 
     var updater = kb.updater
-    var plist = kb.statementsMatching(subject)
-    var qlist = kb.statementsMatching(undefined, undefined, subject)
-
     var t = kb.findTypeURIs(subject)
-
     var me = UI.authn.currentUser()
-
-    // Reload resorce then
-
-    var reloadStore = function (store, callBack) {
-      UI.store.fetcher.unload(store)
-      UI.store.fetcher.nowOrWhenFetched(store.uri, undefined, function (ok, body) {
-        if (!ok) {
-          console.log('Cant refresh data:' + body)
-        } else {
-          callBack()
-        }
-      })
-    }
+    var tracker
 
     // Refresh the DOM tree
 
@@ -309,7 +289,7 @@ module.exports = {
     var singleIssueUI = function (subject, div) {
       var ns = UI.ns
       var predicateURIsDone = {}
-      var donePredicate = function (pred) {predicateURIsDone[pred.uri] = true}
+      var donePredicate = function (pred) { predicateURIsDone[pred.uri] = true }
       donePredicate(ns.rdf('type'))
       donePredicate(ns.dc('title'))
 
@@ -330,7 +310,7 @@ module.exports = {
       var stateStore = kb.any(tracker, WF('stateStore'))
       var store = kb.sym(subject.uri.split('#')[0])
 
-      UI.authn.checkUser()  // kick off async operation
+      UI.authn.checkUser() // kick off async operation
 
       var states = kb.any(tracker, WF('issueClass'))
       if (!states) throw new Error('This tracker ' + tracker + ' has no issueClass')
@@ -355,7 +335,7 @@ module.exports = {
           }))
       }
 
-      var a = dom.createElement('a')
+      let a = dom.createElement('a')
       a.setAttribute('href', tracker.uri)
       a.setAttribute('style', 'float:right')
       div.appendChild(a).textContent = UI.utils.label(tracker)
@@ -384,23 +364,24 @@ module.exports = {
         })
       }
 
-      var assignee = assignments.length ? assignments[0].object : null
+      // var assignee = assignments.length ? assignments[0].object : null
       // Who could be assigned to this?
       // Anyone assigned to any issue we know about  @@ should be just for this tracker
       var sts = kb.statementsMatching(undefined, ns.wf('assignee'))
-      var devs = sts.map(function (st) {return st.object})
+      var devs = sts.map(st => st.object)
       // Anyone who is a developer of any project which uses this tracker
       var proj = kb.any(undefined, ns.doap('bug-database'), tracker)
       if (proj) devs = devs.concat(kb.each(proj, ns.doap('developer')))
       if (devs.length) {
-        devs.map(function (person) {kb.fetcher.lookUpThing(person)}) // best effort async for names etc
+        devs.map(function (person) { kb.fetcher.lookUpThing(person) }) // best effort async for names etc
         var opts = { 'mint': '** Add new person **',
           'nullLabel': '(unassigned)',
           'mintStatementsFun': function (newDev) {
-            var sts = [ $rdf.st(newDev, ns.rdf('type'), ns.foaf('Person'))]
+            var sts = [ $rdf.st(newDev, ns.rdf('type'), ns.foaf('Person')) ]
             if (proj) sts.push($rdf.st(proj, ns.doap('developer'), newDev))
             return sts
-        }}
+          }
+        }
         div.appendChild(UI.widgets.makeSelectForOptions(dom, kb,
           subject, ns.wf('assignee'), devs, opts, store,
           function (ok, body) {
@@ -437,7 +418,8 @@ module.exports = {
         b.innerHTML = 'New sub ' + classLabel
         b.setAttribute('style', 'float: right; margin: 0.5em 1em;')
         b.addEventListener('click', function (e) {
-          div.appendChild(newIssueForm(dom, kb, tracker, subject))}, false)
+          div.appendChild(newIssueForm(dom, kb, tracker, subject))
+        }, false)
       }
 
       // Extras are stored centrally to the tracker
@@ -474,13 +456,13 @@ module.exports = {
       } else {
         messageStore = kb.any(tracker, ns.wf('messageStore'))
         if (!messageStore) messageStore = kb.any(tracker, WF('stateStore'))
-        var chat = kb.sym(messageStore.uri + '#' + 'Chat' + timestring())
+        kb.sym(messageStore.uri + '#' + 'Chat' + timestring()) // var chat =
       }
 
       kb.fetcher.nowOrWhenFetched(messageStore, function (ok, body, xhr) {
         if (!ok) {
           var er = dom.createElement('p')
-          er.textContent = body; // @@ use nice error message
+          er.textContent = body // @@ use nice error message
           div.insertBefore(er, spacer)
         } else {
           var discussion = UI.messageArea(
@@ -491,7 +473,7 @@ module.exports = {
       donePredicate(ns.wf('message'))
 
       // Draggable attachment list
-      var a = UI.widgets.attachmentList(dom, subject, div, {
+      UI.widgets.attachmentList(dom, subject, div, {
         promptIcon: UI.icons.iconBase + 'noun_25830.svg',
         predicate: ns.wf('attachment')
       })
@@ -531,8 +513,8 @@ module.exports = {
 
     if (t['http://www.w3.org/2005/01/wf/flow#Task'] ||
       kb.holds(subject, UI.ns.wf('tracker'))) {
-      var tracker = kb.any(subject, WF('tracker'))
-      if (!tracker) throw 'This issue ' + subject + 'has no tracker'
+      tracker = kb.any(subject, WF('tracker'))
+      if (!tracker) throw new Error('This issue ' + subject + 'has no tracker')
 
       var trackerURI = tracker.uri.split('#')[0]
       // Much data is in the tracker instance, so wait for the data from it
@@ -541,23 +523,22 @@ module.exports = {
         UI.store.fetcher.nowOrWhenFetched(stateStore, subject, function drawIssuePane2 (ok, body) {
           if (!ok) return console.log('Failed to load state ' + stateStore + ' ' + body)
           singleIssueUI(subject, div)
-          updater.addDownstreamChangeListener(stateStore, function () {refreshTree(div)}) // Live update
+          updater.addDownstreamChangeListener(stateStore, function () { refreshTree(div) }) // Live update
         })
-      }).catch(function (err) {
-        return console.log('Failed to load config ' + trackerURI + ' ' + err)
+      }).catch(err => {
+        let msg = 'Failed to load config ' + trackerURI + ' ' + err
+        return complain(msg)
       })
-
       UI.store.fetcher.nowOrWhenFetched(trackerURI, subject, function drawIssuePane1 (ok, body) {
         if (!ok) return console.log('Failed to load config ' + trackerURI + ' ' + body)
-
       }) // End nowOrWhenFetched tracker
 
       // /////////////////////////////////////////////////////////
-
+      //
       //          Render a Tracker instance
-
+      //
     } else if (t['http://www.w3.org/2005/01/wf/flow#Tracker']) {
-      var tracker = subject
+      tracker = subject
       var overlayPane
 
       var states = kb.any(subject, WF('issueClass'))
@@ -565,13 +546,13 @@ module.exports = {
       var stateStore = kb.any(subject, WF('stateStore'))
       if (!stateStore) throw new Error('This tracker has no stateStore')
 
-      UI.authn.checkUser()  // kick off async operation
+      UI.authn.checkUser() // kick off async operation
 
       var h = dom.createElement('h2')
       h.setAttribute('style', 'font-size: 150%')
       div.appendChild(h)
       var classLabel = UI.utils.label(states)
-      h.appendChild(dom.createTextNode(classLabel + ' list')); // Use class label @@I18n
+      h.appendChild(dom.createTextNode(classLabel + ' list')) // Use class label @@I18n
 
       // New Issue button
       var b = dom.createElement('button')
@@ -600,15 +581,15 @@ module.exports = {
         var query = new $rdf.Query(UI.utils.label(subject))
         var cats = kb.each(tracker, WF('issueCategory')) // zero or more
         var vars = ['issue', 'state', 'created']
-        for (var i = 0; i < cats.length; i++) { vars.push('_cat_' + i) }
+        for (let i = 0; i < cats.length; i++) { vars.push('_cat_' + i) }
         var v = {} // The RDF variable objects for each variable name
-        vars.map(function (x) {query.vars.push(v[x] = $rdf.variable(x))})
+        vars.map(function (x) { query.vars.push(v[x] = $rdf.variable(x)) })
         query.pat.add(v['issue'], WF('tracker'), tracker)
         // query.pat.add(v['issue'], ns.dc('title'), v['title'])
         query.pat.add(v['issue'], ns.dct('created'), v['created'])
         query.pat.add(v['issue'], ns.rdf('type'), v['state'])
         query.pat.add(v['state'], ns.rdfs('subClassOf'), states)
-        for (var i = 0; i < cats.length; i++) {
+        for (let i = 0; i < cats.length; i++) {
           query.pat.add(v['issue'], ns.rdf('type'), v['_cat_' + i])
           query.pat.add(v['_cat_' + i], ns.rdfs('subClassOf'), cats[i])
         }
@@ -644,9 +625,9 @@ module.exports = {
           }
         })
 
-        var overlay, overlayTable
+        var overlay
 
-        var bringUpInOverlay = function (href) {
+        function bringUpInOverlay (href) {
           overlayPane.innerHTML = '' // clear existing
           var button = overlayPane.appendChild(dom.createElement('button'))
           button.textContent = 'X'
@@ -661,8 +642,8 @@ module.exports = {
           keyVariable: '?issue', // Charactersic of row
           hints: {
             '?issue': { linkFunction: bringUpInOverlay },
-            '?created': { cellFormat: 'shortDate'},
-        '?state': { initialSelection: selectedStates }}})
+            '?created': {cellFormat: 'shortDate'},
+            '?state': { initialSelection: selectedStates }}})
         div.appendChild(tableDiv)
 
         overlay = div.appendChild(dom.createElement('div'))
@@ -712,7 +693,7 @@ module.exports = {
             me = kb.sym(webIdUri)
             console.log('Web ID set from login button: ' + webIdUri)
             div.removeChild(loginOutButton)
-            // enable things
+          // enable things
           } else {
             me = null
           }
