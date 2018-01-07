@@ -11,6 +11,10 @@ to change its state according to an ontology, comment on it, etc.
 ** I am using in places single quotes strings like 'this'
 ** where internationalization ("i18n") is not a problem, and double quoted
 ** like "this" where the string is seen by the user and so I18n is an issue.
+**
+** Feross "Standard" style note:  Callback functions should not be called "callback"
+** or the "standard"  linter will complain if the first param is not a node.js error code. (2018-01)
+** Hence "callbackFunction"
 */
 /* global alert, confirm, FileReader */
 
@@ -258,7 +262,7 @@ module.exports = {
       }
 
       //  Write a new contact to the web
-      var createNewContact = function (book, name, selectedGroups, callback) {
+      var createNewContact = function (book, name, selectedGroups, callbackFunction) {
         book = findBookFromGroups(book)
         var nameEmailIndex = kb.any(book, ns.vcard('nameEmailIndex'))
 
@@ -286,7 +290,7 @@ module.exports = {
         var updateCallback = function (uri, success, body) {
           if (!success) {
             console.log("Error: can't update " + uri + ' for new contact:' + body + '\n')
-            callback(false, "Error: can't update " + uri + ' for new contact:' + body)
+            callbackFunction(false, "Error: can't update " + uri + ' for new contact:' + body)
           } else {
             if (agenda.length > 0) {
               console.log('Patching ' + agenda[0] + '\n')
@@ -296,10 +300,10 @@ module.exports = {
               UI.store.fetcher.nowOrWhenFetched(doc, undefined, function (ok, body) {
                 if (ok) {
                   console.log('Read back in OK.\n')
-                  callback(true, person)
+                  callbackFunction(true, person)
                 } else {
                   console.log('Read back in FAILED: ' + body + '\n')
-                  callback(false, body)
+                  callbackFunction(false, body)
                 }
               })
             }
@@ -315,7 +319,7 @@ module.exports = {
               'text/turtle', updateCallback)
           } else {
             console.log('Error loading people index!' + nameEmailIndex.uri + ': ' + message)
-            callback(false, 'Error loading people index!' + nameEmailIndex.uri + ': ' + message + '\n')
+            callbackFunction(false, 'Error loading people index!' + nameEmailIndex.uri + ': ' + message + '\n')
           }
         })
       }
@@ -323,7 +327,7 @@ module.exports = {
       // Write new group to web
       // Creates an empty new group file and adds it to the index
       //
-      var saveNewGroup = function (book, name, callback) {
+      var saveNewGroup = function (book, name, callbackFunction) {
         var gix = kb.any(book, ns.vcard('groupIndex'))
 
         var x = book.uri.split('#')[0]
@@ -349,15 +353,15 @@ module.exports = {
                   $rdf.st(group, ns.vcard('fn'), name, doc)
                 ]
                 updater.put(doc, triples, 'text/turtle', function (uri, ok, body) {
-                  callback(ok, ok ? group : "Can't save new group file " + doc + body)
+                  callbackFunction(ok, ok ? group : "Can't save new group file " + doc + body)
                 })
               } else {
-                callback(ok, 'Could not update group index ' + body) // fail
+                callbackFunction(ok, 'Could not update group index ' + body) // fail
               }
             })
           } else {
             console.log('Error loading people index!' + gix.uri + ': ' + message)
-            callback(false, 'Error loading people index!' + gix.uri + ': ' + message + '\n')
+            callbackFunction(false, 'Error loading people index!' + gix.uri + ': ' + message + '\n')
           }
         })
       }
@@ -438,7 +442,7 @@ module.exports = {
         }
       }
 
-      var selectAllGroups = function (selectedGroups, groupsMainTable, callback) {
+      var selectAllGroups = function (selectedGroups, groupsMainTable, callbackFunction) {
         var todo = groupsMainTable.children.length
         var badness = []
         for (var k = 0; k < groupsMainTable.children.length; k++) {
@@ -458,7 +462,7 @@ module.exports = {
               refreshNames() // @@ every time??
               todo -= 1
               if (!todo) {
-                if (callback) callback(badness.length === 0, badness)
+                if (callbackFunction) callbackFunction(badness.length === 0, badness)
               }
             })
           }
@@ -570,13 +574,11 @@ module.exports = {
 
       var refreshNames = function () {
         var cards = []
-        var ng = 0
         for (var u in selectedGroups) {
           if (selectedGroups[u]) {
             var a = kb.each(kb.sym(u), ns.vcard('hasMember'))
             // console.log('Adding '+ a.length + ' people from ' + u + '\n')
             cards = cards.concat(a)
-            ng += 1
           }
         }
         cards.sort(compareForSort) // @@ sort by name not UID later
@@ -1062,7 +1064,6 @@ module.exports = {
           var thing = $rdf.sym(u) // Attachment needs text label to disinguish I think not icon.
           console.log('Dropped on mugshot thing ' + thing) // icon was: UI.icons.iconBase + 'noun_25830.svg'
           if (u.startsWith('http') && u.indexOf('#') < 0) { // Plain document
-
             // Take a copy of a photo on the web:
             kb.fetcher.webOperation('GET', thing.uri).then(result => {
               let contentType = result.headers.get('Content-Type')

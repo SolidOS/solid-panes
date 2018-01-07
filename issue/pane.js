@@ -44,7 +44,7 @@ module.exports = {
     div.setAttribute('class', 'issuePane')
 
     // Don't bother changing the last modified dates of things: save time
-    var setModifiedDate = function (subj, kb, doc) {
+    function setModifiedDate (subj, kb, doc) {
       if (SET_MODIFIED_DATES) {
         if (!getOption(tracker, 'trackLastModified')) return
         var deletions = kb.statementsMatching(subject, DCT('modified'))
@@ -55,7 +55,7 @@ module.exports = {
       }
     }
 
-    var say = function say (message, style) {
+    function say (message, style) {
       var pre = dom.createElement('pre')
       pre.setAttribute('style', style || 'color: grey')
       div.appendChild(pre)
@@ -63,14 +63,15 @@ module.exports = {
       return pre
     }
 
-    var complainIfBad = function (ok, body) {
-      if (ok) {
-      }
-      else console.log('Sorry, failed to save your change:\n' + body, 'background-color: pink;')
-    }
     function complain (message) {
       console.warn(message)
       div.appendChild(UI.widgets.errorMessageBlock(dom, message))
+    }
+
+    function complainIfBad (ok, body) {
+      if (!ok) {
+        complain('Sorry, failed to save your change:\n' + body, 'background-color: pink;')
+      }
     }
 
     var getOption = function (tracker, option) { // eg 'allowSubIssues'
@@ -182,6 +183,9 @@ module.exports = {
     var newTrackerButton = function (thisTracker) {
       var button = UI.authn.newAppInstance(dom, { noun: 'tracker' }, function (ws, base) {
         var appPathSegment = 'issuetracker.w3.org' // how to allocate this string and connect to
+        // console.log("Ready to make new instance at "+ws)
+        var sp = UI.ns.space
+        var kb = UI.store
 
         if (!base) {
           base = kb.any(ws, sp('uriPrefix')).value
@@ -194,10 +198,6 @@ module.exports = {
             return
           }
         }
-
-        // console.log("Ready to make new instance at "+ws)
-        var sp = UI.ns.space
-        var kb = UI.store
 
         var stateStore = kb.any(tracker, WF('stateStore'))
         var newStore = kb.sym(base + 'store.ttl')
@@ -318,8 +318,9 @@ module.exports = {
         if (ok) {
           setModifiedDate(store, kb, store)
           refreshTree(div)
+        } else {
+          console.log('Failed to change state:\n' + body)
         }
-        else console.log('Failed to change state:\n' + body)
       })
       div.appendChild(select)
 
@@ -330,8 +331,9 @@ module.exports = {
             if (ok) {
               setModifiedDate(store, kb, store)
               refreshTree(div)
+            } else {
+              console.log('Failed to change category:\n' + body)
             }
-            else console.log('Failed to change category:\n' + body)
           }))
       }
 
@@ -363,6 +365,10 @@ module.exports = {
           }
         })
       }
+
+      // Remaining properties
+      var plist = kb.statementsMatching(subject)
+      var qlist = kb.statementsMatching(undefined, undefined, subject)
 
       // var assignee = assignments.length ? assignments[0].object : null
       // Who could be assigned to this?
@@ -478,10 +484,6 @@ module.exports = {
         predicate: ns.wf('attachment')
       })
       donePredicate(ns.wf('attachment'))
-
-      // Remaining properties
-      var plist = kb.statementsMatching(subject)
-      var qlist = kb.statementsMatching(undefined, undefined, subject)
 
       outliner.appendPropertyTRs(div, plist, false,
         function (pred, inverse) {

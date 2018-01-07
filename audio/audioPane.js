@@ -129,7 +129,6 @@ module.exports = {
             guessNames(next)
             controlRow.appendChild(audioControl(next, true)) // Force autoplay
             controlRow.removeChild(event.target)
-            return
           } else {
             console.log('Ignoring redundant ' + next)
             tryNext(next)

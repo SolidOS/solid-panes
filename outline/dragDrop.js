@@ -44,7 +44,10 @@ dragAndDrop.util.Event = (function () {
       listeners.splice(index, 1)
       return true
     },
-    EL: 0, TYPE: 1, FNID: 2, WFN: 3,
+    EL: 0,
+    TYPE: 1,
+    FNID: 2,
+    WFN: 3,
     _getCacheIndex: function (el, sType, fnId) {
       for (var i = 0, len = listeners.length; i < len; ++i) {
         var li = listeners[i]
@@ -367,7 +370,7 @@ var TabulatorOutlinerObserver = {
     return dataSet
   },
   _mDS: null,
-  get_mDragService: function () {// some syntax I don't understand -- was get mDragService()
+  get_mDragService: function () { // some syntax I don't understand -- was get mDragService()
     if (!this._mDS) {
       var kDSContractID = '@mozilla.org/widget/dragservice;1'
       var kDSIID = Components.interfaces.nsIDragService

@@ -172,8 +172,8 @@ module.exports = {
     }
     Microblog.prototype.gen_random_uri = function (base) {
       // generate random uri
-      var uri_nonce = base + '#n' + Math.floor(Math.random() * 10e+9)
-      return kb.sym(uri_nonce)
+      var uriNonce = base + '#n' + Math.floor(Math.random() * 10e+9)
+      return kb.sym(uriNonce)
     }
     Microblog.prototype.statusUpdate = function (statusMsg, callback, replyTo, meta) {
       var myUserURI = this.getMyURI()
@@ -452,7 +452,7 @@ module.exports = {
                             <p id="xcmbavatar">Avatar: </p>
                             <p id="xcmbwritable">Host my microblog at: </p>
                             <input type="button" id="mbCancel" value="Cancel" />
-                            <input type="submit" id="mbCreate" value="Create\!" />
+                            <input type="submit" id="mbCreate" value="Create!" />
                         </form>
                         `
         xupdateContainer.appendChild(xcmb)
@@ -497,7 +497,7 @@ module.exports = {
             mb.statusUpdate(xupdateStatus.value, cbconfirmSubmit, xinReplyToContainer.value, meta)
           }
           for (var word in words) {
-            if (words[word].match(/\@\w+/)) {
+            if (words[word].match(/@\w+/)) {
               var atUser = words[word].replace(/\W/g, '')
               var recipient = myFollowList.selectUser(atUser)
               if (recipient[0] === true) {
@@ -618,7 +618,7 @@ module.exports = {
       subheaderContainer.className = 'subheader-container'
 
       // user header
-      this.creator
+      // this.creator
       var creators = kb.each(s, FOAF('holdsAccount'))
       for (var c in creators) {
         if (kb.whether(creators[c], RDF('type'), SIOC('User')) &&
@@ -727,14 +727,14 @@ module.exports = {
         let id = kb.any(mentions[mention], SIOC('id'))
         tags['@' + id] = mentions[mention]
       }
-      var postTags = postText.match(/(\@|\#|\!)\w+/g)
+      var postTags = postText.match(/(@|#|!)\w+/g)
       var postFunction = function () {
         let p = postTags.pop()
         return (tags[p]) ? kb.any(undefined, FOAF('holdsAccount'), tags[p]).uri : p
       }
       for (var t in tags) {
-        var person = t.replace(/\@/, '')
-        var replacePerson = RegExp('(\@|\!|\#)(' + person + ')')
+        var person = t.replace(/@/, '')
+        var replacePerson = RegExp('(@|!|#)(' + person + ')')
         postText = postText.replace(replacePerson, '$1<a href="' + postFunction() + '">$2</a>')
       }
       xpostContent.innerHTML = postText
@@ -745,7 +745,7 @@ module.exports = {
       var xreplyTo = doc.createElement('span')
       for (var reply in inReplyTo) {
         var theReply
-        theReply = String(inReplyTo[reply]).replace(/\<|\>/g, '')
+        theReply = String(inReplyTo[reply]).replace(/<|>/g, '')
         var genReplyTo = function () {
           var reply = doc.createElement('a')
           reply.innerHTML = ', <b>in reply to</b>'
@@ -901,26 +901,26 @@ module.exports = {
       }
       return xpost
     }
-    Pane.prototype.generatePostList = function (gmb_posts) {
+    Pane.prototype.generatePostList = function (gmbPosts) {
       /*
       generatePostList - Generate the posts and
       display their results on the interface.
       */
-      var post_list = doc.createElement('ul')
+      var postList = doc.createElement('ul')
       var postlist = {}
       var datelist = []
-      for (var post in gmb_posts) {
-        var postDate = kb.any(gmb_posts[post], terms('created'))
+      for (var post in gmbPosts) {
+        var postDate = kb.any(gmbPosts[post], terms('created'))
         if (postDate) {
           datelist.push(postDate)
-          postlist[postDate] = this.generatePost(gmb_posts[post], this.thisIsMe)
+          postlist[postDate] = this.generatePost(gmbPosts[post], this.thisIsMe)
         }
       }
       datelist.sort().reverse()
       for (var d in datelist) {
-        post_list.appendChild(postlist[datelist[d]])
+        postList.appendChild(postlist[datelist[d]])
       }
-      return post_list
+      return postList
     }
     Pane.prototype.followsView = function () {
       var getFollowed = function (user) {
@@ -952,7 +952,7 @@ module.exports = {
       var postContainer = doc.createElement('div')
       postContainer.id = 'postContainer'
       postContainer.className = 'post-container view-container active'
-      var mb_posts = []
+      var mbPosts = []
       if (kb.whether(s, FOAF('name')) && kb.whether(s, FOAF('holdsAccount'))) {
         sf.lookUpThing(kb.any(s, FOAF('holdsAccount')))
         var follows = kb.each(kb.any(s, FOAF('holdsAccount')), SIOC('follows'))
@@ -966,13 +966,13 @@ module.exports = {
             if (kb.whether(smicroblogs[smb], SIOC('topic'), follows[f])) {
               continue
             } else {
-              mb_posts = mb_posts.concat(kb.each(smicroblogs[smb], SIOC('container_of')))
+              mbPosts = mbPosts.concat(kb.each(smicroblogs[smb], SIOC('container_of')))
             }
           }
         }
       }
-      if (mb_posts.length > 0) {
-        var postList = this.generatePostList(mb_posts)
+      if (mbPosts.length > 0) {
+        var postList = this.generatePostList(mbPosts)
         // generate stream
         postList.id = 'postList'
         postList.className = 'postList'
@@ -988,8 +988,8 @@ module.exports = {
       var postMentionContainer = doc.createElement('div')
       postMentionContainer.id = 'postMentionContainer'
       postMentionContainer.className = 'mention-container view-container'
-      var mbn_posts = []
-      var mbm_posts = []
+      var mbnPosts = []
+      var mbmPosts = []
       // get mbs that I am the creator of.
       var theUser = kb.any(s, FOAF('holdsAccount'))
       var user = kb.any(theUser, SIOC('id'))
@@ -997,19 +997,19 @@ module.exports = {
       for (var mbm in microblogs) {
         sf.lookUpThing(microblogs[mbm])
         if (kb.whether(microblogs[mbm], SIOC('topic'), theUser)) {
-          mbm_posts = mbm_posts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
+          mbmPosts = mbmPosts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
         } else {
           if (kb.whether(microblogs[mbm], RDF('type'), SIOCt('Microblog'))) {
-            mbn_posts = mbn_posts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
+            mbnPosts = mbnPosts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
           }
         }
       }
-      var postNotificationList = this.generatePostList(mbn_posts)
+      var postNotificationList = this.generatePostList(mbnPosts)
       postNotificationList.id = 'postNotificationList'
       postNotificationList.className = 'postList'
       postNotificationContainer.appendChild(postNotificationList)
 
-      var postMentionList = this.generatePostList(mbm_posts)
+      var postMentionList = this.generatePostList(mbmPosts)
       postMentionList.id = 'postMentionList'
       postMentionList.className = 'postList'
       postMentionContainer.appendChild(postMentionList)

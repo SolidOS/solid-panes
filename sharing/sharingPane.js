@@ -50,8 +50,7 @@ module.exports = {
     var box = MainRow.appendChild(dom.createElement('table'))
     // var bottomRow = table.appendChild(dom.createElement('tr'));
 
-    var context = { target: subject, me: null, noun: noun,
-      div: pane, dom: dom, statusRegion: statusBlock }
+    var context = { target: subject, me: null, noun: noun, div: pane, dom: dom, statusRegion: statusBlock }
     var uri = UI.authn.currentUser()
     context.me = uri
     UI.aclControl.preventBrowserDropEvents(dom)

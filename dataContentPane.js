@@ -52,30 +52,30 @@ module.exports = {
       }
       sts.sort()
       var same = 0
-      var td_p // The cell which holds the predicate
+      var predicateTD // The cell which holds the predicate
       for (var i = 0; i < sts.length; i++) {
         var st = sts[i]
         var tr = myDocument.createElement('tr')
         if (st.predicate.uri !== lastPred) {
-          if (lastPred && same > 1) td_p.setAttribute('rowspan', '' + same)
-          td_p = myDocument.createElement('td')
-          td_p.setAttribute('class', 'pred')
+          if (lastPred && same > 1) predicateTD.setAttribute('rowspan', '' + same)
+          predicateTD = myDocument.createElement('td')
+          predicateTD.setAttribute('class', 'pred')
           var anchor = myDocument.createElement('a')
           anchor.setAttribute('href', st.predicate.uri)
           anchor.addEventListener('click', UI.widgets.openHrefInOutlineMode, true)
           anchor.appendChild(myDocument.createTextNode(UI.utils.predicateLabelForXML(st.predicate)))
-          td_p.appendChild(anchor)
-          tr.appendChild(td_p)
+          predicateTD.appendChild(anchor)
+          tr.appendChild(predicateTD)
           lastPred = st.predicate.uri
           same = 0
         }
         same++
-        var td_o = myDocument.createElement('td')
-        td_o.appendChild(objectTree(st.object))
-        tr.appendChild(td_o)
+        var objectTD = myDocument.createElement('td')
+        objectTD.appendChild(objectTree(st.object))
+        tr.appendChild(objectTD)
         rep.appendChild(tr)
       }
-      if (lastPred && same > 1) td_p.setAttribute('rowspan', '' + same)
+      if (lastPred && same > 1) predicateTD.setAttribute('rowspan', '' + same)
       return rep
     }
 
@@ -140,7 +140,6 @@ module.exports = {
         case 'Variable':
           res = myDocument.createTextNode('?' + obj.uri)
           return res
-
       }
       throw new Error('Unhandled node type: ' + obj.termType)
     }
@@ -158,17 +157,17 @@ module.exports = {
     for (var i = 0; i < roots.length; i++) {
       var tr = myDocument.createElement('tr')
       rep.appendChild(tr)
-      var td_s = myDocument.createElement('td')
-      tr.appendChild(td_s)
-      var td_tree = myDocument.createElement('td')
-      tr.appendChild(td_tree)
+      var subjectTD = myDocument.createElement('td')
+      tr.appendChild(subjectTD)
+      var TDTree = myDocument.createElement('td')
+      tr.appendChild(TDTree)
       var root = roots[i]
       if (root.termType === 'BlankNode') {
-        td_s.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
+        subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
       } else {
-        td_s.appendChild(objectTree(root)) // won't have tree
+        subjectTD.appendChild(objectTree(root)) // won't have tree
       }
-      td_tree.appendChild(propertyTree(root))
+      TDTree.appendChild(propertyTree(root))
     }
     for (var bNT in referencedBnodes) { // Add number to refer to
       let table = doneBnodes[bNT]
@@ -181,32 +180,15 @@ module.exports = {
     }
     return rep
   }, // statementsAsTables
-
   // View the data in a file in user-friendly way
   render: function (subject, myDocument) {
-    var outliner = UI.panes.getOutliner(myDocument)
-    var kb = UI.store
-    var div = myDocument.createElement('div')
-    div.setAttribute('class', 'dataContentPane')
-    // Because of smushing etc, this will not be a copy of the original source
-    // We could instead either fetch and re-parse the source,
-    // or we could keep all the pre-smushed triples.
-    var sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
-    if (1) {
-      var initialRoots = [] // Ordering: start with stuf fabout this doc
-      if (kb.holds(subject, undefined, undefined, subject)) initialRoots.push(subject)
-      // Then about the primary topic of the document if any
-      var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
-      if (ps) initialRoots.push(ps)
-      div.appendChild(UI.panes.dataContents.statementsAsTables(sts, myDocument, initialRoots))
-    } else { // An outline mode openable rendering .. might be better
+    function alternativeRendering () {
       var sz = UI.rdf.Serializer(UI.store)
       var res = sz.rootSubjects(sts)
       var roots = res.roots
       var p = {}
       p.render = function (s2) {
         var div = myDocument.createElement('div')
-
         div.setAttribute('class', 'withinDocumentPane')
         var plist = kb.statementsMatching(s2, undefined, undefined, subject)
         outliner.appendPropertyTRs(div, plist, false, function (pred, inverse) { return true })
@@ -221,6 +203,30 @@ module.exports = {
         div.appendChild(tr)
         outliner.outline_expand(td, root, {'pane': p})
       }
+    }
+
+    function mainRendering () {
+      var initialRoots = [] // Ordering: start with stuf fabout this doc
+      if (kb.holds(subject, undefined, undefined, subject)) initialRoots.push(subject)
+      // Then about the primary topic of the document if any
+      var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
+      if (ps) initialRoots.push(ps)
+      div.appendChild(UI.panes.dataContents.statementsAsTables(sts, myDocument, initialRoots))
+    }
+
+    var outliner = UI.panes.getOutliner(myDocument)
+    var kb = UI.store
+    var div = myDocument.createElement('div')
+    div.setAttribute('class', 'dataContentPane')
+    // Because of smushing etc, this will not be a copy of the original source
+    // We could instead either fetch and re-parse the source,
+    // or we could keep all the pre-smushed triples.
+    var sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
+
+    if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
+      alternativeRendering()
+    } else {
+      mainRendering()
     }
     return div
   }

@@ -278,8 +278,7 @@ module.exports = {
         if (ok) {
           // setModifiedDate(store, kb, store)
           // rerender(div) // deletes the new trip form
-        }
-        else complain('Sorry, failed to save your change:\n' + body)
+        } else complain('Sorry, failed to save your change:\n' + body)
       }
 
       // What trips do we know about?
@@ -336,16 +335,18 @@ module.exports = {
 
           if (trips.length > 1) {
             div.appendChild(UI.widgets.makeSelectForOptions(
-                dom, kb, subject, TRIP('trip'), trips,
-                { 'multiple': false, 'nullLabel': '-- what trip? --', 'mint': 'New Trip *',
-                  'mintClass': TRIP('Trip'),
-                  'mintStatementsFun': function (trip) {
-                    var is = []
-                    is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc()))
-                    return is
-                  }
-                },
-                store, complainIfBad))
+              dom, kb, subject, TRIP('trip'), trips,
+              { 'multiple': false,
+                'nullLabel': '-- what trip? --',
+                'mint': 'New Trip *',
+                'mintClass': TRIP('Trip'),
+                'mintStatementsFun': function (trip) {
+                  var is = []
+                  is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc()))
+                  return is
+                }
+              },
+            store, complainIfBad))
           }
 
           div.appendChild(dom.createElement('br'))
@@ -465,9 +466,11 @@ module.exports = {
             header.appendChild(headerCell('total'))
           }
 
-          for (var uri in total) if (total.hasOwnProperty(uri)) {
-            types.push(uri)
-            grandTotal += total[uri]
+          for (var uri in total) {
+            if (total.hasOwnProperty(uri)) {
+              types.push(uri)
+              grandTotal += total[uri]
+            }
           }
           types.sort()
           var row, label, z

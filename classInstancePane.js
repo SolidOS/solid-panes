@@ -44,8 +44,10 @@ module.exports = {
       sts.map(st => {
         already[st.subject.toNT()] = st
       })
-      for (var nt in kb.findMembersNT(subject)) if (!already[nt]) {
-        more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)) // @@ no provenence
+      for (var nt in kb.findMembersNT(subject)) {
+        if (!already[nt]) {
+          more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)) // @@ no provenence
+        }
       }
       if (more.length) {
         complain('There are ' + sts.length + ' explicit and ' +

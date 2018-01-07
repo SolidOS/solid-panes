@@ -24,8 +24,7 @@ function toolsPane (selectAllGroups, selectedGroups, groupsMainTable, book, dom,
   var box = MainRow.appendChild(dom.createElement('table'))
   table.appendChild(dom.createElement('tr')) // bottomRow
 
-  let context = { target: book, me: me, noun: 'address book',
-  div: pane, dom: dom, statusRegion: statusBlock }
+  let context = { target: book, me: me, noun: 'address book', div: pane, dom: dom, statusRegion: statusBlock }
 
   box.appendChild(UI.aclControl.ACLControlBox5(book.dir(), dom, 'book', kb, function (ok, body) {
     if (!ok) box.innerHTML = 'ACL control box Failed: ' + body
@@ -373,7 +372,7 @@ function toolsPane (selectAllGroups, selectedGroups, groupsMainTable, book, dom,
 
         function checkGroupMembers () {
           return new Promise(function (resolve, reject) {
-            var inUniques = 0
+            // var inUniques = 0
             log('Groups loaded')
             for (let i = 0; i < stats.uniques.length; i++) {
               stats.uniquesSet[stats.uniques[i].uri] = true
@@ -390,11 +389,11 @@ function toolsPane (selectAllGroups, selectedGroups, groupsMainTable, book, dom,
             }
             log('  Compact group members ' + stats.groupMembers2.length)
 
-            if (false) { // Don't inspect as seems groups membership is complete
+            if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) { // Don't inspect as seems groups membership is complete
               for (let i = 0; i < stats.groupMembers.length; i++) {
                 var card = stats.groupMembers[i]
                 if (stats.uniquesSet[card.uri]) {
-                  inUniques += 1
+                  // inUniques += 1
                 } else {
                   log('  Not in uniques: ' + card)
                   stats.groupProblems.push(card)

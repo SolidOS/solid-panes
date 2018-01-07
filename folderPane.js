@@ -92,30 +92,26 @@ module.exports = {
 
       return div
     } else {
-      if (true) {
-        // outliner.appendPropertyTRs(div, contentsStatements, false, function (pred) { return true })
-
-        mainTable = div.appendChild(dom.createElement('table'))
-        var refresh = function () {
-          var objs = kb.each(subject, ns.ldp('contains')).filter(noHiddenFiles)
-          objs = objs.map(obj => [ UI.utils.label(obj).toLowerCase(), obj ])
-          objs.sort() // Sort by label case-insensitive
-          objs = objs.map(pair => pair[1])
-          UI.utils.syncTableToArray(mainTable, objs, function (obj) {
-            let st = kb.statementsMatching(subject, ns.ldp('contains'), obj)[0]
-            let defaultpropview = outliner.VIEWAS_boring_default
-            let tr = outliner.propertyTR(dom,
-              st, false)
-            tr.firstChild.textContent = '' // Was initialized to 'Contains'
-            tr.firstChild.style.cssText += 'min-width: 3em;'
-            tr.appendChild(outliner.outline_objectTD(obj, defaultpropview, undefined, st))
-            // UI.widgets.makeDraggable(tr, obj)
-            return tr
-          })
-        }
-        mainTable.refresh = refresh
-        refresh()
+      mainTable = div.appendChild(dom.createElement('table'))
+      var refresh = function () {
+        var objs = kb.each(subject, ns.ldp('contains')).filter(noHiddenFiles)
+        objs = objs.map(obj => [ UI.utils.label(obj).toLowerCase(), obj ])
+        objs.sort() // Sort by label case-insensitive
+        objs = objs.map(pair => pair[1])
+        UI.utils.syncTableToArray(mainTable, objs, function (obj) {
+          let st = kb.statementsMatching(subject, ns.ldp('contains'), obj)[0]
+          let defaultpropview = outliner.VIEWAS_boring_default
+          let tr = outliner.propertyTR(dom,
+            st, false)
+          tr.firstChild.textContent = '' // Was initialized to 'Contains'
+          tr.firstChild.style.cssText += 'min-width: 3em;'
+          tr.appendChild(outliner.outline_objectTD(obj, defaultpropview, undefined, st))
+          // UI.widgets.makeDraggable(tr, obj)
+          return tr
+        })
       }
+      mainTable.refresh = refresh
+      refresh()
     }
 
     // Allow user to create new things within the folder

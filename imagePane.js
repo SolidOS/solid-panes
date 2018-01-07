@@ -13,7 +13,7 @@ module.exports = {
     var kb = UI.store
     if (!kb.anyStatementMatching(
         subject, UI.ns.rdf('type'),
-        kb.sym('http://purl.org/dc/terms/Image'))) {// NB: Not dc: namespace!
+        kb.sym('http://purl.org/dc/terms/Image'))) { // NB: Not dc: namespace!
       return null
     }
 

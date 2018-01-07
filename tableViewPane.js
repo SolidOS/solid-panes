@@ -14,7 +14,7 @@
 
 // ///////////////////////////////////////////////////////////////////
 
-/* Table view pane  -- view of a class*/
+// Table view pane  -- view of a class/
 var UI = require('solid-ui')
 
 module.exports = {

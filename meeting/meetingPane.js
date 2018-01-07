@@ -161,7 +161,6 @@ module.exports = {
         var addIframeTool = function (target) {
           var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
           kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
-          return
         }
 
         var addLink = function (target) {

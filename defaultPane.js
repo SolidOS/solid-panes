@@ -50,18 +50,17 @@ module.exports = {
         kb.anyStatementMatching(subject).why.uri &&
         kb.updater.editable(kb.anyStatementMatching(subject).why.uri)
       // check the document containing something about of the bnode @@ what about as object?
-      /*! && HCIoptions["bottom insert highlights"].enabled*/)) {
+      /*  ! && HCIoptions["bottom insert highlights"].enabled  */)) {
       var holdingTr = dom.createElement('tr') // these are to minimize required changes
       var holdingTd = dom.createElement('td') // in userinput.js
       holdingTd.setAttribute('colspan', '2')
       holdingTd.setAttribute('notSelectable', 'true')
       var img = dom.createElement('img')
       img.src = UI.icons.originalIconBase + 'tango/22-list-add-new.png'
-      img.addEventListener('click', function add_new_tripleIconMouseDownListener (e) {
+      img.addEventListener('click', function addNewTripleIconMouseDownListener (e) {
         outliner.UserInput.addNewPredicateObject(e)
         e.stopPropagation()
         e.preventDefault()
-        return
       })
       img.className = 'bottom-border-active'
       // img.addEventListener('click', thisOutline.UserInput.addNewPredicateObject,false)

@@ -111,23 +111,25 @@ module.exports = {
       var uriHash = kb.findMemberURIs(subject)
       var pairs = []
       var subjects = []
-      for (u in uriHash) if (uriHash.hasOwnProperty(u)) {
-        x = kb.sym(u)
-        if (sortBy) {
-          key = kb.any(x, sortBy)
-          if (!key) {
-            // complain("No key "+key+" sortby "+sortBy+" for "+x)
-            key = '8888-12-31'
+      for (u in uriHash) {
+        if (uriHash.hasOwnProperty(u)) {
+          x = kb.sym(u)
+          if (sortBy) {
+            key = kb.any(x, sortBy)
+            if (!key) {
+              // complain("No key "+key+" sortby "+sortBy+" for "+x)
+              key = '8888-12-31'
+            } else {
+              key = key.value
+            }
           } else {
-            key = key.value
+            complain('No sortby ' + sortBy + ' for ' + x)
+            key = '9999-12-31'
           }
-        } else {
-          complain('No sortby ' + sortBy + ' for ' + x)
-          key = '9999-12-31'
+          // key = (sortBy && kb.any(x, sortBy)) || kb.literal("9999-12-31") // Undated appear future
+          // if (!key) complain("Sort: '"+key+"' No "+sortBy+" for "+x) // Assume just not in this year
+          pairs.push([key, x])
         }
-        // key = (sortBy && kb.any(x, sortBy)) || kb.literal("9999-12-31") // Undated appear future
-        // if (!key) complain("Sort: '"+key+"' No "+sortBy+" for "+x) // Assume just not in this year
-        pairs.push([key, x])
       }
       pairs.sort()
       pairs.reverse() // @@ Descending order .. made a toggle?
@@ -370,14 +372,13 @@ module.exports = {
         var mintBox = dom.createElement('div')
         mintBox.setAttribute('style', 'clear: left; width: 20em; margin-top:2em; background-color:#ccc; border-radius: 1em; padding: 1em; font-weight: bold;')
         mintBox.textContent = '+ New ' + UI.utils.label(subject)
-        if (true) { // Only if > 1 store in set?
-          mintBox.textContent += ' in ' + UI.utils.label(store)
-          var storeLab = dom.createElement('span')
-          storeLab.setAttribute('style', 'font-weight: normal; font-size: 80%; color: #777;')
-          storeLab.textContent = storeURI
-          mintBox.appendChild(dom.createElement('br'))
-          mintBox.appendChild(storeLab)
-        }
+
+        mintBox.textContent += ' in ' + UI.utils.label(store)
+        var storeLab = dom.createElement('span')
+        storeLab.setAttribute('style', 'font-weight: normal; font-size: 80%; color: #777;')
+        storeLab.textContent = storeURI
+        mintBox.appendChild(dom.createElement('br'))
+        mintBox.appendChild(storeLab)
         /*
         var mintButton = dom.createElement('img')
         mintBox.appendChild(mintButton)

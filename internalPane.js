@@ -30,12 +30,12 @@ module.exports = {
     //        appendRemoveIcon(div, subject, div)
 
     var plist = kb.statementsMatching(subject)
-    var doc_uri = null
+    var docURI = null
     if (subject.uri) {
       plist.push($r.st(subject,
         kb.sym('http://www.w3.org/2007/ont/link#uri'), subject.uri, UI.store.fetcher.appNode))
       if (subject.uri.indexOf('#') >= 0) {
-        doc_uri = subject.uri.split('#')[0]
+        docURI = subject.uri.split('#')[0]
         plist.push($r.st(subject,
           kb.sym('http://www.w3.org/2007/ont/link#documentURI'),
           subject.uri.split('#')[0], UI.store.fetcher.appNode))
@@ -43,11 +43,11 @@ module.exports = {
           kb.sym('http://www.w3.org/2007/ont/link#document'),
           kb.sym(subject.uri.split('#')[0]), UI.store.fetcher.appNode))
       } else {
-        doc_uri = subject.uri
+        docURI = subject.uri
       }
     }
-    if (doc_uri) {
-      var ed = UI.store.updater.editable(doc_uri)
+    if (docURI) {
+      var ed = UI.store.updater.editable(docURI)
       if (ed) {
         plist.push($r.st(subject,
           kb.sym('http://www.w3.org/ns/rww#editable'),
