@@ -82,7 +82,7 @@ paneModule.register(require('./schedule/schedulePane.js'))
 paneModule.register(require('./links/linksPane.js'))
 
 paneModule.register(require('./trip/tripPane.js'))
-paneModule.register(require('./airPane.js'))
+// paneModule.register(require('./airPane.js'))
 
 // Content views
 
