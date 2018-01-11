@@ -198,10 +198,10 @@ module.exports = {
         var tr = myDocument.createElement('TR')
         var root = roots[i]
         tr.style.verticalAlign = 'top'
-        var td = outliner.outline_objectTD(root, undefined, tr)
+        var td = outliner.outlineObjectTD(root, undefined, tr)
         tr.appendChild(td)
         div.appendChild(tr)
-        outliner.outline_expand(td, root, {'pane': p})
+        outliner.outlineExpand(td, root, {'pane': p})
       }
     }
 

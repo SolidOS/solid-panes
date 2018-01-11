@@ -469,7 +469,7 @@ module.exports = function UserInput (outline) {
         preStat = upperTr.AJAR_statement
         reqTerm = this.generateRequest('(To be determined. Re-type of drag an object onto this field)')
         this.formUndetStat(upperTr, preStat.subject, preStat.predicate, reqTerm, preStat.why, false)
-        outline.replaceTD(outline.outline_objectTD(reqTerm, defaultpropview), upperTr.lastChild)
+        outline.replaceTD(outline.outlineObjectTD(reqTerm, defaultpropview), upperTr.lastChild)
         this.lastModified = null
         return
       } else
@@ -496,10 +496,10 @@ module.exports = function UserInput (outline) {
 
       if (!this.statIsInverse) {
             // this is for an old feature
-            // outline.replaceTD(outline.outline_objectTD(s.object, defaultpropview),trNode.lastChild);
-        outline.replaceTD(outline.outline_objectTD(kb.literal(this.lastModified.value), defaultpropview), trNode.lastChild)
+            // outline.replaceTD(outline.outlineObjectTD(s.object, defaultpropview),trNode.lastChild);
+        outline.replaceTD(outline.outlineObjectTD(kb.literal(this.lastModified.value), defaultpropview), trNode.lastChild)
       } else {
-        outline.replaceTD(outline.outline_objectTD(s.subject, defaultpropview), trNode.lastChild)
+        outline.replaceTD(outline.outlineObjectTD(s.subject, defaultpropview), trNode.lastChild)
       }
       if (this.lastModified.value !== this.lastModified.defaultValue) { trNode.lastChild.className += ' pendingedit' }
         // trNode.AJAR_statement=s;//you don't have to set AJAR_inverse because it's not changed
@@ -639,7 +639,7 @@ module.exports = function UserInput (outline) {
           var insertTr = this.appendToPredicate(selectedTd)
           var preStat = selectedTd.parentNode.AJAR_statement
           defaultpropview = this.views.defaults[preStat.predicate.uri]
-          insertTr.appendChild(outline.outline_objectTD(term, defaultpropview))
+          insertTr.appendChild(outline.outlineObjectTD(term, defaultpropview))
                 // modify store and update here
           var isInverse = selectedTd.parentNode.AJAR_inverse
           if (!isInverse) { insertTr.AJAR_statement = kb.add(preStat.subject, preStat.predicate, term, preStat.why) } else { insertTr.AJAR_statemnet = kb.add(term, preStat.predicate, preStat.object, preStat.why) }
@@ -669,7 +669,7 @@ module.exports = function UserInput (outline) {
           if (isObject) { // object inserted
             this.formUndetStat(newTr, preStat.subject, this.generateRequest('(TBD)', newTr, true), term, preStat.why, false)
                     // defaultpropview temporaily not dealt with
-            newTr.appendChild(outline.outline_objectTD(term))
+            newTr.appendChild(outline.outlineObjectTD(term))
             outline.walk('moveTo', newTr.firstChild)
             this.startFillInText(newTr.firstChild)
           } else { // predicate inserted
@@ -677,7 +677,7 @@ module.exports = function UserInput (outline) {
             var reqTerm = this.generateRequest('(To be determined. Re-type of drag an object onto this field)', newTr)
             this.formUndetStat(newTr, preStat.subject, term, reqTerm, preStat.why, false)
 
-            newTr.insertBefore(outline.outline_predicateTD(term, newTr, false, false), newTr.firstChild)
+            newTr.insertBefore(outline.outlinePredicateTD(term, newTr, false, false), newTr.firstChild)
             outline.walk('moveTo', newTr.lastChild)
             this.startFillInText(newTr.lastChild)
           }
@@ -1213,7 +1213,7 @@ module.exports = function UserInput (outline) {
         // append the undetermined td
       if (!notShow) {
         var newNode
-        if (isPredicate) { newNode = trNode.appendChild(outline.outline_predicateTD(reqTerm, trNode, false, false)) } else { newNode = trNode.appendChild(outline.outline_objectTD(reqTerm)) }
+        if (isPredicate) { newNode = trNode.appendChild(outline.outlinePredicateTD(reqTerm, trNode, false, false)) } else { newNode = trNode.appendChild(outline.outlineObjectTD(reqTerm)) }
         newNode.className = 'undetermined'
         newNode.textContent = tipText
       }
@@ -1322,7 +1322,7 @@ module.exports = function UserInput (outline) {
 
                     // refresh the choice
             var tr = clickedTd.parentNode
-            var newTd = outline.outline_predicateTD(tr.AJAR_statement.predicate, tr)
+            var newTd = outline.outlinePredicateTD(tr.AJAR_statement.predicate, tr)
             tr.insertBefore(newTd, clickedTd)
             tr.removeChild(clickedTd)
             This.lastModified.select()
@@ -1604,7 +1604,7 @@ module.exports = function UserInput (outline) {
 
       if (type === 'predicate') {
             // ToDo: How to link two things with an inverse relationship
-        let newTd = outline.outline_predicateTD(inputTerm, tr, false, false)
+        let newTd = outline.outlinePredicateTD(inputTerm, tr, false, false)
         if (selectedTd.nextSibling.className !== 'undetermined') {
           var s = new UI.rdf.Statement(stat.subject, inputTerm, stat.object, stat.why)
 
@@ -1637,7 +1637,7 @@ module.exports = function UserInput (outline) {
         outline.replaceTD(newTd, selectedTd)
         TempFormula.remove(stat)
       } else if (type === 'object') {     // Object value has been edited
-        let newTd = outline.outline_objectTD(inputTerm)
+        let newTd = outline.outlineObjectTD(inputTerm)
         outline.replaceTD(newTd, selectedTd)
         if (!selectedTd.previousSibling || selectedTd.previousSibling.className !== 'undetermined') {
           let s

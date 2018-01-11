@@ -105,7 +105,7 @@ module.exports = {
             st, false)
           tr.firstChild.textContent = '' // Was initialized to 'Contains'
           tr.firstChild.style.cssText += 'min-width: 3em;'
-          tr.appendChild(outliner.outline_objectTD(obj, defaultpropview, undefined, st))
+          tr.appendChild(outliner.outlineObjectTD(obj, defaultpropview, undefined, st))
           // UI.widgets.makeDraggable(tr, obj)
           return tr
         })
