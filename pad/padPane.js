@@ -108,11 +108,11 @@ module.exports = {
     /**
      * @param docURI
      * @param allWrite
-     * @param callback
+     * @param callbackFunction
      *
      * @returns {Promise<Response>}
      */
-    var setACL = function setACL (docURI, allWrite, callback) {
+    var setACL = function setACL (docURI, allWrite, callbackFunction) {
       var aclDoc = kb.any(kb.sym(docURI),
         kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
 
@@ -120,14 +120,14 @@ module.exports = {
         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
         return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
-          .then(result => callback(true))
+          .then(result => callbackFunction(true))
           .catch(err => {
-            callback(false, err.message)
+            callbackFunction(false, err.message)
           })
       } else {
         return fetcher.load(docURI)
           .catch(err => {
-            callback(false, 'Getting headers for ACL: ' + err)
+            callbackFunction(false, 'Getting headers for ACL: ' + err)
           })
           .then(() => {
             var aclDoc = kb.any(kb.sym(docURI),
@@ -142,9 +142,9 @@ module.exports = {
 
             return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
           })
-          .then(result => callback(true))
+          .then(result => callbackFunction(true))
           .catch(err => {
-            callback(false, err.message)
+            callbackFunction(false, err.message)
           })
       }
     }

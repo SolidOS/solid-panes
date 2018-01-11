@@ -2,7 +2,7 @@
  Microblog pane
  Charles McKenzie <charles2@mit.edu>
 */
-
+/* global alert */
 var UI = require('solid-ui')
 
 module.exports = {
@@ -10,7 +10,6 @@ module.exports = {
   icon: UI.icons.originalIconBase + 'microblog/microblog.png',
   name: 'microblogPane',
   label: function (subject) {
-    var SIOCt = UI.rdf.Namespace('http://rdfs.org/sioc/types#')
     if (UI.store.whether(subject, UI.ns.rdf('type'), UI.ns.foaf('Person'))) {
       return 'Microblog'
     } else {
@@ -23,7 +22,6 @@ module.exports = {
     //* **********************************************
     var SIOC = UI.rdf.Namespace('http://rdfs.org/sioc/ns#')
     var SIOCt = UI.rdf.Namespace('http://rdfs.org/sioc/types#')
-    var RSS = UI.rdf.Namespace('http://purl.org/rss/1.0/')
     var FOAF = UI.rdf.Namespace('http://xmlns.com/foaf/0.1/')
     var terms = UI.rdf.Namespace('http://purl.org/dc/terms/')
     var RDF = UI.ns.rdf
@@ -35,36 +33,6 @@ module.exports = {
     // BACK END
     //* **********************************************
     var sparqlUpdater = kb.updater
-    // ----------------------------------------------
-    // ISO 8601 DATE
-    // ----------------------------------------------
-    Date.prototype.getISOdate = function () {
-      var padZero = function (n) {
-        return (n < 10) ? '0' + n : n
-      }
-      var ISOdate = this.getUTCFullYear() + '-' +
-        padZero(this.getUTCMonth()) + '-' +
-        padZero(this.getUTCDate()) + 'T' +
-        padZero(this.getUTCHours()) + ':' +
-        padZero(this.getUTCMinutes()) + ':' +
-        padZero(this.getUTCSeconds()) + 'Z'
-      return ISOdate
-    }
-    Date.prototype.parseISOdate = function (dateString) {
-      var arrDateTime = dateString.split('T')
-      var theDate = arrDateTime[0].split('-')
-      var theTime = arrDateTime[1].replace('Z', '').split(':')
-
-      this.setUTCDate(1)
-      this.setUTCFullYear(theDate[0])
-      this.setUTCMonth(theDate[1])
-      this.setUTCDate(theDate[2])
-      this.setUTCHours(theTime[0])
-      this.setUTCMinutes(theTime[1])
-      this.setUTCSeconds(theTime[2])
-
-      return this
-    }
     // ----------------------------------------------
     // FOLLOW LIST
     // store the URIs of followed users for
@@ -92,7 +60,7 @@ module.exports = {
     FollowList.prototype.selectUser = function (user) {
       // check if a user is in the follows list.
       if (this.userlist[user]) {
-        return [(this.userlist[user].length == 1), this.userlist[user]]
+        return [(this.userlist[user].length === 1), this.userlist[user]]
       } else {
         // user does not follow any users with this nick
         return [false, []]
@@ -110,8 +78,8 @@ module.exports = {
         return
       }
       this.user = user.split('#')[0]
-      created = kb.each(kb.sym(user), SIOC('creator_of'))
-      for (var c in created) {
+      let created = kb.each(kb.sym(user), SIOC('creator_of'))
+      for (let c in created) {
         if (kb.whether(created[c], RDF('type'), SIOCt('FavouriteThings'))) {
           this.favoritesURI = created[c]
           var favs = kb.each(created[c], SIOC('container_of'))
@@ -182,10 +150,9 @@ module.exports = {
     }
 
     Microblog.prototype.getPost = function (uri) {
-      Post = new Object()
+      var Post = {}
       // date ----------
-      var postLink = new Date()
-      postLink = postLink.parseISOdate(String(kb.any(uri, terms('created'))))
+      var postLink = new Date(kb.anyValue(uri, terms('created')))
       var h = postLink.getHours()
       var a = (h > 12) ? ' PM' : ' AM'
       h = (h > 12) ? (h - 12) : h
@@ -205,12 +172,12 @@ module.exports = {
     }
     Microblog.prototype.gen_random_uri = function (base) {
       // generate random uri
-      var uri_nonce = base + '#n' + Math.floor(Math.random() * 10e+9)
-      return kb.sym(uri_nonce)
+      var uriNonce = base + '#n' + Math.floor(Math.random() * 10e+9)
+      return kb.sym(uriNonce)
     }
     Microblog.prototype.statusUpdate = function (statusMsg, callback, replyTo, meta) {
       var myUserURI = this.getMyURI()
-      myUser = kb.sym(myUserURI.split('#')[0])
+      let myUser = kb.sym(myUserURI.split('#')[0])
       var newPost = this.gen_random_uri(myUser.uri)
       var microlist = kb.each(kb.sym(myUserURI), SIOC('creator_of'))
       var micro
@@ -227,7 +194,7 @@ module.exports = {
         new UI.rdf.Statement(newPost, RDF('type'), SIOCt('MicroblogPost'), myUser),
         new UI.rdf.Statement(newPost, SIOC('has_creator'), kb.sym(myUserURI), myUser),
         new UI.rdf.Statement(newPost, SIOC('content'), statusMsg, myUser),
-        new UI.rdf.Statement(newPost, terms('created'), String(new Date().getISOdate()), myUser),
+        new UI.rdf.Statement(newPost, terms('created'), new Date(), myUser),
         new UI.rdf.Statement(micro, SIOC('container_of'), newPost, myUser)
       ]
 
@@ -260,9 +227,9 @@ module.exports = {
     }
     Microblog.prototype.getMyURI = function () {
       var me = UI.authn.currentUser()
-      dump(me)
+      console.log(me)
       var myMicroblog = kb.any(kb.sym(me), FOAF('holdsAccount'))
-      dump('\n\n' + myMicroblog)
+      console.log('\n\n' + myMicroblog)
       return (myMicroblog) ? myMicroblog.uri : false
     }
     Microblog.prototype.generateNewMB = function (id, name, avatar, loc) {
@@ -272,9 +239,9 @@ module.exports = {
       }
       var cbgenUserMB = function (a, success, c, d) {
         if (success) {
-          notify('Microblog generated at ' + host + '#' + id
-            + 'please add <b>' + host + '</b> to your foaf.')
-          mbCancelNewMB()
+          alert('Microblog generated at ' + host + '#' + id +
+            'please add <b>' + host + '</b> to your foaf.')
+          // mbCancelNewMB()   @@TBD
           // assume the foaf is not writable and store the microblog to the
           // preferences for later retrieval.
           // this will probably need to change.
@@ -313,8 +280,8 @@ module.exports = {
       sparqlUpdater.insert_statement(genUserMB, cbgenUserMB)
     }
     var mb = new Microblog(kb)
-    var Favorites = new Favorites(mb.getMyURI())
-    var FollowList = new FollowList(mb.getMyURI())
+    var myFavorites = new Favorites(mb.getMyURI())
+    var myFollowList = new FollowList(mb.getMyURI())
 
     //* **********************************************
     // FRONT END FUNCTIONALITY
@@ -335,8 +302,8 @@ module.exports = {
         tab.innerHTML = caption
         if (isDefault) { tab.className = 'active' }
         tab.id = id
-        change = this.change
-        tablist = this.tablist
+        let change = this.change
+        let tablist = this.tablist
         tab.addEventListener('click', function (evt) { change(evt.target.id, tablist, doc) }, false)
 
         this.tablist[id] = {'view': view.id, 'tab': tab}
@@ -347,7 +314,7 @@ module.exports = {
       }
       TabManager.prototype.change = function (id, tablist, doc) {
         for (var tab in tablist) {
-          if (tab == id) {
+          if (tab === id) {
             tablist[id]['tab'].className = 'active'
             doc.getElementById(tablist[id]['view']).className += ' active'
           } else {
@@ -396,11 +363,10 @@ module.exports = {
     }
 
     Pane.prototype.header = function (s, doc) {
-      postNotificationContainer = this.postNotificationContainer
       var that = this
-      lsFollowUser = function () {
+      function lsFollowUser () {
         var myUser = kb.sym(mb.getMyURI())
-        var Ifollow = that.Ifollow
+        // var Ifollow = that.Ifollow
         var username = that.creator.name
         var mbconfirmFollow = function (uri, success, msg) {
           if (success === true) {
@@ -412,11 +378,11 @@ module.exports = {
             } else {
               kb.removeMany(followMe.subject, followMe.predicate, followMe.object, followMe.why)
             }
-            dump('\n' + that.Ifollow)
+            console.log(that.Ifollow)
             that.Ifollow = !that.Ifollow
             xfollowButton.disabled = false
-            dump(that.Ifollow)
-            followButtonLabel = (that.Ifollow) ? 'Unfollow ' : 'Follow '
+            console.log(that.Ifollow)
+            var followButtonLabel = (that.Ifollow) ? 'Unfollow ' : 'Follow '
             var doFollow = (that.Ifollow) ? 'now follow ' : 'no longer follow '
             xfollowButton.value = followButtonLabel + username
             that.notify('You ' + doFollow + username + '.')
@@ -457,10 +423,10 @@ module.exports = {
           xcmbName.value = kb.any(s, FOAF('name'))
         } else {
           // handle use of family and given name
-          xcmbName.value = (kb.any(s, FOAF('givenname'))) ?
-            kb.any(s, FOAF('givenname')) + ' ' : ''
-          xcmbName.value += (kb.any(s, FOAF('family_name'))) ?
-            kb.any(s, FOAF('givenname')) : ''
+          xcmbName.value = (kb.any(s, FOAF('givenname')))
+            ? kb.any(s, FOAF('givenname')) + ' ' : ''
+          xcmbName.value += (kb.any(s, FOAF('family_name')))
+            ? kb.any(s, FOAF('givenname')) : ''
           xcmbName.value = kb.any(s, FOAF('givenname')) + ' ' +
             kb.any(s, FOAF('family_name'))
         }
@@ -472,23 +438,23 @@ module.exports = {
           xcmbAvatar.value = kb.any(s, FOAF('img')).uri
         } else {
           // otherwise try depiction
-          xcmbAvatar.value = (kb.any(s, FOAF('depiction'))) ?
-            kb.any(s, FOAF('depiction')).uri : ''
+          xcmbAvatar.value = (kb.any(s, FOAF('depiction')))
+            ? kb.any(s, FOAF('depiction')).uri : ''
         }
         var workspace
         // = kb.any(s,WORKSPACE) //TODO - ADD URI FOR WORKSPACE DEFINITION
         var xcmbWritable = doc.createElement('input')
-        xcmbWritable.value = (workspace) ? workspace : 'http://dig.csail.mit.edu/2007/wiki/sandbox'
-        xcmb.innerHTML = '\
-                        <form class ="createNewMB" id="createNewMB">\
-                            <p id="xcmbname"><span class="">Name: </span></p>\
-                            <p id="xcmbid">Id: </p>\
-                            <p id="xcmbavatar">Avatar: </p> \
-                            <p id="xcmbwritable">Host my microblog at: </p>\
-                            <input type="button" id="mbCancel" value="Cancel" />\
-                            <input type="submit" id="mbCreate" value="Create\!" />\
-                        </form>\
-                        '
+        xcmbWritable.value = workspace || 'http://dig.csail.mit.edu/2007/wiki/sandbox' // @@@
+        xcmb.innerHTML = `
+                        <form class ="createNewMB" id="createNewMB">
+                            <p id="xcmbname"><span class="">Name: </span></p>
+                            <p id="xcmbid">Id: </p>
+                            <p id="xcmbavatar">Avatar: </p>
+                            <p id="xcmbwritable">Host my microblog at: </p>
+                            <input type="button" id="mbCancel" value="Cancel" />
+                            <input type="submit" id="mbCreate" value="Create!" />
+                        </form>
+                        `
         xupdateContainer.appendChild(xcmb)
         doc.getElementById('xcmbname').appendChild(xcmbName)
         doc.getElementById('xcmbid').appendChild(xcmbId)
@@ -501,13 +467,12 @@ module.exports = {
         xcmbName.focus()
       }
       var mbSubmitPost = function () {
-        var postDate = new Date()
         var meta = {
           recipients: []
         }
         // user has selected a microblog to post to
         if (mb.getMyURI()) {
-          myUser = kb.sym(mb.getMyURI())
+          // let myUser = kb.sym(mb.getMyURI())
           // submission callback
           var cbconfirmSubmit = function (uri, success, responseText, d) {
             if (success === true) {
@@ -532,9 +497,9 @@ module.exports = {
             mb.statusUpdate(xupdateStatus.value, cbconfirmSubmit, xinReplyToContainer.value, meta)
           }
           for (var word in words) {
-            if (words[word].match(/\@\w+/)) {
+            if (words[word].match(/@\w+/)) {
               var atUser = words[word].replace(/\W/g, '')
-              var recipient = FollowList.selectUser(atUser)
+              var recipient = myFollowList.selectUser(atUser)
               if (recipient[0] === true) {
                 meta.recipients.push(recipient[1][0])
               } else if (recipient[1].length > 1) {
@@ -566,7 +531,7 @@ module.exports = {
                 return
               } else {
                 // no users known or self reference.
-                if (String(kb.any(kb.sym(mb.getMyURI()), SIOC('id'))).toLowerCase() == atUser.toLowerCase()) {
+                if (String(kb.any(kb.sym(mb.getMyURI()), SIOC('id'))).toLowerCase() === atUser.toLowerCase()) {
                   meta.recipients.push(mb.getMyURI())
                 } else {
                   notify('You do not follow ' + atUser + '. Try following ' + atUser + ' before mentioning them.')
@@ -636,9 +601,9 @@ module.exports = {
         xupdateContainer.appendChild(xupdateSubmit)
         xupdateContainer.addEventListener('submit', mbSubmitPost, false)
       } else {
-        var xnewUser = doc.createTextNode("\
-                    Hi, it looks like you don't have a microblog,\
-                    would you like to create one? ")
+        var xnewUser = doc.createTextNode(
+                    'Hi, it looks like you don\'t have a microblog, ' +
+                    ' would you like to create one? ')
         var xcreateNewMB = doc.createElement('input')
         xcreateNewMB.type = 'button'
         xcreateNewMB.value = 'Create a new Microblog'
@@ -653,7 +618,7 @@ module.exports = {
       subheaderContainer.className = 'subheader-container'
 
       // user header
-      this.creator
+      // this.creator
       var creators = kb.each(s, FOAF('holdsAccount'))
       for (var c in creators) {
         if (kb.whether(creators[c], RDF('type'), SIOC('User')) &&
@@ -682,7 +647,7 @@ module.exports = {
         if (!this.thisIsMe && mb.getMyURI()) {
           var xfollowButton = doc.createElement('input')
           xfollowButton.setAttribute('type', 'button')
-          followButtonLabel = (this.Ifollow) ? 'Unfollow ' : 'Follow '
+          let followButtonLabel = (this.Ifollow) ? 'Unfollow ' : 'Follow '
           xfollowButton.value = followButtonLabel + this.creator.name
           xfollowButton.addEventListener('click', lsFollowUser, false)
           subheaderContainer.appendChild(xfollowButton)
@@ -702,8 +667,8 @@ module.exports = {
   */
       var that = this
       var viewPost = function (uris) {
-        xviewReply = that.xviewReply
-        for (var n in xviewReply.childNodes) {
+        let xviewReply = that.xviewReply
+        for (let i = 0; i < xviewReply.childNodes.length; i++) {
           xviewReply.removeChild(xviewReply.childNodes[0])
         }
         var xcloseContainer = doc.createElement('li')
@@ -725,7 +690,7 @@ module.exports = {
       xpost.setAttribute('id', String(post.uri).split('#')[1])
       var Post = mb.getPost(post)
       // username text
-      var uname = kb.any(kb.any(post, SIOC('has_creator')), SIOC('id'))
+      // var uname = kb.any(kb.any(post, SIOC('has_creator')), SIOC('id'))
       var uholdsaccount = kb.any(undefined, FOAF('holdsAccount'), kb.any(post, SIOC('has_creator')))
       var xuname = doc.createElement('a')
       xuname.href = uholdsaccount.uri
@@ -750,26 +715,26 @@ module.exports = {
       xpostLink.id = 'post_' + String(post.uri).split('#')[1]
       xpostLink.setAttribute('content', post.uri)
       xpostLink.setAttribute('property', 'permalink')
-      postLink = doc.createTextNode((Post.date) ? Post.date : 'post date unknown')
+      let postLink = doc.createTextNode((Post.date) ? Post.date : 'post date unknown')
       xpostLink.appendChild(postLink)
 
       // LINK META DATA (MENTIONS, HASHTAGS, GROUPS)
       var mentions = kb.each(post, SIOC('topic'))
-      tags = new Object()
+      let tags = {}
 
       for (var mention in mentions) {
         sf.lookUpThing(mentions[mention])
-        id = kb.any(mentions[mention], SIOC('id'))
+        let id = kb.any(mentions[mention], SIOC('id'))
         tags['@' + id] = mentions[mention]
       }
-      var postTags = postText.match(/(\@|\#|\!)\w+/g)
+      var postTags = postText.match(/(@|#|!)\w+/g)
       var postFunction = function () {
-        p = postTags.pop()
+        let p = postTags.pop()
         return (tags[p]) ? kb.any(undefined, FOAF('holdsAccount'), tags[p]).uri : p
       }
       for (var t in tags) {
-        var person = t.replace(/\@/, '')
-        var replacePerson = RegExp('(\@|\!|\#)(' + person + ')')
+        var person = t.replace(/@/, '')
+        var replacePerson = RegExp('(@|!|#)(' + person + ')')
         postText = postText.replace(replacePerson, '$1<a href="' + postFunction() + '">$2</a>')
       }
       xpostContent.innerHTML = postText
@@ -780,7 +745,7 @@ module.exports = {
       var xreplyTo = doc.createElement('span')
       for (var reply in inReplyTo) {
         var theReply
-        theReply = String(inReplyTo[reply]).replace(/\<|\>/g, '')
+        theReply = String(inReplyTo[reply]).replace(/<|>/g, '')
         var genReplyTo = function () {
           var reply = doc.createElement('a')
           reply.innerHTML = ', <b>in reply to</b>'
@@ -822,7 +787,7 @@ module.exports = {
         xconfirmDeletionDialog.innerHTML += '<p>Are you sure you want to delete this post?</p>'
         xconfirmDeletionDialog.addEventListener('keyup',
           function (evt) {
-            if (evt.keyCode == 27) {
+            if (evt.keyCode === 27) {
               lsconfirmNo()
             }
           },
@@ -870,7 +835,7 @@ module.exports = {
           }
           // delete attributes of post
           evt.target.disabled = true
-          deleteMe = kb.statementsMatching(kb.sym(doc.getElementById(
+          let deleteMe = kb.statementsMatching(kb.sym(doc.getElementById(
             'post_' + evt.target.parentNode.id).getAttribute('content')))
           sparqlUpdater.batch_delete_statement(deleteMe, deleteContainerOf)
         }
@@ -879,7 +844,7 @@ module.exports = {
         // If the microblog in question does not belong to the user,
         // display the delete post and reply to post buttons.
         var themaker = kb.any(post, SIOC('has_creator'))
-        if (mb.getMyURI() != themaker.uri) {
+        if (mb.getMyURI() !== themaker.uri) {
           var xreplyButton = doc.createElement('input')
           xreplyButton.type = 'button'
           xreplyButton.value = 'reply'
@@ -900,20 +865,20 @@ module.exports = {
         xfavorite.className += ' ing'
         var cbFavorite = function (a, success, c, d) {
           if (success) {
-            xfavorite.className = (xfavorite.className.split(' ')[1] == 'ed') ?
-              'favorit' : 'favorit ed'
+            xfavorite.className = (xfavorite.className.split(' ')[1] === 'ed')
+              ? 'favorit' : 'favorit ed'
           }
         }
-        if (!Favorites.favorited(favpost)) {
-          Favorites.add(favpost, cbFavorite)
+        if (!myFavorites.favorited(favpost)) {
+          myFavorites.add(favpost, cbFavorite)
         } else {
-          Favorites.remove(favpost, cbFavorite)
+          myFavorites.remove(favpost, cbFavorite)
         }
       }
       var xfavorite = doc.createElement('a')
       xfavorite.innerHTML = '&#9733;'
       xfavorite.addEventListener('click', mbFavorite, false)
-      if (Favorites.favorited(post.uri)) {
+      if (myFavorites.favorited(post.uri)) {
         xfavorite.className = 'favorit ed'
       } else {
         xfavorite.className = 'favorit'
@@ -923,7 +888,7 @@ module.exports = {
       xpost.appendChild(xpostContent)
       if (mb.getMyURI()) {
         xpost.appendChild(xfavorite)
-        if (mb.getMyURI() != themaker.uri) {
+        if (mb.getMyURI() !== themaker.uri) {
           xpost.appendChild(xreplyButton)
         } else {
           xpost.appendChild(xdeleteButton)
@@ -936,33 +901,33 @@ module.exports = {
       }
       return xpost
     }
-    Pane.prototype.generatePostList = function (gmb_posts) {
+    Pane.prototype.generatePostList = function (gmbPosts) {
       /*
       generatePostList - Generate the posts and
       display their results on the interface.
       */
-      var post_list = doc.createElement('ul')
-      var postlist = new Object()
-      var datelist = new Array()
-      for (var post in gmb_posts) {
-        var postDate = kb.any(gmb_posts[post], terms('created'))
+      var postList = doc.createElement('ul')
+      var postlist = {}
+      var datelist = []
+      for (var post in gmbPosts) {
+        var postDate = kb.any(gmbPosts[post], terms('created'))
         if (postDate) {
           datelist.push(postDate)
-          postlist[postDate] = this.generatePost(gmb_posts[post], this.thisIsMe)
+          postlist[postDate] = this.generatePost(gmbPosts[post], this.thisIsMe)
         }
       }
       datelist.sort().reverse()
       for (var d in datelist) {
-        post_list.appendChild(postlist[datelist[d]])
+        postList.appendChild(postlist[datelist[d]])
       }
-      return post_list
+      return postList
     }
     Pane.prototype.followsView = function () {
       var getFollowed = function (user) {
         var userid = kb.any(user, SIOC('id'))
         var follow = doc.createElement('li')
         follow.className = 'follow'
-        userid = (userid) ? userid : user.uri
+        userid = userid || user.uri
         var fol = kb.any(undefined, FOAF('holdsAccount'), user)
         fol = (fol) ? fol.uri : user.uri
         follow.innerHTML = '<a href="' + fol + '">' +
@@ -987,7 +952,7 @@ module.exports = {
       var postContainer = doc.createElement('div')
       postContainer.id = 'postContainer'
       postContainer.className = 'post-container view-container active'
-      var mb_posts = []
+      var mbPosts = []
       if (kb.whether(s, FOAF('name')) && kb.whether(s, FOAF('holdsAccount'))) {
         sf.lookUpThing(kb.any(s, FOAF('holdsAccount')))
         var follows = kb.each(kb.any(s, FOAF('holdsAccount')), SIOC('follows'))
@@ -1001,13 +966,13 @@ module.exports = {
             if (kb.whether(smicroblogs[smb], SIOC('topic'), follows[f])) {
               continue
             } else {
-              mb_posts = mb_posts.concat(kb.each(smicroblogs[smb], SIOC('container_of')))
+              mbPosts = mbPosts.concat(kb.each(smicroblogs[smb], SIOC('container_of')))
             }
           }
         }
       }
-      if (mb_posts.length > 0) {
-        var postList = this.generatePostList(mb_posts)
+      if (mbPosts.length > 0) {
+        var postList = this.generatePostList(mbPosts)
         // generate stream
         postList.id = 'postList'
         postList.className = 'postList'
@@ -1023,8 +988,8 @@ module.exports = {
       var postMentionContainer = doc.createElement('div')
       postMentionContainer.id = 'postMentionContainer'
       postMentionContainer.className = 'mention-container view-container'
-      var mbn_posts = []
-      var mbm_posts = []
+      var mbnPosts = []
+      var mbmPosts = []
       // get mbs that I am the creator of.
       var theUser = kb.any(s, FOAF('holdsAccount'))
       var user = kb.any(theUser, SIOC('id'))
@@ -1032,19 +997,19 @@ module.exports = {
       for (var mbm in microblogs) {
         sf.lookUpThing(microblogs[mbm])
         if (kb.whether(microblogs[mbm], SIOC('topic'), theUser)) {
-          mbm_posts = mbm_posts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
+          mbmPosts = mbmPosts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
         } else {
           if (kb.whether(microblogs[mbm], RDF('type'), SIOCt('Microblog'))) {
-            mbn_posts = mbn_posts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
+            mbnPosts = mbnPosts.concat(kb.each(microblogs[mbm], SIOC('container_of')))
           }
         }
       }
-      var postNotificationList = this.generatePostList(mbn_posts)
+      var postNotificationList = this.generatePostList(mbnPosts)
       postNotificationList.id = 'postNotificationList'
       postNotificationList.className = 'postList'
       postNotificationContainer.appendChild(postNotificationList)
 
-      var postMentionList = this.generatePostList(mbm_posts)
+      var postMentionList = this.generatePostList(mbmPosts)
       postMentionList.id = 'postMentionList'
       postMentionList.className = 'postList'
       postMentionContainer.appendChild(postMentionList)
@@ -1063,7 +1028,7 @@ module.exports = {
       microblogPane.appendChild(this.xviewReply)
       microblogPane.appendChild(this.xnotify)
       microblogPane.appendChild(this.headerContainer)
-      if (this.xfollows != undefined) { microblogPane.appendChild(this.xfollows) }
+      if (this.xfollows !== undefined) { microblogPane.appendChild(this.xfollows) }
       microblogPane.appendChild(this.postContainer)
       microblogPane.appendChild(this.postNotificationContainer)
       microblogPane.appendChild(this.postMentionContainer)
@@ -1087,7 +1052,7 @@ module.exports = {
 //
 //          var buildPaneUI = function(uri){
 //              followsa.matches = (follows[uri]) ? followsa.matches+1: followsa.matches;
-//              dump(follows.toSource());
+//              console.log(follows.toSource());
 //              if(followsa.follows == followsa.matches ){
     var ppane = new Pane(s, doc, microblogpane)
     ppane.build()

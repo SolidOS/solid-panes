@@ -48,16 +48,7 @@ module.exports = {
       } else complain('Sorry, failed to save your change:\n' + body)
     }
 
-    var thisPane = this
-    var rerender = function (box) {
-      var parent = box.parentNode
-      var box2 = thisPane.render(subject, dom)
-      parent.replaceChild(box2, box)
-    }
-
     // //////////////////////////////////////////////////////////////////////////////
-    var plist = kb.statementsMatching(subject)
-    var qlist = kb.statementsMatching(undefined, undefined, subject)
 
     var t = kb.findTypeURIs(subject)
 
@@ -125,8 +116,8 @@ module.exports = {
 
         pred = ns.ui('creationForm')
         box.appendChild(dom.createElement('h2')).textContent = UI.utils.label(pred)
-        mention('Creation forms allow you to add information about a new thing,\
-                                    in this case a new ' + label + '.')
+        mention('Creation forms allow you to add information about a new thing,' +
+                      ' in this case a new ' + label + '.')
         displayFormsForRelation(pred, true)
         box.appendChild(dom.createElement('hr'))
         mention('You can make a new creation form:')
@@ -137,8 +128,8 @@ module.exports = {
 
         pred = ns.ui('annotationForm')
         box.appendChild(dom.createElement('h2')).textContent = UI.utils.label(pred)
-        mention('Annotaion forms allow you to add extra information about a ,\
-                                ' + label + ' we already know about.')
+        mention('Annotaion forms allow you to add extra information about a ,' +
+                              label + ' we already know about.')
         displayFormsForRelation(pred, false)
         box.appendChild(dom.createElement('hr'))
         mention('You can make a new annotation form:')

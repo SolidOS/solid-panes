@@ -70,13 +70,13 @@ module.exports = {
       }
 
       /*
-          var setACL3 = function (docURI, allWrite, callback) {
+          var setACL3 = function (docURI, allWrite, callbackFunction) {
             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-            return UI.acl.setACL(docURI, aclText, callback)
+            return UI.acl.setACL(docURI, aclText, callbackFunction)
           }
           */
 
-      var setACL2 = function setACL2 (docURI, allWrite, callback) {
+      var setACL2 = function setACL2 (docURI, allWrite, callbackFunction) {
         var aclDoc = kb.any(kb.sym(docURI),
           kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
 
@@ -84,14 +84,14 @@ module.exports = {
           var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
           return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
-            .then(result => callback(true))
+            .then(result => callbackFunction(true))
             .catch(err => {
-              callback(false, err.message)
+              callbackFunction(false, err.message)
             })
         } else {
           return fetcher.load(docURI)
             .catch(err => {
-              callback(false, 'Getting headers for ACL: ' + err)
+              callbackFunction(false, 'Getting headers for ACL: ' + err)
             })
             .then(() => {
               var aclDoc = kb.any(kb.sym(docURI),
@@ -106,9 +106,9 @@ module.exports = {
 
               return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
             })
-            .then(result => callback(true))
+            .then(result => callbackFunction(true))
             .catch(err => {
-              callback(false, err.message)
+              callbackFunction(false, err.message)
             })
         }
       }
@@ -266,12 +266,12 @@ module.exports = {
     var base = baseDir.uri
 
     var resultsDoc = $rdf.sym(base + 'results.ttl')
-    // var forms_uri = base + 'forms.ttl'
-    var forms_uri = 'https://linkeddata.github.io/solid-app-set/schedule/formsForSchedule.ttl'
+    // var formsURI = base + 'forms.ttl'
+    var formsURI = 'https://linkeddata.github.io/solid-app-set/schedule/formsForSchedule.ttl'
 
-    var form1 = kb.sym(forms_uri + '#form1')
-    var form2 = kb.sym(forms_uri + '#form2')
-    var form3 = kb.sym(forms_uri + '#form3')
+    var form1 = kb.sym(formsURI + '#form1')
+    var form2 = kb.sym(formsURI + '#form2')
+    var form3 = kb.sym(formsURI + '#form3')
 
     var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%
 
@@ -359,7 +359,7 @@ module.exports = {
 
     var getForms = function () {
       console.log('getforms()')
-      fetcher.nowOrWhenFetched(forms_uri, undefined, function (ok, body) {
+      fetcher.nowOrWhenFetched(formsURI, undefined, function (ok, body) {
         console.log('getforms() ok? ' + ok)
         if (!ok) return complainIfBad(ok, body)
         getDetails()
@@ -444,6 +444,8 @@ module.exports = {
 
     // ///////////// The forms to configure the poll
 
+    var doneButton = dom.createElement('button')
+
     var showForms = function () {
       var div = naviMain
       var wizard = true
@@ -514,7 +516,6 @@ module.exports = {
       insertables.push($rdf.st(subject, ns.sched('ready'), new Date(), detailsDoc))
       insertables.push($rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)) // @@ also link in results
 
-      var doneButton = dom.createElement('button')
       doneButton.setAttribute('style', inputStyle)
       doneButton.textContent = 'Go to poll'
       doneButton.addEventListener('click', function (e) {
@@ -635,12 +636,12 @@ module.exports = {
         // var point = cellLookup[x.toNT() + y.toNT()]
 
         if (y.sameTerm(me)) {
-          var callback = function () { refreshCellColor(cell, value); }; //  @@ may need that
+          var callbackFunction = function () { refreshCellColor(cell, value); }; //  @@ may need that
           var selectOptions = {}
           var predicate = ns.sched('timeOfDay')
           var cellSubject = dataPointForNT[x.toNT()]
           var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
-            possibleAvailabilities, selectOptions, resultsDoc, callback)
+            possibleAvailabilities, selectOptions, resultsDoc, callbackFunction)
           cell.appendChild(selector)
         } else if (value !== null) {
           cell.textContent = UI.utils.label(value)
@@ -806,14 +807,14 @@ module.exports = {
             })
           }
           if (y.sameTerm(me)) {
-            var callback = function () {
+            var callbackFunction = function () {
               refreshCellColor(cell, value)
             } //  @@ may need that
             var selectOptions = {}
             var predicate = ns.sched('availabilty')
             var cellSubject = dataPointForNT[x.toNT()]
             var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
-              possibleAvailabilities, selectOptions, resultsDoc, callback)
+              possibleAvailabilities, selectOptions, resultsDoc, callbackFunction)
             cell.appendChild(selector)
           } else if (value !== null) {
             cell.textContent = UI.utils.label(value)

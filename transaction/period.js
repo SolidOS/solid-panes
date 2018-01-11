@@ -213,8 +213,8 @@ module.exports = {
         'http://www.w3.org/2000/10/swap/pim/qif#UnclassifiedIncome': true
       }
       var xURIs = kb.findMemberURIs(ns.qu('Transaction'))
-      var unc_in = []
-      var unc_out = []
+      var unclassifiedIn = []
+      var unclassifiedOut = []
       var usd, z
       for (var y in xURIs) { // For each thing which can be inferred to be a transaction
         if (xURIs.hasOwnProperty(y)) {
@@ -233,16 +233,16 @@ module.exports = {
               usd = kb.any(z, ns.qu('amount'))
             }
             if (usd && ('' + usd.value).indexOf('-') >= 0) {
-              unc_out.push(kb.sym(y))
+              unclassifiedOut.push(kb.sym(y))
             } else {
-              unc_in.push(kb.sym(y))
+              unclassifiedIn.push(kb.sym(y))
             }
           }
         }
       }
       var tab, count
-      if (unc_in.length) {
-        tab = transactionTable(dom, unc_in)
+      if (unclassifiedIn.length) {
+        tab = transactionTable(dom, unclassifiedIn)
         count = tab.children.length
         div.appendChild(dom.createElement('h3')).textContent = 'Unclassified Income' +
           (count < 4 ? '' : ' (' + count + ')')
@@ -250,8 +250,8 @@ module.exports = {
       } else {
         happy('No unclassified income')
       }
-      if (unc_out.length) {
-        tab = transactionTable(dom, unc_out)
+      if (unclassifiedOut.length) {
+        tab = transactionTable(dom, unclassifiedOut)
         count = tab.children.length
         div.appendChild(dom.createElement('h3')).textContent = 'Unclassified Outgoings' +
           (count < 4 ? '' : ' (' + count + ')')

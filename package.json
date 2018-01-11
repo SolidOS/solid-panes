@@ -8,7 +8,7 @@
     "build-dist": "webpack --progress --colors",
     "build": "npm run clean && mkdir -p dist/ && npm run build-dist",
     "clean": "rm -rf dist/",
-    "standard": "standard chat/*.js",
+    "standard": "standard",
     "test": "npm run standard"
   },
   "repository": {

@@ -26,12 +26,6 @@ module.exports = {
   render: function (subject, dom) {
     // ////////////////////////////////////////////////////////////////////////////
 
-    var complain = function complain (message) {
-      var pre = dom.createElement('pre')
-      pre.setAttribute('style', 'background-color: pink')
-      div.appendChild(pre)
-      pre.appendChild(dom.createTextNode(message))
-    }
     /*
     var newThingUI = function (context) {
       var iconStyle = 'padding: 1em; width: 3em; height: 3em;'
@@ -144,7 +138,7 @@ module.exports = {
       var creationDiv = div.appendChild(dom.createElement('div'))
       var creationContext = {div: creationDiv, dom: dom, statusArea: div, me: me}
       creationDiv.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
-      var newUI = UI.create.newThingUI(creationContext, UI.panes) // Have to pass panes down
+      UI.create.newThingUI(creationContext, UI.panes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private:'
       UI.authn.registrationList(context, {private: true}).then(function (context) {

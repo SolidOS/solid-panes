@@ -1,4 +1,3 @@
-
 // Format an array of RDF statements as an HTML table.
 //
 // This can operate in one of three modes: when the class of object is given
@@ -13,31 +12,30 @@
 // 2008 Written, Ilaria Liccardi
 // 2014 core functionality now in common/table.js   -timbl
 
+// ///////////////////////////////////////////////////////////////////
 
-/////////////////////////////////////////////////////////////////////
-
-/* Table view pane  -- view of a class*/
+// Table view pane  -- view of a class/
 var UI = require('solid-ui')
 
 module.exports = {
-    icon: UI.icons.originalIconBase + "table.png",
+  icon: UI.icons.originalIconBase + 'table.png',
 
-    name: "tableOfClass",
+  name: 'tableOfClass',
 
-    label: function(subject) {
-            //if (!UI.store.holds(subject, UI.ns.rdf('type'),UI.ns.rdfs('Class'))) return null;
-            if (!UI.store.any(undefined, UI.ns.rdf('type'),subject)) return null;
-            var n = UI.store.statementsMatching(
-                undefined, UI.ns.rdf( 'type'), subject).length;
-            if (n == 0) return null;  // None, suppress pane
-            if (n > 15) return null;  // @@ At the moment this pane can be slow with too many @@ fixme by using limits
-            return (UI.utils.label(subject) + " table")
-        },
+  label: function (subject) {
+    // if (!UI.store.holds(subject, UI.ns.rdf('type'),UI.ns.rdfs('Class'))) return null
+    if (!UI.store.any(undefined, UI.ns.rdf('type'), subject)) return null
+    var n = UI.store.statementsMatching(
+      undefined, UI.ns.rdf('type'), subject).length
+    if (n === 0) return null // None, suppress pane
+    if (n > 15) return null // @@ At the moment this pane can be slow with too many @@ fixme by using limits
+    return (UI.utils.label(subject) + ' table')
+  },
 
-    render: function(subject, myDocument) {
-        var div = myDocument.createElement("div");
-        div.setAttribute('class', 'tablePane');
-        div.appendChild(UI.table(myDocument, {'tableClass': subject}));
-        return div;
-    }
+  render: function (subject, myDocument) {
+    var div = myDocument.createElement('div')
+    div.setAttribute('class', 'tablePane')
+    div.appendChild(UI.table(myDocument, {'tableClass': subject}))
+    return div
+  }
 }

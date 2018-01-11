@@ -161,7 +161,6 @@ module.exports = {
         var addIframeTool = function (target) {
           var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
           kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
-          return
         }
 
         var addLink = function (target) {
@@ -834,7 +833,7 @@ module.exports = {
           picker.render()
         })
       }
-      
+
       var renderDetails = function () {
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
         var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')

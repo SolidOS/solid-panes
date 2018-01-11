@@ -100,11 +100,11 @@ module.exports = {
       var slots = []
       for (var i = 0; i < sl.length; i++) {
         if (sl[i]) {
-          slots.push(parseInt(sl[i].object.value))
+          slots.push(parseInt(sl[i].object.value, 10))
         }
       }
 
-      index = parseInt(index.value)
+      index = parseInt(index.value, 10)
       var descDiv = myDocument.createElement('div')
 
       var pIndex = slots[(slots.indexOf(index) - 1 + slots.length) % slots.length]

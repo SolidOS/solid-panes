@@ -16,9 +16,13 @@ module.exports = {
   name: 'social',
 
   label: function (subject) {
-    if (!UI.store.whether(
-        subject, UI.ns.rdf('type'), UI.ns.foaf('Person'))) return null
-    return 'Friends'
+    var kb = UI.store
+    var types = kb.findTypeURIs(subject)
+    if (types[UI.ns.foaf('Person').uri] ||
+    types[UI.ns.vcard('Individual').uri]) {
+      return 'Friends'
+    }
+    return null
   },
 
   render: function (s, dom) {
@@ -73,10 +77,10 @@ module.exports = {
         // alert('Should be greyed out')
         if (this.checked) { // Add link
           try {
-            outliner.UserInput.sparqler.insert_statement(statement, function (uri, success, error_body) {
+            outliner.UserInput.sparqler.insert_statement(statement, function (uri, success, errorBody) {
               tx.className = 'question'
               if (!success) {
-                UI.log.alert(null, 'Message', 'Error occurs while inserting ' + statement + '\n\n' + error_body)
+                UI.log.alert(null, 'Message', 'Error occurs while inserting ' + statement + '\n\n' + errorBody)
                 input.checked = false // rollback UI
                 return
               }
@@ -90,10 +94,10 @@ module.exports = {
           }
         } else { // Remove link
           try {
-            outliner.UserInput.sparqler.delete_statement(statement, function (uri, success, error_body) {
+            outliner.UserInput.sparqler.delete_statement(statement, function (uri, success, errorBody) {
               tx.className = 'question'
               if (!success) {
-                UI.log.alert('Error occurs while deleting ' + statement + '\n\n' + error_body)
+                UI.log.alert('Error occurs while deleting ' + statement + '\n\n' + errorBody)
                 this.checked = true // Rollback UI
               } else {
                 kb.removeMany(statement.subject, statement.predicate, statement.object, statement.why)
@@ -102,7 +106,7 @@ module.exports = {
           } catch (e) {
             UI.log.alert('Delete fails:' + e)
             this.checked = true // Rollback UI
-            return
+            // return
           }
         }
       }
@@ -291,16 +295,21 @@ module.exports = {
 
     // /////////////////////////////////////////////  Main block
     //
-    // Find the intersection and difference sets
+    // Should: Find the intersection and difference sets
 
-    if (true) {
-      UI.widgets.attachmentList(dom, s, mainTable, {
-        doc: profile,
-        modify: !!editable,
-        predicate: foaf('knows'),
-        noun: 'friend'
-      })
-    } else {
+    // List all x such that s knows x.
+    UI.widgets.attachmentList(dom, s, mainTable, {
+      doc: profile,
+      modify: !!editable,
+      predicate: foaf('knows'),
+      noun: 'friend'
+    })
+
+    // Figure out whuich are reciprocated:
+    // @@ Does not look up profiles
+    // Does distinsuish reciporocated from unreciprocated friendships
+    //
+    function triageFriends (s) {
       outgoing = kb.each(s, foaf('knows'))
       incoming = kb.each(undefined, foaf('knows'), s) // @@ have to load the friends
       var confirmed = []
@@ -333,9 +342,7 @@ module.exports = {
         if (!found) requests.push(friend)
       } // incoming
 
-      //        cases = [['Confirmed friends', confirmed],['Unconfirmed friends', unconfirmed],['Friend Requests', requests]]
       var cases = [['Acquaintances', outgoing], ['Mentioned as acquaintances by: ', requests]]
-
       for (let i = 0; i < cases.length; i++) {
         let thisCase = cases[i]
         let friends = thisCase[1]
@@ -365,7 +372,9 @@ module.exports = {
         }
       }
     }
-
+    if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
+      triageFriends(s)
+    }
     // //////////////////////////////////// Basic info on left
 
     h3 = dom.createElement('h3')
