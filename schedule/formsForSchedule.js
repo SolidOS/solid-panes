@@ -1,11 +1,12 @@
+module.exports = `
 @prefix dc: <http://purl.org/dc/elements/1.1/>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
-@prefix cal: <http://www.w3.org/2002/12/cal/ical#>.
+@prefix ical: <http://www.w3.org/2002/12/cal/ical#>.
 @prefix ui: <http://www.w3.org/ns/ui#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix sched: <http://www.w3.org/ns/pim/schedule#>.
 
-   cal:Vevent ui:annotationForm <#form2>, <#form3>; ui:creationForm <#form1> .
+   ical:Vevent ui:annotationForm <#form2>, <#form3>; ui:creationForm <#form1> .
 
 <#bigForm>
     dc:title
@@ -29,7 +30,7 @@
     ui:maxLength
        "128";
     ui:property
-       cal:summary;
+       ical:summary;
     ui:size
        "40".
 
@@ -38,7 +39,7 @@
     ui:maxLength
        "512";
     ui:property
-       cal:location;
+       ical:location;
     ui:size
        "40".
 
@@ -49,7 +50,7 @@
 #    ui:size
 #       "40".
     ui:property
-       cal:comment.
+       ical:comment.
 
 <#eventAuthor>
    a ui:Multiple; ui:min 1; ui:part <#eventAuthorGroup>; ui:property dc:author.
@@ -69,7 +70,7 @@
     <#id1417314641301>
     a ui:Multiple; ui:min 2; ui:part <#id1417314674292>; ui:property sched:option.
 
-   <#id1417314674292> a ui:DateField; ui:property cal:dtstart; ui:label "Date".
+   <#id1417314674292> a ui:DateField; ui:property ical:dtstart; ui:label "Date".
 
    ##################################
 
@@ -79,3 +80,4 @@
    <#id1417314674292b> a ui:EmailField; ui:label "email"; ui:property foaf:mbox .
    <#form1header> a ui:Heading; ui:contents "Schedule an event" .
    <#id1118132113135> a ui:Heading; ui:contents "Who to invite" .
+`

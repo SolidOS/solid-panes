@@ -358,7 +358,7 @@ module.exports = function (doc) {
     return td
   } // outlineObjectTD
 
-  this.outlineMyPredicateTD = function outlineMyPredicateTD (predicate, newTr, inverse, internal) {
+  this.outlinePredicateTD = function outlinePredicateTD (predicate, newTr, inverse, internal) {
     var predicateTD = dom.createElement('TD')
     predicateTD.setAttribute('about', predicate.toNT())
     predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
@@ -404,7 +404,7 @@ module.exports = function (doc) {
     }
     predicateTD.addEventListener('click', selectableTDClickListener)
     return predicateTD
-  } // outlineMyPredicateTD
+  } // outlinePredicateTD
 
   function expandedHeaderTR (subject, requiredPane, options) {
     var tr = dom.createElement('tr')
@@ -625,7 +625,7 @@ module.exports = function (doc) {
     tr.AJAR_inverse = inverse
     // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
     tr.setAttribute('predTR', 'true')
-    var predicateTD = thisOutline.outlineMyPredicateTD(st.predicate, tr, inverse)
+    var predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
     tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
     return tr
   }
