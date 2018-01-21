@@ -152,6 +152,22 @@ module.exports = {
       return x
     }
 
+    // Map from end-user non-iframeable Google maps URI to G Maps API
+    // Input: like https://www.google.co.uk/maps/place/Mastercard/@53.2717971,-6.2042699,17z/...
+    // Output:
+    function googleMapsSpecial (page) {
+      const initialPrefix = /https:\/\/www\.google\..*\/maps\//
+      const finalPrefix = 'https://www.google.com/maps/embed/v1/'
+      const myPersonalApiKEY = 'AIzaSyB8aaT6bY9tcLCmc2oPCkdUYLmTOWM8R54' // Get your own key!
+      // GET YOUR KEY AT https://developers.google.com/maps/documentation/javascript/
+      const uri = page.uri
+      if (!uri.match(initialPrefix)) return page
+      if (uri.startsWith(finalPrefix)) return page // Already done
+      const map = uri.replace(initialPrefix, finalPrefix) + '&key=' + myPersonalApiKEY
+      console.log('Converted Google Map URI! ' + map)
+      return $rdf.sym(map)
+    }
+
     // ////////////////////  DRAG and Drop
 
     var handleDroppedThing = function (target) { // @@ idea: look
@@ -172,10 +188,11 @@ module.exports = {
             shareTab: true // but many things behind it
           }
           var newPaneOptions = {
-            newInstance: kb.sym(subject.doc().uri + '#LinkListTool'),
-            pane: UI.panes.link,
+            newInstance: subject, // kb.sym(subject.doc().uri + '#LinkListTool'),
+            pane: UI.panes.link, // the pane to be used to mint a new thing
             predicate: ns.meeting('attachmentTool'),
             tabTitle: 'Links',
+            view: 'link', // The pane to be used when it is viewed
             noIndexHTML: true}
           return makeNewPaneTool(toolObject, newPaneOptions)
         }
@@ -227,7 +244,8 @@ module.exports = {
           return resolve(target)
         }
         kb.fetcher.nowOrWhenFetched(target, function (ok, mess) {
-          var addAttachmentTab = function (target) {
+          function addAttachmentTab (target) {
+            target = googleMapsSpecial(target)
             console.log('make web page attachement tab ' + target) // icon was: UI.icons.iconBase + 'noun_25830.svg'
             var tool = makeToolNode(target, UI.ns.wf('attachment'), UI.utils.label(target), null)
             kb.add(tool, UI.ns.meeting('view'), 'iframe', meetingDoc)
@@ -256,12 +274,13 @@ module.exports = {
                   if (hh[j].indexOf('sameorigin') < 0) {  // (and diff origin @@)
                     ok2 = false
                   }
-                  if (hh[j].indexOf('deny') < 0) {  // (and diff origin @@)
+                  if (hh[j].indexOf('deny') < 0) {
                     ok2 = false
                   }
                 }
               }
               if (ok2) {
+                target = googleMapsSpecial(target) // tweak Google maps to embed OK
                 addIframeTool(target) // Something we can maybe iframe
                 return resolve(target)
               }
@@ -392,7 +411,9 @@ module.exports = {
         newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
         pane: UI.panes.folder, // @@ slideshow??
         predicate: ns.meeting('pictures'),
+        shareTab: true,
         tabTitle: folderName,
+        view: 'slideshow',
         noIndexHTML: true
       }
       return makeNewPaneTool(toolObject, newPaneOptions)
@@ -472,17 +493,18 @@ module.exports = {
     // out: options. the above plus
     //             me, newInstance
 
-    var makeNewPaneTool = function (toolObject, options) {
+    function makeNewPaneTool (toolObject, options) {
       return new Promise(function (resolve, reject) {
         var kb = UI.store
         if (!options.useExisting) { // useExisting means use existing object in new role
           var existing = kb.any(meeting, options.predicate)
           if (existing) {
-            complain('Already have ' + existing + ' as ' + UI.utils.label(options.predicate))
-            if (toolObject.limit && toolObject.limit === 1) {
+            if (toolObject.limit && toolObject.limit === 1 && !toolObject.shareTab) {
+              complain('Already have ' + existing + ' as ' + UI.utils.label(options.predicate))
               complain('Cant have two')
               return resolve(null)
             } if (toolObject.shareTab) { // return existing one
+              console.log('Using existing ' + existing + ' as ' + UI.utils.label(options.predicate))
               return resolve({ me: me, newInstance: existing, instanceClass: options.instanceClass })
             }
           }
