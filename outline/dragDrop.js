@@ -320,7 +320,7 @@ var TabulatorOutlinerObserver = {
     region.init() // this is important
     region.unionRect(tdBox.screenX, tdBox.screenY, tdBox.width, tdBox.height)
     var transferDataSet = {data: null}
-    var term = tabulator.Util.getTerm(td)
+    var term = UI.Util.getTerm(td)
     switch (term.termType) {
       case 'NamedNode':
         transferDataSet.data = this.URItoTransferDataSet(term.uri)
