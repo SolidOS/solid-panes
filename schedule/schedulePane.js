@@ -117,7 +117,7 @@ module.exports = {
       var fetcher = kb.fetcher
       var updater = kb.updater
 
-      var me = UI.authn.currentUser()
+      var me = options.me || UI.authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
@@ -190,7 +190,8 @@ module.exports = {
       agenda.push(function createDetailsFile () {
         kb.add(newInstance, ns.rdf('type'), ns.sched('SchedulableEvent'), newDetailsDoc)
         if (me) {
-          kb.add(newInstance, ns.dc('author'), me, newDetailsDoc)
+          kb.add(newInstance, ns.dc('author'), me, newDetailsDoc) // Who is sending the invitation?
+          kb.add(newInstance, ns.foaf('maker'), me, newDetailsDoc) // Uneditable - wh is allowed to edit this?
         }
 
         kb.add(newInstance, ns.dc('created'), new Date(), newDetailsDoc)
@@ -258,8 +259,6 @@ module.exports = {
     var updater = kb.updater
     var waitingForLogin = false
 
-    var ICAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-
     var thisInstance = subject
     var detailsDoc = subject.doc()
     var baseDir = detailsDoc.dir()
@@ -267,13 +266,18 @@ module.exports = {
 
     var resultsDoc = $rdf.sym(base + 'results.ttl')
     // var formsURI = base + 'forms.ttl'
+    // We can't in fact host stuff from there because of CORS
     var formsURI = 'https://linkeddata.github.io/solid-app-set/schedule/formsForSchedule.ttl'
 
     var form1 = kb.sym(formsURI + '#form1')
     var form2 = kb.sym(formsURI + '#form2')
     var form3 = kb.sym(formsURI + '#form3')
 
-    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white;' //  font-size: 120%
+    var formText = require('./formsForSchedule.js')
+    $rdf.parse(formText, kb, formsURI, 'text/turtle') // Load forms directly
+
+    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 100%' //  font-size: 120%
+    var buttonIconStyle = 'width: 1.8em; height: 1.8em;'
 
     // Utility functions
 
@@ -359,11 +363,14 @@ module.exports = {
 
     var getForms = function () {
       console.log('getforms()')
+      getDetails()
+      /*
       fetcher.nowOrWhenFetched(formsURI, undefined, function (ok, body) {
         console.log('getforms() ok? ' + ok)
         if (!ok) return complainIfBad(ok, body)
         getDetails()
       })
+      */
     }
 
     var getDetails = function () {
@@ -447,6 +454,7 @@ module.exports = {
     var doneButton = dom.createElement('button')
 
     var showForms = function () {
+      clearElement(naviCenter) // Remove refresh button if nec
       var div = naviMain
       var wizard = true
       var currentSlide = 0
@@ -537,19 +545,21 @@ module.exports = {
 
       var emailButton = dom.createElement('button')
       emailButton.setAttribute('style', inputStyle)
-      var emailIcon = emailButton.appendChild(dom.createElement('img'))
-      // emailIcon.setAttribute('src', scriptBase + 'envelope-icon.png') // noun_480183.svg
+      let emailIcon = emailButton.appendChild(dom.createElement('img'))
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
-      emailButton.textContent = 'email invitations'
+      emailIcon.setAttribute('style', buttonIconStyle)
+      // emailButton.textContent = 'email invitations'
       emailButton.addEventListener('click', function (e) {
-        var title = '' + (kb.any(subject, ns.dc('title')) || '')
+        var title = kb.anyValue(subject, ns.cal('summary')) ||
+          kb.anyValue(subject, ns.dc('title')) || ''
         var mailto = 'mailto:' +
           kb.each(subject, ns.sched('invitee')).map(function (who) {
             var mbox = kb.any(who, ns.foaf('mbox'))
-            return mbox ? '' + mbox : ''
+            return mbox ? mbox.uri.replace('mailto:', '') : ''
           }).join(',') +
           '?subject=' + encodeURIComponent(title + '-- When can we meet?') +
-          '&body=' + encodeURIComponent(title + '\n\nWhen can you?\n\nSee ' + base + 'index.html\n')
+          '&body=' + encodeURIComponent(title + '\n\nWhen can you?\n\nSee ' + subject + '\n')
+          // @@ assumed there is a data browser
 
         console.log('Mail: ' + mailto)
         window.location.href = mailto
@@ -562,7 +572,7 @@ module.exports = {
       var i, j, x, y, slot, cell, day
       var insertables = []
       var possibleDays = kb.each(invitation, ns.sched('option'))
-        .map(function (opt) {return kb.any(opt, ICAL('dtstart'))})
+        .map(function (opt) {return kb.any(opt, ns.cal('dtstart'))})
       var cellLookup = []
       var slots = kb.each(invitation, ns.sched('slot'))
       if (slots.length === 0) {
@@ -573,7 +583,7 @@ module.exports = {
           for (j = 0; j < possibleDays.length; j++) {
             day - possibleDays[j]
             x = kb.any(slot, ns.rdfs('label'))
-            y = kb.any(day, ICAL('dtstart'))
+            y = kb.any(day, ns.cal('dtstart'))
             cell = UI.widgets.newThing(detailsDoc)
             cellLookup[x.toNT() + y.toNT()] = cell
             insertables.push($rdf.st(slot, ns.sched('cell'), cell))
@@ -596,10 +606,10 @@ module.exports = {
       options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.rdfs('label')) })
 
       options.set_y = kb.each(subject, ns.sched('option')); // @@@@@ option -> dtstart in future
-      options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
+      options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
       var possibleTimes = kb.each(invitation, ns.sched('option'))
-        .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
+        .map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
       var displayTheMatrix = function () {
         var matrix = div.appendChild(UI.matrix.matrixForQuery(
@@ -665,7 +675,7 @@ module.exports = {
       } else {
         var dps = kb.each(myResponse, ns.sched('cell'))
         dps.map(function (dataPoint) {
-          var time = kb.any(dataPoint, ICAL('dtstart'))
+          var time = kb.any(dataPoint, ns.cal('dtstart'))
           dataPointForNT[time.toNT()] = dataPoint
         })
       }
@@ -673,7 +683,7 @@ module.exports = {
         if (dataPointForNT[possibleTimes[j].toNT()]) continue
         var dataPoint = $rdf.sym(id + '_' + j)
         insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
-        insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
+        insertables.push($rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)) // @@
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
       }
       if (insertables.length) {
@@ -723,9 +733,9 @@ module.exports = {
       // div.appendChild(dom.createElement('hr'))
 
       // var invitation = subject
-      var title = kb.any(invitation, ns.dc('title'))
-      var comment = kb.any(invitation, ns.rdfs('comment'))
-      var location = kb.any(invitation, ICAL('location'))
+      var title = kb.any(invitation, ns.cal('summary'))
+      var comment = kb.any(invitation, ns.cal('comment'))
+      var location = kb.any(invitation, ns.cal('location'))
       var div = naviMain
       if (title) div.appendChild(dom.createElement('h3')).textContent = title
       if (location) div.appendChild(dom.createElement('address')).textContent = location.value
@@ -748,19 +758,19 @@ module.exports = {
       query.pat.add(v.resp, ns.dc('author'), v.author)
       query.pat.add(v.resp, ns.sched('cell'), v.cell)
       query.pat.add(v.cell, ns.sched('availabilty'), v.value)
-      query.pat.add(v.cell, ICAL('dtstart'), v.time)
+      query.pat.add(v.cell, ns.cal('dtstart'), v.time)
 
       // Sort by by person @@@
 
       var options = {}
       options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
+      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
       options.set_y = kb.each(subject, ns.sched('response'))
       options.set_y = options.set_y.map(function (resp) { return kb.any(resp, ns.dc('author')) })
 
       var possibleTimes = kb.each(invitation, ns.sched('option'))
-        .map(function (opt) { return kb.any(opt, ICAL('dtstart')) })
+        .map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
       var displayTheMatrix = function () {
         var matrix = div.appendChild(UI.matrix.matrixForQuery(
@@ -770,11 +780,14 @@ module.exports = {
 
         var refreshButton = dom.createElement('button')
         refreshButton.setAttribute('style', inputStyle)
-
-        refreshButton.textContent = 'refresh'
+        // refreshButton.textContent = 'refresh' // noun_479395.svg
+        let refreshIcon = dom.createElement('img')
+        refreshIcon.setAttribute('src', UI.icons.iconBase + 'noun_479395.svg')
+        refreshIcon.setAttribute('style', buttonIconStyle)
+        refreshButton.appendChild(refreshIcon)
         refreshButton.addEventListener('click', function (e) {
           refreshButton.disabled = true
-          UI.store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
+          UI.store.fetcher.refresh(resultsDoc, function (ok, body) {
             if (!ok) {
               console.log('Cant refresh matrix' + body)
             } else {
@@ -791,11 +804,13 @@ module.exports = {
       // @@ Give other combos too-- see schedule ontology
       // var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      var me = UI.authn.currentUser()
+      // var me = UI.authn.currentUser()
 
       var dataPointForNT = []
 
-      if (me) {
+      var context = { div: naviCenter, dom: dom }
+      UI.authn.logIn(context).then(context => {
+        const me = context.me
         var doc = resultsDoc
         options.set_y = options.set_y.filter(function (z) { return (!z.sameTerm(me)) })
         options.set_y.push(me) // Put me on the end
@@ -839,7 +854,7 @@ module.exports = {
         } else {
           var dps = kb.each(myResponse, ns.sched('cell'))
           dps.map(function (dataPoint) {
-            var time = kb.any(dataPoint, ICAL('dtstart'))
+            var time = kb.any(dataPoint, ns.cal('dtstart'))
             dataPointForNT[time.toNT()] = dataPoint
           })
         }
@@ -847,7 +862,7 @@ module.exports = {
           if (dataPointForNT[possibleTimes[j].toNT()]) continue
           var dataPoint = $rdf.sym(id + '_' + j)
           insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
-          insertables.push($rdf.st(dataPoint, ICAL('dtstart'), possibleTimes[j], doc)) // @@
+          insertables.push($rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)) // @@
           dataPointForNT[possibleTimes[j].toNT()] = dataPoint
         }
         if (insertables.length) {
@@ -861,15 +876,19 @@ module.exports = {
         } else { // no insertables
           displayTheMatrix()
         }
-      } else {
-        // pass me not defined
-      }
+      })
 
-      var instanceAuthor = kb.any(subject, ns.dc('author'))
-      if (!instanceAuthor || instanceAuthor.sameTerm(me)) {
+      // If I made this in the first place, allow me to edit it.
+      // @@ optionally -- allows others to if according to original
+      var instanceCreator = kb.any(subject, ns.foaf('maker')) // owner?
+      if (!instanceCreator || instanceCreator.sameTerm(me)) {
         var editButton = dom.createElement('button')
         editButton.setAttribute('style', inputStyle)
-        editButton.textContent = '(Modify the poll)'
+        // editButton.textContent = '(Modify the poll)' // noun_344563.svg
+        let editIcon = dom.createElement('img')
+        editIcon.setAttribute('src', UI.icons.iconBase + 'noun_344563.svg')
+        editIcon.setAttribute('style', buttonIconStyle)
+        editButton.appendChild(editIcon)
         editButton.addEventListener('click', function (e) {
           clearElement(div)
           showForms()

@@ -112,7 +112,7 @@ module.exports = {
         query.pat.add(v['msg'], ns.dc('description'), v['content'])
         return query
       }
-      messageStore = subject
+      messageStore = subject.doc()
       options.query = ircLogQuery()
     } else {
       complain('Unknown chat type')

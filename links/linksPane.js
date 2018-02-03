@@ -1,5 +1,6 @@
-/*   Single audio play Pane
+/*   Simple pane for links to related material
 **
+** Uses the attachmentList widget
 */
 const UI = require('solid-ui')
 const ns = UI.ns
@@ -29,19 +30,14 @@ module.exports = {
   },
 
   render: function (subject, dom) {
-    var target = kb.any(subject, ns.meeting('target')) || subject
-    function createNewRow (object) {
-      var opts = {} // @@ Add delete function
-      return UI.widgets.personTR(dom, predicate, object, opts)
-    }
-    var div = dom.createElement('div')
-    var table = div.appendChild(dom.createElement('table'))
-    var refresh = function () {
-      var things = kb.each(target, predicate)
-      UI.utils.syncTableToArray(table, things, createNewRow)
-    }
-    div.refresh = refresh
-    refresh()
+    const div = dom.createElement('div')
+    var options = {}
+    UI.widgets.attachmentList(dom, subject, div, options)
+
+    const p = div.appendChild(dom.createElement('p'))
+    p.textContent = 'Drag web pages or things onto the target to add to list of links.'
+    p.setAttribute('style', 'color: #888; padding: 2em;')
+
     return div
   }
 }

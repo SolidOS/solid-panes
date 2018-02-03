@@ -169,8 +169,8 @@ module.exports = {
             var act = activities[j]
 
             var s = kb.any(ws, ns.space('store'))
-            var start = kb.any(ws, ns.ical('dtstart')).value()
-            var end = kb.any(ws, ns.ical('dtend')).value()
+            var start = kb.any(ws, ns.cal('dtstart')).value()
+            var end = kb.any(ws, ns.cal('dtend')).value()
             if (s && start && end && start <= date && end > date) {
               renderFormsFor(s, subject)
               break

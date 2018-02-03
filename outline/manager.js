@@ -5,6 +5,8 @@ var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')
 var UserInput = require('./userInput.js')
 var UI = require('solid-ui')
+var queryByExample = require('./queryByExample.js')
+
 /* global Components, alert XPathResult sourceWidget */
 // XPathResult?
 
@@ -37,6 +39,7 @@ module.exports = function (doc) {
   var sf = UI.store.fetcher
   // var sourceWidget = tabulator.sourceWidget; // only set in extension
   dom.outline = this
+  this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
   // var selection = []  // Array of statements which have been selected
   // this.focusTd // the <td> that is being observed
@@ -49,61 +52,6 @@ module.exports = function (doc) {
     var table = dom.getElementById('outline')
     table.outline = this
   }
-
-  this.viewAndSaveQuery = function () {
-    var qs = tabulator.qs
-    UI.log.info('outline.doucment is now ' + outline.document.location)
-    var q = saveQuery()
-    if (tabulator.isExtension) {
-      tabulator.drawInBestView(q)
-    } else {
-      var i
-      for (i = 0; i < qs.listeners.length; i++) {
-        qs.listeners[i].getActiveView().view.drawQuery(q)
-        qs.listeners[i].updateQueryControls(qs.listeners[i].getActiveView())
-      }
-    }
-  }
-
-  function saveQuery () {
-    var qs = tabulator.qs
-    var q = new UI.rdf.Query()
-    var n = selection.length
-    var i, sel, st, tr
-    for (i = 0; i < n; i++) {
-      sel = selection[i]
-      tr = sel.parentNode
-      st = tr.AJAR_statement
-      UI.log.debug('Statement ' + st)
-      if (sel.getAttribute('class').indexOf('pred') >= 0) {
-        UI.log.info('   We have a predicate')
-        UI.utils.makeQueryRow(q, tr)
-      }
-      if (sel.getAttribute('class').indexOf('obj') >= 0) {
-        UI.log.info('   We have an object')
-        UI.utils.makeQueryRow(q, tr, true)
-      }
-    }
-    qs.addQuery(q)
-
-    function resetOutliner (pat) {
-      var n = pat.statements.length
-      var pattern, tr
-      for (let i = 0; i < n; i++) {
-        pattern = pat.statements[i]
-        tr = pattern.tr
-          // UI.log.debug('tr: ' + tr.AJAR_statement);
-        if (typeof tr !== 'undefined') {
-          tr.AJAR_pattern = null // TODO: is this == to whats in current version?
-          tr.AJAR_variable = null
-        }
-      }
-      for (let x in pat.optional) { resetOutliner(pat.optional[x]) }
-    }
-    resetOutliner(q.pat)
-      // NextVariable=0;
-    return q
-  } // saveQuery
 
   /** benchmark a function **/
   benchmark.lastkbsize = 0
@@ -212,68 +160,6 @@ module.exports = function (doc) {
    *  @param view - a VIEW function (rather than a bool asImage)
    **/
 
-  tabulator.options = {}
-
-  tabulator.options.references = []
-
-  var display
-
-  this.openCheckBox = function () {
-    display = window.open(' ', 'NewWin',
-      'menubar=0,location=no,status=no,directories=no,toolbar=no,scrollbars=yes,height=200,width=200')
-
-    display.tabulator = tabulator
-    tabulator.options.names = ['BY-NC-ND', 'BY-NC-SA', 'BY-NC', 'BY-ND', 'BY-SA', 'BY']
-
-    var message = "<font face='arial' size='2'><form name ='checkboxes'>"
-    var lics = tabulator.options.checkedLicenses
-    for (var kk = 0; kk < lics.length; kk++) {
-      message += "<input type='checkbox' name = 'n" + kk +
-            "' onClick = 'tabulator.options.submit()'" +
-            (lics[kk] ? 'CHECKED' : '') + ' />CC: ' + tabulator.options.names[kk] + '<br />'
-    }
-
-    message += "<br /> <a onclick='tabulator.options.selectAll()'>[Select All] </a>"
-    message += "<a onclick='tabulator.options.deselectAll()'> [Deselect All]</a>"
-    message += '</form></font>'
-
-    display.document.write(message)
-
-    display.document.close()
-
-    var i
-    for (i = 0; i < 6; i++) {
-      tabulator.options.references[i] = display.document.checkboxes.elements[i]
-    }
-  }
-
-  tabulator.options.checkedLicenses = []
-
-  tabulator.options.selectAll = function () {
-    var i
-    for (i = 0; i < 6; i++) {
-      display.document.checkboxes.elements[i].checked = true
-      tabulator.options.references[i].checked = true
-      tabulator.options.checkedLicenses[i] = true
-    }
-  }
-
-  tabulator.options.deselectAll = function () {
-    var i
-    for (i = 0; i < 6; i++) {
-      display.document.checkboxes.elements[i].checked = false
-      tabulator.options.references[i].checked = false
-      tabulator.options.checkedLicenses[i] = false
-    }
-  }
-
-  tabulator.options.submit = function () {
-    alert('tabulator.options.submit: checked=' + tabulator.options.references[0].checked)
-    for (let i = 0; i < 6; i++) {
-      tabulator.options.checkedLicenses[i] = !!tabulator.options.references[i].checked
-    }
-  }
-
   this.outlineObjectTD = function outlineObjectTD (obj, view, deleteNode, statement) {
     var td = dom.createElement('td')
     td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
@@ -281,23 +167,9 @@ module.exports = function (doc) {
     var theClass = 'obj'
 
       // check the IPR on the data.  Ok if there is any checked license which is one the document has.
-    if (statement) {
-      var licenses = kb.each(statement.why, kb.sym('http://creativecommons.org/ns#license'))
-      UI.log.info('licenses:' + statement.why + ': ' + licenses)
-      var licenseURI = ['http://creativecommons.org/licenses/by-nc-nd/3.0/',
-        'http://creativecommons.org/licenses/by-nc-sa/3.0/',
-        'http://creativecommons.org/licenses/by-nc/3.0/',
-        'http://creativecommons.org/licenses/by-nd/3.0/',
-        'http://creativecommons.org/licenses/by-sa/3.0/',
-        'http://creativecommons.org/licenses/by/3.0/'
-      ]
-      for (let i = 0; i < licenses.length; i++) {
-        for (let j = 0; j < tabulator.options.checkedLicenses.length; j++) {
-          if (tabulator.options.checkedLicenses[j] && (licenses[i].uri === licenseURI[j])) {
-            theClass += ' licOkay' // icon_expand
-            break
-          }
-        }
+    if (statement && statement.why) {
+      if (UI.licenceOptions && (UI.licenceOptions.checkLicence())) {
+        theClass += ' licOkay' // flag as light green etc .licOkay {background-color: #dfd}
       }
     }
 
@@ -312,7 +184,7 @@ module.exports = function (doc) {
           (UI.icons.originalIconBase + 'tbl-expand-trans.png'), 'expand', undefined, dom)).addEventListener('click', expandMouseDownListener)
     }
     td.setAttribute('class', theClass) // this is how you find an object
-
+    // @@ TAKE CSS OUT OF STYLE SHEET
     if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) { td.className = 'undetermined' } // @@? why-timbl
 
     if (!view) { // view should be a function pointer
@@ -358,7 +230,7 @@ module.exports = function (doc) {
     return td
   } // outlineObjectTD
 
-  this.outlineMyPredicateTD = function outlineMyPredicateTD (predicate, newTr, inverse, internal) {
+  this.outlinePredicateTD = function outlinePredicateTD (predicate, newTr, inverse, internal) {
     var predicateTD = dom.createElement('TD')
     predicateTD.setAttribute('about', predicate.toNT())
     predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
@@ -404,7 +276,7 @@ module.exports = function (doc) {
     }
     predicateTD.addEventListener('click', selectableTDClickListener)
     return predicateTD
-  } // outlineMyPredicateTD
+  } // outlinePredicateTD
 
   function expandedHeaderTR (subject, requiredPane, options) {
     var tr = dom.createElement('tr')
@@ -498,7 +370,9 @@ module.exports = function (doc) {
                   pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
                 }
               }
-              if (pane.requireQueryButton && dom.getElementById('queryButton')) { dom.getElementById('queryButton').removeAttribute('style') }
+              if (pane.requireQueryButton && dom.getElementById('queryButton')) {
+                dom.getElementById('queryButton').removeAttribute('style')
+              }
               var second = t.firstChild.nextSibling
               if (second) t.insertBefore(paneDiv, second)
               else t.appendChild(paneDiv)
@@ -605,7 +479,9 @@ module.exports = function (doc) {
           pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
         }
 
-        if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) { dom.getElementById('queryButton').removeAttribute('style') }
+        if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
+          dom.getElementById('queryButton').removeAttribute('style')
+        }
         table.appendChild(paneDiv)
         paneDiv.pane = tr1.firstPane
         paneDiv.paneButton = tr1.paneButton
@@ -625,7 +501,7 @@ module.exports = function (doc) {
     tr.AJAR_inverse = inverse
     // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
     tr.setAttribute('predTR', 'true')
-    var predicateTD = thisOutline.outlineMyPredicateTD(st.predicate, tr, inverse)
+    var predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
     tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
     return tr
   }
@@ -659,18 +535,6 @@ module.exports = function (doc) {
 
         // Avoid predicates from other panes
       if (predicateFilter && !predicateFilter(s.predicate, inverse)) continue
-      var k
-      var dups = 0 // How many rows have the same predicate, -1?
-      var langTagged = 0 // how many objects have language tags?
-      var myLang = 0 // Is there one I like?
-      for (k = 0;
-          (k + j < max) && (plist[j + k].predicate.sameTerm(s.predicate)); k++) {
-        if (k > 0 && (sel(plist[j + k]).sameTerm(sel(plist[j + k - 1])))) dups++
-        if (sel(plist[j + k]).lang && typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference) {
-          langTagged += 1
-          if (sel(plist[j + k]).lang.indexOf(tabulator.lb.LanguagePreference) >= 0) myLang++
-        }
-      }
 
       var tr = propertyTR(dom, s, inverse)
       parent.appendChild(tr)
@@ -678,10 +542,25 @@ module.exports = function (doc) {
 
       var defaultpropview = views.defaults[s.predicate.uri]
 
+      /*   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
+
+      var dups = 0 // How many rows have the same predicate, -1?
+      var langTagged = 0 // how many objects have language tags?
+      var myLang = 0 // Is there one I like?
+
+      for (let k = 0;
+          (k + j < max) && (plist[j + k].predicate.sameTerm(s.predicate)); k++) {
+        if (k > 0 && (sel(plist[j + k]).sameTerm(sel(plist[j + k - 1])))) dups++
+        if (sel(plist[j + k]).lang && typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference) {
+          langTagged += 1
+          if (sel(plist[j + k]).lang.indexOf(tabulator.lb.LanguagePreference) >= 0) myLang++
+        }
+      }
+      */
         /* Display only the one in the preferred language
           ONLY in the case (currently) when all the values are tagged.
           Then we treat them as alternatives. */
-
+        /*
       if (myLang > 0 && langTagged === dups + 1) {
         for (k = j; k <= j + dups; k++) {
           if (typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference && sel(plist[k]).lang.indexOf(tabulator.lb.LanguagePreference) >= 0) {
@@ -692,7 +571,7 @@ module.exports = function (doc) {
         j += dups // extra push
         continue
       }
-
+      */
       tr.appendChild(thisOutline.outlineObjectTD(sel(s), defaultpropview, undefined, s))
 
         /* Note: showNobj shows between n to 2n objects.
@@ -701,6 +580,8 @@ module.exports = function (doc) {
          * Therefore more objects are shown than hidden.
          */
 
+      var dups = 0
+      var k = 0
       tr.showNobj = function (n) {
         var predDups = k - dups
         var show = ((2 * n) < predDups) ? n : predDups
@@ -1031,7 +912,11 @@ module.exports = function (doc) {
       var st = selection[i].parentNode.AJAR_statement
       if (!st) continue // for root TD
       var source = st.why
-      if (source && source.uri) { sourceWidget.highlight(source, true) } else if (tabulator.isExtension && source.termType === 'BlankNode') { sourceWidget.highlight(kb.sym(tabulator.sourceURI), true) }
+      if (source && source.uri) {
+        sourceWidget.highlight(source, true)
+      } else if (tabulator.isExtension && source.termType === 'BlankNode') {
+        sourceWidget.highlight(kb.sym(tabulator.sourceURI), true)
+      }
     }
   }
 
