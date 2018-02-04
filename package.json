@@ -1,6 +1,6 @@
 {
   "name": "solid-app-set",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Solid-compatible App set",
   "main": "./index.js",
   "scripts": {
@@ -37,8 +37,8 @@
   "dependencies": {
     "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
-   "solid-ui": ">=0.8.1"
-   },
+    "solid-ui": ">=0.8.1"
+  },
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-core": "^6.24.1",
