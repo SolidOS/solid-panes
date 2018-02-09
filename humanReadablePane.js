@@ -1,7 +1,7 @@
 /*   Human-readable Pane
 **
 **  This outline pane contains the document contents for an HTML document
-**  This is for peeking at a page, because the user might not want to leave the tabulator.
+**  This is for peeking at a page, because the user might not want to leave the data browser.
 */
 var UI = require('solid-ui')
 
@@ -11,8 +11,6 @@ module.exports = {
   name: 'humanReadable',
 
   label: function (subject, myDocument) {
-    // Prevent infinite recursion with iframe loading a web page which uses tabulator which shows iframe...
-    if (tabulator.isExtension && myDocument.location === subject.uri) return null
     var kb = UI.store
     var ns = UI.ns
 

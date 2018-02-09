@@ -18,13 +18,8 @@ module.exports = {
   mintClass: UI.ns.solid('DokieliDocument'), // @@ A better class?
 
   label: function (subject, myDocument) {
-    // Prevent infinite recursion with iframe loading a web page which uses tabulator which shows iframe...
-    if (tabulator.isExtension && myDocument.location === subject.uri) return null
     var kb = UI.store
     var ns = UI.ns
-
-    //   See aslo tthe source pane, which has lower precedence.
-
     var allowed = [ // 'text/plain',
       'text/html', 'application/xhtml+xml'
     // 'image/png', 'image/jpeg', 'application/pdf',

@@ -12,7 +12,7 @@ var queryByExample = require('./queryByExample.js')
 
 module.exports = function (doc) {
   var dom
-  if (typeof tabulator !== 'undefined' && tabulator.isExtension) {
+  if (UI.isExtension) {
     var wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
       .getService(Components.interfaces.nsIWindowMediator)
     var window = wm.getMostRecentWindow('navigator:browser')
@@ -23,11 +23,10 @@ module.exports = function (doc) {
     dom = doc
   }
 
-  // tabulator.outline = this; // Allow panes to access outline.register()
-  // no, that is done by the pane system.
-  //
   this.document = doc
   this.outlineIcons = outlineIcons
+  this.labeller = this.labeller || {}
+  this.labeller.LanguagePreference = '' // for now
   var outline = this // Kenny: do we need this?
   var thisOutline = this
   var selection = []
@@ -37,7 +36,6 @@ module.exports = function (doc) {
   this.kb = UI.store
   var kb = UI.store
   var sf = UI.store.fetcher
-  // var sourceWidget = tabulator.sourceWidget; // only set in extension
   dom.outline = this
   this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
@@ -466,7 +464,6 @@ module.exports = function (doc) {
       table.appendChild(tr1)
 
       if (tr1.firstPane) {
-        if (typeof tabulator === 'undefined') alert('tabulator undefined')
         var paneDiv
         try {
           UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
@@ -515,7 +512,7 @@ module.exports = function (doc) {
       // UI.log.info('@appendPropertyTRs, dom is now ' + thisOutline.document.location);
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
-    var sel
+    var sel, j, k
     if (inverse) {
       sel = function (x) {
         return x.subject
@@ -527,7 +524,7 @@ module.exports = function (doc) {
       }
       plist = plist.sort(UI.utils.RDFComparePredicateObject)
     }
-    var j
+
     var max = plist.length
     for (j = 0; j < max; j++) { // squishing together equivalent properties I think
       var s = plist[j]
@@ -542,28 +539,28 @@ module.exports = function (doc) {
 
       var defaultpropview = views.defaults[s.predicate.uri]
 
-      /*   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
+      //   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
 
       var dups = 0 // How many rows have the same predicate, -1?
       var langTagged = 0 // how many objects have language tags?
       var myLang = 0 // Is there one I like?
 
-      for (let k = 0;
+      for (k = 0;
           (k + j < max) && (plist[j + k].predicate.sameTerm(s.predicate)); k++) {
         if (k > 0 && (sel(plist[j + k]).sameTerm(sel(plist[j + k - 1])))) dups++
-        if (sel(plist[j + k]).lang && typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference) {
+        if (sel(plist[j + k]).lang && outline.labeller.LanguagePreference) {
           langTagged += 1
-          if (sel(plist[j + k]).lang.indexOf(tabulator.lb.LanguagePreference) >= 0) myLang++
+          if (sel(plist[j + k]).lang.indexOf(outline.labeller.LanguagePreference) >= 0) myLang++
         }
       }
-      */
+
         /* Display only the one in the preferred language
           ONLY in the case (currently) when all the values are tagged.
           Then we treat them as alternatives. */
-        /*
+
       if (myLang > 0 && langTagged === dups + 1) {
-        for (k = j; k <= j + dups; k++) {
-          if (typeof tabulator !== 'undefined' && tabulator.lb && tabulator.lb.LanguagePreference && sel(plist[k]).lang.indexOf(tabulator.lb.LanguagePreference) >= 0) {
+        for (let k = j; k <= j + dups; k++) {
+          if (outline.labeller.LanguagePreference && sel(plist[k]).lang.indexOf(outline.labeller.LanguagePreference) >= 0) {
             tr.appendChild(thisOutline.outlineObjectTD(sel(plist[k]), defaultpropview, undefined, s))
             break
           }
@@ -571,7 +568,7 @@ module.exports = function (doc) {
         j += dups // extra push
         continue
       }
-      */
+
       tr.appendChild(thisOutline.outlineObjectTD(sel(s), defaultpropview, undefined, s))
 
         /* Note: showNobj shows between n to 2n objects.
@@ -580,8 +577,6 @@ module.exports = function (doc) {
          * Therefore more objects are shown than hidden.
          */
 
-      var dups = 0
-      var k = 0
       tr.showNobj = function (n) {
         var predDups = k - dups
         var show = ((2 * n) < predDups) ? n : predDups
@@ -879,7 +874,7 @@ module.exports = function (doc) {
       window.content.location = target.label
       // The following alternative does not work in the extension.
       // var s = UI.store.sym(target.label);
-      // tabulator.outline.GotoSubject(s, true);
+      // outline.GotoSubject(s, true);
     }
   }
 
@@ -887,7 +882,7 @@ module.exports = function (doc) {
     if (about && dom.getElementById('UserURI')) {
       dom.getElementById('UserURI').value =
         (about.termType === 'NamedNode') ? about.uri : '' // blank if no URI
-    } else if (about && tabulator.isExtension) {
+    } else if (about && UI.isExtension) {
       var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
       tabStatusBar.setAttribute('style', 'display:block')
       tabStatusBar.label = (about.termType === 'NamedNode') ? about.uri : '' // blank if no URI
@@ -914,8 +909,8 @@ module.exports = function (doc) {
       var source = st.why
       if (source && source.uri) {
         sourceWidget.highlight(source, true)
-      } else if (tabulator.isExtension && source.termType === 'BlankNode') {
-        sourceWidget.highlight(kb.sym(tabulator.sourceURI), true)
+      } else if (UI.isExtension && source.termType === 'BlankNode') {
+        sourceWidget.highlight(kb.sym('resource://tabulator/'), true) // see extension
       }
     }
   }
@@ -943,7 +938,7 @@ module.exports = function (doc) {
 
       var about = UI.utils.getTerm(node) // show uri for a newly selectedTd
       thisOutline.showURI(about)
-      // if(tabulator.isExtension && about && about.termType=='NamedNode') gURLBar.value = about.uri;
+      // if(UI.isExtension && about && about.termType=='NamedNode') gURLBar.value = about.uri;
       // about==null when node is a TBD
 
       var st = node.AJAR_statement // show blue cross when the why of that triple is editable
@@ -1525,7 +1520,7 @@ module.exports = function (doc) {
           var message = dom.createElement('pre')
           message.textContent = body
           message.setAttribute('style', 'background-color: #fee;')
-          message.textContent = 'Unable to fetch ' + subject.doc() + ': ' + body
+          message.textContent = 'Outline.expand: Unable to fetch ' + subject.doc() + ': ' + body
           p.appendChild(message)
         }
       })
@@ -1576,7 +1571,7 @@ module.exports = function (doc) {
   }
 
   function outlineRefocus (p, subject) { // Shift-expand or shift-collapse: Maximize
-    if (tabulator.isExtension && subject.termType === 'symbol' && subject.uri.indexOf('#') < 0) {
+    if (UI.isExtension && subject.termType === 'symbol' && subject.uri.indexOf('#') < 0) {
       gBrowser.selectedBrowser.loadURI(subject.uri)
       return
     }
@@ -1639,7 +1634,7 @@ module.exports = function (doc) {
       return td
     }
 
-    if (tabulator.isExtension) {
+    if (UI.isExtension) {
       var newURI = function (spec) {
       // e.g. see http://www.nexgenmedia.net/docs/protocol/
         const MozillaSimpoleURIContactId = '@mozilla.org/network/simple-uri;1'
@@ -1669,7 +1664,7 @@ module.exports = function (doc) {
     }
     */
 
-    if (solo && tabulator.isExtension) {
+    if (solo && UI.isExtension) {
       // See https://developer.mozilla.org/en/NsIGlobalHistory2
       // See <http://mxr.mozilla.org/mozilla-central/source/toolkit/
       //     components/places/tests/mochitest/bug_411966/redirect.js#157>
@@ -1930,8 +1925,7 @@ module.exports = function (doc) {
   this.UserInput.views = views
   this.outlineExpand = outlineExpand
 
-  if (tabulator.isExtension) {
-    // console.log('dom.getElementById('tabulator-display') = '+dom.getElementById('tabulator-display')+'\n');
+  if (UI.isExtension) {
     window.addEventListener('unload', function () {
       var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
       tabStatusBar.label = ''
