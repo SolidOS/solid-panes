@@ -26,8 +26,7 @@ Currently th panes available include
 - A Sharing pane to control the Access Control Lists for any object or folder
 - and so on
 
-The solid-app-set panes are built using a set of widgets and utilities in the solid-ui 
-system.
+The solid-app-set panes are built using a set of widgets and utilities in https://github.com/linkeddata/solid-ui
 
 Goals:
 
