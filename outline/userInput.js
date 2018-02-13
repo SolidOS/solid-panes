@@ -16,7 +16,6 @@ var TempFormula // Formula to store incomplete tripes (Requests),
 var UI = require('solid-ui')
 
 module.exports = function UserInput (outline) {
-    // var tabulator = Components.classes["@dig.csail.mit.edu/tabulator;1"].getService(Components.interfaces.nsISupports).wrappedJSObject;
   var kb = UI.store
 
   var myDocument = outline.document // is this ok?
@@ -154,7 +153,7 @@ module.exports = function UserInput (outline) {
     //  Called when paste is called (Ctrl+v)
     pasteFromClipboard: function pasteFromClipboard (address, selectedTd) {
       function termFrom (fromCode) {
-        var term = tabulator.clipboard[fromCode].shift()
+        var term = outline.clipboard[fromCode].shift()
         if (term === null) {
           UI.log.warn('no more element in clipboard!')
           return
@@ -162,7 +161,7 @@ module.exports = function UserInput (outline) {
         switch (fromCode) {
           case 'predicates':
           case 'objects':
-            var allArray = tabulator.clipboard.all
+            var allArray = outline.clipboard.all
             for (var i = 0; true; i++) {
               if (term.sameTerm(allArray[i])) {
                 allArray.splice(i, 1)
@@ -174,7 +173,7 @@ module.exports = function UserInput (outline) {
             throw new Error('hostorical code not understood - what is theCollection?')
             /*
             var isObject = term.sameTerm(theCollection('objects').elements[0])
-            isObject ? tabulator.clipboard.objecs.shift() : tabulator.clipboard.predicates.shift() // drop the corresponding term
+            isObject ? outline.clipboard.objecs.shift() : outline.clipboard.predicates.shift() // drop the corresponding term
             return [term, isObject]
             break
             */
@@ -585,10 +584,10 @@ module.exports = function UserInput (outline) {
       3. make a clipboard class?
     */
     clipboardInit: function clipboardInit () {
-      tabulator.clipboard = {}
-      tabulator.clipboard.objects = []
-      tabulator.clipboard.predicates = []
-      tabulator.clipboard.all = []
+      outline.clipboard = {}
+      outline.clipboard.objects = []
+      outline.clipboard.predicates = []
+      outline.clipboard.all = []
     },
 
     copyToClipboard: function copyToClipboard (address, selectedTd) {
@@ -618,15 +617,15 @@ module.exports = function UserInput (outline) {
       switch (selectedTd.className) {
         case 'selected': // table header
         case 'obj selected':
-          // var objects = tabulator.clipboard.objects
-          tabulator.clipboard.objects.unshift(term)
+          // var objects = outline.clipboard.objects
+          outline.clipboard.objects.unshift(term)
           break
         case 'pred selected':
         case 'pred internal selected':
-          tabulator.clipboard.predicates.unshift(term)
+          outline.clipboard.predicates.unshift(term)
       }
 
-      tabulator.clipboard.all.unshift(term)
+      outline.clipboard.all.unshift(term)
     },
 
     insertTermTo: function insertTermTo (selectedTd, term, isObject) {
@@ -788,7 +787,7 @@ module.exports = function UserInput (outline) {
       }
     },
 
-    // This is where pubsPane.js comes in, with: tabulator.outline.UserInput.getAutoCompleteHandler("JournalTAC")(e);
+    // This is where pubsPane.js comes in, with: outline.UserInput.getAutoCompleteHandler("JournalTAC")(e);
     getAutoCompleteHandler: function getAutoCompleteHandler (mode) {
       qp('\n\n***** In getAutoCompleteHandler ****** mode = ' + mode)
       if (mode === 'PredicateAutoComplete') {
@@ -1138,7 +1137,7 @@ module.exports = function UserInput (outline) {
       }
       This.lastModified.addEventListener('keypress', typeURIhandler, false)
         /*
-        if (false &&tabulator.isExtension){
+        if (false && UI.isExtension){
             var selectedTd = outline.getSelection()[0];
             emptyNode(selectedTd);
             var textbox = myDocument.createElementNS(kXULNS,'textbox');
@@ -1438,20 +1437,22 @@ module.exports = function UserInput (outline) {
           ans2.appendChild(myDocument.createElement('th')).appendChild(myDocument.createTextNode('No'))
           ans2.appendChild(myDocument.createElement('td')).appendChild(myDocument.createTextNode('BOOLEAN'))
           break
-        case 'PredicateAutoComplete':
+        case 'PredicateAutoComplete': // Prompt user  for possible relationships for new data
           inputText = extraInformation.inputText
-          let results = tabulator.lb.searchAdv(inputText, undefined, 'predicate')
-                /*
-                for (var i=0;i<predicates.length;i++){
-                    var tempQuery={};
-                    tempQuery.vars=[];
-                    tempQuery.vars.push('Kenny');
-                    var tempBinding={};
-                    tempBinding.Kenny=kb.fromNT(predicates[i].NT);
-                    try{addPredicateChoice(tempQuery)(tempBinding);}
-                        catch(e){alert('I\'ll deal with bnodes later...'+e);}//I'll deal with bnodes later...
-                }
-                */
+                /*   The labeller functionality code ahs been lost or dropped -- reinstate this? */
+          let predicates = outline.labeller.searchAdv(inputText, undefined, 'predicate')
+          let results = [] // @@ fixme
+          for (let i = 0; i < predicates.length; i++) {
+            var tempQuery = {}
+            tempQuery.vars = []
+            tempQuery.vars.push('Kenny')
+            var tempBinding = {}
+            tempBinding.Kenny = kb.fromNT(predicates[i].NT)
+            try { addPredicateChoice(tempQuery)(tempBinding) } catch (e) {
+              throw new Error('I\'ll deal with bnodes later...[Kenny]' + e)
+            }// I'll deal with bnodes later...
+          }
+
           let entries = results[0]
           if (entries.length === 0) {
             console.log('cm length 0\n')// hq
@@ -1465,9 +1466,9 @@ module.exports = function UserInput (outline) {
         case 'GeneralAutoComplete':
           inputText = extraInformation.inputText
           try {
-            results = tabulator.lb.search(inputText)
+            results = outline.labeller.search(inputText)
           } catch (e) {
-            console.log('stop to see what happens ' + extraInformation.selectedTd.textContent + '\n' + e + '\n')
+            console.log('GeneralAutoComplete: debug me ' + extraInformation.selectedTd.textContent + '\n' + e + '\n')
           }
           entries = results[0] // [label, subject,priority]
           var types = results[1]
@@ -1505,7 +1506,6 @@ module.exports = function UserInput (outline) {
                     var typeLabel=type?label(type):"";
                     tr.appendChild(myDocument.createElement('td')).appendChild(myDocument.createTextNode(typeLabel));
                 }
-                //alert(extraInformation.choices.length);
                 */
           break
         case 'JournalTitleAutoComplete': // hql
@@ -1550,7 +1550,7 @@ module.exports = function UserInput (outline) {
           console.log("\\\\done showMenu's JTAutocomplete\n")
           break
         case 'LimitedPredicateChoice':
-          var choiceTerm = tabulator.util.getAbout(kb, extraInformation.clickedTd)
+          var choiceTerm = UI.utils.getAbout(kb, extraInformation.clickedTd)
                 // because getAbout relies on kb.fromNT, which does not deal with
                 // the 'Collection' termType. This termType is ambiguous anyway.
           choiceTerm.termType = 'Collection'
@@ -1685,45 +1685,6 @@ module.exports = function UserInput (outline) {
       trNode.AJAR_inverse = inverse
       trNode.AJAR_statement = TempFormula.add(subject, predicate, object, why)
       return trNode.AJAR_statement
-    },
-    /** ABANDONED APPROACH
-    //determine whether the event happens at around the bottom border of the element
-    aroundBorderBottom: function(event,element){
-        //UI.log.warn(event.pageY);
-        //UI.log.warn(findPos(element)[1]);
-        var elementPageY=findPos(element)[1]+38; //I'll figure out what this 38 is...
-
-        function findPos(obj) { //C&P from http://www.quirksmode.org/js/findpos.html
-        var curleft = curtop = 0;
-        if (obj.offsetParent) {
-            curleft = obj.offsetLeft
-            curtop = obj.offsetTop
-            while (obj = obj.offsetParent) {
-                curleft += obj.offsetLeft
-                curtop += obj.offsetTop
-            }
-        }
-        return [curleft,curtop];
-        }
-
-        //UI.log.warn(elementPageY+element.offsetHeight-event.pageY);
-        //I'm totally confused by these numbers...
-        if(event.pageY-4==elementPageY+element.offsetHeight||event.pageY-5==elementPageY+element.offsetHeight)
-            return true;
-        else
-            return false;
-    },
-    **/
-    // #include emptyNode(Node) from util.js
-    // #include getTerm(node) from util.js
-
-    // Not so important (will become obsolete?)
-    switchModeByRadio: function () {
-      var radio = myDocument.getElementsByName('mode')
-      if (this._tabulatorMode === 0 && radio[1].checked === true) this.switchMode()
-      if (this._tabulatorMode === 1 && radio[0].checked === true) this.switchMode()
-    },
-    _tabulatorMode: 0
-    // Default mode: Discovery
+    }
   }
 }

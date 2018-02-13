@@ -9,7 +9,7 @@ var UI = require('solid-ui')
 var ns = UI.ns
 
 module.exports = {
-  icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
+  icon: UI.icons.iconBase + 'noun_973694_expanded.svg',
 
   name: 'folder',
 

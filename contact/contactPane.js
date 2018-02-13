@@ -8,10 +8,6 @@ to change its state according to an ontology, comment on it, etc.
 **  http://tools.ietf.org/html/rfc6350
 **  http://www.iana.org/assignments/vcard-elements/vcard-elements.xhtml
 **
-** I am using in places single quotes strings like 'this'
-** where internationalization ("i18n") is not a problem, and double quoted
-** like "this" where the string is seen by the user and so I18n is an issue.
-**
 ** Feross "Standard" style note:  Callback functions should not be called "callback"
 ** or the "standard"  linter will complain if the first param is not a node.js error code. (2018-01)
 ** Hence "callbackFunction"
@@ -74,7 +70,7 @@ module.exports = {
       }
       var appInstanceNoun = 'address book'
 
-      var complain = function (message) {
+      function complain (message) {
         div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
       }
 
@@ -175,8 +171,6 @@ module.exports = {
 
     UI.aclControl.preventBrowserDropEvents(dom) // protect drag and drop
 
-    var buttonStyle = 'font-size: 100%; margin: 0.8em; padding:0.5em;'
-
     div.setAttribute('class', 'contactPane')
 
     var complain = function (message) {
@@ -238,6 +232,7 @@ module.exports = {
       var book = books[0] // for now
       var groupIndex = kb.any(book, ns.vcard('groupIndex'))
       var selectedGroups = {}
+      var selectedPeople = {} // Actually prob max 1
 
       var target = options.foreignGroup || book
 
@@ -366,56 +361,6 @@ module.exports = {
         })
       }
 
-      // Form to get the name of a new thing before we create it
-      var getNameForm = function (dom, kb, classLabel, gotNameCallback) {
-        var form = dom.createElement('div') // form is broken as HTML behaviour can resurface on js error
-
-        UI.store.fetcher.removeCallback('done', 'expand') // @@ experimental -- does this kill the re-paint? no
-        UI.store.fetcher.removeCallback('fail', 'expand') // @@ ??
-
-        // classLabel = UI.utils.label(ns.vcard('Individual'))
-        form.innerHTML = '<p>Name of new ' + classLabel + ':</p>'
-        var namefield = dom.createElement('input')
-        namefield.setAttribute('type', 'text')
-        namefield.setAttribute('size', '100')
-        namefield.setAttribute('maxLength', '2048') // No arbitrary limits
-        namefield.select() // focus next user input
-
-        var gotName = function () {
-          namefield.setAttribute('class', 'pendingedit')
-          namefield.disabled = true
-          gotNameCallback(true, namefield.value)
-        }
-
-        namefield.addEventListener('keyup', function (e) {
-          if (e.keyCode === 13) {
-            gotName()
-          }
-        }, false)
-        form.appendChild(namefield)
-
-        form.appendChild(dom.createElement('br'))
-
-        var cancel = form.appendChild(dom.createElement('button'))
-        cancel.setAttribute('type', 'button')
-        cancel.style.cssText = buttonStyle
-        cancel.innerHTML = 'Cancel'
-        cancel.addEventListener('click', function (e) {
-          form.parentNode.removeChild(form)
-          gotNameCallback(false)
-        }, false)
-
-        var b = form.appendChild(dom.createElement('button'))
-        b.setAttribute('type', 'button')
-        b.innerHTML = 'Continue'
-        b.style.cssText = buttonStyle
-        b.addEventListener('click', function (e) {
-          gotName()
-        }, false)
-
-        return form
-      }
-
       // organization-name is a hack for Mac records with no FN which is mandatory.
       var nameFor = function (x) {
         var name = kb.any(x, ns.vcard('fn')) ||
@@ -434,11 +379,65 @@ module.exports = {
         return true
       }
 
-      var searchFilterNames = function () {
+      function selectPerson (person) {
+        cardMain.innerHTML = 'loading...'
+        selectedPeople = { }
+        selectedPeople[person.uri] = true
+        refreshFilteredPeople() // Color to remember which one you picked
+        var local = book ? localNode(person) : person
+        UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
+          cardMain.innerHTML = ''
+          if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
+          // console.log("Loaded card " + local + '\n')
+          cardMain.appendChild(cardPane(dom, local, 'contact'))
+          cardMain.appendChild(dom.createElement('br'))
+
+          cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
+
+          // Add in a delete button to delete from AB
+          var deleteButton = UI.widgets.deleteButtonWithCheck(dom, cardMain, 'contact', function () {
+            let container = person.dir() // ASSUMPTION THAT CARD IS IN ITS OWN DIRECTORY
+            // function warn (message) { return UI.widgets.errorMessageBlock(dom, message, 'straw') }
+            alert('Conatiner to delete is ' + container)
+            let pname = kb.any(person, ns.vcard('fn'))
+
+            if (confirm('Delete contact ' + pname + ' completely?? ' + container)) {
+              console.log('Deleting a contact ' + pname)
+              deleteThing(person)
+              //  - delete the references to it in group files and save them background
+              //   - delete the reference in people.ttl and save it back
+              deleteRecursive(kb, container).then(res => {
+                refreshNames() // Doesn't work
+                cardMain.innerHTML = 'Contact Data Deleted.'
+              })
+            }
+          })
+          deleteButton.style = 'height: 2em;'
+        })
+      }
+
+      function refreshFilteredPeople (active) {
+        var count = 0
+        var lastRow = null
         for (var i = 0; i < peopleMainTable.children.length; i++) {
           var row = peopleMainTable.children[i]
-          row.setAttribute('style',
-            filterName(nameFor(row.subject)) ? '' : 'display: none;')
+          let matches = filterName(nameFor(row.subject))
+          if (matches) {
+            count++
+            lastRow = row
+          }
+          row.setAttribute('style', matches
+            ? (selectedPeople[row.subject.uri]
+              ? 'background-color: #cce;'
+              : '')
+            : 'display: none;')
+        }
+        if (count === 1 && active) {
+          let unique = lastRow.subject
+          // selectedPeople = { }
+          // selectedPeople[unique.uri] = true
+          // lastRow.setAttribute('style', 'background-color: #cce;')
+          selectPerson(unique)
         }
       }
 
@@ -512,19 +511,20 @@ module.exports = {
       // together and then deleted.
 
       function deleteThing (x) {
-        var ds = kb.statexmentsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
+        console.log('deleteThing: ' + x)
+        var ds = kb.statementsMatching(x).concat(kb.statementsMatching(undefined, undefined, x))
         var targets = {}
         ds.map(function (st) { targets[st.why.uri] = st })
         var agenda = [] // sets of statements of same dcoument to delete
         for (var target in targets) {
           agenda.push(ds.filter(function (st) { return st.why.uri === target }))
-          console.log('Deleting ' + agenda[agenda.length - 1].length + ' from ' + target)
+          console.log('   Deleting ' + agenda[agenda.length - 1].length + ' triples from ' + target)
         }
         function nextOne () {
           if (agenda.length > 0) {
             updater.update(agenda.shift(), [], function (uri, ok, body) {
               if (!ok) {
-                complain('Eror deleting all trace of: ' + x + ': ' + body)
+                complain('Error deleting all trace of: ' + x + ': ' + body)
                 return
               }
               nextOne()
@@ -547,15 +547,23 @@ module.exports = {
 
       function deleteRecursive (kb, folder) {
         return new Promise(function (resolve, reject) {
-          kb.load(folder).then(function () {
+          kb.fetcher.load(folder).then(function () {
             let promises = kb.each(folder, ns.ldp('contains')).map(file => {
               if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
-                return deleteRecursive(file)
+                return deleteRecursive(kb, file)
               } else {
-                return kb.fetcher.webOperation(file, 'DELETE')
+                console.log('deleteRecirsive file: ' + file)
+                if (!confirm(' Really DELETE File ' + file)) {
+                  throw new Error('User aborted delete file')
+                }
+                return kb.fetcher.webOperation('DELETE', file)
               }
             })
-            promises.push(kb.fetcher.webOperation(folder, 'DELETE'))
+            console.log('deleteRecirsive folder: ' + folder)
+            if (!confirm(' Really DELETE folder ' + folder)) {
+              throw new Error('User aborted delete file')
+            }
+            promises.push(kb.fetcher.webOperation('DELETE', folder))
             Promise.all(promises).then(res => { resolve() })
           })
         })
@@ -596,65 +604,44 @@ module.exports = {
         for (var j = 0; j < cards.length; j++) {
           var personRow = peopleMainTable.appendChild(dom.createElement('tr'))
           var personLeft = personRow.appendChild(dom.createElement('td'))
-          var personRight = personRow.appendChild(dom.createElement('td'))
+          // var personRight = personRow.appendChild(dom.createElement('td'))
           personLeft.setAttribute('style', dataCellStyle)
           var person = cards[j]
+          personRow.subject = person
           var name = nameFor(person)
           personLeft.textContent = name
           personRow.subject = person
           UI.widgets.makeDraggable(personRow, person)
 
           var setPersonListener = function toggle (personLeft, person) {
+            /*  No delete button on person in list: ambiguous: group or total? Do in card itself
             UI.widgets.deleteButtonWithCheck(dom, personRight, 'contact', function () {
-              deleteThing(person)
+              deleteThing(person) /// Just remove from group
               refreshNames()
               cardMain.innerHTML = ''
             })
+            */
             personRow.addEventListener('click', function (event) {
               event.preventDefault()
-              cardMain.innerHTML = 'loading...'
-              var local = book ? localNode(person) : person
-              UI.store.fetcher.nowOrWhenFetched(local.doc(), undefined, function (ok, message) {
-                cardMain.innerHTML = ''
-                if (!ok) return complainIfBad(ok, "Can't load card: " + local + ': ' + message)
-                // console.log("Loaded card " + local + '\n')
-                cardMain.appendChild(cardPane(dom, local, 'contact'))
-                cardMain.appendChild(dom.createElement('br'))
-
-                cardMain.appendChild(UI.widgets.linkIcon(dom, local)) // hoverHide
-
-                // Add in a delete button to delete from AB
-                var deleteButton = UI.widgets.deleteButtonWithCheck(dom, cardMain, 'contact', function () {
-                  let container = subject.dir()
-                  function warn (message) { return UI.widgets.errorMessageBlock(dom, message, 'straw') }
-                  warn('Conatiner to delete is ' + container)
-                  if (confirm('Delete this contact completely??')) {
-                    deleteThing(subject)
-                    console.log('Deleting a contact... @@ fix me')
-                    //  - delete the references to it in group files and save them background
-                    //   - delete the reference in people.ttl and save it back
-                    deleteRecursive(container).then(res => {
-                      refreshNames()
-                      cardMain.innerHTML = 'Contact Data Deleted.'
-                    })
-                  }
-                })
-                deleteButton.style = 'height: 2em;'
-              })
+              selectPerson(person)
             })
           }
           setPersonListener(personRow, person)
         }
-        searchFilterNames()
+        refreshFilteredPeople()
       }
 
-      var refreshGroupsSelected = function () {
-        for (var i = 0; i < groupsMainTable.children.length; i++) {
-          var row = groupsMainTable.children[i]
+      function refreshThingsSelected (table, selectionArray) {
+        for (var i = 0; i < table.children.length; i++) {
+          var row = table.children[i]
           if (row.subject) {
-            row.setAttribute('style', selectedGroups[row.subject.uri] ? 'background-color: #cce;' : '')
+            row.setAttribute('style', selectionArray[row.subject.uri] ? 'background-color: #cce;' : '')
           }
         }
+      }
+
+      function refreshGroupsSelected () {
+        return refreshThingsSelected(groupsMainTable, selectedGroups)
       }
 
       // Check every group is in the list and add it if not.
@@ -790,7 +777,7 @@ module.exports = {
       // //////////////////   Body of 3-column browser
 
       var bookTable = dom.createElement('table')
-      bookTable.setAttribute('style', 'border-collapse: collapse; margin-right: 0;')
+      bookTable.setAttribute('style', 'border-collapse: collapse; margin-right: 0; max-height: 9in;')
       div.appendChild(bookTable)
       var bookHeader = bookTable.appendChild(dom.createElement('tr'))
       var bookMain = bookTable.appendChild(dom.createElement('tr'))
@@ -811,10 +798,10 @@ module.exports = {
       // searchDiv.setAttribute('style', 'border: 0.1em solid #888; border-radius: 0.5em')
       var searchInput = cardHeader.appendChild(dom.createElement('input'))
       searchInput.setAttribute('type', 'text')
-      searchInput.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em; width: 100%;')
-      // searchInput.addEventListener('input', searchFilterNames)
+      searchInput.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em; width: 100%; font-size: 100%; padding: 0.1em 0.6em')
+
       searchInput.addEventListener('input', function (e) {
-        searchFilterNames()
+        refreshFilteredPeople(true) // Active: select person if justone left
       })
 
       var cardMain = bookMain.appendChild(dom.createElement('td'))
@@ -907,20 +894,21 @@ module.exports = {
         })
         .then(function (response) { console.log('Name index loaded async' + response.url) })
 
-        cardMain.appendChild(getNameForm(dom, kb, 'Contact',
-          function (ok, name) {
-            if (!ok) return // cancelled by user
-            createNewContact(book, name, selectedGroups, function (success, body) {
-              if (!success) {
-                console.log("Error: can't save new contact:" + body)
-              } else {
-                cardMain.innerHTML = ''
-                refreshNames() // Add name to list of group
-                // @@@ SELECT THE NAME JUST MADE
-                cardMain.appendChild(cardPane(dom, body, 'contact'))
-              }
-            })
-          }))
+        UI.widgets.askName(dom, kb, cardMain, UI.ns.foaf('name'), ns.vcard('Individual'), 'person').then(function (name) {
+          if (!name) return // cancelled by user
+          createNewContact(book, name, selectedGroups, function (success, body) {
+            if (!success) {
+              console.log("Error: can't save new contact:" + body)
+            } else {
+              let person = body
+              cardMain.innerHTML = 'indexing...'
+              selectedPeople = {}
+              selectedPeople[person.uri] = true
+              refreshNames() // Add name to list of group
+              cardMain.appendChild(cardPane(dom, person, 'contact'))
+            }
+          })
+        })
       }, false)
 
       // New Group button
@@ -940,25 +928,24 @@ module.exports = {
             }
           })
 
-          cardMain.appendChild(getNameForm(dom, kb, 'Group',
-            function (ok, name) {
-              if (!ok) return // cancelled by user
-              saveNewGroup(book, name, function (success, body) {
-                if (!success) {
-                  console.log("Error: can't save new group:" + body)
-                  cardMain.innerHTML = 'Failed to save group' + body
-                } else {
-                  selectedGroups = {}
-                  selectedGroups[body.uri] = true
-                  syncGroupTable() // Refresh list of groups
+          UI.widgets.askName(dom, kb, cardMain, UI.ns.foaf('name'), ns.vcard('Group'), 'group').then(function (name) {
+            if (!name) return // cancelled by user
+            saveNewGroup(book, name, function (success, body) {
+              if (!success) {
+                console.log("Error: can't save new group:" + body)
+                cardMain.innerHTML = 'Failed to save group' + body
+              } else {
+                selectedGroups = {}
+                selectedGroups[body.uri] = true
+                syncGroupTable() // Refresh list of groups
 
-                  cardMain.innerHTML = ''
-                  cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
-                    if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
-                  }))
-                }
-              })
-            }))
+                cardMain.innerHTML = ''
+                cardMain.appendChild(UI.aclControl.ACLControlBox5(body, dom, 'group', kb, function (ok, body) {
+                  if (!ok) cardMain.innerHTML = 'Group sharing setup failed: ' + body
+                }))
+              }
+            })
+          })
         }, false)
 
         // Tools button
@@ -986,7 +973,7 @@ module.exports = {
     // Render Individual card
 
     var renderIndividual = function (subject) {
-      var mainImage
+      var mugshotDiv
       // ////////////////////  DRAG and Drop for mugshot image
       var card = subject
 
@@ -1050,7 +1037,7 @@ module.exports = {
           })
           .then(function () {
             if (isImage) {
-              mainImage.setAttribute('src', pic.uri)
+              mugshotDiv.refresh()
             }
           })
           .catch(function (status) {
@@ -1147,10 +1134,29 @@ module.exports = {
 
           UI.authn.checkUser()  // kick off async operation
 
-          mainImage = div.appendChild(dom.createElement('img'))
-          mainImage.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
-          UI.widgets.setImage(mainImage, subject)
-          UI.widgets.makeDropTarget(mainImage, handleURIsDroppedOnMugshot, droppedFileHandler)
+          mugshotDiv = div.appendChild(dom.createElement('div'))
+
+          function mugshot (image) {
+            let img = div.appendChild(dom.createElement('img'))
+            img.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
+            UI.widgets.makeDropTarget(img, handleURIsDroppedOnMugshot, droppedFileHandler)
+            if (image) img.setAttribute('src', image.uri)
+            return img
+          }
+
+          function syncMugshots () {
+            mugshotDiv.innerHTML = '' // @@ don't clear, later: sync
+            let images = kb.each(subject, ns.vcard('hasPhoto'))  // Priviledge vcard ones
+            images.sort()
+            images = images.slice(0, 5) // max number for the space
+            images.forEach(mugshot)
+            if (images.length === 0) {
+              UI.widgets.setImage(mugshot(), subject) // Fallback icon or get from web
+            }
+          }
+
+          syncMugshots()
+          mugshotDiv.refresh = syncMugshots
 
           UI.widgets.appendForm(dom, div, {}, subject, individualForm, cardDoc, complainIfBad)
 
@@ -1199,7 +1205,7 @@ module.exports = {
 
           UI.widgets.attachmentList(dom, subject, div, {
             // promptIcon: UI.icons.iconBase +  'noun_681601.svg',
-            predicate: UI.ns.vcard('url') // @@@@@@@@@ ,--- no, the actual structure uses a bnode.
+            predicate: UI.ns.vcard('url') // @@@@@@@@@ ,--- no, the vcard ontology structure uses a bnode.
           })
 
           div.appendChild(dom.createElement('hr'))
@@ -1222,6 +1228,48 @@ module.exports = {
               span.textContent = val.uri
             }
           })
+
+          div.appendChild(dom.createElement('hr'))
+
+          // Remove a person from a group
+
+          var removeFromGroup = function (thing, group) {
+            var pname = kb.any(thing, ns.vcard('fn'))
+            var gname = kb.any(group, ns.vcard('fn'))
+            var groups = kb.each(null, ns.vcard('hasMember'), thing)
+            if (groups.length < 2) {
+              alert('Must be a member of at least one group.  Add to another group first.')
+              return
+            }
+            var message = 'Remove ' + pname + ' from group ' + gname + '?'
+            if (confirm(message)) {
+              var del = [ $rdf.st(group, ns.vcard('hasMember'), thing, group.doc()),
+                $rdf.st(thing, ns.vcard('fn'), pname, group.doc())]
+              kb.updater.update(del, [], function (uri, ok, err) {
+                if (!ok) return complain('Error removing member from group ' + group + ': ' + err)
+                console.log('Removed ' + pname + ' from group ' + gname)
+                syncGroupList()
+              })
+            }
+          }
+
+          function newRowForGroup (group) {
+            var options = { deleteFunction: function () {
+              removeFromGroup(subject, group)
+            },
+              noun: 'membership'
+            }
+            var tr = UI.widgets.personTR(dom, null, group, options)
+            return tr
+          }
+
+          var groupList = div.appendChild(dom.createElement('table'))
+          function syncGroupList () {
+            var groups = kb.each(null, ns.vcard('hasMember'), subject)
+            UI.utils.syncTableToArray(groupList, groups, newRowForGroup)
+          }
+          groupList.refresh = syncGroupList
+          syncGroupList()
         })
     } // renderIndividual
 
@@ -1268,7 +1316,7 @@ module.exports = {
 
     // /////////////// Fix user when testing on a plane
 
-    if (tabulator.mode === 'webapp' && typeof document !== 'undefined' &&
+    if (typeof document !== 'undefined' &&
       document.location && ('' + document.location).slice(0, 16) === 'http://localhost') {
       me = kb.any(subject, UI.ns.acl('owner')) // when testing on plane with no webid
       console.log('Assuming user is ' + me)
