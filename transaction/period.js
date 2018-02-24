@@ -6,6 +6,7 @@
 */
 
 var UI = require('solid-ui')
+var panes = require('../paneRegistry')
 
 module.exports = {
 
@@ -111,7 +112,7 @@ module.exports = {
       h2.textContent = 'Period ' + dtstart.value.slice(0, 10) + ' - ' + dtend.value.slice(0, 10)
 
       var insertedPane = function (dom, subject, paneName) {
-        var p = UI.panes.byName(paneName)
+        var p = panes.byName(paneName)
         var d = p.render(subject, dom)
         d.setAttribute('style', 'border: 0.1em solid green;')
         return d

@@ -8,6 +8,7 @@
 */
 
 const UI = require('solid-ui')
+var panes = require('../paneRegistry')
 
 // console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
 module.exports = {
@@ -26,7 +27,7 @@ module.exports = {
 
   // View the data in a file in user-friendly way
   render: function (subject, dom) {
-    var outliner = UI.panes.getOutliner(dom)
+    var outliner = panes.getOutliner(dom)
     var kb = UI.store
     var arg = UI.ns.arg
 

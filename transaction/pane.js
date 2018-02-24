@@ -6,6 +6,7 @@
 */
 
 var UI = require('solid-ui')
+var panes = require('../paneRegistry')
 const ns = UI.ns
 
 module.exports = {
@@ -121,7 +122,7 @@ module.exports = {
     }
 
     var insertedPane = function (dom, subject, paneName) {
-      var p = UI.panes.byName(paneName)
+      var p = panes.byName(paneName)
       var d = p.render(subject, dom)
       d.setAttribute('style', 'border: 0.1em solid green;')
       return d
@@ -353,7 +354,7 @@ module.exports = {
 
           // Add in simple comments about the transaction
 
-          var outliner = UI.panes.getOutliner(dom)
+          var outliner = panes.getOutliner(dom)
 
           donePredicate(ns.rdfs('comment')) // Done above
 
