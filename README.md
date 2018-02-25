@@ -12,7 +12,7 @@ ask the pane system to pick the appropriate pane.  It does this by calling each 
 with the object, and asking whether it want to. Typically the pane chosen is the most speicific pane, 
 so typically a hand-written user interface will be chosen over a generic machine-generated one.
 
-These panes are used in the Data Bowser - see mashlib https://github.com/linkeddata/mashlib
+These panes are used in the Data Browser - see mashlib https://github.com/linkeddata/mashlib
 
 Currently the panes available include;
 
