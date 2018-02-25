@@ -38,7 +38,7 @@
     "babel-preset-metalab": "^1.0.0",
     "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
-    "rdflib": "file://../../linkeddata/rdflib.js",
+    "rdflib": ">=0.16.6",
     "solid-ui": ">=0.9.2"
   },
   "devDependencies": {
