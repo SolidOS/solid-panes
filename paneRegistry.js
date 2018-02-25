@@ -50,8 +50,7 @@ paneRegistry.byName = function (name) {
   for (var i = 0; i < paneRegistry.list.length; i++) {
     if (paneRegistry.list[i].name === name) return paneRegistry.list[i]
   }
-  return undefined
+  return null
 }
-
 
 // ENDS

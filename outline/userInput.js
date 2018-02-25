@@ -17,7 +17,6 @@ var UserInputFormula // Formula to store references of user's work
 var TempFormula // Formula to store incomplete tripes (Requests),
                  // temporarily disjoint with kb to avoid bugs
 
-
 module.exports = function UserInput (outline) {
   var kb = UI.store
 

@@ -14,7 +14,6 @@
 var UI = require('solid-ui')
 var panes = require('../paneRegistry')
 
-
 const SET_MODIFIED_DATES = false
 
 module.exports = {

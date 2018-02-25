@@ -12,7 +12,6 @@
 var UI = require('solid-ui')
 var panes = require('./paneRegistry')
 
-
 module.exports = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
 
