@@ -4,7 +4,7 @@
 */
 
 var UI = require('solid-ui')
-// var Solid = require('solid-client')
+var panes = require('./paneRegistry')
 
 var ns = UI.ns
 
@@ -24,7 +24,7 @@ module.exports = {
   },
 
   render: function (subject, dom) {
-    var outliner = UI.panes.getOutliner(dom)
+    var outliner = panes.getOutliner(dom)
     var kb = UI.store
     var complain = function complain (message, color) {
       var pre = dom.createElement('pre')

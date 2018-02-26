@@ -2,6 +2,7 @@
 //
 // This is or was part of https://github.com/Linkeddata/solid-app-set/
 //
+var panes = require('../paneRegistry')
 
 document.addEventListener('DOMContentLoaded', function () {
   var UI = require('mashlib')
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   var initializeNewInstanceAtBase = function (thisInstance, newBase) {
-    var pane = UI.panes.byName('meeting')
+    var pane = panes.byName('meeting')
     pane.mint(newBase)
       .then((newInstance) => {
         UI.outline.GotoSubject(newInstance, true, undefined, true)

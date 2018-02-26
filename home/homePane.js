@@ -9,6 +9,7 @@
 */
 
 var UI = require('solid-ui')
+var panes = require('../paneRegistry')
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830
@@ -82,8 +83,8 @@ module.exports = {
       } // newAppInstance
 
       var iconArray = []
-      for (var pn in UI.panes) {
-        var pane = UI.panes[pn]
+      for (var pn in panes) {
+        var pane = panes[pn]
         if (pane.mintNew) {
           var icon = context.div.appendChild(dom.createElement('img'))
           icon.setAttribute('src', pane.icon)
@@ -138,7 +139,7 @@ module.exports = {
       var creationDiv = div.appendChild(dom.createElement('div'))
       var creationContext = {div: creationDiv, dom: dom, statusArea: div, me: me}
       creationDiv.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
-      UI.create.newThingUI(creationContext, UI.panes) // newUI Have to pass panes down
+      UI.create.newThingUI(creationContext, panes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private:'
       UI.authn.registrationList(context, {private: true}).then(function (context) {

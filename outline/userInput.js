@@ -9,11 +9,13 @@
     clipboard: 'predicates' 'objects' 'all'(internal)
     request: 'from' 'to' 'message' 'Request'
 */
+
+var UI = require('solid-ui')
+var panes = require('../paneRegistry')
+
 var UserInputFormula // Formula to store references of user's work
 var TempFormula // Formula to store incomplete tripes (Requests),
                  // temporarily disjoint with kb to avoid bugs
-
-var UI = require('solid-ui')
 
 module.exports = function UserInput (outline) {
   var kb = UI.store
@@ -441,7 +443,7 @@ module.exports = function UserInput (outline) {
                   // this add will cause a repainting
                 }
                 var enclosingTd = UI.utils.ancestor(this.lastModified.parentNode.parentNode, 'TD')
-                const defaultPane = UI.panes.default // @@ check
+                const defaultPane = panes.default // @@ check
                 outline.outlineExpand(enclosingTd, s.subject, {'pane': defaultPane, 'already': true})
                 outline.walk('right', outline.focusTd)
                         // </Feature>

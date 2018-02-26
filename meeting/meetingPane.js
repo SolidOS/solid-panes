@@ -5,6 +5,8 @@
 /* global FileReader */
 
 var UI = require('solid-ui')
+var panes = require('../paneRegistry')
+
 var mime = require('mime-types')
 
 var meetingDetailsFormText = require('./meetingDetailsForm.js')
@@ -189,7 +191,7 @@ module.exports = {
           }
           var newPaneOptions = {
             newInstance: subject, // kb.sym(subject.doc().uri + '#LinkListTool'),
-            pane: UI.panes.link, // the pane to be used to mint a new thing
+            pane: panes.link, // the pane to be used to mint a new thing
             predicate: ns.meeting('attachmentTool'),
             tabTitle: 'Links',
             view: 'link', // The pane to be used when it is viewed
@@ -391,7 +393,7 @@ module.exports = {
       var newPaneOptions = {
         useExisting: meeting, // Regard the meeting as being the schedulable event itself.
         // newInstance: meeting,
-        pane: UI.panes.schedule,
+        pane: panes.schedule,
         view: 'schedule',
         // predicate: ns.meeting('schedulingPoll'),
         // newBase: meetingBase + 'Schedule/',   Not needed as uses existing meeting
@@ -409,7 +411,7 @@ module.exports = {
       }
       var newPaneOptions = {
         newInstance: kb.sym(meeting.dir().uri + folderName + '/'),
-        pane: UI.panes.folder, // @@ slideshow??
+        pane: panes.folder, // @@ slideshow??
         predicate: ns.meeting('pictures'),
         shareTab: true,
         tabTitle: folderName,
@@ -427,7 +429,7 @@ module.exports = {
       }
       var options = {
         newInstance: kb.sym(meeting.dir().uri + 'Files/'),
-        pane: UI.panes.folder,
+        pane: panes.folder,
         predicate: ns.meeting('materialsFolder'),
         tabTitle: 'Materials',
         noIndexHTML: true
@@ -443,7 +445,7 @@ module.exports = {
       }
       var options = {
         newInstance: kb.sym(meeting.dir().uri + 'Attendees/index.ttl#this'),
-        pane: UI.panes.contact,
+        pane: panes.contact,
         predicate: ns.meeting('attendeeGroup'),
         tabTitle: 'Attendees',
         instanceClass: ns.vcard('Group'),
@@ -461,7 +463,7 @@ module.exports = {
         newBase: meetingBase + 'SharedNotes/',
         predicate: UI.ns.meeting('sharedNotes'),
         tabTitle: 'Shared Notes',
-        pane: UI.panes.pad
+        pane: panes.pad
       }
       return makeNewPaneTool(toolObject, newPaneOptions)
     }
@@ -479,7 +481,7 @@ module.exports = {
             newBase: meetingBase + URIsegment + '/', // @@@ sanitize
             predicate: UI.ns.meeting('subMeeting'),
             tabTitle: name,
-            pane: UI.panes.meeting }
+            pane: panes.meeting }
           return makeNewPaneTool(toolObject, options)
         })
         .catch(function (e) {
@@ -906,7 +908,7 @@ module.exports = {
           } else if (view === 'iframe') {
             showIframe(target)
           } else {
-            pane = view ? UI.panes.byName(view) : null
+            pane = view ? panes.byName(view) : null
             table = containerDiv.appendChild(dom.createElement('table'))
             UI.outline.GotoSubject(target, true, pane, false, undefined, table)
           }

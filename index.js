@@ -1,4 +1,4 @@
-/*  PANES
+/*                            SOLID PANES
 **
 **     Panes are regions of the outline view in which a particular subject is
 ** displayed in a particular way.
@@ -10,53 +10,28 @@
 ** If it is relevant, then it returns a suitable tooltip for a control which selects the pane
 */
 
-// create the unique UI module on which to attach panes
-var UI = require('solid-ui') // Note we will add the panes register to this.
+// create the unique UI module on which to attach panes (no, don't attach as UI dot panes any more)
+// var UI = require('solid-ui') // Note we will add the panes register to this.
 
-var paneModule = module.exports = {}
+const panes = require('./paneRegistry')
 
-paneModule.list = []
-paneModule.paneForIcon = []
-paneModule.paneForPredicate = []
-paneModule.register = function (p, requireQueryButton) {
-  p.requireQueryButton = requireQueryButton
-  if (!p.name) {
-    console.log('***     No name for pane!')
-    return
-  }
-  console.log('  registering pane: ' + p.name)
-  if (!p.label) {
-    console.log('***     No label for pane!')
-    return
-  }
-  paneModule.list.push(p)
-  if (!(p.name in paneModule)) { // don't overwrite methods
-    paneModule[p.name] = p
-    // console.log('    Indexing '+ p.name +' pane ...')
-  }
-  if (p.icon) {
-    paneModule.paneForIcon[p.icon] = p
-  }
-  if (p.predicates) {
-    for (var x in p.predicates) {
-      paneModule.paneForPredicate[x] = {pred: x, code: p.predicates[x]}
-    }
-  }
-}
+module.exports = panes
 
-paneModule.byName = function (name) {
-  for (var i = 0; i < paneModule.list.length; i++) {
-    if (paneModule.list[i].name === name) return paneModule.list[i]
-  }
-  return undefined
-}
+// We attach the solid-UI lower-level system for convenience
+// Currently most panes ar ebuilt using it anyway.
+// It also gives access to rdflib as panes.UI.rdf
+
+panes.UI = require('solid-ui') // Pass on directly to any who needs it
 
 // This has common outline mode functionality for the default and other other panes
-paneModule.OutlineManager = require('./outline/manager.js')
+// A separate outline manager is requires per DOM in cases like a browser extension
+// where ther are many occurences of window, and of window.document
+// But each DOM should have just one outline manager.
 
-paneModule.getOutliner = function (dom) {
+panes.OutlineManager = require('./outline/manager.js')
+panes.getOutliner = function (dom) {
   if (!dom.outliner) {
-    dom.outliner = UI.panes.OutlineManager(dom)
+    dom.outliner = panes.OutlineManager(dom)
   }
   return dom.outliner
 }
@@ -66,82 +41,84 @@ paneModule.getOutliner = function (dom) {
 */
 // Developer designed:
 
-paneModule.register(require('./issue/pane.js'))
-paneModule.register(require('./contact/contactPane.js'))
+let register = panes.register
 
-paneModule.register(require('./pad/padPane.js'))
-// paneModule.register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
+register(require('./issue/pane.js'))
+register(require('./contact/contactPane.js'))
 
-paneModule.register(require('./transaction/pane.js'))
-paneModule.register(require('./transaction/period.js'))
-paneModule.register(require('./chat/chatPane.js'))
-// paneModule.register(require('./publication/publicationPane.js'))
-paneModule.register(require('./meeting/meetingPane.js'))
-paneModule.register(require('./tabbed/tabbedPane.js'))
-paneModule.register(require('./schedule/schedulePane.js'))
-paneModule.register(require('./links/linksPane.js'))
+register(require('./pad/padPane.js'))
+// register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
 
-paneModule.register(require('./trip/tripPane.js'))
-// paneModule.register(require('./airPane.js'))
+register(require('./transaction/pane.js'))
+register(require('./transaction/period.js'))
+register(require('./chat/chatPane.js'))
+// register(require('./publication/publicationPane.js'))
+register(require('./meeting/meetingPane.js'))
+register(require('./tabbed/tabbedPane.js'))
+register(require('./schedule/schedulePane.js'))
+register(require('./links/linksPane.js'))
+
+register(require('./trip/tripPane.js'))
+// register(require('./airPane.js'))
 
 // Content views
 
-paneModule.register(require('./imagePane.js')) // Basic image view
-paneModule.register(require('./playlist/playlistPane.js')) // Basic playlist view
+register(require('./imagePane.js')) // Basic image view
+register(require('./playlist/playlistPane.js')) // Basic playlist view
 
-paneModule.register(require('./video/videoPane.js')) // Video clip player
-paneModule.register(require('./audio/audioPane.js')) // Audio clip player
+register(require('./video/videoPane.js')) // Video clip player
+register(require('./audio/audioPane.js')) // Audio clip player
 
-paneModule.register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
-paneModule.register(require('./folderPane.js')) // Should be above dataContentPane
-paneModule.register(require('./classInstancePane.js')) // Should be above dataContentPane
-// paneModule.register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
-paneModule.register(require('./slideshow/slideshowPane.js'))
+register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
+register(require('./folderPane.js')) // Should be above dataContentPane
+register(require('./classInstancePane.js')) // Should be above dataContentPane
+// register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
+register(require('./slideshow/slideshowPane.js'))
 
-paneModule.register(require('./socialPane.js'))
+register(require('./socialPane.js'))
 
-paneModule.register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
-paneModule.register(require('./dataContentPane.js')) // Prefered for a data file
-paneModule.register(require('./n3Pane.js'))
-paneModule.register(require('./RDFXMLPane.js'))
+register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
+register(require('./dataContentPane.js')) // Prefered for a data file
+register(require('./n3Pane.js'))
+register(require('./RDFXMLPane.js'))
 
 // User configured - data driven
-paneModule.register(require('./form/pane.js'))
+register(require('./form/pane.js'))
 
 // Generic:
 
-paneModule.register(require('./attach/attachPane.js'))
-paneModule.register(require('./tableViewPane.js'))
+register(require('./attach/attachPane.js'))
+register(require('./tableViewPane.js'))
 
 // Fallback totally generic:
-paneModule.register(require('./defaultPane.js'))
+register(require('./defaultPane.js'))
 
-paneModule.register(require('./ui/pane.js'))
+register(require('./ui/pane.js'))
 
-// paneModule.register(require("categoryPane.js"))  // Not useful enough
-// paneModule.register(require("pubsPane.js")) // not finished
+// register(require("categoryPane.js"))  // Not useful enough
+// register(require("pubsPane.js")) // not finished
 
 // @@ jambo commented these things out to pare things down temporarily.
 // Note must use // not /* to comment out to make sure expander sees it
-// paneModule.register(require("lawPane.js"))
+// register(require("lawPane.js"))
 
-paneModule.register(require('./microblogPane/microblogPane.js'))
+register(require('./microblogPane/microblogPane.js'))
 
-// paneModule.register(require("./social/pane.js")) // competitor to other social
-// paneModule.register(require("./airPane.js"))
-// paneModule.register(require("./lawPane.js"))
-// paneModule.register(require("pushbackPane.js"))
-// paneModule.register(require("CVPane.js"))
-// paneModule.register(require("photoPane.js"))
-// paneModule.register(require("tagPane.js"))
-// paneModule.register(require("photoImportPane.js"))
+// register(require("./social/pane.js")) // competitor to other social
+// register(require("./airPane.js"))
+// register(require("./lawPane.js"))
+// register(require("pushbackPane.js"))
+// register(require("CVPane.js"))
+// register(require("photoPane.js"))
+// register(require("tagPane.js"))
+// register(require("photoImportPane.js"))
 
 // The sharing pane is fairly generic and administrative  201
-paneModule.register(require('./sharing/sharingPane.js'))
+register(require('./sharing/sharingPane.js'))
 
 // The internals pane is always (almost?) the last as it is the least user-friendly
-paneModule.register(require('./internalPane.js'))
+register(require('./internalPane.js'))
 // The home pame is a 2016 experiment. Always there.
-paneModule.register(require('./home/homePane.js'))
+register(require('./home/homePane.js'))
 
 // ENDS

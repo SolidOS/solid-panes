@@ -1,6 +1,8 @@
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */
+var panes = require('../paneRegistry')
+
 var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')
 var UserInput = require('./userInput.js')
@@ -301,8 +303,8 @@ module.exports = function (doc) {
     if (requiredPane) {
       tr.firstPane = requiredPane
     };
-    for (var i = 0; i < UI.panes.list.length; i++) {
-      let pane = UI.panes.list[i]
+    for (var i = 0; i < panes.list.length; i++) {
+      let pane = panes.list[i]
       var lab = pane.label(subject, dom)
       if (!lab) continue
 
@@ -318,7 +320,7 @@ module.exports = function (doc) {
         UI.log.info('the ' + i + 'th pane steals the focus')
       }
     }
-    if (!relevantPanes.length) relevantPanes.push(UI.panes.internalPane)
+    if (!relevantPanes.length) relevantPanes.push(panes.internalPane)
     tr.firstPane = tr.firstPane || relevantPanes[0]
     if (relevantPanes.length !== 1) { // if only one, simplify interface
       for (let i = 0; i < relevantPanes.length; i++) {
@@ -456,7 +458,7 @@ module.exports = function (doc) {
   var propertyTable = this.propertyTable = function propertyTable (subject, table, pane, options) {
     UI.log.debug('Property table for: ' + subject)
     subject = kb.canon(subject)
-      // if (!pane) pane = UI.panes.defaultPane;
+      // if (!pane) pane = panes.defaultPane;
 
     if (!table) { // Create a new property table
       table = dom.createElement('table')
@@ -1156,7 +1158,7 @@ module.exports = function (doc) {
             sf.addCallback('done', setSelectedAfterward)
             sf.addCallback('fail', setSelectedAfterward)
             outlineExpand(selectedTd, obj, {
-              'pane': UI.panes.defaultPane
+              'pane': panes.defaultPane
             })
           }
           setSelectedAfterward()
@@ -1245,14 +1247,14 @@ module.exports = function (doc) {
     var target = thisOutline.targetOf(e)
     var p = target.parentNode
     var subject = UI.utils.getAbout(kb, target)
-    var pane = e.altKey ? UI.panes.internalPane : undefined // set later: was UI.panes.defaultPane
+    var pane = e.altKey ? panes.internalPane : undefined // set later: was panes.defaultPane
 
     if (e.shiftKey) { // Shift forces a refocuss - bring this to the top
       outlineRefocus(p, subject, pane)
     } else {
       if (e.altKey) { // To investigate screwups, dont wait show internals
         outlineExpand(p, subject, {
-          'pane': UI.panes.internalPane,
+          'pane': panes.internalPane,
           'immediate': true
         })
       } else {
@@ -1264,7 +1266,7 @@ module.exports = function (doc) {
   function collapseMouseDownListener (e) { // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     var target = thisOutline.targetOf(e)
     var subject = UI.utils.getAbout(kb, target)
-    var pane = e.altKey ? UI.panes.internalPane : undefined
+    var pane = e.altKey ? panes.internalPane : undefined
     var p = target.parentNode
     outlineCollapse(p, subject, pane)
   }
@@ -1792,7 +1794,7 @@ module.exports = function (doc) {
         row.appendChild(thisOutline.outlineObjectTD(elt))
       }
     } else if (obj.termType === 'Graph') {
-      rep = UI.panes.dataContentPane.statementsAsTables(obj.statements, dom)
+      rep = panes.dataContentPane.statementsAsTables(obj.statements, dom)
       rep.setAttribute('class', 'nestedFormula')
     } else {
       UI.log.error('Object ' + obj + ' has unknown term type: ' + obj.termType)

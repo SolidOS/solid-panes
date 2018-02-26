@@ -15,6 +15,8 @@ to change its state according to an ontology, comment on it, etc.
 /* global alert, confirm, FileReader */
 
 var UI = require('solid-ui')
+var panes = require('../paneRegistry')
+
 var mime = require('mime-types')
 var toolsPane0 = require('./toolsPane')
 var toolsPane = toolsPane0.toolsPane
@@ -485,7 +487,7 @@ module.exports = {
       }
 
       var cardPane = function (dom, subject, paneName) {
-        var p = UI.panes.byName(paneName)
+        var p = panes.byName(paneName)
         var d = p.render(subject, dom)
         d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
         return d

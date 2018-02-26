@@ -10,6 +10,7 @@
 //         - original source view?  Use ffox view source
 
 var UI = require('solid-ui')
+var panes = require('./paneRegistry')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
@@ -29,7 +30,7 @@ module.exports = {
   },
 */
   statementsAsTables: function statementsAsTables (sts, myDocument, initialRoots) {
-    // var outliner = UI.panes.getOutliner(myDocument)
+    // var outliner = panes.getOutliner(myDocument)
     var rep = myDocument.createElement('table')
     var sz = UI.rdf.Serializer(UI.store)
     var res = sz.rootSubjects(sts)
@@ -134,7 +135,7 @@ module.exports = {
           }
           return res
         case 'Graph':
-          res = UI.panes.dataContents.statementsAsTables(obj.statements, myDocument)
+          res = panes.dataContents.statementsAsTables(obj.statements, myDocument)
           res.setAttribute('class', 'nestedFormula')
           return res
         case 'Variable':
@@ -211,10 +212,10 @@ module.exports = {
       // Then about the primary topic of the document if any
       var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
       if (ps) initialRoots.push(ps)
-      div.appendChild(UI.panes.dataContents.statementsAsTables(sts, myDocument, initialRoots))
+      div.appendChild(panes.dataContents.statementsAsTables(sts, myDocument, initialRoots))
     }
 
-    var outliner = UI.panes.getOutliner(myDocument)
+    var outliner = panes.getOutliner(myDocument)
     var kb = UI.store
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')

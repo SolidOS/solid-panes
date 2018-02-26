@@ -5,6 +5,7 @@
 /* global FileReader */
 
 var UI = require('solid-ui')
+var panes = require('./paneRegistry')
 
 var ns = UI.ns
 
@@ -58,7 +59,7 @@ module.exports = {
   // Render a file folder in a LDP/solid system
 
   render: function (subject, dom) {
-    var outliner = UI.panes.getOutliner(dom)
+    var outliner = panes.getOutliner(dom)
     var kb = UI.store
     var mainTable // This is a live synced table
 
@@ -119,7 +120,7 @@ module.exports = {
     var me = UI.authn.currentUser()
     var creationContext = {folder: subject, div: creationDiv, dom: dom, statusArea: creationDiv, me: me}
     creationContext.refreshTarget = mainTable
-    UI.create.newThingUI(creationContext, UI.panes) // Have to pass panes down  newUI
+    UI.create.newThingUI(creationContext, panes) // Have to pass panes down  newUI
 
     // /////////// Allow new file to be Uploaded
     var droppedFileHandler = function (files) {

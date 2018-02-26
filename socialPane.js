@@ -9,6 +9,7 @@
 */
 
 var UI = require('solid-ui')
+var panes = require('./paneRegistry')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -121,7 +122,7 @@ module.exports = {
 
     // ////////// Body of render():
 
-    var outliner = UI.panes.getOutliner(dom)
+    var outliner = panes.getOutliner(dom)
     var kb = UI.store
     var div = dom.createElement('div')
     div.setAttribute('class', 'socialPane')

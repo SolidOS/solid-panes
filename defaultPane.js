@@ -6,6 +6,7 @@
 */
 
 var UI = require('solid-ui')
+var panes = require('./paneRegistry')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'about.png',
@@ -16,7 +17,7 @@ module.exports = {
 
   render: function (subject, dom) {
     var filter = function (pred, inverse) {
-      if (typeof UI.panes.internal.predicates[pred.uri] !== 'undefined') {
+      if (typeof panes.internal.predicates[pred.uri] !== 'undefined') {
         return false
       }
       if (inverse && (pred.uri ===
@@ -24,7 +25,7 @@ module.exports = {
       return true
     }
 
-    var outliner = UI.panes.getOutliner(dom)
+    var outliner = panes.getOutliner(dom)
     var kb = UI.store
     // var outline = outliner; // @@
     UI.log.info('@defaultPane.render, dom is now ' + dom.location)

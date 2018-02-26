@@ -4,6 +4,7 @@
 ** internal to the user's interaction with the web, and are not normaly displayed
 */
 var UI = require('solid-ui')
+var panes = require('./paneRegistry')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-emblem-system.png',
@@ -22,7 +23,7 @@ module.exports = {
     var types = kb.findTypeURIs(subject)
     function filter (pred, inverse) {
       if (types['http://www.w3.org/2007/ont/link#ProtocolEvent']) return true // display everything for them
-      return !!(typeof UI.panes.internal.predicates[pred.uri] !== 'undefined')
+      return !!(typeof panes.internal.predicates[pred.uri] !== 'undefined')
     }
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'internalPane')
@@ -54,7 +55,7 @@ module.exports = {
           kb.literal(ed), UI.store.fetcher.appNode))
       }
     }
-    var outliner = UI.panes.getOutliner(myDocument)
+    var outliner = panes.getOutliner(myDocument)
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = kb.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)

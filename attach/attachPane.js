@@ -9,6 +9,7 @@
 */
 
 var UI = require('solid-ui')
+var panes = require('../paneRegistry')
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_25830.svg', // noun_25830
@@ -277,7 +278,7 @@ module.exports = {
         if (x.uri) {
           kb.fetcher.load(x.uri)
             .then(() => {
-              var outliner = UI.panes.getOutliner(dom)
+              var outliner = panes.getOutliner(dom)
               var display = outliner.propertyTable(x) //  ,table, pane
               preview.innerHTML = ''
               preview.appendChild(display)
