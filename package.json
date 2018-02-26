@@ -1,7 +1,7 @@
 {
-  "name": "solid-app-set",
+  "name": "solid-panes",
   "version": "1.0.2",
-  "description": "Solid-compatible App set",
+  "description": "Solid-compatible Panes: applets for the mashlib and databrowser",
   "main": "./index.js",
   "scripts": {
     "build-browserified": "npm run build",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/linkeddata/solid-app-set"
+    "url": "https://github.com/solid/solid-panes"
   },
   "keywords": [
     "solid",
@@ -31,10 +31,11 @@
   "author": "Tim Berners-Lee <timbl@mit.edu>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/linkeddata/solid-app-set/issues"
+    "url": "https://github.com/solid/solid-panes/issues"
   },
-  "homepage": "https://github.com/linkeddata/solid-app-set",
+  "homepage": "https://github.com/solid/solid-panes",
   "dependencies": {
+    "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
     "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
