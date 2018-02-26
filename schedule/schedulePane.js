@@ -267,7 +267,7 @@ module.exports = {
     var resultsDoc = $rdf.sym(base + 'results.ttl')
     // var formsURI = base + 'forms.ttl'
     // We can't in fact host stuff from there because of CORS
-    var formsURI = 'https://linkeddata.github.io/solid-app-set/schedule/formsForSchedule.ttl'
+    var formsURI = 'https://solid.github.io/solid-panes/schedule/formsForSchedule.ttl'
 
     var form1 = kb.sym(formsURI + '#form1')
     var form2 = kb.sym(formsURI + '#form2')

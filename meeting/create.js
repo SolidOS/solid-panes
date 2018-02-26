@@ -1,6 +1,6 @@
 // Create a new application instance
 //
-// This is or was part of https://github.com/Linkeddata/solid-app-set/
+// This is or was part of https://github.com/solid/solid-panes/
 //
 var panes = require('../paneRegistry')
 

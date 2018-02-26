@@ -1101,7 +1101,7 @@ module.exports = {
       // //////// End of drag and drop
 
       // Background metadata for this pane we bundle with the JS
-      var individualForm = kb.sym('https://linkeddata.github.io/solid-app-set/contact/individualForm.ttl#form1')
+      var individualForm = kb.sym('https://solid.github.io/solid-panes/contact/individualForm.ttl#form1')
       var individualFormDoc = individualForm.doc()
       if (!kb.holds(undefined, undefined, undefined, individualFormDoc)) { // If not loaded already
         var individualFormText = require('./individualForm.js')
