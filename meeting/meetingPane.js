@@ -910,7 +910,7 @@ module.exports = {
           } else {
             pane = view ? panes.byName(view) : null
             table = containerDiv.appendChild(dom.createElement('table'))
-            UI.outline.GotoSubject(target, true, pane, false, undefined, table)
+            panes.getOutliner(dom).GotoSubject(target, true, pane, false, undefined, table)
           }
         }
       } else if (subject.sameTerm(meeting)) { // self reference? force details form
@@ -920,7 +920,7 @@ module.exports = {
                  !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))) {
       } else {
         table = containerDiv.appendChild(dom.createElement('table'))
-        UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
+        panes.getOutliner(dom).GotoSubject(subject, true, undefined, false, undefined, table)
       }
     }
 

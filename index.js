@@ -30,11 +30,16 @@ panes.UI = require('solid-ui') // Pass on directly to any who needs it
 
 panes.OutlineManager = require('./outline/manager.js')
 panes.getOutliner = function (dom) {
-  if (!dom.outliner) {
-    dom.outliner = panes.OutlineManager(dom)
+  if (!dom.outlineManager) {
+    dom.outlineManager = panes.OutlineManager(dom)
   }
-  return dom.outliner
+  return dom.outlineManager
 }
+if (typeof window !== 'undefined') {
+  var dom = window.document
+  panes.getOutliner(dom)
+}
+
 
 /*  Note that the earliest panes have priority. So the most specific ones are first.
 **

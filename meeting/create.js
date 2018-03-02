@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var pane = panes.byName('meeting')
     pane.mint(newBase)
       .then((newInstance) => {
-        UI.outline.GotoSubject(newInstance, true, undefined, true)
+        panes.getOutliner(dom).GotoSubject(newInstance, true, undefined, true)
         div.removeChild(d)
       })
       .catch((e) => {

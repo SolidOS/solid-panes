@@ -4,6 +4,7 @@
 **
 */
 const UI = require('solid-ui')
+const panes = require('../paneRegistry')
 const ns = UI.ns
 const kb = UI.store
 
@@ -12,7 +13,7 @@ module.exports = {
 
   name: 'tabbed',
 
-  // Does the subject deserve an audio play pane?
+  // Does the subject deserve this pane?
   label: function (subject) {
     var kb = UI.store
     var ns = UI.ns
@@ -34,7 +35,7 @@ module.exports = {
         var pane = null
         containerDiv.innerHTML = ''
         var table = containerDiv.appendChild(dom.createElement('table'))
-        UI.outline.GotoSubject(item, true, pane, false, undefined, table)
+        panes.getOutliner(dom).GotoSubject(item, true, pane, false, undefined, table)
       }
 
       var predicate = kb.the(subject, ns.meeting('predicate'))
