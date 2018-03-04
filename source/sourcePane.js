@@ -10,11 +10,13 @@ module.exports = {
   name: 'source',
 
   label: function (subject) {
-    if ('http://www.w3.org/2007/ont/link#ProtocolEvent' in UI.store.findTypeURIs(subject)) return null
-    var n = UI.store.statementsMatching(
-      undefined, undefined, undefined, subject).length
-    if (n === 0) return null
-    return 'Data (' + n + ') as N3'
+    const kb = UI.store
+    var typeURIs = kb.findTypeURIs(subject)
+    var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
+    for (var t in typeURIs) {
+      if (t.startsWith(prefix)) return 'View Source'
+    }
+    return null
   },
 
   render: function (subject, dom) {
@@ -26,49 +28,64 @@ module.exports = {
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
-    var textArea = div.appendChild(dom.createElement('input'))
+    var table = div.appendChild(dom.createElement('table'))
+    var main = table.appendChild(dom.createElement('tr'))
+    var controls = table.appendChild(dom.createElement('tr'))
+
+    var textArea = main.appendChild(dom.createElement('input'))
     textArea.setAttribute('type', 'textarea')
 
-    var cancelButton = div.appendChild(UI.widgets.cancelButton(dom))
-    var saveButton = div.appendChild(UI.widgets.UI.widgets.continueButton(dom))
+    function editButton (dom) {
+      return UI.widgets.button(dom, UI.icons.iconBase + 'noun_253504.svg', 'Edit')
+    }
 
+    var myEditButton = controls.appendChild(editButton(dom))
+    var cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
+    var saveButton = controls.appendChild(UI.widgets.UI.widgets.continueButton(dom))
+
+    function setUnedited () {
+      textArea.setAttribute('style', editStyle + 'color: #888;') // Grey
+      cancelButton.disabled = true
+      saveButton.disabled = true
+    }
+    function setEditable () {
+      textArea.setAttribute('style', editStyle + 'color: black;')
+      cancelButton.disabled = true
+      saveButton.disabled = true
+    }
     function setEdited (event) {
       textArea.setAttribute('style', editStyle + 'color: green;')
       cancelButton.disabled = readonly
       saveButton.disabled = readonly
     }
-    function setUnedited () {
-      textArea.setAttribute('style', editStyle + 'color: black;')
-      cancelButton.disabled = true
-      saveButton.disabled = true
-    }
-    textArea.addEventListener('keyup', setEdited)
-    cancelButton.addEventListener('click', refresh)
-    saveButton.addEventListener('click', saveBack)
-
     function saveBack (e) {
       fetcher.webOperation('PUT', subject.uri, { data: textArea.value, contentType: contentType })
       .then(function (response) {
-        setUnedited()
+        setEditable()
       })
       .catch(function (err) {
         div.appendChild(UI.utils.errorMessageBlock(err))
       })
     }
 
-    // We have to fetch the original source as rdflib does not cache it
     function refresh (event) {
       fetcher._fetch(subject.uri).then(response => {
         textArea.textContent = response.responseText
         setUnedited()
         contentType = response.headers['content-type']
-        // @@@ check headers to find out whether we have write access -> set readonly
-        // Allow: PUT?
+        let allowed = response.headers['allow']
+        readonly = allowed.indexOf('PUT') < 0 // In future more info re ACL allow?
         textArea.disabled = readonly
       }).catch(err => {
         div.appendChild(UI.utils.errorMessageBlock(err))
       })
     }
+
+    textArea.addEventListener('keyup', setEdited)
+    myEditButton.addEventListener('click', setEditable)
+    cancelButton.addEventListener('click', refresh)
+    saveButton.addEventListener('click', saveBack)
+
     refresh()
     return div
   }
