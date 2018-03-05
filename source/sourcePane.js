@@ -2,7 +2,6 @@
 **
 **  This pane allows the original source of a  resource to be edited by hand
 */
-
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
 
@@ -33,6 +32,7 @@ const thisPane = {
     const fetcher = kb.fetcher
     const editStyle = 'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
     var readonly = true
+    var editing = false
     var contentType // Note it when we read and use it when we save
 
     var div = dom.createElement('div')
@@ -49,30 +49,35 @@ const thisPane = {
       return UI.widgets.button(dom, UI.icons.iconBase + 'noun_253504.svg', 'Edit')
     }
 
-    var myEditButton = controls.appendChild(editButton(dom))
     var cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
     var saveButton = controls.appendChild(UI.widgets.continueButton(dom))
+    var myEditButton = controls.appendChild(editButton(dom))
 
     function setUnedited () {
+      editing = false
+      myEditButton.style.visibility = "visible"
       textArea.style.color = '#888'
-//      textArea.setAttribute('style', editStyle + 'color: #888;') // Grey
-      cancelButton.disabled = true
-      saveButton.disabled = true
-      textArea.disabled = true
+      cancelButton.style.visibility = "collapse"
+      saveButton.style.visibility = "collapse"
+      textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
+      editing = true
       textArea.style.color = 'black'
-      // textArea.setAttribute('style', editStyle + 'color: black;')
-      cancelButton.disabled = false
-      saveButton.disabled = false
-      textArea.disabled = false
+      cancelButton.style.visibility = "visible"
+      saveButton.style.visibility = "visible"
+      myEditButton.style.visibility = "collapse"
+      textArea.removeAttribute('readonly')
     }
     function setEdited (event) {
+      if (!editing) return
       textArea.style.color = 'green'
-      // textArea.setAttribute('style', editStyle + 'color: green;')
-      cancelButton.disabled = readonly
-      saveButton.disabled = readonly
-      textArea.disabled = false
+      cancelButton.style.visibility = "visible"
+      saveButton.style.visibility = "visible"
+      myEditButton.style.visibility = "collapse"
+      // cancelButton.disabled = readonly
+      // saveButton.disabled = readonly
+      textArea.removeAttribute('readonly')
     }
     function saveBack (e) {
       fetcher.webOperation('PUT', subject.uri, { data: textArea.value, contentType: contentType })
@@ -101,7 +106,7 @@ const thisPane = {
         } else {
           readonly = allowed.indexOf('PUT') < 0 // In future more info re ACL allow?
         }
-        textArea.disabled = readonly
+        textArea.readonly = readonly
       }).catch(err => {
         div.appendChild(UI.widgets.errorMessageBlock(err))
       })
