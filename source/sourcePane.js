@@ -41,7 +41,7 @@ module.exports = {
 
     var myEditButton = controls.appendChild(editButton(dom))
     var cancelButton = controls.appendChild(UI.widgets.cancelButton(dom))
-    var saveButton = controls.appendChild(UI.widgets.UI.widgets.continueButton(dom))
+    var saveButton = controls.appendChild(UI.widgets.continueButton(dom))
 
     function setUnedited () {
       textArea.setAttribute('style', editStyle + 'color: #888;') // Grey
