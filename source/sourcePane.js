@@ -1,6 +1,6 @@
 /*      Source editor Pane
 **
-**  This pane allows the original source of a  resource to be edited by hand
+**  This pane allows the original source of a resource to be edited by hand
 */
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
@@ -22,7 +22,8 @@ const thisPane = {
     var typeURIs = kb.findTypeURIs(subject)
     var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
     for (var t in typeURIs) {
-      if (t.startsWith(prefix)) return 'View Source'
+      if (t.startsWith(prefix)) return 'Source'
+      if (t.includes('xml'))return 'XML Source'
     }
     return null
   },
@@ -33,12 +34,14 @@ const thisPane = {
     const editStyle = 'font-family: monospace; font-size: 100%; min-width:60em; margin: 1em 0.2em 1em 0.2em; padding: 1em; border: 0.1em solid #888; border-radius: 0.5em;'
     var readonly = true
     var editing = false
+    var broken = false
     var contentType // Note it when we read and use it when we save
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
     var table = div.appendChild(dom.createElement('table'))
     var main = table.appendChild(dom.createElement('tr'))
+    var statusRow = table.appendChild(dom.createElement('tr'))
     var controls = table.appendChild(dom.createElement('tr'))
     controls.setAttribute('style', 'text-align: right;')
 
@@ -54,6 +57,7 @@ const thisPane = {
     var myEditButton = controls.appendChild(editButton(dom))
 
     function setUnedited () {
+      if (broken) return
       editing = false
       myEditButton.style.visibility = "visible"
       textArea.style.color = '#888'
@@ -62,6 +66,7 @@ const thisPane = {
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
+      if (broken) return
       editing = true
       textArea.style.color = 'black'
       cancelButton.style.visibility = "visible"
@@ -70,27 +75,36 @@ const thisPane = {
       textArea.removeAttribute('readonly')
     }
     function setEdited (event) {
-      if (!editing) return
+      if (broken || !editing) return
       textArea.style.color = 'green'
       cancelButton.style.visibility = "visible"
       saveButton.style.visibility = "visible"
       myEditButton.style.visibility = "collapse"
-      // cancelButton.disabled = readonly
-      // saveButton.disabled = readonly
       textArea.removeAttribute('readonly')
     }
     function saveBack (e) {
       fetcher.webOperation('PUT', subject.uri, { data: textArea.value, contentType: contentType })
       .then(function (response) {
+        if (!happy(response, 'PUT')) return
         setEditable()
       })
       .catch(function (err) {
-        div.appendChild(UI.utils.errorMessageBlock(err))
+        div.appendChild(UI.utils.errorMessageBlock(dom, 'Error saving back: ' + err))
       })
+    }
+
+    function happy (response) {
+      if (!response.ok) {
+        let msg = 'HTTP error! Status: ' + response.statusRow
+        console.log(msg)
+        statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))
+      }
+      return response.ok
     }
 
     function refresh (event) {
       fetcher.webOperation('GET', subject.uri).then(function (response) {
+        if (!happy(response, 'GET')) return
         var desc = response.responseText
         textArea.rows = desc ? desc.split('\n').length + 2 : 2
         textArea.cols = 80
@@ -98,6 +112,12 @@ const thisPane = {
 
         setUnedited()
         contentType = response.headers['content-type']
+        if (!contentType) {
+          readonly = true
+          broken = true
+          statusRow.appendChild(UI.widgets.errorMessageBlock(dom, "Error: No content-type available!"))
+          return
+        }
         console.log('       source content-type ' + contentType)
         let allowed = response.headers['allow']
         if (!allowed) {
@@ -108,7 +128,7 @@ const thisPane = {
         }
         textArea.readonly = readonly
       }).catch(err => {
-        div.appendChild(UI.widgets.errorMessageBlock(err))
+        div.appendChild(UI.widgets.errorMessageBlock(dom, 'Error reading file: ' + err))
       })
     }
 
