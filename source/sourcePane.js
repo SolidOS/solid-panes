@@ -23,7 +23,7 @@ const thisPane = {
     var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
     for (var t in typeURIs) {
       if (t.startsWith(prefix)) return 'Source'
-      if (t.includes('xml'))return 'XML Source'
+      if (t.includes('xml')) return 'XML Source'
     }
     return null
   },
@@ -59,27 +59,27 @@ const thisPane = {
     function setUnedited () {
       if (broken) return
       editing = false
-      myEditButton.style.visibility = "visible"
+      myEditButton.style.visibility = 'visible'
       textArea.style.color = '#888'
-      cancelButton.style.visibility = "collapse"
-      saveButton.style.visibility = "collapse"
+      cancelButton.style.visibility = 'collapse'
+      saveButton.style.visibility = 'collapse'
       textArea.setAttribute('readonly', 'true')
     }
     function setEditable () {
       if (broken) return
       editing = true
       textArea.style.color = 'black'
-      cancelButton.style.visibility = "visible"
-      saveButton.style.visibility = "visible"
-      myEditButton.style.visibility = "collapse"
+      cancelButton.style.visibility = 'visible'
+      saveButton.style.visibility = 'visible'
+      myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
     function setEdited (event) {
       if (broken || !editing) return
       textArea.style.color = 'green'
-      cancelButton.style.visibility = "visible"
-      saveButton.style.visibility = "visible"
-      myEditButton.style.visibility = "collapse"
+      cancelButton.style.visibility = 'visible'
+      saveButton.style.visibility = 'visible'
+      myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
     function saveBack (e) {
@@ -111,17 +111,23 @@ const thisPane = {
         textArea.value = desc
 
         setUnedited()
-        contentType = response.headers['content-type']
+        var contentType, allowed
+        let rrr = kb.any(response.req, kb.sym('http://www.w3.org/2007/ont/link#response'))
+        if (rrr) {
+          contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
+          allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+        }
+        // contentType = response.headers['content-type'] // Not available ?!
         if (!contentType) {
           readonly = true
           broken = true
-          statusRow.appendChild(UI.widgets.errorMessageBlock(dom, "Error: No content-type available!"))
+          statusRow.appendChild(UI.widgets.errorMessageBlock(dom, 'Error: No content-type available!'))
           return
         }
         console.log('       source content-type ' + contentType)
-        let allowed = response.headers['allow']
+        // let allowed = response.headers['allow']
         if (!allowed) {
-          console.log("@@@@@@@@@@ No Allow: header from this server")
+          console.log('@@@@@@@@@@ No Allow: header from this server')
           readonly = false // better allow just in case
         } else {
           readonly = allowed.indexOf('PUT') < 0 // In future more info re ACL allow?
