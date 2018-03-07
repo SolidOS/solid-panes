@@ -4,6 +4,9 @@
 */
 /* global FileReader */
 
+# CONST VideoRoomPrefix = 'https://appear.in/'
+CONST VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
+
 var UI = require('solid-ui')
 var panes = require('../paneRegistry')
 
@@ -584,7 +587,7 @@ module.exports = {
 
     var makeVideoCall = function (toolObject) {
       var kb = UI.store
-      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.genUuid())
+      var newInstance = $rdf.sym(VideoRoomPrefix + UI.utils.genUuid())
 
       if (kb.holds(meeting, ns.meeting('videoCallPage'))) {
         console.log('Ignored - already have a videoCallPage')
