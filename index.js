@@ -83,6 +83,9 @@ register(require('./slideshow/slideshowPane.js'))
 register(require('./socialPane.js'))
 
 register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
+
+register(require('./source/sourcePane.js')) // edit source
+
 register(require('./dataContentPane.js')) // Prefered for a data file
 register(require('./n3Pane.js'))
 register(require('./RDFXMLPane.js'))
