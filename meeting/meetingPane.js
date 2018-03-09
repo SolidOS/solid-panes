@@ -4,7 +4,7 @@
 */
 /* global FileReader */
 
-# CONST VideoRoomPrefix = 'https://appear.in/'
+// CONST VideoRoomPrefix = 'https://appear.in/'
 CONST VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
 
 var UI = require('solid-ui')
