@@ -4,8 +4,8 @@
 */
 /* global FileReader */
 
-// CONST VideoRoomPrefix = 'https://appear.in/'
-CONST VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
+// const VideoRoomPrefix = 'https://appear.in/'
+const VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
 
 var UI = require('solid-ui')
 var panes = require('../paneRegistry')
