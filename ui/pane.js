@@ -84,9 +84,10 @@ module.exports = {
         // For each creation form, allow one to create a new object with it, and also to edit the form.
         var displayFormsForRelation = function displayFormsForRelation (pred, allowCreation) {
           var sts = kb.statementsMatching(subject, pred)
+          const outliner = pane.getOutliner()
           if (sts.length) {
             for (var i = 0; i < sts.length; i++) {
-              UI.outline.appendPropertyTRs(box, [ sts[i] ])
+              outliner.appendPropertyTRs(box, [ sts[i] ])
               var form = sts[i].object
               var cell = dom.createElement('td')
               box.lastChild.appendChild(cell)
@@ -94,7 +95,7 @@ module.exports = {
                 cell.appendChild(UI.widgets.newButton(
                   dom, kb, null, null, subject, form, store, function (ok, body) {
                     if (ok) {
-                      // UI.outline.GotoSubject(newThing@@, true, undefined, true, undefined);
+                      // dom.outlineManager.GotoSubject(newThing@@, true, undefined, true, undefined);
                       // rerender(box);   // Deleted forms at the moment
                     } else complain('Sorry, failed to save your change:\n' + body)
                   }))

@@ -462,6 +462,7 @@ module.exports = function (doc) {
 
     if (!table) { // Create a new property table
       table = dom.createElement('table')
+      table.setAttribute('style', 'width: 100%;')
       var tr1 = expandedHeaderTR(subject, pane, options)
       table.appendChild(tr1)
 
@@ -1776,6 +1777,7 @@ module.exports = function (doc) {
     } else if (obj.termType === 'Collection') {
         // obj.elements is an array of the elements in the collection
       rep = dom.createElement('table')
+      table.setAttribute('style', 'width: 100%;')
       rep.setAttribute('about', obj.toNT())
         /* Not sure which looks best -- with or without. I think without
 

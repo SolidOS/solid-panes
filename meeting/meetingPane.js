@@ -4,6 +4,9 @@
 */
 /* global FileReader */
 
+// const VideoRoomPrefix = 'https://appear.in/'
+const VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
+
 var UI = require('solid-ui')
 var panes = require('../paneRegistry')
 
@@ -584,7 +587,7 @@ module.exports = {
 
     var makeVideoCall = function (toolObject) {
       var kb = UI.store
-      var newInstance = $rdf.sym('https://appear.in/' + UI.utils.genUuid())
+      var newInstance = $rdf.sym(VideoRoomPrefix + UI.utils.genUuid())
 
       if (kb.holds(meeting, ns.meeting('videoCallPage'))) {
         console.log('Ignored - already have a videoCallPage')
@@ -664,7 +667,7 @@ module.exports = {
       {icon: 'noun_66617.svg', maker: makeMeeting, hint: 'Make a sub meeting', disabled: false}
     ] // 'noun_66617.svg'
 
-    var settingsForm = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
+    var settingsForm = $rdf.sym('https://solid.github.io/solid-panes/meeting/meetingDetailsForm.ttl#settings')
     $rdf.parse(meetingDetailsFormText, kb, settingsForm.doc().uri, 'text/turtle') // Load form directly
 
     var iconStyle = 'padding: 1em; width: 3em; height: 3em;'
@@ -792,7 +795,7 @@ module.exports = {
       containerDiv.style += 'border-color: #eed;'
       containerDiv.appendChild(dom.createElement('h3')).textContent = 'Adjust this tab'
       if (kb.holds(subject, ns.rdf('type'), ns.meeting('Tool'))) {
-        var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#settings')
+        var form = $rdf.sym('https://solid.github.io/solid-panes/meeting/meetingDetailsForm.ttl#settings')
         UI.widgets.appendForm(document, containerDiv, {}, subject, form, meeting.doc(), complainIfBad)
         var delButton = UI.widgets.deleteButtonWithCheck(dom, containerDiv, 'tab', function () {
           var toolList = kb.the(meeting, ns.meeting('toolList'))
@@ -860,7 +863,7 @@ module.exports = {
 
       var renderDetails = function () {
         containerDiv.appendChild(dom.createElement('h3')).textContent = 'Details of meeting'
-        var form = $rdf.sym('https://linkeddata.github.io/solid-app-set/meeting/meetingDetailsForm.ttl#main')
+        var form = $rdf.sym('https://solid.github.io/solid-panes/meeting/meetingDetailsForm.ttl#main')
         UI.widgets.appendForm(document, containerDiv, {}, meeting, form, meeting.doc(), complainIfBad)
         containerDiv.appendChild(tipDiv(
           'Drag URL-bar icons of web pages into the tab bar on the left to add new meeting materials.'))
@@ -886,8 +889,8 @@ module.exports = {
 
         // "Fork me on Github" button
         var forka = detailsBottom.appendChild(dom.createElement('a'))
-        forka.setAttribute('href', 'https://github.com/linkeddata/solid-app-set') // @@ Move when code moves
-        forka.setAttribute('target', '_blank') // @@ Move when code moves
+        forka.setAttribute('href', 'https://github.com/solid/solid-panes') // @@ Move when code moves
+        forka.setAttribute('target', '_blank')
         var fork = forka.appendChild(dom.createElement('img'))
         fork.setAttribute('src', UI.icons.iconBase + 'noun_368567.svg')
         fork.setAttribute('title', 'Fork me on github')
@@ -910,7 +913,7 @@ module.exports = {
           } else {
             pane = view ? panes.byName(view) : null
             table = containerDiv.appendChild(dom.createElement('table'))
-            UI.outline.GotoSubject(target, true, pane, false, undefined, table)
+            panes.getOutliner(dom).GotoSubject(target, true, pane, false, undefined, table)
           }
         }
       } else if (subject.sameTerm(meeting)) { // self reference? force details form
@@ -920,7 +923,7 @@ module.exports = {
                  !kb.holds(subject, UI.ns.rdf('type'), UI.ns.meeting('PaneView'))) {
       } else {
         table = containerDiv.appendChild(dom.createElement('table'))
-        UI.outline.GotoSubject(subject, true, undefined, false, undefined, table)
+        panes.getOutliner(dom).GotoSubject(subject, true, undefined, false, undefined, table)
       }
     }
 

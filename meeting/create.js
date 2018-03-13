@@ -1,6 +1,6 @@
 // Create a new application instance
 //
-// This is or was part of https://github.com/Linkeddata/solid-app-set/
+// This is or was part of https://github.com/solid/solid-panes/
 //
 var panes = require('../paneRegistry')
 
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var pane = panes.byName('meeting')
     pane.mint(newBase)
       .then((newInstance) => {
-        UI.outline.GotoSubject(newInstance, true, undefined, true)
+        panes.getOutliner(dom).GotoSubject(newInstance, true, undefined, true)
         div.removeChild(d)
       })
       .catch((e) => {

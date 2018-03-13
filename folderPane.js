@@ -88,7 +88,7 @@ module.exports = {
       packageDiv.style.cssText = 'border-top: 0.2em solid #ccc;' // Separate folder views above from package views below
       kb.fetcher.load(indexThing.doc()).then(function () {
         mainTable = packageDiv.appendChild(dom.createElement('table'))
-        UI.outline.GotoSubject(indexThing, true, undefined, false, undefined, mainTable)
+        panes.getOutliner(dom).GotoSubject(indexThing, true, undefined, false, undefined, mainTable)
       })
 
       return div
