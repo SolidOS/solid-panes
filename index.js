@@ -54,6 +54,8 @@ register(require('./contact/contactPane.js'))
 register(require('./pad/padPane.js'))
 // register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
 
+register(require('./profile/profilePane.js')) // edit your public profile
+
 register(require('./transaction/pane.js'))
 register(require('./transaction/period.js'))
 register(require('./chat/chatPane.js'))
