@@ -13,7 +13,7 @@ if (nodeMode) {
 }
 
 const thisPane = {
-  icon: UI.icons.iconBase + 'noun_109873_51A7F9.svg', // noun_109873_51A7F9.svg
+  icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
 
   name: 'source',
 
@@ -35,7 +35,7 @@ const thisPane = {
     var readonly = true
     var editing = false
     var broken = false
-    var contentType // Note it when we read and use it when we save
+    var contentType, eTag // Note it when we read and use it when we save
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
@@ -83,7 +83,9 @@ const thisPane = {
       textArea.removeAttribute('readonly')
     }
     function saveBack (e) {
-      fetcher.webOperation('PUT', subject.uri, { data: textArea.value, contentType: contentType })
+      var options =  { data: textArea.value, contentType: contentType }
+      if (eTag) options.headers = {'if-match': eTag} // avoid overwriting changed files -> status 412
+      fetcher.webOperation('PUT', subject.uri, options)
       .then(function (response) {
         if (!happy(response, 'PUT')) return
         setEditable()
@@ -97,6 +99,7 @@ const thisPane = {
       if (!response.ok) {
         let msg = 'HTTP error! Status: ' + response.statusRow
         console.log(msg)
+        if (response.status === 412) msg = 'Error: File changed by someone else'
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))
       }
       return response.ok
@@ -116,6 +119,8 @@ const thisPane = {
         if (rrr) {
           contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
           allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+          eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
+          if (!eTag) console.log('sourcePane: No eTag on GET')
         }
         // contentType = response.headers['content-type'] // Not available ?!
         if (!contentType) {
