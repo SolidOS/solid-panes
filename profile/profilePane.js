@@ -21,7 +21,7 @@ module.exports = {
     var types = kb.findTypeURIs(subject)
     if (types[UI.ns.foaf('Person').uri] ||
     types[UI.ns.vcard('Individual').uri]) {
-      return 'Friends'
+      return 'Your Profile'
     }
     return null
   },
@@ -63,6 +63,10 @@ module.exports = {
      h3.textContent = 'Your contact information'
 
      main.appendChild(paneDiv(dom, subject, 'contact'))
+
+     h3 = main.appendChild(dom.createElement('h3'))
+     h3.textContent = 'People you know'
+
    }, err => {
      statusArea....UI.utils.errorMessageBlock(err)
    })

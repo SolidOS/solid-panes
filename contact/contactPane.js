@@ -1007,15 +1007,14 @@ module.exports = {
           filename += '_.' + extension
           console.log('MIME TYPE MISMATCH -- adding extension: ' + filename)
         }
-        let prefix, predicate, isImage
-        if (contentType.startsWith('image')) {
+        let prefix, predicate
+        let isImage = contentType.startsWith('image')
+        if (isImage) {
           prefix = 'image_'
           predicate = ns.vcard('hasPhoto')
-          isImage = true
         } else {
           prefix = 'attachment_'
           predicate = ns.wf('attachment')
-          isImage = false
         }
 
         var n, pic
@@ -1138,8 +1137,8 @@ module.exports = {
 
           mugshotDiv = div.appendChild(dom.createElement('div'))
 
-          function mugshot (image) {
-            let img = div.appendChild(dom.createElement('img'))
+          function elementForImage (image) {
+            let img = dom.createElement('img')
             img.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
             UI.widgets.makeDropTarget(img, handleURIsDroppedOnMugshot, droppedFileHandler)
             if (image) img.setAttribute('src', image.uri)
@@ -1147,13 +1146,13 @@ module.exports = {
           }
 
           function syncMugshots () {
-            mugshotDiv.innerHTML = '' // @@ don't clear, later: sync
             let images = kb.each(subject, ns.vcard('hasPhoto'))  // Priviledge vcard ones
-            images.sort()
+            images.sort() // arbitrary consistency
             images = images.slice(0, 5) // max number for the space
-            images.forEach(mugshot)
             if (images.length === 0) {
-              UI.widgets.setImage(mugshot(), subject) // Fallback icon or get from web
+              UI.widgets.setImage(elementForImage(), subject) // Fallback icon or get from web
+            } else {
+              syncTableToArray(mugshotDiv, images. elementForImage)
             }
           }
 
