@@ -9,7 +9,7 @@
 */
 
 const UI = require('solid-ui')
-const panes = require('./paneRegistry')
+const panes = require('../paneRegistry')
 const kb = UI.store
 
 module.exports = {
@@ -36,7 +36,7 @@ module.exports = {
 
     var div = dom.createElement('div')
     var table = div.appendChild(dom.createElement('h2'))
-    var top = table.appendChild(dom.createElement('tr'))
+    // var top = table.appendChild(dom.createElement('tr'))
     var main = table.appendChild(dom.createElement('tr'))
     var bottom = table.appendChild(dom.createElement('tr'))
     var statusArea = bottom.appendChild(dom.createElement('div'))
@@ -52,6 +52,10 @@ module.exports = {
       h2.textContent = 'Edit your public profile'
 
       var editable = UI.store.updater.editable(subject.uri, kb)
+
+      if (!editable) {
+        statusArea.appendChild(UI.utils.errorMessageBlock('Not editable!'))
+      }
 
       var p = main.appendChild(dom.createElement('p')).setAttribute('style', 'padding: 1em;')
       p.textContent = `Everything you put here will be public.
