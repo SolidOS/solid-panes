@@ -27,49 +27,46 @@ module.exports = {
   },
 
   render: function (subject, dom) {
+    function paneDiv (dom, subject, paneName) {
+      var p = panes.byName(paneName)
+      var d = p.render(subject, dom)
+      d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
+      return d
+    }
 
-   function paneDiv (dom, subject, paneName) {
-     var p = panes.byName(paneName)
-     var d = p.render(subject, dom)
-     d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
-     return d
-   }
+    var div = dom.createElement('div')
+    var table = div.appendChild(dom.createElement('h2'))
+    var top = table.appendChild(dom.createElement('tr'))
+    var main = table.appendChild(dom.createElement('tr'))
+    var bottom = table.appendChild(dom.createElement('tr'))
+    var statusArea = bottom.appendChild(dom.createElement('div'))
 
-   var div = dom.createElement('div')
-   var table = div.appendChild(dom.createElement('h2'))
-   var top = table.appendChild(dom.createElement('tr'))
-   var main = table.appendChild(dom.createElement('tr'))
-   var bottom = table.appendChild(dom.createElement('tr'))
-   var statusArea = bottom.appendChild(dom.createElement('div'))
+    var context = {dom: dom, div: main, statusArea: statusArea, me: null}
+    UI.authn.logInLoadProfile(context).then(context => {
+      var h2 = main.appendChild(dom.createElement('h2'))
 
-   var context = {dom: dom, div: main, statusArea: statusArea, me: null}
-   UI.authn.logInLoadProfile(context).then(context => {
+      if (!context.me.sameTerm(subject)) { // logged in as this person
+        h2.textContent = 'This is not your public profile - watch this space' // later  - just display
+        return div
+      }
+      h2.textContent = 'Edit your public profile'
 
-     var h2 = main.appendChild(dom.createElement('h2'))
+      var editable = UI.store.updater.editable(subject.uri, kb)
 
-     if (!context.me.sameTerm(subject)) { // logged in as this person
-       h2.textContent = 'This is not your public profile - watch this space' // later  - just display
-       return div
-     }
-     h2.textContent = 'Edit your public profile'
-
-     var editable = UI.store.updater.editable(subject.uri, kb)
-
-     var p = main.appendChild(dom.createElement('p')).setAttribute('style', 'padding: 1em;')
-     p.textContent = `Everything you put here will be public.
+      var p = main.appendChild(dom.createElement('p')).setAttribute('style', 'padding: 1em;')
+      p.textContent = `Everything you put here will be public.
      There will be other places to record private things.`
 
-     var h3 = main.appendChild(dom.createElement('h3'))
-     h3.textContent = 'Your contact information'
+      var h3 = main.appendChild(dom.createElement('h3'))
+      h3.textContent = 'Your contact information'
 
-     main.appendChild(paneDiv(dom, subject, 'contact'))
+      main.appendChild(paneDiv(dom, subject, 'contact'))
 
-     h3 = main.appendChild(dom.createElement('h3'))
-     h3.textContent = 'People you know'
-
-   }, err => {
-     statusArea....UI.utils.errorMessageBlock(err)
-   })
+      h3 = main.appendChild(dom.createElement('h3'))
+      h3.textContent = 'People you know'
+    }, err => {
+      statusArea.appendChild(UI.utils.errorMessageBlock(err))
+    })
 
     return div
   } // render()
