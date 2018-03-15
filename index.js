@@ -40,7 +40,6 @@ if (typeof window !== 'undefined') {
   panes.getOutliner(dom)
 }
 
-
 /*  Note that the earliest panes have priority. So the most specific ones are first.
 **
 */
@@ -53,7 +52,6 @@ register(require('./contact/contactPane.js'))
 
 register(require('./pad/padPane.js'))
 // register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
-
 
 register(require('./transaction/pane.js'))
 register(require('./transaction/period.js'))

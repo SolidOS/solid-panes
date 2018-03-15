@@ -19,7 +19,7 @@ if (nodeMode) {
 }
 
 const kb = UI.store
-consi ns = UI.ns
+// const ns = UI.ns
 
 const thisPane = { // 'noun_638141.svg' not editing
   icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
@@ -51,15 +51,16 @@ const thisPane = { // 'noun_638141.svg' not editing
     var statusArea = bottom.appendChild(dom.createElement('div'))
 
     function comment (str) {
-        var p = main.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'padding: 1em;')
-        p.textContent = str
+      var p = main.appendChild(dom.createElement('p'))
+      p.setAttribute('style', 'padding: 1em;')
+      p.textContent = str
     }
 
     var context = {dom: dom, div: main, statusArea: statusArea, me: null}
     UI.authn.logInLoadProfile(context).then(context => {
-      var h = main.appendChild(dom.createElement('h3'))
+      var me = context.me
 
+      var h = main.appendChild(dom.createElement('h3'))
       if (!context.me.sameTerm(subject)) { // logged in as this person
         main.appendChild(comment('This is not you. Editing your profile anyway'))
         subject = me

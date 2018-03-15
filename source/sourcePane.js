@@ -83,7 +83,7 @@ const thisPane = {
       textArea.removeAttribute('readonly')
     }
     function saveBack (e) {
-      var options =  { data: textArea.value, contentType: contentType }
+      var options = { data: textArea.value, contentType: contentType }
       if (eTag) options.headers = {'if-match': eTag} // avoid overwriting changed files -> status 412
       fetcher.webOperation('PUT', subject.uri, options)
       .then(function (response) {

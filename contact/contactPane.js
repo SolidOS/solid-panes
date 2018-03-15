@@ -1152,7 +1152,7 @@ module.exports = {
             if (images.length === 0) {
               UI.widgets.setImage(elementForImage(), subject) // Fallback icon or get from web
             } else {
-              UI.utils.syncTableToArray(mugshotDiv, images. elementForImage)
+              UI.utils.syncTableToArray(mugshotDiv, images.elementForImage)
             }
           }
 

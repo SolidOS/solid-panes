@@ -1777,7 +1777,7 @@ module.exports = function (doc) {
     } else if (obj.termType === 'Collection') {
         // obj.elements is an array of the elements in the collection
       rep = dom.createElement('table')
-      table.setAttribute('style', 'width: 100%;')
+      rep.setAttribute('style', 'width: 100%;')
       rep.setAttribute('about', obj.toNT())
         /* Not sure which looks best -- with or without. I think without
 
