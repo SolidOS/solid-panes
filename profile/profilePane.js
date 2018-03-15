@@ -57,7 +57,7 @@ const thisPane = { // 'noun_638141.svg' not editing
       return p
     }
 
-    functiion heading (str) {
+    function heading (str) {
       var h = main.appendChild(dom.createElement('h3'))
       h.setAttribute('style', 'color: #882288;')
       h.textContent = str
@@ -94,12 +94,11 @@ const thisPane = { // 'noun_638141.svg' not editing
       comment(`Drag people onto the target bellow to add people.`)
 
       UI.widgets.attachmentList(dom, subject, main, {
-          doc: profile,
-          modify: !!editable,
-          predicate: ns.foaf('knows'),
-          noun: 'friend'
+        doc: profile,
+        modify: !!editable,
+        predicate: ns.foaf('knows'),
+        noun: 'friend'
       })
-
     }, err => {
       statusArea.appendChild(UI.utils.errorMessageBlock(err))
     })
