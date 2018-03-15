@@ -54,7 +54,6 @@ register(require('./contact/contactPane.js'))
 register(require('./pad/padPane.js'))
 // register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
 
-register(require('./profile/profilePane.js')) // edit your public profile
 
 register(require('./transaction/pane.js'))
 register(require('./transaction/period.js'))
@@ -129,6 +128,8 @@ register(require('./sharing/sharingPane.js'))
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internalPane.js'))
 // The home pame is a 2016 experiment. Always there.
+
+register(require('./profile/profilePane.js')) // edit your public profile
 register(require('./home/homePane.js'))
 
 // ENDS

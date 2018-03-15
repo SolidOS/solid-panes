@@ -12,8 +12,8 @@ const UI = require('solid-ui')
 const panes = require('../paneRegistry')
 const kb = UI.store
 
-module.exports = {
-  icon: UI.icons.iconBase + 'noun_638141.svg', // see also noun_492246.svg for editing
+module.exports = { // 'noun_638141.svg' not editing
+  icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
 
   name: 'profile',
 
@@ -23,7 +23,7 @@ module.exports = {
     types[UI.ns.vcard('Individual').uri]) {
       return 'Your Profile'
     }
-    return null
+    return 'Edit your profile' // At the monet, just allow on any object. Like home pane
   },
 
   render: function (subject, dom) {
@@ -41,20 +41,26 @@ module.exports = {
     var bottom = table.appendChild(dom.createElement('tr'))
     var statusArea = bottom.appendChild(dom.createElement('div'))
 
+    function comment (straw) {
+        var p = main.appendChild(dom.createElement('p'))
+        p.setAttribute('style', 'padding: 1em;')
+        p.textContent = str
+    }
+
     var context = {dom: dom, div: main, statusArea: statusArea, me: null}
     UI.authn.logInLoadProfile(context).then(context => {
-      var h2 = main.appendChild(dom.createElement('h2'))
+      var h = main.appendChild(dom.createElement('h3'))
 
       if (!context.me.sameTerm(subject)) { // logged in as this person
-        h2.textContent = 'This is not your public profile - watch this space' // later  - just display
-        return div
+        main.appendChild(comment('This is not you. Editing your profile anyway'))
+        subject = me
       }
-      h2.textContent = 'Edit your public profile'
+      h.textContent = 'Edit your public profile'
 
-      var editable = UI.store.updater.editable(subject.uri, kb)
+      var editable = UI.store.updater.editable(subject.doc().uri, kb)
 
       if (!editable) {
-        statusArea.appendChild(UI.utils.errorMessageBlock('Not editable!'))
+        statusArea.appendChild(UI.utils.errorMessageBlock(subject.doc().uri + ' Not editable!? '))
       }
 
       var p = main.appendChild(dom.createElement('p')).setAttribute('style', 'padding: 1em;')
