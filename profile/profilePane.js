@@ -49,6 +49,7 @@ const thisPane = { // 'noun_638141.svg' not editing
     var main = table.appendChild(dom.createElement('tr'))
     var bottom = table.appendChild(dom.createElement('tr'))
     var statusArea = bottom.appendChild(dom.createElement('div'))
+    statusArea.setAttribute('style', 'padding: 0.7em;')
 
     function comment (str) {
       var p = main.appendChild(dom.createElement('p'))
