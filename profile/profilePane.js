@@ -76,7 +76,7 @@ const thisPane = { // 'noun_638141.svg' not editing
       var editable = UI.store.updater.editable(profile.uri, kb)
 
       if (!editable) {
-        statusArea.appendChild(UI.utils.errorMessageBlock(subject.doc().uri + ' Not editable!? '))
+        statusArea.appendChild(UI.widgets.errorMessageBlock(subject.doc().uri + ' Not editable!? '))
       }
 
       comment(`Everything you put here will be public.
@@ -101,7 +101,7 @@ const thisPane = { // 'noun_638141.svg' not editing
         noun: 'friend'
       })
     }, err => {
-      statusArea.appendChild(UI.utils.errorMessageBlock(err))
+      statusArea.appendChild(UI.widgets.errorMessageBlock(err))
     })
 
     return div
