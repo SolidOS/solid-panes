@@ -1145,12 +1145,16 @@ module.exports = {
             return img
           }
 
+          var placeholder = elementForImage()
+          UI.widgets.setImage(placeholder, subject) // Fallback icon or get from web
+
           function syncMugshots () {
             let images = kb.each(subject, ns.vcard('hasPhoto'))  // Priviledge vcard ones
             images.sort() // arbitrary consistency
             images = images.slice(0, 5) // max number for the space
             if (images.length === 0) {
-              UI.widgets.setImage(elementForImage(), subject) // Fallback icon or get from web
+              mugshotDiv.innerHTML = '' // strictly, don't remove it if already there
+              mugshotDiv.appendChild(placeholder)
             } else {
               UI.utils.syncTableToArray(mugshotDiv, images, elementForImage)
             }
