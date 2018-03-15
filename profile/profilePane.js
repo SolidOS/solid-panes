@@ -21,6 +21,8 @@ if (nodeMode) {
 const kb = UI.store
 const ns = UI.ns
 
+const thisColor = '#090'
+
 const thisPane = { // 'noun_638141.svg' not editing
   icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
 
@@ -39,11 +41,12 @@ const thisPane = { // 'noun_638141.svg' not editing
     function paneDiv (dom, subject, paneName) {
       var p = panes.byName(paneName)
       var d = p.render(subject, dom)
-      d.setAttribute('style', 'border: 0.1em solid #444; border-radius: 0.5em')
+      d.setAttribute('style', 'border: 0.3em solid #444; border-radius: 0.5em')
       return d
     }
 
     var div = dom.createElement('div')
+    div.setAttribute('style', 'border: 0.3em solid ' + thisColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
     var table = div.appendChild(dom.createElement('table'))
     // var top = table.appendChild(dom.createElement('tr'))
     var main = table.appendChild(dom.createElement('tr'))
@@ -60,7 +63,7 @@ const thisPane = { // 'noun_638141.svg' not editing
 
     function heading (str) {
       var h = main.appendChild(dom.createElement('h3'))
-      h.setAttribute('style', 'color: #882288;')
+      h.setAttribute('style', 'color:' + thisColor + ';')
       h.textContent = str
       return h
     }
@@ -100,10 +103,11 @@ const thisPane = { // 'noun_638141.svg' not editing
         predicate: ns.foaf('knows'),
         noun: 'friend'
       })
+      heading('Thank you for filling your profile.')
+
     }, err => {
       statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
     })
-
     return div
   } // render()
 

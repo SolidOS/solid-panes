@@ -14,8 +14,8 @@ to change its state according to an ontology, comment on it, etc.
 */
 /* global alert, confirm, FileReader */
 
-var UI = require('solid-ui')
-var panes = require('../paneRegistry')
+const UI = require('solid-ui')
+const panes = require('../paneRegistry')
 
 var mime = require('mime-types')
 var toolsPane0 = require('./toolsPane')
@@ -26,6 +26,10 @@ var toolsPane = toolsPane0.toolsPane
 //   console.log = function (msg) { UI.log.info(msg) }
 // }
 
+const $rdf = UI.rdf
+const ns = UI.ns
+const kb = UI.store
+
 module.exports = {
   icon: UI.icons.iconBase + 'noun_99101.svg', // changed from embedded icon 2016-05-01
 
@@ -33,11 +37,11 @@ module.exports = {
 
   // Does the subject deserve an contact pane?
   label: function (subject) {
-    var kb = UI.store
-    var ns = UI.ns
     var t = kb.findTypeURIs(subject)
     if (t[ns.vcard('Individual').uri]) return 'Contact'
     if (t[ns.vcard('Organization').uri]) return 'contact'
+    if (t[ns.foaf('Person').uri]) return 'Person'
+    if (t[ns.schema('Person').uri]) return 'Person'
     if (t[ns.vcard('Group').uri]) return 'Group'
     if (t[ns.vcard('AddressBook').uri]) return 'Address book'
     return null // No under other circumstances
@@ -164,10 +168,6 @@ module.exports = {
   //  Render the pane
   render: function (subject, dom, paneOptions) {
     paneOptions = paneOptions || {}
-    var kb = UI.store
-    var ns = UI.ns
-    // var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    // var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
     var div = dom.createElement('div')
     var cardDoc = subject.doc()
 
@@ -1281,7 +1281,7 @@ module.exports = {
     //              Render a single contact Individual
 
     if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri] ||
-      t[ns.foaf('Person').uri]) {
+      t[ns.foaf('Person').uri] || t[ns.schema('Person').uri]) {
       renderIndividual(subject)
 
       //          Render a Group instance
@@ -1312,9 +1312,14 @@ module.exports = {
     }
 
     me = UI.authn.currentUser()
-
     if (!me) {
       console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
+      UI.logInLoadProfile(context).then( context => {
+        console.log('Logged in as ' + context.me)
+        me = context.me
+      }, err => {
+        div.appendChild(UI.utils.errorMessageBlock(err))
+      })
     } else {
       // console.log("(Your webid is "+ me +")")
     }
