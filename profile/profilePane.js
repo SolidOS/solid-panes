@@ -8,13 +8,14 @@
 **  -- todo: use common code to get username and load profile and set 'me'
 */
 
-// @@@@@ fobartestline
+// @@@@@ fobartestline 2
 
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
 
 if (nodeMode) {
   UI = require('solid-ui')
+  panes = require('../paneRegistry')
 } else { // Add to existing mashlib
   panes = window.panes
   UI = panes.UI
