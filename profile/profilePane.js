@@ -8,11 +8,20 @@
 **  -- todo: use common code to get username and load profile and set 'me'
 */
 
-const UI = require('solid-ui')
-const panes = require('../paneRegistry')
-const kb = UI.store
+const nodeMode = (typeof module !== 'undefined')
+var panes, UI
 
-module.exports = { // 'noun_638141.svg' not editing
+if (nodeMode) {
+  UI = require('solid-ui')
+} else { // Add to existing mashlib
+  panes = window.panes
+  UI = panes.UI
+}
+
+const kb = UI.store
+consi ns = UI.ns
+
+const thisPane = { // 'noun_638141.svg' not editing
   icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
 
   name: 'profile',
@@ -41,7 +50,7 @@ module.exports = { // 'noun_638141.svg' not editing
     var bottom = table.appendChild(dom.createElement('tr'))
     var statusArea = bottom.appendChild(dom.createElement('div'))
 
-    function comment (straw) {
+    function comment (str) {
         var p = main.appendChild(dom.createElement('p'))
         p.setAttribute('style', 'padding: 1em;')
         p.textContent = str
@@ -82,4 +91,11 @@ module.exports = { // 'noun_638141.svg' not editing
   } // render()
 
 } //
-// ends
+
+if (nodeMode) {
+  module.exports = thisPane
+} else {
+  console.log('*** patching in live pane: ' + thisPane.name)
+  panes.register(thisPane)
+}
+// ENDS
