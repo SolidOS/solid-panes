@@ -44,7 +44,7 @@ const thisPane = { // 'noun_638141.svg' not editing
     }
 
     var div = dom.createElement('div')
-    var table = div.appendChild(dom.createElement('h2'))
+    var table = div.appendChild(dom.createElement('table'))
     // var top = table.appendChild(dom.createElement('tr'))
     var main = table.appendChild(dom.createElement('tr'))
     var bottom = table.appendChild(dom.createElement('tr'))
@@ -54,17 +54,15 @@ const thisPane = { // 'noun_638141.svg' not editing
       var p = main.appendChild(dom.createElement('p'))
       p.setAttribute('style', 'padding: 1em;')
       p.textContent = str
+      return p
     }
 
     var context = {dom: dom, div: main, statusArea: statusArea, me: null}
     UI.authn.logInLoadProfile(context).then(context => {
       var me = context.me
+      subject = me
 
       var h = main.appendChild(dom.createElement('h3'))
-      if (!context.me.sameTerm(subject)) { // logged in as this person
-        main.appendChild(comment('This is not you. Editing your profile anyway'))
-        subject = me
-      }
       h.textContent = 'Edit your public profile'
 
       var editable = UI.store.updater.editable(subject.doc().uri, kb)
@@ -73,9 +71,8 @@ const thisPane = { // 'noun_638141.svg' not editing
         statusArea.appendChild(UI.utils.errorMessageBlock(subject.doc().uri + ' Not editable!? '))
       }
 
-      var p = main.appendChild(dom.createElement('p')).setAttribute('style', 'padding: 1em;')
-      p.textContent = `Everything you put here will be public.
-     There will be other places to record private things.`
+      comment(`Everything you put here will be public.
+     There will be other places to record private things.`)
 
       var h3 = main.appendChild(dom.createElement('h3'))
       h3.textContent = 'Your contact information'
