@@ -1,7 +1,9 @@
 /*      Source editor Pane
 **
 **  This pane allows the original source of a resource to be edited by hand
+**
 */
+/* global alert */
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
 
@@ -11,6 +13,8 @@ if (nodeMode) {
   panes = window.panes
   UI = panes.UI
 }
+
+const mime = require('mime-types')
 
 const thisPane = {
   icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
@@ -26,6 +30,29 @@ const thisPane = {
       if (t.includes('xml')) return 'XML Source'
     }
     return null
+  },
+
+  // Create a new text file in a Solid system,
+  mintNew: function (newPaneOptions) {
+    var kb = UI.store
+    var newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase)
+    var contentType = mime.lookup(newInstance.uri)
+    if (contentType.startsWith('text')) {
+      let msg = 'A new text file has to have an file extension like .txt .ttl etc.'
+      alert(msg)
+      throw new Error(msg)
+    }
+
+    return new Promise(function (resolve, reject) {
+      kb.fetcher.webOperation('PUT', newInstance.uri, {data: '\n', contentType: contentType})
+        .then(function (response) {
+          console.log('New text file created: ' + newInstance.uri)
+          resolve(newPaneOptions)
+        }, err => {
+          alert('Cant make new file: ' + err)
+          reject(err)
+        })
+    })
   },
 
   render: function (subject, dom) {

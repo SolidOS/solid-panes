@@ -1,14 +1,11 @@
-/*   Profile Pane
+/*   Profile Edting Pane
 **
-**  This outline pane provides social network functions
-**  Using for example the FOAF ontology.
-**  Goal:  A *distributed* version of facebook, advogato, etc etc
-**  - Similarly easy user interface, but data storage distributed
-**  - Read and write both user-private (address book) and public data clearly
-**  -- todo: use common code to get username and load profile and set 'me'
+** Unlike most panes, this is available any place whatever the real subject,
+** and allows th user to edit their own profile.
+**
+** Usage: paneRegistry.register('profile/profilePane')
+** or standalone script adding onto existig mashlib.
 */
-
-// @@@@@ fobartestline 5
 
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
@@ -22,7 +19,7 @@ if (nodeMode) {
 }
 
 const kb = UI.store
-// const ns = UI.ns
+const ns = UI.ns
 
 const thisPane = { // 'noun_638141.svg' not editing
   icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
@@ -60,15 +57,22 @@ const thisPane = { // 'noun_638141.svg' not editing
       return p
     }
 
+    functiion heading (str) {
+      var h = main.appendChild(dom.createElement('h3'))
+      h.setAttribute('style', 'color: #882288;')
+      h.textContent = str
+      return h
+    }
+
     var context = {dom: dom, div: main, statusArea: statusArea, me: null}
     UI.authn.logInLoadProfile(context).then(context => {
       var me = context.me
       subject = me
 
-      var h = main.appendChild(dom.createElement('h3'))
-      h.textContent = 'Edit your public profile'
+      heading('Edit your public profile')
 
-      var editable = UI.store.updater.editable(subject.doc().uri, kb)
+      var profile = subject.doc()
+      var editable = UI.store.updater.editable(profile.uri, kb)
 
       if (!editable) {
         statusArea.appendChild(UI.utils.errorMessageBlock(subject.doc().uri + ' Not editable!? '))
@@ -77,13 +81,25 @@ const thisPane = { // 'noun_638141.svg' not editing
       comment(`Everything you put here will be public.
      There will be other places to record private things..`)
 
-      var h3 = main.appendChild(dom.createElement('h3'))
-      h3.textContent = 'Your contact information'
+      heading('Your contact information')
 
       main.appendChild(paneDiv(dom, subject, 'contact'))
 
-      h3 = main.appendChild(dom.createElement('h3'))
-      h3.textContent = 'People you know'
+      heading('People you know who have webids')
+
+      comment(`This is your public social network.
+        Just put people here you are happy to be connected with publically
+        (You can always keep private track of friends and family in your contacts.)`)
+
+      comment(`Drag people onto the target bellow to add people.`)
+
+      UI.widgets.attachmentList(dom, subject, main, {
+          doc: profile,
+          modify: !!editable,
+          predicate: ns.foaf('knows'),
+          noun: 'friend'
+      })
+
     }, err => {
       statusArea.appendChild(UI.utils.errorMessageBlock(err))
     })
