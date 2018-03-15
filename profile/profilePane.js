@@ -8,6 +8,8 @@
 **  -- todo: use common code to get username and load profile and set 'me'
 */
 
+// @@@@@ fobartestline
+
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
 
@@ -72,7 +74,7 @@ const thisPane = { // 'noun_638141.svg' not editing
       }
 
       comment(`Everything you put here will be public.
-     There will be other places to record private things.`)
+     There will be other places to record private things..`)
 
       var h3 = main.appendChild(dom.createElement('h3'))
       h3.textContent = 'Your contact information'
