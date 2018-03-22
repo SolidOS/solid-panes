@@ -15,6 +15,7 @@ if (nodeMode) {
 }
 
 const mime = require('mime-types')
+const kb = UI.store
 
 const thisPane = {
   icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
@@ -22,7 +23,6 @@ const thisPane = {
   name: 'source',
 
   label: function (subject) {
-    const kb = UI.store
     var typeURIs = kb.findTypeURIs(subject)
     var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
     for (var t in typeURIs) {
@@ -34,8 +34,16 @@ const thisPane = {
 
   // Create a new text file in a Solid system,
   mintNew: function (newPaneOptions) {
-    var kb = UI.store
-    var newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase)
+    var newInstance = newPaneOptions.newInstance
+    if (!newInstance) {
+      let uri = newPaneOptions.newBase
+      if (uri.endsWith('/')) {
+        uri = uri.slice(0, -1)
+      }
+      newInstance = kb.sym(uri)
+      newPaneOptions.newInstance = newInstance
+    }
+
     var contentType = mime.lookup(newInstance.uri)
     if (!(contentType.startsWith('text') || contentType.includes('xml'))) {
       let msg = 'A new text file has to have an file extension like .txt .ttl etc.'
