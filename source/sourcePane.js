@@ -47,6 +47,7 @@ const thisPane = {
       kb.fetcher.webOperation('PUT', newInstance.uri, {data: '\n', contentType: contentType})
         .then(function (response) {
           console.log('New text file created: ' + newInstance.uri)
+          newPaneOptions.newInstance = newInstance
           resolve(newPaneOptions)
         }, err => {
           alert('Cant make new file: ' + err)
