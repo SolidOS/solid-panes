@@ -80,7 +80,7 @@ const thisPane = { // 'noun_638141.svg' not editing
 
       if (!editable) {
         statusArea.appendChild(UI.widgets.errorMessageBlock(dom,
-          Your profile ${subject.doc().uri} is not editable, so we cant so much.`))
+          `Your profile ${subject.doc().uri} is not editable, so we cant so much.`))
       }
 
       comment(`Everything you put here will be public.
@@ -105,7 +105,6 @@ const thisPane = { // 'noun_638141.svg' not editing
         noun: 'friend'
       })
       heading('Thank you for filling your profile.')
-
     }, err => {
       statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
     })
