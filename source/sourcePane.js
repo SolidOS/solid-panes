@@ -46,7 +46,7 @@ const thisPane = {
     }
 
     var contentType = mime.lookup(newInstance.uri)
-    if (!(contentType.startsWith('text') || contentType.includes('xml'))) {
+    if (!contentType || !(contentType.startsWith('text') || contentType.includes('xml'))) {
       let msg = 'A new text file has to have an file extension like .txt .ttl etc.'
       alert(msg)
       throw new Error(msg)
