@@ -450,6 +450,7 @@ module.exports = function (doc) {
     var table = d.parentNode
     var par = table.parentNode
     var placeholder = dom.createElement('table')
+    placeholder.setAttribute('style', 'width: 100%;')
     par.replaceChild(placeholder, table)
     table.removeChild(d)
     par.replaceChild(table, placeholder) // Attempt to
@@ -1883,6 +1884,8 @@ module.exports = function (doc) {
 
     var containerId = cal + 'Container'
     var table = dom.createElement('table')
+    table.setAttribute('style', 'width: 100%;')
+
 
       // create link to hide/show calendar
     var a = dom.createElement('a')

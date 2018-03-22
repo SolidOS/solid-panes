@@ -836,7 +836,9 @@ module.exports = {
         // iframe.setAttribute('sandbox', '') // All restrictions
         iframe.setAttribute('src', target.uri)
         // iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
-        iframe.setAttribute('style', 'border: none; margin: 0; padding: 0; height: 100%; width: 100%;')
+        iframe.setAttribute('style', 'border: none; margin: 0; padding: 0; height: 100%; width: 100%; resize: both; overflow:scroll;')
+        containerDiv.style.resize = "none" // Remove scroll bars on outer div - don't seem to work so well
+        containerDiv.style.padding = 0
       }
       var renderPeoplePicker = function () {
         var context = {div: containerDiv, dom: dom}
@@ -913,6 +915,7 @@ module.exports = {
           } else {
             pane = view ? panes.byName(view) : null
             table = containerDiv.appendChild(dom.createElement('table'))
+            table.style.width = '100%'
             panes.getOutliner(dom).GotoSubject(target, true, pane, false, undefined, table)
           }
         }
