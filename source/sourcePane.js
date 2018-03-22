@@ -39,6 +39,7 @@ const thisPane = {
       let uri = newPaneOptions.newBase
       if (uri.endsWith('/')) {
         uri = uri.slice(0, -1)
+        newPaneOptions.newBase = uri
       }
       newInstance = kb.sym(uri)
       newPaneOptions.newInstance = newInstance
