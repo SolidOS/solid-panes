@@ -87,7 +87,7 @@ module.exports = {
         })
       })
       deleteButton.style = 'height: 2em;'
-      deleteButton.firstChild.class = '' // Remove hovver hide
+      deleteButton.class = '' // Remove hovver hide
       deleteCell.appendChild(deleteButton)
 
       const refreshCell = controlRow.appendChild(dom.createElement('td'))
