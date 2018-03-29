@@ -68,6 +68,7 @@ module.exports = {
       const controls = div.appendChild(dom.createElement('table'))
       controls.style = 'width: 100%; margin: 1em;'
       const controlRow = controls.appendChild(dom.createElement('tr'))
+
       const deleteCell = controlRow.appendChild(dom.createElement('td'))
       const isFolder = ((subject.uri && subject.uri.endsWith('/')) ||
         kb.holds(subject, ns.rdf('type'), ns.ldp('Container')))
@@ -85,7 +86,25 @@ module.exports = {
           alert(str)
         })
       })
+      deleteButton.style = 'height: 2em;'
+      deleteButton.firstChild.class = '' // Remove hovver hide
       deleteCell.appendChild(deleteButton)
+
+      const refreshCell = controlRow.appendChild(dom.createElement('td'))
+      const refreshButton = UI.widgets.button(dom, UI.icons.iconBase + 'noun_479395.svg', 'refresh')
+      refreshCell.appendChild(refreshButton)
+      refreshButton.addEventListener('click', event => {
+        kb.fetcher.refresh(subject, function (ok, errm, res) {
+          let str
+          if (ok) {
+            str = 'Refreshed OK: ' + subject
+          } else {
+            str = 'Error refreshing: ' + subject + ': ' + errm
+          }
+          console.log(str)
+          alert(str)
+        })
+      })
     }
 
     var plist = kb.statementsMatching(subject)
