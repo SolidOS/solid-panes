@@ -57,7 +57,7 @@ module.exports = {
       controls.style = 'width: 100%; margin: 1em;'
       const controlRow = controls.appendChild(dom.createElement('tr'))
       const deleteCell = controlRow.appendChild(dom.createElement('td'))
-      const isFolder = ((subject.uri && subject.uri.endsWidth('/')) ||
+      const isFolder = ((subject.uri && subject.uri.endsWith('/')) ||
         kb.holds(subject, ns.rdf('type'), ns.ldp('Container')))
       const noun = isFolder ? 'folder' : 'file'
       var deleteButton = UI.widgets.deleteButtonWithCheck(dom, deleteCell, noun, function () {
