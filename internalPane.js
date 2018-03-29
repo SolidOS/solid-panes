@@ -40,12 +40,12 @@ module.exports = {
             if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
               return deleteRecursive(kb, file)
             } else {
-              console.log('deleteRecirsive file: ' + file)
+              console.log('deleteRecirsive leaf file: ' + file)
               return kb.fetcher.webOperation('DELETE', file)
             }
           })
-          console.log('deleteRecirsive folder: ' + folder)
           Promise.all(promises).then(res => {
+            console.log('deleteRecirsive empty folder: ' + folder)
             kb.fetcher.webOperation('DELETE', folder).then(res => {
               console.log('Deleted Ok: ' + folder)
               resolve()
