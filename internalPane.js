@@ -45,8 +45,20 @@ module.exports = {
             }
           })
           console.log('deleteRecirsive folder: ' + folder)
-          promises.push(kb.fetcher.webOperation('DELETE', folder))
-          Promise.all(promises).then(res => { resolve() })
+          Promise.all(promises).then(res => {
+            kb.fetcher.webOperation('DELETE', folder).then(res => {
+              console.log('Deleted Ok: ' + folder)
+              resolve()
+            }, err => {
+              var str = 'Unable to delete ' + folder + ': ' + err
+              console.log(str)
+              reject(new Error(str))
+            })
+            resolve()
+          }, err => {
+            alert(err)
+            reject(err)
+          })
         })
       })
     }
