@@ -21,11 +21,6 @@ var mime = require('mime-types')
 var toolsPane0 = require('./toolsPane')
 var toolsPane = toolsPane0.toolsPane
 
-// if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
-//   console = {}
-//   console.log = function (msg) { UI.log.info(msg) }
-// }
-
 const $rdf = UI.rdf
 const ns = UI.ns
 const kb = UI.store
@@ -1314,7 +1309,7 @@ module.exports = {
     me = UI.authn.currentUser()
     if (!me) {
       console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
-      UI.logInLoadProfile(context).then( context => {
+      UI.authn.logInLoadProfile(context).then( context => {
         console.log('Logged in as ' + context.me)
         me = context.me
       }, err => {
