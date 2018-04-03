@@ -3,8 +3,12 @@
 **  This outline pane contains the properties which are
 ** internal to the user's interaction with the web, and are not normaly displayed
 */
-var UI = require('solid-ui')
-var panes = require('./paneRegistry')
+/* global alert confirm */
+
+const UI = require('solid-ui')
+const panes = require('./paneRegistry')
+
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-emblem-system.png',
@@ -13,10 +17,10 @@ module.exports = {
 
   label: function (subject) {
     // if (subject.uri)
-    return 'under the hood' // There is orften a URI even of no statements
+    return 'under the hood' // There is often a URI even of no statements
   },
 
-  render: function (subject, myDocument) {
+  render: function (subject, dom) {
     var $r = UI.rdf
     var kb = UI.store
     subject = kb.canon(subject)
@@ -25,10 +29,83 @@ module.exports = {
       if (types['http://www.w3.org/2007/ont/link#ProtocolEvent']) return true // display everything for them
       return !!(typeof panes.internal.predicates[pred.uri] !== 'undefined')
     }
-    var div = myDocument.createElement('div')
+    var div = dom.createElement('div')
     div.setAttribute('class', 'internalPane')
     div.setAttribute('style', 'background-color: #ddddff; padding: 0.5em; border-radius: 1em;')
-    //        appendRemoveIcon(div, subject, div)
+
+    function deleteRecursive (kb, folder) {
+      return new Promise(function (resolve, reject) {
+        kb.fetcher.load(folder).then(function () {
+          let promises = kb.each(folder, ns.ldp('contains')).map(file => {
+            if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
+              return deleteRecursive(kb, file)
+            } else {
+              console.log('deleteRecursive leaf file: ' + file)
+              return kb.fetcher.webOperation('DELETE', file)
+            }
+          })
+          Promise.all(promises).then(res => {
+            console.log('deleteRecursive empty folder: ' + folder)
+            kb.fetcher.webOperation('DELETE', folder).then(res => {
+              console.log('Deleted Ok: ' + folder)
+              resolve()
+            }, err => {
+              var str = 'Unable to delete ' + folder + ': ' + err
+              console.log(str)
+              reject(new Error(str))
+            })
+            resolve()
+          }, err => {
+            alert(err)
+            reject(err)
+          })
+        })
+      })
+    }
+
+    const isDocument = subject.uri && !subject.uri.includes('#')
+    if (isDocument) {
+      const controls = div.appendChild(dom.createElement('table'))
+      controls.style = 'width: 100%; margin: 1em;'
+      const controlRow = controls.appendChild(dom.createElement('tr'))
+
+      const deleteCell = controlRow.appendChild(dom.createElement('td'))
+      const isFolder = ((subject.uri && subject.uri.endsWith('/')) ||
+        kb.holds(subject, ns.rdf('type'), ns.ldp('Container')))
+      const noun = isFolder ? 'folder' : 'file'
+      var deleteButton = UI.widgets.deleteButtonWithCheck(dom, deleteCell, noun, function () {
+        if (!confirm('Are you sure you want to delete ' + subject + '? This cannot be undone.')) return
+        var promise = isFolder ? deleteRecursive(kb, subject)
+          : kb.fetcher.webOperation('DELETE', subject.uri)
+        promise.then(response => {
+          var str = 'Deleted: ' + subject
+          console.log(str)
+        }, err => {
+          var str = 'Unable to delete ' + subject + ': ' + err
+          console.log(str)
+          alert(str)
+        })
+      })
+      deleteButton.style = 'height: 2em;'
+      deleteButton.class = '' // Remove hovver hide
+      deleteCell.appendChild(deleteButton)
+
+      const refreshCell = controlRow.appendChild(dom.createElement('td'))
+      const refreshButton = UI.widgets.button(dom, UI.icons.iconBase + 'noun_479395.svg', 'refresh')
+      refreshCell.appendChild(refreshButton)
+      refreshButton.addEventListener('click', event => {
+        kb.fetcher.refresh(subject, function (ok, errm, res) {
+          let str
+          if (ok) {
+            str = 'Refreshed OK: ' + subject
+          } else {
+            str = 'Error refreshing: ' + subject + ': ' + errm
+          }
+          console.log(str)
+          alert(str)
+        })
+      })
+    }
 
     var plist = kb.statementsMatching(subject)
     var docURI = null
@@ -55,7 +132,7 @@ module.exports = {
           kb.literal(ed), UI.store.fetcher.appNode))
       }
     }
-    var outliner = panes.getOutliner(myDocument)
+    var outliner = panes.getOutliner(dom)
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = kb.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)

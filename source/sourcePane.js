@@ -1,7 +1,9 @@
 /*      Source editor Pane
 **
 **  This pane allows the original source of a resource to be edited by hand
+**
 */
+/* global alert */
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
 
@@ -12,13 +14,15 @@ if (nodeMode) {
   UI = panes.UI
 }
 
+const mime = require('mime-types')
+const kb = UI.store
+
 const thisPane = {
   icon: UI.icons.iconBase + 'noun_109873.svg', // noun_109873_51A7F9.svg
 
   name: 'source',
 
   label: function (subject) {
-    const kb = UI.store
     var typeURIs = kb.findTypeURIs(subject)
     var prefix = $rdf.Util.mediaTypeClass('text/*').uri.split('*')[0]
     for (var t in typeURIs) {
@@ -26,6 +30,39 @@ const thisPane = {
       if (t.includes('xml')) return 'XML Source'
     }
     return null
+  },
+
+  // Create a new text file in a Solid system,
+  mintNew: function (newPaneOptions) {
+    var newInstance = newPaneOptions.newInstance
+    if (!newInstance) {
+      let uri = newPaneOptions.newBase
+      if (uri.endsWith('/')) {
+        uri = uri.slice(0, -1)
+        newPaneOptions.newBase = uri
+      }
+      newInstance = kb.sym(uri)
+      newPaneOptions.newInstance = newInstance
+    }
+
+    var contentType = mime.lookup(newInstance.uri)
+    if (!contentType || !(contentType.startsWith('text') || contentType.includes('xml'))) {
+      let msg = 'A new text file has to have an file extension like .txt .ttl etc.'
+      alert(msg)
+      throw new Error(msg)
+    }
+
+    return new Promise(function (resolve, reject) {
+      kb.fetcher.webOperation('PUT', newInstance.uri, {data: '\n', contentType: contentType})
+        .then(function (response) {
+          console.log('New text file created: ' + newInstance.uri)
+          newPaneOptions.newInstance = newInstance
+          resolve(newPaneOptions)
+        }, err => {
+          alert('Cant make new file: ' + err)
+          reject(err)
+        })
+    })
   },
 
   render: function (subject, dom) {
@@ -83,7 +120,7 @@ const thisPane = {
       textArea.removeAttribute('readonly')
     }
     function saveBack (e) {
-      var options =  { data: textArea.value, contentType: contentType }
+      var options = { data: textArea.value, contentType: contentType }
       if (eTag) options.headers = {'if-match': eTag} // avoid overwriting changed files -> status 412
       fetcher.webOperation('PUT', subject.uri, options)
       .then(function (response) {

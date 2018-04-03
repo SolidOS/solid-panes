@@ -14,17 +14,16 @@ to change its state according to an ontology, comment on it, etc.
 */
 /* global alert, confirm, FileReader */
 
-var UI = require('solid-ui')
-var panes = require('../paneRegistry')
+const UI = require('solid-ui')
+const panes = require('../paneRegistry')
 
 var mime = require('mime-types')
 var toolsPane0 = require('./toolsPane')
 var toolsPane = toolsPane0.toolsPane
 
-// if (typeof console === 'undefined') { // e.g. firefox extension. Node and browser have console
-//   console = {}
-//   console.log = function (msg) { UI.log.info(msg) }
-// }
+const $rdf = UI.rdf
+const ns = UI.ns
+const kb = UI.store
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_99101.svg', // changed from embedded icon 2016-05-01
@@ -33,11 +32,11 @@ module.exports = {
 
   // Does the subject deserve an contact pane?
   label: function (subject) {
-    var kb = UI.store
-    var ns = UI.ns
     var t = kb.findTypeURIs(subject)
     if (t[ns.vcard('Individual').uri]) return 'Contact'
     if (t[ns.vcard('Organization').uri]) return 'contact'
+    if (t[ns.foaf('Person').uri]) return 'Person'
+    if (t[ns.schema('Person').uri]) return 'Person'
     if (t[ns.vcard('Group').uri]) return 'Group'
     if (t[ns.vcard('AddressBook').uri]) return 'Address book'
     return null // No under other circumstances
@@ -164,10 +163,6 @@ module.exports = {
   //  Render the pane
   render: function (subject, dom, paneOptions) {
     paneOptions = paneOptions || {}
-    var kb = UI.store
-    var ns = UI.ns
-    // var DC = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
-    // var DCT = $rdf.Namespace('http://purl.org/dc/terms/')
     var div = dom.createElement('div')
     var cardDoc = subject.doc()
 
@@ -1007,15 +1002,14 @@ module.exports = {
           filename += '_.' + extension
           console.log('MIME TYPE MISMATCH -- adding extension: ' + filename)
         }
-        let prefix, predicate, isImage
-        if (contentType.startsWith('image')) {
+        let prefix, predicate
+        let isImage = contentType.startsWith('image')
+        if (isImage) {
           prefix = 'image_'
           predicate = ns.vcard('hasPhoto')
-          isImage = true
         } else {
           prefix = 'attachment_'
           predicate = ns.wf('attachment')
-          isImage = false
         }
 
         var n, pic
@@ -1138,22 +1132,26 @@ module.exports = {
 
           mugshotDiv = div.appendChild(dom.createElement('div'))
 
-          function mugshot (image) {
-            let img = div.appendChild(dom.createElement('img'))
+          function elementForImage (image) {
+            let img = dom.createElement('img')
             img.setAttribute('style', 'max-height: 10em; border-radius: 1em; margin: 0.7em;')
             UI.widgets.makeDropTarget(img, handleURIsDroppedOnMugshot, droppedFileHandler)
             if (image) img.setAttribute('src', image.uri)
             return img
           }
 
+          var placeholder = elementForImage()
+          UI.widgets.setImage(placeholder, subject) // Fallback icon or get from web
+
           function syncMugshots () {
-            mugshotDiv.innerHTML = '' // @@ don't clear, later: sync
             let images = kb.each(subject, ns.vcard('hasPhoto'))  // Priviledge vcard ones
-            images.sort()
+            images.sort() // arbitrary consistency
             images = images.slice(0, 5) // max number for the space
-            images.forEach(mugshot)
             if (images.length === 0) {
-              UI.widgets.setImage(mugshot(), subject) // Fallback icon or get from web
+              mugshotDiv.innerHTML = '' // strictly, don't remove it if already there
+              mugshotDiv.appendChild(placeholder)
+            } else {
+              UI.utils.syncTableToArray(mugshotDiv, images, elementForImage)
             }
           }
 
@@ -1278,7 +1276,7 @@ module.exports = {
     //              Render a single contact Individual
 
     if (t[ns.vcard('Individual').uri] || t[ns.vcard('Organization').uri] ||
-      t[ns.foaf('Person').uri]) {
+      t[ns.foaf('Person').uri] || t[ns.schema('Person').uri]) {
       renderIndividual(subject)
 
       //          Render a Group instance
@@ -1309,9 +1307,14 @@ module.exports = {
     }
 
     me = UI.authn.currentUser()
-
     if (!me) {
       console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
+      UI.authn.logInLoadProfile(context).then( context => {
+        console.log('Logged in as ' + context.me)
+        me = context.me
+      }, err => {
+        div.appendChild(UI.utils.errorMessageBlock(err))
+      })
     } else {
       // console.log("(Your webid is "+ me +")")
     }

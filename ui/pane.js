@@ -2,7 +2,8 @@
 **
 */
 
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const panes = require('../paneRegistry')
 
 module.exports = {
 
@@ -84,7 +85,7 @@ module.exports = {
         // For each creation form, allow one to create a new object with it, and also to edit the form.
         var displayFormsForRelation = function displayFormsForRelation (pred, allowCreation) {
           var sts = kb.statementsMatching(subject, pred)
-          const outliner = pane.getOutliner()
+          const outliner = panes.getOutliner(dom)
           if (sts.length) {
             for (var i = 0; i < sts.length; i++) {
               outliner.appendPropertyTRs(box, [ sts[i] ])

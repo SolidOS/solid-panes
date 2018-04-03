@@ -40,7 +40,6 @@ if (typeof window !== 'undefined') {
   panes.getOutliner(dom)
 }
 
-
 /*  Note that the earliest panes have priority. So the most specific ones are first.
 **
 */
@@ -83,10 +82,9 @@ register(require('./slideshow/slideshowPane.js'))
 register(require('./socialPane.js'))
 
 register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
+register(require('./dataContentPane.js')) // Prefered for a data file
 
 register(require('./source/sourcePane.js')) // edit source
-
-register(require('./dataContentPane.js')) // Prefered for a data file
 register(require('./n3Pane.js'))
 register(require('./RDFXMLPane.js'))
 
@@ -127,6 +125,8 @@ register(require('./sharing/sharingPane.js'))
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internalPane.js'))
 // The home pame is a 2016 experiment. Always there.
+
+register(require('./profile/profilePane.js')) // edit your public profile
 register(require('./home/homePane.js'))
 
 // ENDS
