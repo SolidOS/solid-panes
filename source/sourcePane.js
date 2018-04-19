@@ -4,16 +4,8 @@
 **
 */
 /* global alert */
-const nodeMode = (typeof module !== 'undefined')
-var panes, UI
 
-if (nodeMode) {
-  UI = require('solid-ui')
-} else { // Add to existing mashlib
-  panes = window.panes
-  UI = panes.UI
-}
-
+const UI = require('solid-ui')
 const mime = require('mime-types')
 const kb = UI.store
 
@@ -151,14 +143,23 @@ const thisPane = {
         textArea.value = desc
 
         setUnedited()
-        var contentType, allowed
-        let rrr = kb.any(response.req, kb.sym('http://www.w3.org/2007/ont/link#response'))
-        if (rrr) {
-          contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
-          allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
-          eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
-          if (!eTag) console.log('sourcePane: No eTag on GET')
+        var contentType, allowed, eTag
+        if (response.headers || response.headers.get('content-type')) {
+          contentType = response.headers.get('content-type') // Should work but headers may be empty
+          allow = response.headers.get('allow')
+          eTag = response.headers.get('etag')
         }
+        // let rrr = kb.any(response.req, kb.sym('http://www.w3.org/2007/ont/link#response'))
+        let reqs = kb.each(null , kb.sym('http://www.w3.org/2007/ont/link#requestedURI'), subject.uri)
+        reqs.forEach( req => {
+          let rrr = kb.any(req , kb.sym('http://www.w3.org/2007/ont/link#response'))
+          if (rrr) {
+            contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
+            allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+            eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
+            if (!eTag) console.log('sourcePane: No eTag on GET')
+          }
+        })
         // contentType = response.headers['content-type'] // Not available ?!
         if (!contentType) {
           readonly = true
@@ -190,10 +191,5 @@ const thisPane = {
   }
 }
 
-if (nodeMode) {
-  module.exports = thisPane
-} else {
-  console.log('*** patching in live pane: ' + thisPane.name)
-  panes.register(thisPane)
-}
+module.exports = thisPane
 // ENDS
