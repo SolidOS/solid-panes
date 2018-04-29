@@ -64,7 +64,8 @@ const thisPane = {
     var readonly = true
     var editing = false
     var broken = false
-    var contentType, eTag // Note it when we read and use it when we save
+    // Set in refresh()
+    var contentType, allowed, eTag // Note it when we read and use it when we save
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
@@ -143,7 +144,6 @@ const thisPane = {
         textArea.value = desc
 
         setUnedited()
-        var contentType, allowed, eTag
         if (response.headers && response.headers.get('content-type')) {
           contentType = response.headers.get('content-type') // Should work but headers may be empty
           allowed = response.headers.get('allow')
