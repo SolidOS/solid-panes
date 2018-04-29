@@ -121,7 +121,7 @@ const thisPane = {
         setEditable()
       })
       .catch(function (err) {
-        div.appendChild(UI.utils.errorMessageBlock(dom, 'Error saving back: ' + err))
+        div.appendChild(UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err))
       })
     }
 
