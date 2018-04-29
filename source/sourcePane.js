@@ -146,13 +146,13 @@ const thisPane = {
         var contentType, allowed, eTag
         if (response.headers && response.headers.get('content-type')) {
           contentType = response.headers.get('content-type') // Should work but headers may be empty
-          allow = response.headers.get('allow')
+          allowed = response.headers.get('allow')
           eTag = response.headers.get('etag')
         }
 
-        let reqs = kb.each(null , kb.sym('http://www.w3.org/2007/ont/link#requestedURI'), subject.uri)
-        reqs.forEach( req => {
-          let rrr = kb.any(req , kb.sym('http://www.w3.org/2007/ont/link#response'))
+        let reqs = kb.each(null, kb.sym('http://www.w3.org/2007/ont/link#requestedURI'), subject.uri)
+        reqs.forEach(req => {
+          let rrr = kb.any(req, kb.sym('http://www.w3.org/2007/ont/link#response'))
           if (rrr) {
             contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
             allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
