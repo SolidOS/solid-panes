@@ -4,16 +4,8 @@
 **
 */
 /* global alert */
-const nodeMode = (typeof module !== 'undefined')
-var panes, UI
 
-if (nodeMode) {
-  UI = require('solid-ui')
-} else { // Add to existing mashlib
-  panes = window.panes
-  UI = panes.UI
-}
-
+const UI = require('solid-ui')
 const mime = require('mime-types')
 const kb = UI.store
 
@@ -72,7 +64,8 @@ const thisPane = {
     var readonly = true
     var editing = false
     var broken = false
-    var contentType, eTag // Note it when we read and use it when we save
+    // Set in refresh()
+    var contentType, allowed, eTag // Note it when we read and use it when we save
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'sourcePane')
@@ -128,7 +121,7 @@ const thisPane = {
         setEditable()
       })
       .catch(function (err) {
-        div.appendChild(UI.utils.errorMessageBlock(dom, 'Error saving back: ' + err))
+        div.appendChild(UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err))
       })
     }
 
@@ -151,14 +144,22 @@ const thisPane = {
         textArea.value = desc
 
         setUnedited()
-        var contentType, allowed
-        let rrr = kb.any(response.req, kb.sym('http://www.w3.org/2007/ont/link#response'))
-        if (rrr) {
-          contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
-          allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
-          eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
-          if (!eTag) console.log('sourcePane: No eTag on GET')
+        if (response.headers && response.headers.get('content-type')) {
+          contentType = response.headers.get('content-type') // Should work but headers may be empty
+          allowed = response.headers.get('allow')
+          eTag = response.headers.get('etag')
         }
+
+        let reqs = kb.each(null, kb.sym('http://www.w3.org/2007/ont/link#requestedURI'), subject.uri)
+        reqs.forEach(req => {
+          let rrr = kb.any(req, kb.sym('http://www.w3.org/2007/ont/link#response'))
+          if (rrr) {
+            contentType = kb.anyValue(rrr, UI.ns.httph('content-type'))
+            allowed = kb.anyValue(rrr, UI.ns.httph('allow'))
+            eTag = kb.anyValue(rrr, UI.ns.httph('etag'))
+            if (!eTag) console.log('sourcePane: No eTag on GET')
+          }
+        })
         // contentType = response.headers['content-type'] // Not available ?!
         if (!contentType) {
           readonly = true
@@ -190,10 +191,5 @@ const thisPane = {
   }
 }
 
-if (nodeMode) {
-  module.exports = thisPane
-} else {
-  console.log('*** patching in live pane: ' + thisPane.name)
-  panes.register(thisPane)
-}
+module.exports = thisPane
 // ENDS

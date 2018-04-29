@@ -1313,7 +1313,7 @@ module.exports = {
         console.log('Logged in as ' + context.me)
         me = context.me
       }, err => {
-        div.appendChild(UI.utils.errorMessageBlock(err))
+        div.appendChild(UI.widgets.errorMessageBlock(err))
       })
     } else {
       // console.log("(Your webid is "+ me +")")
