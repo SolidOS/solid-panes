@@ -1662,11 +1662,11 @@ module.exports = function (doc) {
       var tr = td.parentNode
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
-    /*
-    if (solo && typeof History !== 'undefined'){
-      History.pushstate(@@)
+
+    if (solo && dom && dom.defaultView && dom.defaultView.history){
+      let stateObj = pane ? { paneName: pane.name } : {}
+      dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
     }
-    */
 
     if (solo && UI.isExtension) {
       // See https://developer.mozilla.org/en/NsIGlobalHistory2
