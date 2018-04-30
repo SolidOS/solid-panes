@@ -1020,8 +1020,7 @@ module.exports = {
           }
           filename = prefix + n + '.' + extension
         }
-        kb.add(subject, predicate, pic, subject.doc())
-        console.log('Putting ' + data.length + ' bytes of ' + contentType + ' to ' + pic)
+        console.log('Putting ' + data.byteLength + ' bytes of ' + contentType + ' to ' + pic)
         kb.fetcher.webOperation('PUT', pic.uri, {data: data, contentType: contentType})
           .then(function (response) {
             if (!response.ok) {
@@ -1029,6 +1028,7 @@ module.exports = {
               return
             }
             console.log(' Upload: put OK: ' + pic)
+            kb.add(subject, predicate, pic, subject.doc())
             return kb.fetcher.putBack(subject.doc())
           })
           .then(function () {
