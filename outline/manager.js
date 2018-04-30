@@ -68,7 +68,7 @@ module.exports = function (doc) {
     return returnValue
   } // benchmark
 
-  /// ////////////////////// Representing data
+  // / ////////////////////// Representing data
 
   //  Represent an object in summary form as a table cell
 
@@ -420,7 +420,7 @@ module.exports = function (doc) {
     return tr
   } // expandedHeaderTR
 
-  /// //////////////////////////////////////////////////////////////////////////
+  // / //////////////////////////////////////////////////////////////////////////
 
   /*  PANES
    **
@@ -429,7 +429,7 @@ module.exports = function (doc) {
    ** subject panes are currently stacked vertically.
    */
 
-  /// ////////////////////  Specific panes are in panes/*.js
+  // / ////////////////////  Specific panes are in panes/*.js
   //
   // The defaultPaneis the first one registerd for which the label
   //  method
@@ -442,7 +442,7 @@ module.exports = function (doc) {
 
   // the second argument indicates whether the query button is required
 
-  /// ///////////////////////////////////////////////////////////////////////////
+  // / ///////////////////////////////////////////////////////////////////////////
 
   // Remove a node from the DOM so that Firefox refreshes the screen OK
   // Just deleting it cause whitespace to accumulate.
@@ -508,7 +508,7 @@ module.exports = function (doc) {
   }
   this.propertyTR = propertyTR
 
-  /// ////////// Property list
+  // / ////////// Property list
   function appendPropertyTRs (parent, plist, inverse, predicateFilter) {
       // UI.log.info('@appendPropertyTRs, 'this' is %s, dom is %s, '+ // Gives 'can't access dead object'
       //                   'thisOutline.document is %s', this, dom.location, thisOutline.document.location);
@@ -730,9 +730,9 @@ module.exports = function (doc) {
     termWidget.addIcon(td, newIcon, listener)
   }
 
-  /// /////////////////////////////////////////////////// VALUE BROWSER VIEW
+  // / /////////////////////////////////////////////////// VALUE BROWSER VIEW
 
-  /// /////////////////////////////////////////////////////// TABLE VIEW
+  // / /////////////////////////////////////////////////////// TABLE VIEW
 
   //  Summarize a thing as a table cell
 
@@ -1663,7 +1663,7 @@ module.exports = function (doc) {
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
 
-    if (solo && dom && dom.defaultView && dom.defaultView.history){
+    if (solo && dom && dom.defaultView && dom.defaultView.history) {
       let stateObj = pane ? { paneName: pane.name } : {}
       dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
     }
@@ -1697,13 +1697,13 @@ module.exports = function (doc) {
     GotoURI(uri)
   }
 */
-  /// /////////////////////////////////////////////////////
+  // / /////////////////////////////////////////////////////
   //
   //
   //                    VIEWS
   //
   //
-  /// /////////////////////////////////////////////////////
+  // / /////////////////////////////////////////////////////
 
   var views = {
     properties: [],
@@ -1885,7 +1885,6 @@ module.exports = function (doc) {
     var containerId = cal + 'Container'
     var table = dom.createElement('table')
     table.setAttribute('style', 'width: 100%;')
-
 
       // create link to hide/show calendar
     var a = dom.createElement('a')
