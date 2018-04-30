@@ -1022,7 +1022,7 @@ module.exports = {
         }
         kb.add(subject, predicate, pic, subject.doc())
         console.log('Putting ' + data.length + ' bytes of ' + contentType + ' to ' + pic)
-        kb.fetcher.webOperation('PUT', pic, {data: data, contentType: contentType})
+        kb.fetcher.webOperation('PUT', pic.uri, {data: data, contentType: contentType})
           .then(function (response) {
             if (!response.ok) {
               complain('Error uploading ' + pic + ':' + response.status)
