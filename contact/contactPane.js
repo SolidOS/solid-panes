@@ -1029,14 +1029,13 @@ module.exports = {
             }
             console.log(' Upload: put OK: ' + pic)
             kb.add(subject, predicate, pic, subject.doc())
-            return kb.fetcher.putBack(subject.doc(), {contentType: 'text/turtle'})
-          })
-          .then(function (response) {
-            if (isImage) {
-              mugshotDiv.refresh()
-            }
-          }, function (err) {
-            console.log(' Upload: FAIL ' + pic + ', Error: ' + err)
+            kb.fetcher.putBack(subject.doc(), {contentType: 'text/turtle'}).then(function (response) {
+              if (isImage) {
+                mugshotDiv.refresh()
+              }
+            }, function (err) {
+              console.log(' Write back image link FAIL ' + pic + ', Error: ' + err)
+            })
           })
       }
 
