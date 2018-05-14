@@ -7,8 +7,8 @@ const UI = require('solid-ui')
 const ns = UI.ns
 const kb = UI.store
 
-module.exports = {
-  icon: UI.icons.iconBase + 'noun_346319.svg',
+module.exports = { // noun_704.svg Canoe   noun_346319.svg = Chat
+  icon: UI.icons.iconBase + 'noun_704.svg',
 
   name: 'long chat',
 
