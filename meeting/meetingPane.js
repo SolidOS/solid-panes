@@ -2,15 +2,12 @@
 **
 **  Putting together some of the tools we have to manage a Meeting
 */
-/* global FileReader */
 
 // const VideoRoomPrefix = 'https://appear.in/'
 const VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
 
 var UI = require('solid-ui')
 var panes = require('../paneRegistry')
-
-var mime = require('mime-types')
 
 var meetingDetailsFormText = require('./meetingDetailsForm.js')
 
@@ -306,8 +303,8 @@ module.exports = {
         saveBackMeetingDoc()
       })
     }
-
-    var droppedFileHandler = function (files) {
+/*
+    var droppedFileHandler0 = function (files) {
       for (var i = 0; files[i]; i++) {
         let f = files[i]
         console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
@@ -315,7 +312,6 @@ module.exports = {
           (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
         ) // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
 
-        // @@ Add: progress bar(s)
         var reader = new FileReader()
         reader.onload = (function (theFile) {
           return function (e) {
@@ -330,12 +326,12 @@ module.exports = {
             }
 
             UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type })
-              .then(function () {
+              .then(function (theFile, destURI) {
                 console.log(' Upload: put OK: ' + destURI)
                 if (theFile.type.startsWith('image/')) {
-                  makePicturesFolder(folderName) // If necessary
+                  makePicturesFolder('Pictures') // If necessary
                 } else {
-                  makeMaterialsFolder(folderName)
+                  makeMaterialsFolder('Files')
                 }
               })
               .catch(function (error) {
@@ -346,6 +342,57 @@ module.exports = {
         reader.readAsArrayBuffer(f)
       }
     }
+*/
+    var droppedFileHandler = function (files) {
+      UI.widgets.uploadFiles(kb.fetcher, files, meeting.dir().uri + 'Files', meeting.dir().uri + 'Pictures',
+        function (theFile, destURI) {
+          if (theFile.type.startsWith('image/')) {
+            makePicturesFolder('Files') // If necessary
+          } else {
+            makeMaterialsFolder('Pictures')
+          }
+        })
+    }
+
+    // Generic one  -- call from dropped file handler
+    // @@ Move to solid-ui drag and drop widgets
+    /*
+    var uploadFiles = function (fetcher, files, fileBase, imageBase, successHandler) {
+      for (var i = 0; files[i]; i++) {
+        let f = files[i]
+        console.log(' dropped: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
+          ' size: ' + f.size + ' bytes, last modified: ' +
+          (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
+        ) // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
+
+        // @@ Add: progress bar(s)
+        var reader = new FileReader()
+        reader.onload = (function (theFile) {
+          return function (e) {
+            var data = e.target.result
+            console.log(' File read byteLength : ' + data.byteLength)
+            var folderName = theFile.type.startsWith('image/') ? imageBase || fileBase : fileBase
+            var destURI = folderName + '/' + encodeURIComponent(theFile.name)
+            var extension = mime.extension(theFile.type)
+            if (theFile.type !== mime.lookup(theFile.name)) {
+              destURI += '_.' + extension
+              console.log('MIME TYPE MISMATCH -- adding extension: ' + destURI)
+            }
+
+            UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type })
+              .then(response => {
+                console.log(' Upload: put OK: ' + destURI)
+                successHandler(theFile, destURI)
+              },
+                error => {
+                  console.log(' Upload: FAIL ' + destURI + ', Error: ' + error)
+                })
+          }
+        })(f)
+        reader.readAsArrayBuffer(f)
+      }
+    }
+    */
 
     // //////////////////////////////////////////////////////  end of drag drop
 
@@ -837,7 +884,7 @@ module.exports = {
         iframe.setAttribute('src', target.uri)
         // iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
         iframe.setAttribute('style', 'border: none; margin: 0; padding: 0; height: 100%; width: 100%; resize: both; overflow:scroll;')
-        containerDiv.style.resize = "none" // Remove scroll bars on outer div - don't seem to work so well
+        containerDiv.style.resize = 'none' // Remove scroll bars on outer div - don't seem to work so well
         containerDiv.style.padding = 0
       }
       var renderPeoplePicker = function () {

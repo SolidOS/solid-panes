@@ -6,6 +6,8 @@
 const UI = require('solid-ui')
 const ns = UI.ns
 const kb = UI.store
+const panes = require('../paneRegistry')
+const mainClass = ns.meeting('LongChat') // @@ something from SIOC?
 
 module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_1689339.svg = three chat
   icon: UI.icons.iconBase + 'noun_1689339.svg',
@@ -19,7 +21,7 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     return null // Suppress pane otherwise
   },
 
-  mintClass: ns.meeting('LongChat'),
+  mintClass: mainClass,
 
   mintNew: function (newPaneOptions) {
     var updater = kb.updater
@@ -52,31 +54,71 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
   },
 
   render: function (subject, dom) {
-    var complain = function complain (message, color) {
+  /*
+    function complain (message, color) {
       var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
     }
+*/
+    // Build a menu a the side (@@ reactive: on top?)
+    function menuHandler (event, subject, menuOptions) {
+      let div = menuOptions.div
+      let dom = menuOptions.dom
+      div.menuExpaded = !div.menuExpaded
+      if (div.menuExpaded) { // Expand
+        let menuArea = div.appendChild(dom.createElement('table'))
+
+        let participantsArea = menuArea.appendChild(dom.createElement('tr'))
+        let registrationArea = menuArea.appendChild(dom.createElement('tr'))
+        let commandsArea = menuArea.appendChild(dom.createElement('tr'))
+        let statusArea = menuArea.appendChild(dom.createElement('tr'))
+
+        UI.pad.manageParticipation(dom, participantsArea, subject.doc(), subject, menuOptions.me, {})
+
+        var context = {noun: 'chat room', me: menuOptions.me, statusArea: statusArea, div: registrationArea, dom: dom}
+        UI.authn.registrationControl(context, subject, mainClass).then(function (context) {
+          console.log('Registration control finsished.')
+        })
+
+        let c1 = commandsArea.appendChild(dom.createElement('td'))
+        let dropTarget = UI.widgets.button(dom, UI.icons.iconBase + 'noun_748003.svg', 'Drop to upload')
+        c1.appendChild(dropTarget)
+
+        let c2 = commandsArea.appendChild(dom.createElement('td'))
+        let gistButton = UI.widgets.button(dom, UI.icons.iconBase + 'noun_681601.svg', 'Make gist text file')
+        c2.appendChild(gistButton)
+        gistButton.addEventListener('click', event => {
+          let newBase = menuOptions + 'Gists/'
+          let options = {dom: dom, div: statusArea, newBase}
+          let pane = panes.byName('source')
+          pane.mintNew(options)
+            .then(function (options) { // Add a message pointing to the gist
+
+            })
+        }, false)
+
+        div.menuArea = menuArea
+      } else { // Close menu  (hide or delete??)
+        div.removeChild(div.menuArea)
+      }
+    } // menuHandler
 
     var div = dom.createElement('div')
     div.setAttribute('class', 'chatPane')
-    let options = {infinite: true} // Like newestFirst
+    let options = {infinite: true, menuHandler: menuHandler} // Like newestFirst
 
+    /*
     var messageStore
     if (kb.holds(subject, ns.rdf('type'), ns.meeting('LongChat'))) { // subject may be the file
       messageStore = subject.doc()
     } else {
       complain('Unknown chat type')
     }
+    */
 
     div.appendChild(UI.infiniteMessageArea(dom, kb, subject, options))
-    /*
-    kb.updater.addDownstreamChangeListener(messageStore, function () {
-      UI.widgets.refreshTree(div)
-    }) // Live update
-    */
-//    })
 
     return div
   }

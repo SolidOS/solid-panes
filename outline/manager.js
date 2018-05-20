@@ -1886,7 +1886,6 @@ module.exports = function (doc) {
     var table = dom.createElement('table')
     table.setAttribute('style', 'width: 100%;')
 
-
       // create link to hide/show calendar
     var a = dom.createElement('a')
       // a.appendChild(document.createTextNode('[toggle]'))
