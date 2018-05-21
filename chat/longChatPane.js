@@ -62,18 +62,35 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
       pre.appendChild(dom.createTextNode(message))
     }
 */
+
+
+    /* Preferences
+    **
+    **  Things like whether to color text by author webid, to expand image URLs inline,
+    ** expanded inline image height. ...
+    ** In general, preferences can be set per user, per user/app combo, per instance,
+    ** and per instance/user combo. Per instance? not sure about unless it is valuable
+    ** for everyone to be seeing the same thing.
+    */
+
+
+    //          Menu
+    //
     // Build a menu a the side (@@ reactive: on top?)
     function menuHandler (event, subject, menuOptions) {
       let div = menuOptions.div
       let dom = menuOptions.dom
       div.menuExpaded = !div.menuExpaded
       if (div.menuExpaded) { // Expand
-        let menuArea = div.appendChild(dom.createElement('table'))
+        let menuArea = div.appendChild(dom.createElement('div'))
+        // @@ style below fix .. just make it onviious while testing
+        menuArea.style = 'border-radius: 1em; border: 0.1em solid purple; padding: 1em;'
+        let menuTable = menuArea.appendChild(dom.createElement('table'))
 
-        let participantsArea = menuArea.appendChild(dom.createElement('tr'))
-        let registrationArea = menuArea.appendChild(dom.createElement('tr'))
-        let commandsArea = menuArea.appendChild(dom.createElement('tr'))
-        let statusArea = menuArea.appendChild(dom.createElement('tr'))
+        let participantsArea = menuTable.appendChild(dom.createElement('tr'))
+        let registrationArea = menuTable.appendChild(dom.createElement('tr'))
+        let commandsArea = menuTable.appendChild(dom.createElement('tr'))
+        let statusArea = menuTable.appendChild(dom.createElement('tr'))
 
         UI.pad.manageParticipation(dom, participantsArea, subject.doc(), subject, menuOptions.me, {})
 
