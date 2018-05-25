@@ -1108,7 +1108,7 @@ module.exports = {
       UI.store.fetcher.load(toBeFetched)
 
         .catch(function (e) {
-          console.log('Error: Failed to load form or ontology: ' + e)
+          console.log('Error: Failed to load subject: ' + e)
         }) // load.then
 
         .then(function (xhrs) {

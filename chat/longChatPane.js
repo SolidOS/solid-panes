@@ -73,6 +73,55 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     ** for everyone to be seeing the same thing.
     */
 
+    const preferencesFormText = `
+    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+    @prefix ui: <http://www.w3.org/ns/ui#>.
+    @prefix : <#>.
+
+    <http://www.w3.org/2006/vcard/ns#Individual>
+        ui:creationForm <#form1> .
+
+
+    <#form1>
+        <http://purl.org/dc/elements/1.1/title> "Chat preferences" ;
+        a ui:Form ;
+        ui:part
+            <#fullNameField>,   <#roleField>,   <#fullNameFieldC>, <#addressesComment>, <#addresses>,
+            <#emailComment>, <#eMails>,
+            <#telephoneComment>, <#telephones>, <#noteComment>, <#noteField> ;
+        ui:parts (
+                    <#fullNameField>  <#roleField> <#fullNameFieldC>
+                     <#addressesComment> <#addresses>
+                    <#emailComment> <#eMails>
+                    <#telephoneComment> <#telephones> <#noteComment> <#noteField> ) .
+
+        <#fullNameField>
+            a <http://www.w3.org/ns/ui#SingleLineTextField> ;
+`
+    var preferencesForm = kb.sym('https://solid.github.io/solid-panes/longCharPane/preferencesForm.ttl#this')
+    var preferencesFormDoc = preferencesForm.doc()
+    if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
+      $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle') // Load form directly
+    }
+
+    var partipation
+    function preferences (subject, context) {
+      participation = participation || UI.pad.recordParticipation(subject, subject.doc())
+      let dom = context.dom
+      let prefContainer = dom.createElement('div')
+/*
+      let table = dom.createElement('table')
+      let row = table.appendChild(dom.createElement('tr'))
+      let predicate = ns.solid('colorInputByAuthor')
+      let cell = row.appendChild(dom.createElement('td'))
+*/
+      UI.widgets.appendForm(dom, prefContainer, {}, subject, preferencesForm, subject.doc(), complainIfBad)
+
+      // @@ add a form with checkboxes for binary Options
+      // Look for user-specific instance-generic options
+      return prefContainer
+    }
+
 
     //          Menu
     //
