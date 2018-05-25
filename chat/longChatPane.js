@@ -2,11 +2,12 @@
 **
 **  A long chat consists a of a series of chat files saved by date.
 */
+/* global alert */
 
 const UI = require('solid-ui')
 const ns = UI.ns
 const kb = UI.store
-const panes = require('../paneRegistry')
+// const panes = require('../paneRegistry')
 const mainClass = ns.meeting('LongChat') // @@ something from SIOC?
 
 module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_1689339.svg = three chat
@@ -54,16 +55,6 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
   },
 
   render: function (subject, dom) {
-  /*
-    function complain (message, color) {
-      var pre = dom.createElement('pre')
-      pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
-      div.appendChild(pre)
-      pre.appendChild(dom.createTextNode(message))
-    }
-*/
-
-
     /* Preferences
     **
     **  Things like whether to color text by author webid, to expand image URLs inline,
@@ -72,63 +63,89 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     ** and per instance/user combo. Per instance? not sure about unless it is valuable
     ** for everyone to be seeing the same thing.
     */
-
     const preferencesFormText = `
-    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-    @prefix ui: <http://www.w3.org/ns/ui#>.
-    @prefix : <#>.
+  @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+  @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+  @prefix ui: <http://www.w3.org/ns/ui#>.
+  @prefix : <#>.
 
-    <http://www.w3.org/2006/vcard/ns#Individual>
-        ui:creationForm <#form1> .
+  :this
+    <http://purl.org/dc/elements/1.1/title> "Chat preferences" ;
+    a ui:Form ;
+    ui:part :colorizeField, :expandImagesInline, :newestFirst, :inlineImageHeightEms;
+    ui:parts ( :colorizeField :expandImagesInline :newestFirst :inlineImageHeightEms ).
 
+:colorizeField a ui:BooleanField; ui:property solid:colorizeField;
+  ui:label "Color user input by user".
+:expandImagesInline a ui:BooleanField; ui:property solid:expandImagesInline;
+  ui:label "Expand image URLs inline".
+:newestFirst a ui:BooleanField; ui:property solid:newestFirst;
+  ui:label "Newest messages at the top".
 
-    <#form1>
-        <http://purl.org/dc/elements/1.1/title> "Chat preferences" ;
-        a ui:Form ;
-        ui:part
-            <#fullNameField>,   <#roleField>,   <#fullNameFieldC>, <#addressesComment>, <#addresses>,
-            <#emailComment>, <#eMails>,
-            <#telephoneComment>, <#telephones>, <#noteComment>, <#noteField> ;
-        ui:parts (
-                    <#fullNameField>  <#roleField> <#fullNameFieldC>
-                     <#addressesComment> <#addresses>
-                    <#emailComment> <#eMails>
-                    <#telephoneComment> <#telephones> <#noteComment> <#noteField> ) .
+:inlineImageHeightEms a ui:IntegerField; ui:property solid:inlineImageHeightEms;
+  ui:label "Inline image height (lines)".
 
-        <#fullNameField>
-            a <http://www.w3.org/ns/ui#SingleLineTextField> ;
 `
-    var preferencesForm = kb.sym('https://solid.github.io/solid-panes/longCharPane/preferencesForm.ttl#this')
-    var preferencesFormDoc = preferencesForm.doc()
+    const preferencesForm = kb.sym('https://solid.github.io/solid-panes/longCharPane/preferencesForm.ttl#this')
+    const preferencesFormDoc = preferencesForm.doc()
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
       $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle') // Load form directly
     }
-
-    var partipation
-    function preferences (subject, context) {
-      participation = participation || UI.pad.recordParticipation(subject, subject.doc())
-      let dom = context.dom
-      let prefContainer = dom.createElement('div')
-/*
-      let table = dom.createElement('table')
-      let row = table.appendChild(dom.createElement('tr'))
-      let predicate = ns.solid('colorInputByAuthor')
-      let cell = row.appendChild(dom.createElement('td'))
-*/
-      UI.widgets.appendForm(dom, prefContainer, {}, subject, preferencesForm, subject.doc(), complainIfBad)
-
-      // @@ add a form with checkboxes for binary Options
-      // Look for user-specific instance-generic options
-      return prefContainer
+/*    function recordSharedPreferences (subject, context) {
+      return new Promise(function (resolve, reject) {
+        var sharedPreferences = kb.any(subject, ns.ui.sharedPreferences)
+        if (!sharedPreferences) {
+          let sp = $rdf.sym(subject.doc().uri + 'SharedPrefereces')
+          let ins = [$rdf.st(subject, ns.ui.sharedPreferences, sp, subject.doc())]
+          console.log('Creating shared preferences ' + sp)
+          kb.updater.update([], ins, function (uri, ok, errorMessage) {
+            if (!ok) {
+              reject(new Error('create shard prefs: ' + errorMessage))
+            } else {
+              context.sharedPreferences = sp
+              resolve(context)
+            }
+          })
+        } else {
+          context.sharedPreferences = sharedPreferences
+          resolve(context)
+        }
+      })
     }
 
+    function renderPreferencesForm (subject, preferencesForm, context) {
+      var prefContainer = context.dom.createElement('div')
+      UI.pad.participationObject(subject, subject.doc(), context.me).then(participation => {
+        let dom = context.dom
+        function heading (text) {
+          prefContainer.appendChild(dom.createElement('h5')).textContent = text
+        }
+        heading('My view of this ' + context.noun)
+        UI.widgets.appendForm(dom, prefContainer, {}, participation, preferencesForm, subject.doc(),
+          (ok, mes) => { if (!ok) UI.widgets.complain(context, mes) })
 
+        heading('Everyone\'s  view of this ' + context.noun)
+        var sharedPreferences = kb.any(subject, ns.ui.sharedPreferences)
+        recordSharedPreferences(subject, context).then(context => {
+          UI.widgets.appendForm(dom, prefContainer, {}, sharedPreferences, preferencesForm, subject.doc(),
+          (ok, mes) => { if (!ok) UI.widgets.complain(context, mes) })
+
+          // @@ My defaults for all objects like this
+        })
+      }, err => { // parp object fails
+        prefContainer.appendChild(UI.widgets.errorMessageBlock(dom, err))
+      })
+      return prefContainer
+    }
+*/
     //          Menu
     //
     // Build a menu a the side (@@ reactive: on top?)
     function menuHandler (event, subject, menuOptions) {
       let div = menuOptions.div
       let dom = menuOptions.dom
+      // let me = menuOptions.me
+
       div.menuExpaded = !div.menuExpaded
       if (div.menuExpaded) { // Expand
         let menuArea = div.appendChild(dom.createElement('div'))
@@ -138,7 +155,8 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
 
         let participantsArea = menuTable.appendChild(dom.createElement('tr'))
         let registrationArea = menuTable.appendChild(dom.createElement('tr'))
-        let commandsArea = menuTable.appendChild(dom.createElement('tr'))
+        let preferencesArea = menuTable.appendChild(dom.createElement('tr'))
+        // let commandsArea = menuTable.appendChild(dom.createElement('tr'))
         let statusArea = menuTable.appendChild(dom.createElement('tr'))
 
         UI.pad.manageParticipation(dom, participantsArea, subject.doc(), subject, menuOptions.me, {})
@@ -148,22 +166,9 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
           console.log('Registration control finsished.')
         })
 
-        let c1 = commandsArea.appendChild(dom.createElement('td'))
-        let dropTarget = UI.widgets.button(dom, UI.icons.iconBase + 'noun_748003.svg', 'Drop to upload')
-        c1.appendChild(dropTarget)
-
-        let c2 = commandsArea.appendChild(dom.createElement('td'))
-        let gistButton = UI.widgets.button(dom, UI.icons.iconBase + 'noun_681601.svg', 'Make gist text file')
-        c2.appendChild(gistButton)
-        gistButton.addEventListener('click', event => {
-          let newBase = menuOptions + 'Gists/'
-          let options = {dom: dom, div: statusArea, newBase}
-          let pane = panes.byName('source')
-          pane.mintNew(options)
-            .then(function (options) { // Add a message pointing to the gist
-
-            })
-        }, false)
+        var context2 = {noun: 'chat room', me: menuOptions.me, statusArea: statusArea, div: preferencesArea, dom, kb}
+        if (!menuOptions.me) alert('menu: no me!')
+        preferencesArea.appendChild(UI.preferences.renderPreferencesForm(subject, mainClass, preferencesForm, context2))
 
         div.menuArea = menuArea
       } else { // Close menu  (hide or delete??)
@@ -174,15 +179,6 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     var div = dom.createElement('div')
     div.setAttribute('class', 'chatPane')
     let options = {infinite: true, menuHandler: menuHandler} // Like newestFirst
-
-    /*
-    var messageStore
-    if (kb.holds(subject, ns.rdf('type'), ns.meeting('LongChat'))) { // subject may be the file
-      messageStore = subject.doc()
-    } else {
-      complain('Unknown chat type')
-    }
-    */
 
     div.appendChild(UI.infiniteMessageArea(dom, kb, subject, options))
 
