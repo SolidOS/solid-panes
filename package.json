@@ -40,7 +40,7 @@
     "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
     "rdflib": ">=0.16.6",
-    "solid-ui": ">=0.10.5"
+    "solid-ui": ">=0.11.0"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
