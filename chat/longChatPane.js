@@ -72,10 +72,10 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
   :this
     <http://purl.org/dc/elements/1.1/title> "Chat preferences" ;
     a ui:Form ;
-    ui:part :colorizeField, :expandImagesInline, :newestFirst, :inlineImageHeightEms;
-    ui:parts ( :colorizeField :expandImagesInline :newestFirst :inlineImageHeightEms ).
+    ui:part :colorizeByAuthor, :expandImagesInline, :newestFirst, :inlineImageHeightEms;
+    ui:parts ( :colorizeByAuthor :expandImagesInline :newestFirst :inlineImageHeightEms ).
 
-:colorizeField a ui:BooleanField; ui:property solid:colorizeField;
+:colorizeByAuthor a ui:BooleanField; ui:property solid:colorizeByAuthor;
   ui:label "Color user input by user".
 :expandImagesInline a ui:BooleanField; ui:property solid:expandImagesInline;
   ui:label "Expand image URLs inline".
@@ -91,53 +91,8 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
       $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle') // Load form directly
     }
-/*    function recordSharedPreferences (subject, context) {
-      return new Promise(function (resolve, reject) {
-        var sharedPreferences = kb.any(subject, ns.ui.sharedPreferences)
-        if (!sharedPreferences) {
-          let sp = $rdf.sym(subject.doc().uri + 'SharedPrefereces')
-          let ins = [$rdf.st(subject, ns.ui.sharedPreferences, sp, subject.doc())]
-          console.log('Creating shared preferences ' + sp)
-          kb.updater.update([], ins, function (uri, ok, errorMessage) {
-            if (!ok) {
-              reject(new Error('create shard prefs: ' + errorMessage))
-            } else {
-              context.sharedPreferences = sp
-              resolve(context)
-            }
-          })
-        } else {
-          context.sharedPreferences = sharedPreferences
-          resolve(context)
-        }
-      })
-    }
+    let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(st => st.object)
 
-    function renderPreferencesForm (subject, preferencesForm, context) {
-      var prefContainer = context.dom.createElement('div')
-      UI.pad.participationObject(subject, subject.doc(), context.me).then(participation => {
-        let dom = context.dom
-        function heading (text) {
-          prefContainer.appendChild(dom.createElement('h5')).textContent = text
-        }
-        heading('My view of this ' + context.noun)
-        UI.widgets.appendForm(dom, prefContainer, {}, participation, preferencesForm, subject.doc(),
-          (ok, mes) => { if (!ok) UI.widgets.complain(context, mes) })
-
-        heading('Everyone\'s  view of this ' + context.noun)
-        var sharedPreferences = kb.any(subject, ns.ui.sharedPreferences)
-        recordSharedPreferences(subject, context).then(context => {
-          UI.widgets.appendForm(dom, prefContainer, {}, sharedPreferences, preferencesForm, subject.doc(),
-          (ok, mes) => { if (!ok) UI.widgets.complain(context, mes) })
-
-          // @@ My defaults for all objects like this
-        })
-      }, err => { // parp object fails
-        prefContainer.appendChild(UI.widgets.errorMessageBlock(dom, err))
-      })
-      return prefContainer
-    }
-*/
     //          Menu
     //
     // Build a menu a the side (@@ reactive: on top?)
@@ -179,8 +134,16 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     var div = dom.createElement('div')
     div.setAttribute('class', 'chatPane')
     let options = {infinite: true, menuHandler: menuHandler} // Like newestFirst
+    let context = {noun: 'chat room', div, dom}
+    context.me = UI.authn.currentUser() // If already logged on
 
-    div.appendChild(UI.infiniteMessageArea(dom, kb, subject, options))
+    UI.preferences.getPreferencesForClass(subject, mainClass, preferenceProperties, context).then(prefMap => {
+      for (let propuri in prefMap) {
+        options[propuri.split('#')[1]] = prefMap[propuri]
+      }
+      div.appendChild(UI.infiniteMessageArea(dom, kb, subject, options))
+    }, err => UI.widgets.complain(err))
+
 
     return div
   }
