@@ -1020,24 +1020,22 @@ module.exports = {
           }
           filename = prefix + n + '.' + extension
         }
-        kb.add(subject, predicate, pic, subject.doc())
-        console.log('Putting ' + data.length + ' bytes of ' + contentType + ' to ' + pic)
-        kb.fetcher.webOperation('PUT', pic, {data: data, contentType: contentType})
+        console.log('Putting ' + data.byteLength + ' bytes of ' + contentType + ' to ' + pic)
+        kb.fetcher.webOperation('PUT', pic.uri, {data: data, contentType: contentType})
           .then(function (response) {
             if (!response.ok) {
               complain('Error uploading ' + pic + ':' + response.status)
               return
             }
             console.log(' Upload: put OK: ' + pic)
-            return kb.fetcher.putBack(subject.doc())
-          })
-          .then(function () {
-            if (isImage) {
-              mugshotDiv.refresh()
-            }
-          })
-          .catch(function (status) {
-            console.log(' Upload: FAIL ' + pic + ', Error: ' + status)
+            kb.add(subject, predicate, pic, subject.doc())
+            kb.fetcher.putBack(subject.doc(), {contentType: 'text/turtle'}).then(function (response) {
+              if (isImage) {
+                mugshotDiv.refresh()
+              }
+            }, function (err) {
+              console.log(' Write back image link FAIL ' + pic + ', Error: ' + err)
+            })
           })
       }
 
