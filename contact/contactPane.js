@@ -1108,7 +1108,7 @@ module.exports = {
       UI.store.fetcher.load(toBeFetched)
 
         .catch(function (e) {
-          console.log('Error: Failed to load form or ontology: ' + e)
+          console.log('Error: Failed to load subject: ' + e)
         }) // load.then
 
         .then(function (xhrs) {
@@ -1307,7 +1307,7 @@ module.exports = {
     me = UI.authn.currentUser()
     if (!me) {
       console.log('(You do not have your Web Id set. Sign in or sign up to make changes.)')
-      UI.authn.logInLoadProfile(context).then( context => {
+      UI.authn.logInLoadProfile(context).then(context => {
         console.log('Logged in as ' + context.me)
         me = context.me
       }, err => {

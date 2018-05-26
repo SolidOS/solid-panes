@@ -1,0 +1,12 @@
+  @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+  @prefix ui: <http://www.w3.org/ns/ui#>.
+  @prefix : <#>.
+
+  :this
+    <http://purl.org/dc/elements/1.1/title> "Chat preferences" ;
+    a ui:Form ;
+    ui:part :colorizeField;
+    ui:parts ( :colorizeField :expandImagesInline ).
+
+:colorizeField a ui:BooleanField; ui:label "Color user input by user".
+:expandImagesInline a ui:BooleanField; ui:label "Expand image URLs inline".
