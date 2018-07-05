@@ -42,11 +42,11 @@ Volunteers are always welcome!
 
 ## Eg. some RDF CLasses
 
-Here just to show how it works are how some not all RDF Classes map onto panes.  Do anyting to to with
+Here just to show how it works are how some not all RDF Classes map onto panes.  So anything to do with
 contacts (A VCARD Address Book, Group, Individual, Organization) can be handled by the one contact
-pane.  Any othe pane which wants to deal with contacts can just use the paine within its own user interface.
+pane.  Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
 
-![Mapingg many classes on the L to panes on the R](https://solid.github.io//solid-panes/doc/images/panes-for-classes.svg)
+![Mapping many classes on the L to panes on the R](https://solid.github.io//solid-panes/doc/images/panes-for-classes.svg)
 
 
