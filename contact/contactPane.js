@@ -553,14 +553,14 @@ module.exports = {
                 if (!confirm(' Really DELETE File ' + file)) {
                   throw new Error('User aborted delete file')
                 }
-                return kb.fetcher.webOperation('DELETE', file)
+                return kb.fetcher.webOperation('DELETE', file.uri)
               }
             })
             console.log('deleteRecirsive folder: ' + folder)
             if (!confirm(' Really DELETE folder ' + folder)) {
               throw new Error('User aborted delete file')
             }
-            promises.push(kb.fetcher.webOperation('DELETE', folder))
+            promises.push(kb.fetcher.webOperation('DELETE', folder.uri))
             Promise.all(promises).then(res => { resolve() })
           })
         })

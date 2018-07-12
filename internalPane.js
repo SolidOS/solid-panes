@@ -41,12 +41,12 @@ module.exports = {
               return deleteRecursive(kb, file)
             } else {
               console.log('deleteRecursive leaf file: ' + file)
-              return kb.fetcher.webOperation('DELETE', file)
+              return kb.fetcher.webOperation('DELETE', file.uri)
             }
           })
           Promise.all(promises).then(res => {
             console.log('deleteRecursive empty folder: ' + folder)
-            kb.fetcher.webOperation('DELETE', folder).then(res => {
+            kb.fetcher.webOperation('DELETE', folder.uri).then(res => {
               console.log('Deleted Ok: ' + folder)
               resolve()
             }, err => {
