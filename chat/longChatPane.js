@@ -144,7 +144,6 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
       div.appendChild(UI.infiniteMessageArea(dom, kb, subject, options))
     }, err => UI.widgets.complain(err))
 
-
     return div
   }
 }
