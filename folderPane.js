@@ -2,7 +2,6 @@
 **
 **  This outline pane lists the members of a folder
 */
-/* global FileReader */
 
 var UI = require('solid-ui')
 var panes = require('./paneRegistry')
@@ -62,7 +61,7 @@ module.exports = {
     var outliner = panes.getOutliner(dom)
     var kb = UI.store
     var mainTable // This is a live synced table
-
+/*
     var complain = function complain (message, color) {
       var pre = dom.createElement('pre')
       console.log(message)
@@ -70,6 +69,7 @@ module.exports = {
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
     }
+*/
     var div = dom.createElement('div')
     div.setAttribute('class', 'instancePane')
     div.setAttribute('style', '  border-top: solid 1px #777; border-bottom: solid 1px #777; margin-top: 0.5em; margin-bottom: 0.5em ')
@@ -124,45 +124,13 @@ module.exports = {
 
     // /////////// Allow new file to be Uploaded
     var droppedFileHandler = function (files) {
-      var f
-      for (var i = 0; files[i]; i++) {
-        f = files[i]
-        console.log(' folder: dropped filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
-          ' size: ' + f.size + ' bytes, last modified: ' +
-          (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
-        )
-
-        var reader = new FileReader()
-        reader.onload = (function (theFile) {
-          return function (e) {
-            var data = e.target.result
-            console.log(' File read byteLength : ' + data.byteLength)
-            if (!subject.uri.endsWith('/')) {
-              console.log('FAIL: - folder name should end in /')
-              return
-            }
-            // Check it does not already exist
-            var destination = kb.sym(subject.uri + encodeURIComponent(theFile.name)) // encode spaces etc
-            if (kb.holds(subject, ns.ldp('contains'), destination)) {
-              complain('Sorry, ' + subject.uri + ' already has something called ' + theFile.name)
-              console.log('Drag-drop upload aborted: folder already contains ' + destination)
-              return
-            }
-            UI.store.fetcher.webOperation('PUT', destination, {data: data, contentType: theFile.type})
-              .then(function () {
-                console.log(' Upload: put OK: ' + destination)
-                kb.add(subject, ns.ldp('contains'), destination, subject.doc())
-                mainTable.refresh()
-                // @@ reload the container file?
-              // @@ Restore the target style after ALL files are done
-              })
-              .catch(function (error) {
-                complain(' Upload: FAILED ' + destination + ', Error: ' + error)
-              })
-          }
-        })(f)
-        reader.readAsArrayBuffer(f)
-      }
+      UI.widgets.uploadFiles(kb.fetcher, files, subject.uri, subject.uri, function (file, uri) {
+        // A file has been uploaded
+        let destination = kb.sym(uri)
+        console.log(' Upload: put OK: ' + destination)
+        kb.add(subject, ns.ldp('contains'), destination, subject.doc())
+        mainTable.refresh()
+      })
     }
 
     UI.aclControl.preventBrowserDropEvents(dom)

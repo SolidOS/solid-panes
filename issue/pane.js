@@ -481,6 +481,7 @@ module.exports = {
 
       // Draggable attachment list
       UI.widgets.attachmentList(dom, subject, div, {
+        doc: stateStore,
         promptIcon: UI.icons.iconBase + 'noun_25830.svg',
         predicate: ns.wf('attachment')
       })

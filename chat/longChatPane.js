@@ -75,11 +75,11 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
     ui:part :colorizeByAuthor, :expandImagesInline, :newestFirst, :inlineImageHeightEms;
     ui:parts ( :colorizeByAuthor :expandImagesInline :newestFirst :inlineImageHeightEms ).
 
-:colorizeByAuthor a ui:BooleanField; ui:property solid:colorizeByAuthor;
+:colorizeByAuthor a ui:TristateField; ui:property solid:colorizeByAuthor;
   ui:label "Color user input by user".
-:expandImagesInline a ui:BooleanField; ui:property solid:expandImagesInline;
+:expandImagesInline a ui:TristateField; ui:property solid:expandImagesInline;
   ui:label "Expand image URLs inline".
-:newestFirst a ui:BooleanField; ui:property solid:newestFirst;
+:newestFirst a ui:TristateField; ui:property solid:newestFirst;
   ui:label "Newest messages at the top".
 
 :inlineImageHeightEms a ui:IntegerField; ui:property solid:inlineImageHeightEms;
@@ -143,7 +143,6 @@ module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_168933
       }
       div.appendChild(UI.infiniteMessageArea(dom, kb, subject, options))
     }, err => UI.widgets.complain(err))
-
 
     return div
   }

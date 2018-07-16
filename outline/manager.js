@@ -1665,7 +1665,11 @@ module.exports = function (doc) {
 
     if (solo && dom && dom.defaultView && dom.defaultView.history) {
       let stateObj = pane ? { paneName: pane.name } : {}
-      dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+      try { // can fail if different origin
+        dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+      } catch (e) {
+        console.log(e)
+      }
     }
 
     if (solo && UI.isExtension) {

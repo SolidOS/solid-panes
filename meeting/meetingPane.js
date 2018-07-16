@@ -303,46 +303,7 @@ module.exports = {
         saveBackMeetingDoc()
       })
     }
-/*
-    var droppedFileHandler0 = function (files) {
-      for (var i = 0; files[i]; i++) {
-        let f = files[i]
-        console.log(' meeting: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
-          ' size: ' + f.size + ' bytes, last modified: ' +
-          (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
-        ) // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
 
-        var reader = new FileReader()
-        reader.onload = (function (theFile) {
-          return function (e) {
-            var data = e.target.result
-            console.log(' File read byteLength : ' + data.byteLength)
-            var folderName = theFile.type.startsWith('image/') ? 'Pictures' : 'Files'
-            var destURI = meeting.dir().uri + folderName + '/' + encodeURIComponent(theFile.name)
-            var extension = mime.extension(theFile.type)
-            if (theFile.type !== mime.lookup(theFile.name)) {
-              destURI += '_.' + extension
-              console.log('MIME TYPE MISMATCH -- adding extension: ' + destURI)
-            }
-
-            UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type })
-              .then(function (theFile, destURI) {
-                console.log(' Upload: put OK: ' + destURI)
-                if (theFile.type.startsWith('image/')) {
-                  makePicturesFolder('Pictures') // If necessary
-                } else {
-                  makeMaterialsFolder('Files')
-                }
-              })
-              .catch(function (error) {
-                console.log(' Upload: FAIL ' + destURI + ', Error: ' + error)
-              })
-          }
-        })(f)
-        reader.readAsArrayBuffer(f)
-      }
-    }
-*/
     var droppedFileHandler = function (files) {
       UI.widgets.uploadFiles(kb.fetcher, files, meeting.dir().uri + 'Files', meeting.dir().uri + 'Pictures',
         function (theFile, destURI) {
@@ -353,46 +314,6 @@ module.exports = {
           }
         })
     }
-
-    // Generic one  -- call from dropped file handler
-    // @@ Move to solid-ui drag and drop widgets
-    /*
-    var uploadFiles = function (fetcher, files, fileBase, imageBase, successHandler) {
-      for (var i = 0; files[i]; i++) {
-        let f = files[i]
-        console.log(' dropped: Filename: ' + f.name + ', type: ' + (f.type || 'n/a') +
-          ' size: ' + f.size + ' bytes, last modified: ' +
-          (f.lastModifiedDate ? f.lastModifiedDate.toLocaleDateString() : 'n/a')
-        ) // See e.g. https://www.html5rocks.com/en/tutorials/file/dndfiles/
-
-        // @@ Add: progress bar(s)
-        var reader = new FileReader()
-        reader.onload = (function (theFile) {
-          return function (e) {
-            var data = e.target.result
-            console.log(' File read byteLength : ' + data.byteLength)
-            var folderName = theFile.type.startsWith('image/') ? imageBase || fileBase : fileBase
-            var destURI = folderName + '/' + encodeURIComponent(theFile.name)
-            var extension = mime.extension(theFile.type)
-            if (theFile.type !== mime.lookup(theFile.name)) {
-              destURI += '_.' + extension
-              console.log('MIME TYPE MISMATCH -- adding extension: ' + destURI)
-            }
-
-            UI.store.fetcher.webOperation('PUT', destURI, { data: data, contentType: theFile.type })
-              .then(response => {
-                console.log(' Upload: put OK: ' + destURI)
-                successHandler(theFile, destURI)
-              },
-                error => {
-                  console.log(' Upload: FAIL ' + destURI + ', Error: ' + error)
-                })
-          }
-        })(f)
-        reader.readAsArrayBuffer(f)
-      }
-    }
-    */
 
     // //////////////////////////////////////////////////////  end of drag drop
 
