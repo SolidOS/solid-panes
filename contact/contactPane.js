@@ -46,117 +46,123 @@ module.exports = {
 
   mintNew: function mintNew (context) {
     return new Promise(function (resolve, reject) {
-      var dom = context.dom
-      var me = context.me
-      var div = context.div
-      var kb = UI.store
-      var ns = UI.ns
-      var newBase = context.newBase || context.newInstance.dir().uri
-      var instanceClass = context.instanceClass || ns.vcard('AddressBook')
+      UI.authn.logInLoadProfile(context).then(context => { // 20180713
+        console.log('Logged in as ' + context.me)
+        var me = context.me
 
-      if (instanceClass.sameTerm(ns.vcard('Group'))) {
-        // Make a group not an address book
-        var g = context.newInstance || kb.sym(context.newBase + 'index.ttl#this')
-        var doc = g.doc()
-        kb.add(g, ns.rdf('type'), ns.vcard('Group'), doc)
-        kb.add(g, ns.vcard('fn'), context.instanceName || 'untitled group', doc) // @@ write doc back
-        kb.fetcher.putBack(doc, {contentType: 'text/turtle'})
-          .then(function (xhr) {
-            resolve(context)
-          })
-          .catch(function (err) {
-            reject(new Error('Error creating document for new group ' + err))
-          })
-        return
-      }
-      var appInstanceNoun = 'address book'
+        var dom = context.dom
+        var div = context.div
+        var kb = UI.store
+        var ns = UI.ns
+        var newBase = context.newBase || context.newInstance.dir().uri
+        var instanceClass = context.instanceClass || ns.vcard('AddressBook')
 
-      function complain (message) {
-        div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
-      }
+        if (instanceClass.sameTerm(ns.vcard('Group'))) {
+          // Make a group not an address book
+          var g = context.newInstance || kb.sym(context.newBase + 'index.ttl#this')
+          var doc = g.doc()
+          kb.add(g, ns.rdf('type'), ns.vcard('Group'), doc)
+          kb.add(g, ns.vcard('fn'), context.instanceName || 'untitled group', doc) // @@ write doc back
+          kb.fetcher.putBack(doc, {contentType: 'text/turtle'})
+            .then(function (xhr) {
+              resolve(context)
+            })
+            .catch(function (err) {
+              reject(new Error('Error creating document for new group ' + err))
+            })
+          return
+        }
+        var appInstanceNoun = 'address book'
 
-      var bookContents = `@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
-  @prefix ab: <http://www.w3.org/ns/pim/ab#>.
-  @prefix dc: <http://purl.org/dc/elements/1.1/>.
-  @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
+        function complain (message) {
+          div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
+        }
 
-  <#this> a vcard:AddressBook;
-      dc:title "New address Book";
-      vcard:nameEmailIndex <people.ttl>;
-      vcard:groupIndex <groups.ttl>.
-`
+        var bookContents = `@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+    @prefix ab: <http://www.w3.org/ns/pim/ab#>.
+    @prefix dc: <http://purl.org/dc/elements/1.1/>.
+    @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 
-      bookContents += '<#this> <http://www.w3.org/ns/auth/acl#owner> <' + me.uri + '>.\n\n'
+    <#this> a vcard:AddressBook;
+        dc:title "New address Book";
+        vcard:nameEmailIndex <people.ttl>;
+        vcard:groupIndex <groups.ttl>.
+  `
 
-      var toBeWritten = [
-        // { to: 'index.html', contentType: 'text/html' },
-        { to: 'index.ttl', content: bookContents, contentType: 'text/turtle' },
-        { to: 'groups.ttl', content: '', contentType: 'text/turtle' },
-        { to: 'people.ttl', content: '', contentType: 'text/turtle' },
-        { to: '', existing: true, aclOptions: { defaultForNew: true } }
-      ]
+        bookContents += '<#this> <http://www.w3.org/ns/auth/acl#owner> <' + me.uri + '>.\n\n'
 
-      var newAppPointer = newBase + 'index.html' // @@ assuming we can't trust server with bare dir
+        var toBeWritten = [
+          // { to: 'index.html', contentType: 'text/html' },
+          { to: 'index.ttl', content: bookContents, contentType: 'text/turtle' },
+          { to: 'groups.ttl', content: '', contentType: 'text/turtle' },
+          { to: 'people.ttl', content: '', contentType: 'text/turtle' },
+          { to: '', existing: true, aclOptions: { defaultForNew: true } }
+        ]
 
-      var offline = UI.authn.offlineTestID()
-      if (offline) {
-        toBeWritten.push({ to: 'local.html', from: 'local.html', contentType: 'text/html' })
-        newAppPointer = newBase + 'local.html' // kludge for testing
-      }
+        var newAppPointer = newBase + 'index.html' // @@ assuming we can't trust server with bare dir
 
-      // @@ Ask user abut ACLs?
+        var offline = UI.authn.offlineTestID()
+        if (offline) {
+          toBeWritten.push({ to: 'local.html', from: 'local.html', contentType: 'text/html' })
+          newAppPointer = newBase + 'local.html' // kludge for testing
+        }
 
-      //
-      //   @@ Add header to PUT     If-None-Match: *       to prevent overwrite
-      //
+        // @@ Ask user abut ACLs?
 
-      var claimSuccess = function (uri, appInstanceNoun) { // @@ delete or grey other stuff
-        console.log('Files created. App ready at ' + uri)
-        var p = div.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'font-size: 140%;')
-        p.innerHTML =
-          "Your <a href='" + uri + "'><b>new " + appInstanceNoun + '</b></a> is ready. ' +
-          "<br/><br/><a href='" + uri + "'>Go to new " + appInstanceNoun + '</a>'
-        resolve(context)
-      }
+        //
+        //   @@ Add header to PUT     If-None-Match: *       to prevent overwrite
+        //
 
-      var doNextTask = function () {
-        if (toBeWritten.length === 0) {
-          claimSuccess(newAppPointer, appInstanceNoun)
-        } else {
-          var task = toBeWritten.shift()
-          console.log('Creating new file ' + task.to + ' in new instance ')
-          var dest = $rdf.uri.join(task.to, newBase) //
-          var aclOptions = task.aclOptions || {}
-          var checkOKSetACL = function (uri, ok) {
-            if (!ok) {
-              complain('Error writing new file ' + task.to)
-              return reject(new Error('Error writing new file ' + task.to))
+        var claimSuccess = function (uri, appInstanceNoun) { // @@ delete or grey other stuff
+          console.log('Files created. App ready at ' + uri)
+          var p = div.appendChild(dom.createElement('p'))
+          p.setAttribute('style', 'font-size: 140%;')
+          p.innerHTML =
+            "Your <a href='" + uri + "'><b>new " + appInstanceNoun + '</b></a> is ready. ' +
+            "<br/><br/><a href='" + uri + "'>Go to new " + appInstanceNoun + '</a>'
+          resolve(context)
+        }
+
+        var doNextTask = function () {
+          if (toBeWritten.length === 0) {
+            claimSuccess(newAppPointer, appInstanceNoun)
+          } else {
+            var task = toBeWritten.shift()
+            console.log('Creating new file ' + task.to + ' in new instance ')
+            var dest = $rdf.uri.join(task.to, newBase) //
+            var aclOptions = task.aclOptions || {}
+            var checkOKSetACL = function (uri, ok) {
+              if (!ok) {
+                complain('Error writing new file ' + task.to)
+                return reject(new Error('Error writing new file ' + task.to))
+              }
+
+              UI.authn.setACLUserPublic(dest, me, aclOptions)
+                .then(() => doNextTask())
+                .catch(err => {
+                  let message = 'Error setting access permissions for ' +
+                    task.to + ' : ' + err.message
+                  complain(message)
+                  return reject(new Error(message))
+                })
             }
 
-            UI.authn.setACLUserPublic(dest, me, aclOptions)
-              .then(() => doNextTask())
-              .catch(err => {
-                let message = 'Error setting access permissions for ' +
-                  task.to + ' : ' + err.message
-                complain(message)
-                return reject(new Error(message))
-              })
-          }
-
-          if ('content' in task) {
-            kb.fetcher.webOperation('PUT', dest, { data: task.content, saveMetadata: true, contentType: task.contentType })
-              .then(() => checkOKSetACL(dest, true))
-          } else if ('existing' in task) {
-            checkOKSetACL(dest, true)
-          } else {
-            reject(new Error('copy not expected buiding new app'))
-            // var from = task.from || task.to // default source to be same as dest
-            // UI.widgets.webCopy(base + from, dest, task.contentType, checkOKSetACL)
+            if ('content' in task) {
+              kb.fetcher.webOperation('PUT', dest, { data: task.content, saveMetadata: true, contentType: task.contentType })
+                .then(() => checkOKSetACL(dest, true))
+            } else if ('existing' in task) {
+              checkOKSetACL(dest, true)
+            } else {
+              reject(new Error('copy not expected buiding new app'))
+              // var from = task.from || task.to // default source to be same as dest
+              // UI.widgets.webCopy(base + from, dest, task.contentType, checkOKSetACL)
+            }
           }
         }
-      }
-      doNextTask()
+        doNextTask()
+      }, err => { // log in then
+        context.div.appendChild(UI.widgets.errorMessageBlock(err))
+      })
     })
   },
 
