@@ -513,8 +513,13 @@ module.exports = {
       div.appendChild(refreshButton)
     } // singleIssueUI
 
-    //              Render a single issue
-
+    // Whatever we are rendering, lets load the ontology
+    var flowOntology = UI.ns.wf('').doc()
+    if (!kb.holds(undefined, undefined, undefined, flowOntology)) { // If not loaded already
+      $rdf.parse(require('./wf.js'), kb, flowOntology.uri, 'text/turtle') // Load ontology directly
+    }
+    
+    // Render a single issue
     if (t['http://www.w3.org/2005/01/wf/flow#Task'] ||
       kb.holds(subject, UI.ns.wf('tracker'))) {
       tracker = kb.any(subject, WF('tracker'))
@@ -522,11 +527,6 @@ module.exports = {
 
       var trackerURI = tracker.uri.split('#')[0]
       // Much data is in the tracker instance, so wait for the data from it
-
-      var flowOntology = UI.ns.wf('').doc()
-      if (!kb.holds(undefined, undefined, undefined, flowOntology)) { // If not loaded already
-        $rdf.parse(require('./wf.js'), kb, flowOntology.uri, 'text/turtle') // Load ontology directly
-      }
 
       UI.store.fetcher.load(tracker.doc()).then(function (xhrs) {
         var stateStore = kb.any(tracker, WF('stateStore'))
@@ -587,7 +587,7 @@ module.exports = {
       // Table of issues - when we have the main issue list
       // We also need the ontology loaded
       //
-      UI.store.fetcher.load([stateStore, ns.wf('').doc()]).then(function (xhrs) {
+      UI.store.fetcher.load([stateStore]).then(function (xhrs) {
         var query = new $rdf.Query(UI.utils.label(subject))
         var cats = kb.each(tracker, WF('issueCategory')) // zero or more
         var vars = ['issue', 'state', 'created']
