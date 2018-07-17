@@ -522,7 +522,13 @@ module.exports = {
 
       var trackerURI = tracker.uri.split('#')[0]
       // Much data is in the tracker instance, so wait for the data from it
-      UI.store.fetcher.load([tracker.doc(), ns.wf('').doc()]).then(function (xhrs) {
+
+      var flowOntology = UI.ns.wf('').doc()
+      if (!kb.holds(undefined, undefined, undefined, flowOntology)) { // If not loaded already
+        $rdf.parse(require('./wf.js'), kb, flowOntology.uri, 'text/turtle') // Load ontology directly
+      }
+
+      UI.store.fetcher.load(tracker.doc()).then(function (xhrs) {
         var stateStore = kb.any(tracker, WF('stateStore'))
         UI.store.fetcher.nowOrWhenFetched(stateStore, subject, function drawIssuePane2 (ok, body) {
           if (!ok) return console.log('Failed to load state ' + stateStore + ' ' + body)
