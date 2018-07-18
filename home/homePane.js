@@ -38,7 +38,6 @@ module.exports = {
       div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere'
       var creationDiv = div.appendChild(dom.createElement('div'))
       var creationContext = {div: creationDiv, dom: dom, statusArea: div, me: me}
-      creationDiv.appendChild(dom.createElement('h4')).textContent = 'Make a new tool'
       UI.create.newThingUI(creationContext, panes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
