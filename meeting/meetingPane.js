@@ -616,7 +616,7 @@ module.exports = {
             parameterCell.appendChild(UI.widgets.errorMessageBlock(dom, err))
           })
       }
-      var mintUI = UI.widgets.selectWorkspace(dom, appDetails, gotWS)
+      var mintUI = UI.authn.selectWorkspace(dom, appDetails, gotWS)
       parameterCell.appendChild(mintUI)
     }
 
