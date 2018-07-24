@@ -518,7 +518,7 @@ module.exports = {
     if (!kb.holds(undefined, undefined, undefined, flowOntology)) { // If not loaded already
       $rdf.parse(require('./wf.js'), kb, flowOntology.uri, 'text/turtle') // Load ontology directly
     }
-    
+
     // Render a single issue
     if (t['http://www.w3.org/2005/01/wf/flow#Task'] ||
       kb.holds(subject, UI.ns.wf('tracker'))) {

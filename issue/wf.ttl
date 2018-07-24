@@ -6,8 +6,8 @@
 #
 @keywords a, is, of.
 
-@prefix :	<http://www.w3.org/2005/01/wf/flow#>.
-@prefix wf:	<http://www.w3.org/2005/01/wf/flow#>.
+@prefix :    <http://www.w3.org/2005/01/wf/flow#>.
+@prefix wf:    <http://www.w3.org/2005/01/wf/flow#>.
 
 @prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix s: <http://www.w3.org/2000/01/rdf-schema#> .
@@ -43,32 +43,32 @@
     """.
 
 Task a s:Class;
-	s:label "task"@en; owl:disjointUnionOf (Open Closed);
-	s:comment """Something to be done in a wide sense,
-	an agenda item at a meeting is one example, but any
-	issue, task, action item, goal, product, deliverable, milestone, can such a thing.
-	The requirement for this framework was that it would allow
-	one to customize ontologies for things such as agenda items,
-	action items, working group issues with a spec, w3c Last Call issues,
-	software bugs and administrative requests.
-	In π-calculus, a process.
-	Make your type of issue a subclass of Task.
-	""".
+    s:label "task"@en; owl:disjointUnionOf (Open Closed);
+    s:comment """Something to be done in a wide sense,
+    an agenda item at a meeting is one example, but any
+    issue, task, action item, goal, product, deliverable, milestone, can such a thing.
+    The requirement for this framework was that it would allow
+    one to customize ontologies for things such as agenda items,
+    action items, working group issues with a spec, w3c Last Call issues,
+    software bugs and administrative requests.
+    In π-calculus, a process.
+    Make your type of issue a subclass of Task.
+    """.
 
 Open a s:Class; s:subClassOf Task;
-	s:label "open"@en, "ouvert"@fr;
-	s:comment """A task which needs attention. The very crude states of Open and Closed all
+    s:label "open"@en, "ouvert"@fr;
+    s:comment """A task which needs attention. The very crude states of Open and Closed all
         interoperatbility between different systems if the states for a given
         application are made subclasses of either Open or Closed. This allows
         tasks from different systems to be mixed and treatd together with
         limited but valuable functionality.
-	""".
+    """.
 
 Closed a s:Class; s:subClassOf Task;
-	s:label "closed"@en, "fermé"@fr;
-	s:comment """A task which does not neeed attention. It may be closed because
+    s:label "closed"@en, "fermé"@fr;
+    s:comment """A task which does not neeed attention. It may be closed because
         has been abandonned or completed, for example.
-	""".
+    """.
 
 
 
@@ -88,11 +88,11 @@ dependent a rdf:Property;
         (Note the US spelling of the URI. In the UK, a dependant is a something
         which is dependent on somehing else.)""".
 
-assignee	a		rdf:Property;
-		s:label		"assigned to"; owl:inverseOf [s:label "assignment"];
-#		s:domain	Task;
-		s:range		foaf:Agent;
-		s:comment	"""The person or group to whom this has been assigned.""".
+assignee    a        rdf:Property;
+        s:label        "assigned to"; owl:inverseOf [s:label "assignment"];
+#        s:domain    Task;
+        s:range        foaf:Agent;
+        s:comment    """The person or group to whom this has been assigned.""".
 
 # use dct:modified
 #modified        a               rdf:Property;
@@ -260,100 +260,100 @@ doap:bug-database owl:inverseOf [ s:label "project"@en ].
 #
 #           Finite state machines
 #
-Change		a s:Class;
-		s:label "change";
-		s:comment """The universal class of things which
+Change        a s:Class;
+        s:label "change";
+        s:comment """The universal class of things which
 change the state of a task.
 Included now: Creation, Transition. (Maybe in the future
 more π-calculus constructions such as splitting & merging tasks,
 and import/export of obligations to a foreign opaque system.)
 """.
 
-Transition 	a s:Class; s:subClassOf Change;
-		s:label		"transition";
-		s:comment """A transition is a change of state of
+Transition     a s:Class; s:subClassOf Change;
+        s:label        "transition";
+        s:comment """A transition is a change of state of
 a task. Typical properties include date and/or source
 (a document causing the transition), and a final state.""".
 
-Creation 	a s:Class; s:subClassOf Change;
-		s:label		"creation";
-		s:comment """A creation is a change from existence
+Creation     a s:Class; s:subClassOf Change;
+        s:label        "creation";
+        s:comment """A creation is a change from existence
 to non-existence
 a task. Typical properties include date and/or source
 (a document causing the transition), and a final state.""".
 
 
-date	s:range	DateTime.
+date    s:range    DateTime.
 
-final	a 		rdf:Property;
-		s:label		"to";
-		s:domain	Transition;
-		s:range	State.
+final    a         rdf:Property;
+        s:label        "to";
+        s:domain    Transition;
+        s:range    State.
 
-task		a		rdf:Property;
-		s:range		Task;
-		s:label		"task".
+task        a        rdf:Property;
+        s:range        Task;
+        s:label        "task".
 
-requires	a rdf:Property;
-		s:label "requires";
-		s:domain	Transition;
-		s:range		rdf:List; # Of properties for validation
-		s:comment	"""To be a valid transition,
-		a necessary (but not necessarily sufficuent) condition
-		is that there be recorded these properties for the record""".
+requires    a rdf:Property;
+        s:label "requires";
+        s:domain    Transition;
+        s:range        rdf:List; # Of properties for validation
+        s:comment    """To be a valid transition,
+        a necessary (but not necessarily sufficuent) condition
+        is that there be recorded these properties for the record""".
 
-affects		a rdf:Property;
-		s:label "affects";
-		s:domain	doc:Work;
-		s:range		Task.
+affects        a rdf:Property;
+        s:label "affects";
+        s:domain    doc:Work;
+        s:range        Task.
 
 
 # { ?x a Transition; task ?t; source ?doc } => { ?doc affects ?t }.
 
 
-creates		a rdf:Property;
-		s:label "creates";
-		s:domain	doc:Work;
-		s:range		Task.
+creates        a rdf:Property;
+        s:label "creates";
+        s:domain    doc:Work;
+        s:range        Task.
 
 
 allowedTransitions a rdf:Property;
-		s:domain	State;
-		s:range		rdf:List; # @@@ of Action
-		s:label		"allowed transitions";
-		s:comment	"""The state machine is defined
-	by these lists of transition allowed for each issue.
-	(An interesting option in the Web is to make an allowed transition
-	to a state in soemone else's ontology, which in turn allows
-	transitions into many ontologies.  So a finite state maxchine
-	may become very large. In practice this means that a task handed
-	off to another organization may be processed on all kinds of ways.)""".
+        s:domain    State;
+        s:range        rdf:List; # @@@ of Action
+        s:label        "allowed transitions";
+        s:comment    """The state machine is defined
+    by these lists of transition allowed for each issue.
+    (An interesting option in the Web is to make an allowed transition
+    to a state in soemone else's ontology, which in turn allows
+    transitions into many ontologies.  So a finite state maxchine
+    may become very large. In practice this means that a task handed
+    off to another organization may be processed on all kinds of ways.)""".
 
-#	{ ?x a TerminalState} => { ?x allowedTransitions () }.
+#    { ?x a TerminalState} => { ?x allowedTransitions () }.
 
-final 		a rdf:Property;
-		s:label		"to";
-		s:range	State.
+final         a rdf:Property;
+        s:label        "to";
+        s:range    State.
 
-issue		a		rdf:Property;
-		s:label		"issue";
-		s:comment
-		"""A transition changes the state of the given issue.""".
+issue        a        rdf:Property;
+        s:label        "issue";
+        s:comment
+        """A transition changes the state of the given issue.""".
 
-source	a		rdf:Property;
-		s:label		"source";
-		s:comment	"""The source of a transition is
-				the document by which it happened""";
-		s:range		doc:Work.
+source    a        rdf:Property;
+        s:label        "source";
+        s:comment    """The source of a transition is
+                the document by which it happened""";
+        s:range        doc:Work.
 TerminalState a s:Class;
-	s:subClassOf State;
-	s:label "terminal state";
-	s:comment """A state from which there are no transisions.""".
+    s:subClassOf State;
+    s:label "terminal state";
+    s:comment """A state from which there are no transisions.""".
 
 NonTerminalState a s:Class;
-	s:label "non-terminal state";
-	owl:disjointWith TerminalState;
-	s:comment """A state from which there are transisions.""".
+    s:label "non-terminal state";
+    owl:disjointWith TerminalState;
+    s:comment """A state from which there are transisions.""".
 
 ######################################################
 

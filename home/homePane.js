@@ -25,7 +25,6 @@ module.exports = {
   },
 
   render: function (subject, dom) {
-
     var showContent = function () {
       var context = {div: div, dom: dom, statusArea: div, me: me}
 
