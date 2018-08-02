@@ -96,7 +96,7 @@ const thisPane = { // 'noun_638141.svg' not editing
         Just put people here you are happy to be connected with publically
         (You can always keep private track of friends and family in your contacts.)`)
 
-      if (editable) comment(`Drag people onto the target bellow to add people.`)
+      if (editable) comment(`Drag people onto the target below to add people.`)
 
       UI.widgets.attachmentList(dom, subject, main, {
         doc: profile,
