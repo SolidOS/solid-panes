@@ -120,7 +120,8 @@ module.exports = {
           p.innerHTML =
             "Your <a href='" + uri + "'><b>new " + appInstanceNoun + '</b></a> is ready. ' +
             "<br/><br/><a href='" + uri + "'>Go to new " + appInstanceNoun + '</a>'
-          resolve(context)
+          var newContext = Object.assign({ newInstance: kb.sym(uri) }, context)
+          resolve(newContext)
         }
 
         var doNextTask = function () {
