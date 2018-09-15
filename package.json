@@ -40,7 +40,23 @@
     "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
     "rdflib": ">=0.17.0",
-    "solid-ui": ">=0.11.3"
+    "solid-ui": ">=0.11.5"
+  },
+  "dependenciesBackup": {
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-metalab": "^1.0.0",
+    "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
+    "mime-types": "^2.1.13",
+    "rdflib": ">=0.17.1",
+    "solid-ui": ">=0.11.5"
+  },
+  "dependenciesFile": {
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-metalab": "^1.0.0",
+    "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
+    "mime-types": "^2.1.13",
+    "rdflib": ">=0.17.0",
+    "solid-ui": "file://../../solid/solid-ui"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",

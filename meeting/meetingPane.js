@@ -4,7 +4,7 @@
 */
 
 // const VideoRoomPrefix = 'https://appear.in/'
-const VideoRoomPrefix = 'https://meet.jit.si/rdflib-rdfext '
+const VideoRoomPrefix = 'https://meet.jit.si/'
 
 var UI = require('solid-ui')
 var panes = require('../paneRegistry')
