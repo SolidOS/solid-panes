@@ -1,6 +1,7 @@
 module.exports = `
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix ui: <http://www.w3.org/ns/ui#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
 @prefix : <#>.
 
 <http://www.w3.org/2006/vcard/ns#Individual>
@@ -22,9 +23,8 @@ module.exports = `
 
     <#fullNameField>
         a <http://www.w3.org/ns/ui#SingleLineTextField> ;
-        ui:label "Name";
         <http://www.w3.org/ns/ui#maxLength> "128" ;
-        <http://www.w3.org/ns/ui#property> <http://www.w3.org/2006/vcard/ns#fn> ;
+        <http://www.w3.org/ns/ui#property> foaf:name ;
         <http://www.w3.org/ns/ui#size> "40" .
 
     <#roleField>
