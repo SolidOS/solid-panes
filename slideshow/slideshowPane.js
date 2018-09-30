@@ -5,7 +5,7 @@ var UI = require('solid-ui')
 
 // tabulator.loadScript("js/panes/slideshow/better-simple-slideshow/js/better-simple-slideshow.js")
 
-var makeBSS = require('better-simple-slideshow')
+var makeBSS = require('@solid/better-simple-slideshow')
 // load also js/panes/slideshow/better-simple-slideshow/css/simple-slideshow-styles.css
 
 module.exports = {

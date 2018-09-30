@@ -35,25 +35,25 @@
   },
   "homepage": "https://github.com/solid/solid-panes",
   "dependencies": {
+    "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
-    "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
     "rdflib": ">=0.17.0",
     "solid-ui": ">=0.11.5"
   },
   "dependenciesBackup": {
+    "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
-    "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
     "rdflib": ">=0.17.1",
     "solid-ui": ">=0.11.5"
   },
   "dependenciesFile": {
+    "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
-    "better-simple-slideshow": "linkeddata/better-simple-slideshow#gh-pages",
     "mime-types": "^2.1.13",
     "rdflib": ">=0.17.0",
     "solid-ui": "file://../../solid/solid-ui"
