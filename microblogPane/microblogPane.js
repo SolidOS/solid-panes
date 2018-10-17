@@ -129,7 +129,7 @@ module.exports = {
       var theUser = UI.authn.currentUser()
 
       if (theUser) {
-        var theAccount = tabulator.preferences.get('acct')
+        var theAccount = UI.preferences.get('acct')
 
         if (theAccount) {
           theAccount = kb.sym(theAccount)
@@ -235,7 +235,7 @@ module.exports = {
     Microblog.prototype.generateNewMB = function (id, name, avatar, loc) {
       var host = loc + '/' + id
       var rememberMicroblog = function () {
-        tabulator.preferences.set('acct', host + '#' + id)
+        UI.preferences.set('acct', host + '#' + id)
       }
       var cbgenUserMB = function (a, success, c, d) {
         if (success) {
