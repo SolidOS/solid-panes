@@ -14,7 +14,7 @@ so typically a hand-written user interface will be chosen over a generic machine
 
 These panes are used in the Data Browser - see mashlib https://github.com/linkeddata/mashlib
 
-Currently the panes available include;
+Currently the panes available include:
 
 - A default pane which lists the properties of any object
 - An internals pane which allows the URI and the HTTP fetch history to be checked
