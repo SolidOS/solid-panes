@@ -47,6 +47,6 @@ contacts (A VCARD Address Book, Group, Individual, Organization) can be handled 
 pane. Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
 
-![Mapping many classes on the L to panes on the R](https://solid.github.io//solid-panes/doc/images/panes-for-classes.svg)
+![Mapping many classes on the L to panes on the R](https://solid.github.io/solid-panes/doc/images/panes-for-classes.svg)
 
 
