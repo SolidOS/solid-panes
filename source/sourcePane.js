@@ -118,7 +118,7 @@ const thisPane = {
       fetcher.webOperation('PUT', subject.uri, options)
       .then(function (response) {
         if (!happy(response, 'PUT')) return
-        setEditable()
+        setUnedited()
       })
       .catch(function (err) {
         div.appendChild(UI.widgets.errorMessageBlock(dom, 'Error saving back: ' + err))
