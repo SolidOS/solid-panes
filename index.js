@@ -6,7 +6,7 @@
 ** Panes may be used naked or with a pane selection header.
 **
 ** The label() method has two functions: it determines whether the pane is
-** relevant to a given subhect, returning null if not.
+** relevant to a given subject, returning null if not.
 ** If it is relevant, then it returns a suitable tooltip for a control which selects the pane
 */
 
@@ -18,14 +18,14 @@ const panes = require('./paneRegistry')
 module.exports = panes
 
 // We attach the solid-UI lower-level system for convenience
-// Currently most panes ar ebuilt using it anyway.
+// Currently most panes are built using it anyway.
 // It also gives access to rdflib as panes.UI.rdf
 
 panes.UI = require('solid-ui') // Pass on directly to any who needs it
 
 // This has common outline mode functionality for the default and other other panes
-// A separate outline manager is requires per DOM in cases like a browser extension
-// where ther are many occurences of window, and of window.document
+// A separate outline manager is required per DOM in cases like a browser extension
+// where there are many occurrences of window and of window.document
 // But each DOM should have just one outline manager.
 
 panes.OutlineManager = require('./outline/manager.js')
@@ -51,7 +51,7 @@ register(require('./issue/pane.js'))
 register(require('./contact/contactPane.js'))
 
 register(require('./pad/padPane.js'))
-// register(require('./argument/argumentPane.js')) // A posistion in an argumnent tree
+// register(require('./argument/argumentPane.js')) // A position in an argument tree
 
 register(require('./transaction/pane.js'))
 register(require('./transaction/period.js'))
@@ -83,7 +83,7 @@ register(require('./slideshow/slideshowPane.js'))
 register(require('./socialPane.js'))
 
 register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
-register(require('./dataContentPane.js')) // Prefered for a data file
+register(require('./dataContentPane.js')) // Preferred for a data file
 
 register(require('./source/sourcePane.js')) // edit source
 register(require('./n3Pane.js'))
@@ -125,7 +125,7 @@ register(require('./sharing/sharingPane.js'))
 
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internalPane.js'))
-// The home pame is a 2016 experiment. Always there.
+// The home pane is a 2016 experiment. Always there.
 
 register(require('./profile/profilePane.js')) // edit your public profile
 register(require('./home/homePane.js'))

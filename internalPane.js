@@ -1,7 +1,7 @@
 /*   Internal Pane
 **
 **  This outline pane contains the properties which are
-** internal to the user's interaction with the web, and are not normaly displayed
+** internal to the user's interaction with the web, and are not normally displayed
 */
 /* global alert confirm */
 
@@ -87,7 +87,7 @@ module.exports = {
         })
       })
       deleteButton.style = 'height: 2em;'
-      deleteButton.class = '' // Remove hovver hide
+      deleteButton.class = '' // Remove hover hide
       deleteCell.appendChild(deleteButton)
 
       const refreshCell = controlRow.appendChild(dom.createElement('td'))

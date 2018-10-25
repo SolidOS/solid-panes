@@ -292,7 +292,7 @@ module.exports = {
     } // me is defined
     // End of you and s
 
-    // div.appendChild(dom.createTextNode(plural(friends.length, 'acqaintance') +'. '))
+    // div.appendChild(dom.createTextNode(plural(friends.length, 'acquaintance') +'. '))
 
     // /////////////////////////////////////////////  Main block
     //
@@ -306,9 +306,9 @@ module.exports = {
       noun: 'friend'
     })
 
-    // Figure out whuich are reciprocated:
+    // Figure out which are reciprocated:
     // @@ Does not look up profiles
-    // Does distinsuish reciporocated from unreciprocated friendships
+    // Does distinguish reciprocated from unreciprocated friendships
     //
     function triageFriends (s) {
       outgoing = kb.each(s, foaf('knows'))

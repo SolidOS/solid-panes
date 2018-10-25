@@ -1,10 +1,10 @@
-/*   Profile Edting Pane
+/*   Profile Editing Pane
 **
 ** Unlike most panes, this is available any place whatever the real subject,
-** and allows th user to edit their own profile.
+** and allows the user to edit their own profile.
 **
 ** Usage: paneRegistry.register('profile/profilePane')
-** or standalone script adding onto existig mashlib.
+** or standalone script adding onto existing mashlib.
 */
 
 const nodeMode = (typeof module !== 'undefined')
@@ -30,8 +30,7 @@ const thisPane = { // 'noun_638141.svg' not editing
 
   label: function (subject) {
     var types = kb.findTypeURIs(subject)
-    if (types[UI.ns.foaf('Person').uri] ||
-    types[UI.ns.vcard('Individual').uri]) {
+    if (types[UI.ns.foaf('Person').uri] || types[UI.ns.vcard('Individual').uri]) {
       return 'Your Profile'
     }
     return 'Edit your profile' // At the monet, just allow on any object. Like home pane
@@ -80,7 +79,7 @@ const thisPane = { // 'noun_638141.svg' not editing
 
       if (!editable) {
         statusArea.appendChild(UI.widgets.errorMessageBlock(dom,
-          `Your profile ${subject.doc().uri} is not editable, so we cant so much.`))
+          `Your profile ${subject.doc().uri} is not editable, so we cannot do much here.`))
       }
 
       comment(`Everything you put here will be public.
@@ -93,10 +92,13 @@ const thisPane = { // 'noun_638141.svg' not editing
       heading('People you know who have webids')
 
       comment(`This is your public social network.
-        Just put people here you are happy to be connected with publically
+        Just put people here you are happy to be connected with publicly
         (You can always keep private track of friends and family in your contacts.)`)
 
-      if (editable) comment(`Drag people onto the target bellow to add people.`)
+      // TODO: would be useful to explain what it means to "drag people"
+      //       what is it that is being dragged?
+      //       is there a way to search for people (or things to drag) on this page?
+      if (editable) comment(`Drag people onto the target below to add people.`)
 
       UI.widgets.attachmentList(dom, subject, main, {
         doc: profile,

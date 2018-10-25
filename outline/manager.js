@@ -431,8 +431,7 @@ module.exports = function (doc) {
 
   // / ////////////////////  Specific panes are in panes/*.js
   //
-  // The defaultPaneis the first one registerd for which the label
-  //  method
+  // The defaultPane is the first one registered for which the label method exists
   // Those registered first take priority as a default pane.
   // That is, those earlier in this file
 
@@ -1235,7 +1234,7 @@ module.exports = function (doc) {
 
   /** things to do onmousedown in outline view **/
   /*
-   **   To Do:  This big event hander needs to be replaced by lots
+   **   To Do:  This big event handler needs to be replaced by lots
    ** of little ones individually connected to each icon.  This horrible
    ** switch below isn't modular. (Sorry!) - Tim
    */
@@ -1251,10 +1250,10 @@ module.exports = function (doc) {
     var subject = UI.utils.getAbout(kb, target)
     var pane = e.altKey ? panes.internalPane : undefined // set later: was panes.defaultPane
 
-    if (e.shiftKey) { // Shift forces a refocuss - bring this to the top
+    if (e.shiftKey) { // Shift forces a refocus - bring this to the top
       outlineRefocus(p, subject, pane)
     } else {
-      if (e.altKey) { // To investigate screwups, dont wait show internals
+      if (e.altKey) { // To investigate screw ups, dont wait show internals
         outlineExpand(p, subject, {
           'pane': panes.internalPane,
           'immediate': true
@@ -1317,7 +1316,7 @@ module.exports = function (doc) {
     }
 
     var target = thisOutline.targetOf(e)
-    // Originallt this was set on the whole tree and could happen anywhere
+    // Originally this was set on the whole tree and could happen anywhere
     // var p = target.parentNode
     var node
     for (node = UI.utils.ancestor(target, 'TD'); node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
@@ -1339,11 +1338,11 @@ module.exports = function (doc) {
       thisOutline.UserInput.clearInputAndSave(e)
       setSelected(node, true)
 
-      if (e.detail === 2) { // dobule click -> quit TabulatorMousedown()
+      if (e.detail === 2) { // double click -> quit TabulatorMousedown()
         e.stopPropagation()
         return
       }
-      // if the node is already selected and the correspoding statement is editable,
+      // if the node is already selected and the corresponding statement is editable,
       // go to UserInput
       var st = node.parentNode.AJAR_statement
       if (!st) return // For example in the title TD of an expanded pane
@@ -1362,7 +1361,7 @@ module.exports = function (doc) {
     }
     */
     e.stopPropagation()
-     // this is important or conflict between deslect and userinput happens
+     // this is important or conflict between deselect and user input happens
   }
 
   function TabulatorMousedown (e) {
@@ -1385,7 +1384,7 @@ module.exports = function (doc) {
     if (thisOutline.UserInput.lastModified &&
         thisOutline.UserInput.lastModified.parentNode.nextSibling) thisOutline.UserInput.backOut()
 
-      // if (typeof rav=='undefined') //uncommnet this for javascript2rdf
+      // if (typeof rav=='undefined') //uncomment this for javascript2rdf
       // have to put this here or this conflicts with deselectAll()
 
     if (!target.src || (target.src.slice(target.src.indexOf('/icons/') + 1) !== outlineIcons.src.icon_show_choices && target.src.slice(target.src.indexOf('/icons/') + 1) !== outlineIcons.src.icon_add_triple)) { thisOutline.UserInput.clearInputAndSave(e) }
@@ -1619,8 +1618,8 @@ module.exports = function (doc) {
   // Display the subject in an outline view
   //
   // subject -- RDF term for teh thing to be presented
-  // expand  -- flag -- open the subject rather tahn keep folded closed
-  // pane    -- optional -- pane to be used for exanded display
+  // expand  -- flag -- open the subject rather than keep folded closed
+  // pane    -- optional -- pane to be used for expanded display
   // solo    -- optional -- the window will be cleared out and only the subject displayed
   // referer -- optional -- where did we hear about this from anyway?
   // table   -- option  -- a table element in which to put the outline.

@@ -1,7 +1,7 @@
 /*   Default Pane
 **
 **  This outline pane contains the properties which are
-**  normaly displayed to the user. See also: internalPane
+**  normally displayed to the user. See also: internalPane
 ** This pane hides the ones considered too low-level for the normal user.
 */
 

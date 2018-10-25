@@ -41,7 +41,7 @@ module.exports = {
     var doneBnodes = {} // For preventing looping
     var referencedBnodes = {} // Bnodes which need to be named alas
 
-    // The property tree for a single subject or anonymos node
+    // The property tree for a single subject or anonymous node
     function propertyTree (subject) {
       // print('Proprty tree for '+subject)
       var rep = myDocument.createElement('table')
@@ -115,7 +115,7 @@ module.exports = {
             anchor.textContent = '*' + obj.toNT().slice(3)
             return anchor
           }
-          doneBnodes[obj.toNT()] = true // Flag to prevent infinite recusruion in propertyTree
+          doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
           var newTable = propertyTree(obj)
           doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
           if (UI.utils.ancestor(newTable, 'TABLE') && UI.utils.ancestor(newTable, 'TABLE').style.backgroundColor === 'white') {
@@ -207,7 +207,7 @@ module.exports = {
     }
 
     function mainRendering () {
-      var initialRoots = [] // Ordering: start with stuf fabout this doc
+      var initialRoots = [] // Ordering: start with stuff about this doc
       if (kb.holds(subject, undefined, undefined, subject)) initialRoots.push(subject)
       // Then about the primary topic of the document if any
       var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)

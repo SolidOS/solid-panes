@@ -46,7 +46,7 @@ module.exports = {
       })
       for (var nt in kb.findMembersNT(subject)) {
         if (!already[nt]) {
-          more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)) // @@ no provenence
+          more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)) // @@ no provenance
         }
       }
       if (more.length) {
@@ -54,7 +54,7 @@ module.exports = {
           more.length + ' implicit members of ' + UI.utils.label(subject))
       }
       if (subject.sameTerm(ns.rdf('Property'))) {
-        // / Do not find all properties used as properties .. unlesss look at kb index
+        // / Do not find all properties used as properties .. unless look at kb index
       } else if (subject.sameTerm(ns.rdfs('Class'))) {
         var uses = kb.statementsMatching(undefined, ns.rdf('type'), undefined)
         var usedTypes = {}
@@ -64,7 +64,7 @@ module.exports = {
           used.push($rdf.st(
             $rdf.sym(i), ns.rdf('type'), ns.rdfs('Class')))
         }
-        complain('Total of ' + uses.length + ' type statments and ' + used.length + ' unique types.')
+        complain('Total of ' + uses.length + ' type statements and ' + used.length + ' unique types.')
       }
 
       if (sts.length > 10) {
@@ -77,7 +77,7 @@ module.exports = {
       outliner.appendPropertyTRs(div, sts, true, function (pred) { return true })
 
       if (more.length) {
-        complain('Implcit:')
+        complain('Implicit:')
         outliner.appendPropertyTRs(div, more, true, function (pred) { return true })
       }
     }
