@@ -9,7 +9,8 @@
     "build": "npm run clean && mkdir -p dist/ && npm run build-dist",
     "clean": "rm -rf dist/",
     "standard": "standard",
-    "test": "npm run standard"
+    "test": "npm run standard",
+    "postinstall": "node ./postinstall.js"
   },
   "repository": {
     "type": "git",

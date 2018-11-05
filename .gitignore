@@ -25,6 +25,7 @@ build/Release
 
 # Dependency directory
 node_modules
+panes
 
 # Optional npm cache directory
 .npm

@@ -85,7 +85,9 @@ register(require('./socialPane.js'))
 register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
 register(require('./dataContentPane.js')) // Prefered for a data file
 
-register(require('./source/sourcePane.js')) // edit source
+// register(require('./source/sourcePane.js')) // edit source
+const pluginManager = require('./pluginManager')
+pluginManager.load(panes)
 register(require('./n3Pane.js'))
 register(require('./RDFXMLPane.js'))
 
