@@ -112,12 +112,42 @@ const thisPane = {
       myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
+    const parseable = {
+      'text/n3': true,
+      'text/turtle': true,
+      'application/rdf+xml': true,
+      'application/xhtml+xml': true, // For RDFa?
+//        'text/html': true,
+//        'application/sparql-update': true,
+      'application/ld+json': true
+//        'application/nquads' : true,
+//        'application/n-quads' : true
+    }
+
+    function checkSyntax (data, contentType, base) {
+      if (parseable[contentType]) return true // don't check things we don't understand
+      try {
+        $rdf.parse(data, kb, base, contentType)
+      } catch (e) {
+        statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
+        // @@ color text red at error until key pressed again?
+        // EXtract line number and charcater number from error is poss
+        return false
+      }
+      return true
+    }
+
     function saveBack (e) {
-      var options = { data: textArea.value, contentType: contentType }
+      const data = textArea.value
+      if (!checkSyntax(data, contentType, subject.uri)) {
+        return setEditable()
+      }
+      var options = { data, contentType }
       if (eTag) options.headers = {'if-match': eTag} // avoid overwriting changed files -> status 412
       fetcher.webOperation('PUT', subject.uri, options)
       .then(function (response) {
         if (!happy(response, 'PUT')) return
+        /// @@ show edited: make save button disabled util edited again.
         setEditable()
       })
       .catch(function (err) {
@@ -125,9 +155,9 @@ const thisPane = {
       })
     }
 
-    function happy (response) {
+    function happy (response, method) {
       if (!response.ok) {
-        let msg = 'HTTP error! Status: ' + response.statusRow
+        let msg = 'HTTP error on ' + method + '! Status: ' + response.status
         console.log(msg)
         if (response.status === 412) msg = 'Error: File changed by someone else'
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))

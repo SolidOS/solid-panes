@@ -287,7 +287,7 @@ module.exports = {
 
     // All the UI for a single issue, without store load or listening for changes
     //
-    var singleIssueUI = function (subject, div) {
+    function singleIssueUI (subject, div) {
       var ns = UI.ns
       var predicateURIsDone = {}
       var donePredicate = function (pred) { predicateURIsDone[pred.uri] = true }
@@ -348,7 +348,7 @@ module.exports = {
       div.appendChild(UI.widgets.makeDescription(dom, kb, subject, WF('description'),
         store, function (ok, body) {
           if (ok) setModifiedDate(store, kb, store)
-          else console.log('Failed to description:\n' + body)
+          else console.log('Failed to change description:\n' + body)
         }))
       donePredicate(WF('description'))
 
@@ -371,31 +371,47 @@ module.exports = {
       var plist = kb.statementsMatching(subject)
       var qlist = kb.statementsMatching(undefined, undefined, subject)
 
-      // var assignee = assignments.length ? assignments[0].object : null
       // Who could be assigned to this?
-      // Anyone assigned to any issue we know about  @@ should be just for this tracker
-      var sts = kb.statementsMatching(undefined, ns.wf('assignee'))
-      var devs = sts.map(st => st.object)
-      // Anyone who is a developer of any project which uses this tracker
-      var proj = kb.any(undefined, ns.doap('bug-database'), tracker)
-      if (proj) devs = devs.concat(kb.each(proj, ns.doap('developer')))
-      if (devs.length) {
-        devs.map(function (person) { kb.fetcher.lookUpThing(person) }) // best effort async for names etc
-        var opts = { 'mint': '** Add new person **',
-          'nullLabel': '(unassigned)',
-          'mintStatementsFun': function (newDev) {
-            var sts = [ $rdf.st(newDev, ns.rdf('type'), ns.foaf('Person')) ]
-            if (proj) sts.push($rdf.st(proj, ns.doap('developer'), newDev))
-            return sts
-          }
+      // Anyone assigned to any issue we know about
+
+      async function getPossibleAssignees () {
+        var devs = []
+        var devGroups = kb.each(subject, ns.wf('assigneeGroup'))
+        for (let i = 0; i < devGroups.length; i++) {
+          let group = devGroups[i]
+          await kb.fetcher.load()
+          devs = devs.concat(kb.each(group, ns.vcard('member')))
         }
-        div.appendChild(UI.widgets.makeSelectForOptions(dom, kb,
-          subject, ns.wf('assignee'), devs, opts, store,
-          function (ok, body) {
-            if (ok) setModifiedDate(store, kb, store)
-            else console.log('Failed to description:\n' + body)
-          }))
+        // Anyone who is a developer of any project which uses this tracker
+        var proj = kb.any(null, ns.doap('bug-database'), tracker) // What project?
+        if (proj) {
+          await kb.fetcher.load(proj)
+          devs = devs.concat(kb.each(proj, ns.doap('developer')))
+        }
+        return devs
       }
+
+      getPossibleAssignees.then(devs => {
+        if (devs.length) {
+          devs.map(function (person) { kb.fetcher.lookUpThing(person) }) // best effort async for names etc
+          var opts = { // 'mint': '** Add new person **',
+            'nullLabel': '(unassigned)'
+            /* 'mintStatementsFun': function (newDev) {
+              var sts = [ $rdf.st(newDev, ns.rdf('type'), ns.foaf('Person')) ]
+              if (proj) sts.push($rdf.st(proj, ns.doap('developer'), newDev))
+              return sts
+            }
+            */
+          }
+          div.appendChild(UI.widgets.makeSelectForOptions(dom, kb,
+            subject, ns.wf('assignee'), devs, opts, store,
+            function (ok, body) {
+              if (ok) setModifiedDate(store, kb, store)
+              else console.log('Failed to change assignee:\n' + body)
+            }))
+        }
+      })
+
       donePredicate(ns.wf('assignee'))
 
       if (getOption(tracker, 'allowSubIssues')) {
