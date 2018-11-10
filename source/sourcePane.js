@@ -99,8 +99,8 @@ const thisPane = {
       if (broken) return
       editing = true
       textArea.style.color = 'black'
-      cancelButton.style.visibility = 'visible'
-      saveButton.style.visibility = 'visible'
+      cancelButton.style.visibility = 'visible' // not logically needed but may be comforting
+      saveButton.style.visibility = 'collapse'
       myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
@@ -124,14 +124,38 @@ const thisPane = {
 //        'application/n-quads' : true
     }
 
+    /** Set Caret position in a text box
+    * @param {Element} elem - the element to be tweaked
+    * @param {Integer} caretPos - the poisition starting at zero
+    * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
+    */
+    function setCaretPosition(elem, caretPos) {
+      if(elem != null) {
+        if(elem.createTextRange) {
+          var range = elem.createTextRange();
+          range.move('character', caretPos);
+          range.select();
+        } else {
+          elem.focus();
+          if(elem.selectionStart) {
+              elem.setSelectionRange(caretPos, caretPos);
+          }
+        }
+      }
+    }
+
     function checkSyntax (data, contentType, base) {
-      if (parseable[contentType]) return true // don't check things we don't understand
+      if (!parseable[contentType]) return true // don't check things we don't understand
       try {
+        statusRow.innerHTML = ''
         $rdf.parse(data, kb, base, contentType)
       } catch (e) {
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
-        // @@ color text red at error until key pressed again?
-        // EXtract line number and charcater number from error is poss
+        for (let cause = e; cause = cause.cause; cause) {
+          if (cause.characterInFile) {
+            setCaretPosition(textArea, e2.characterInFile)
+          }
+        }
         return false
       }
       return true
@@ -140,7 +164,9 @@ const thisPane = {
     function saveBack (e) {
       const data = textArea.value
       if (!checkSyntax(data, contentType, subject.uri)) {
-        return setEditable()
+        setEdited() // failed to save -> differenet from web
+        textArea.style.color = 'red'
+        return
       }
       var options = { data, contentType }
       if (eTag) options.headers = {'if-match': eTag} // avoid overwriting changed files -> status 412
