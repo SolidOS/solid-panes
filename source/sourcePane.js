@@ -99,8 +99,8 @@ const thisPane = {
       if (broken) return
       editing = true
       textArea.style.color = 'black'
-      cancelButton.style.visibility = 'visible'
-      saveButton.style.visibility = 'visible'
+      cancelButton.style.visibility = 'visible' // not logically needed but may be comforting
+      saveButton.style.visibility = 'collapse'
       myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
@@ -112,12 +112,68 @@ const thisPane = {
       myEditButton.style.visibility = 'collapse'
       textArea.removeAttribute('readonly')
     }
+    const parseable = {
+      'text/n3': true,
+      'text/turtle': true,
+      'application/rdf+xml': true,
+      'application/xhtml+xml': true, // For RDFa?
+//        'text/html': true,
+//        'application/sparql-update': true,
+      'application/ld+json': true
+//        'application/nquads' : true,
+//        'application/n-quads' : true
+    }
+
+    /** Set Caret position in a text box
+    * @param {Element} elem - the element to be tweaked
+    * @param {Integer} caretPos - the poisition starting at zero
+    * @credit  https://stackoverflow.com/questions/512528/set-keyboard-caret-position-in-html-textbox
+    */
+    function setCaretPosition(elem, caretPos) {
+      if(elem != null) {
+        if(elem.createTextRange) {
+          var range = elem.createTextRange();
+          range.move('character', caretPos);
+          range.select();
+        } else {
+          elem.focus();
+          if(elem.selectionStart) {
+              elem.setSelectionRange(caretPos, caretPos);
+          }
+        }
+      }
+    }
+
+    function checkSyntax (data, contentType, base) {
+      if (!parseable[contentType]) return true // don't check things we don't understand
+      try {
+        statusRow.innerHTML = ''
+        $rdf.parse(data, kb, base, contentType)
+      } catch (e) {
+        statusRow.appendChild(UI.widgets.errorMessageBlock(dom, e))
+        for (let cause = e; cause = cause.cause; cause) {
+          if (cause.characterInFile) {
+            setCaretPosition(textArea, e2.characterInFile)
+          }
+        }
+        return false
+      }
+      return true
+    }
+
     function saveBack (e) {
-      var options = { data: textArea.value, contentType: contentType }
+      const data = textArea.value
+      if (!checkSyntax(data, contentType, subject.uri)) {
+        setEdited() // failed to save -> different from web
+        textArea.style.color = 'red'
+        return
+      }
+      var options = { data, contentType }
       if (eTag) options.headers = {'if-match': eTag} // avoid overwriting changed files -> status 412
       fetcher.webOperation('PUT', subject.uri, options)
       .then(function (response) {
         if (!happy(response, 'PUT')) return
+        /// @@ show edited: make save button disabled util edited again.
         setEditable()
       })
       .catch(function (err) {
@@ -125,9 +181,9 @@ const thisPane = {
       })
     }
 
-    function happy (response) {
+    function happy (response, method) {
       if (!response.ok) {
-        let msg = 'HTTP error! Status: ' + response.statusRow
+        let msg = 'HTTP error on ' + method + '! Status: ' + response.status
         console.log(msg)
         if (response.status === 412) msg = 'Error: File changed by someone else'
         statusRow.appendChild(UI.widgets.errorMessageBlock(dom, msg))

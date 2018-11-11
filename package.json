@@ -34,12 +34,20 @@
     "url": "https://github.com/solid/solid-panes/issues"
   },
   "homepage": "https://github.com/solid/solid-panes",
+  "dependenciesFile": {
+    "@solid/better-simple-slideshow": "^0.1.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-metalab": "^1.0.0",
+    "mime-types": "^2.1.13",
+    "rdflib": "file://../../linkeddata/rdflib.js",
+    "solid-ui": "file://../../solid/solid-ui"
+  },
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
     "mime-types": "^2.1.13",
-    "rdflib": ">=0.17.0",
+    "rdflib": ">=0.17.1",
     "solid-ui": ">=0.11.5"
   },
   "dependenciesBackup": {
@@ -49,14 +57,6 @@
     "mime-types": "^2.1.13",
     "rdflib": ">=0.17.1",
     "solid-ui": ">=0.11.5"
-  },
-  "dependenciesFile": {
-    "@solid/better-simple-slideshow": "^0.1.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-metalab": "^1.0.0",
-    "mime-types": "^2.1.13",
-    "rdflib": ">=0.17.0",
-    "solid-ui": "file://../../solid/solid-ui"
   },
   "devDependencies": {
     "babel-cli": "^6.24.1",
