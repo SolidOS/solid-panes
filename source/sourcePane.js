@@ -164,7 +164,7 @@ const thisPane = {
     function saveBack (e) {
       const data = textArea.value
       if (!checkSyntax(data, contentType, subject.uri)) {
-        setEdited() // failed to save -> differenet from web
+        setEdited() // failed to save -> different from web
         textArea.style.color = 'red'
         return
       }
