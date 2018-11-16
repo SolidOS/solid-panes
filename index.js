@@ -55,7 +55,7 @@ register(require('./pad/padPane.js'))
 
 register(require('./transaction/pane.js'))
 register(require('./transaction/period.js'))
-register(require('./chat/chatPane.js'))
+register(require('chat-pane')) // was './chat/chatPane.js'
 register(require('./chat/longChatPane.js'))
 // register(require('./publication/publicationPane.js'))
 register(require('./meeting/meetingPane.js'))
