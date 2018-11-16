@@ -805,6 +805,8 @@ module.exports = {
         iframe.setAttribute('src', target.uri)
         // iframe.setAttribute('style', 'height: 350px; border: 0; margin: 0; padding: 0; resize:both; width: 100%;')
         iframe.setAttribute('style', 'border: none; margin: 0; padding: 0; height: 100%; width: 100%; resize: both; overflow:scroll;')
+        // Following https://dev.chromium.org/Home/chromium-security/deprecating-permissions-in-cross-origin-iframes :
+        iframe.setAttribute('allow', 'getUserMedia') // Allow iframe to request camera and mic
         containerDiv.style.resize = 'none' // Remove scroll bars on outer div - don't seem to work so well
         containerDiv.style.padding = 0
       }
