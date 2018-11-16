@@ -24,7 +24,7 @@ module.exports = {
     newPaneOptions.newInstance = kb.sym(u + '/')
 
     // @@@@ kludge until we can get the solid-client version working
-    // Force the folder by saving a dummy file insie it
+    // Force the folder by saving a dummy file inside it
     return kb.fetcher.webOperation('PUT', newInstance.uri + '.dummy')
       .then(function () {
         console.log('New folder created: ' + newInstance.uri)

@@ -14,7 +14,7 @@ var UI = require('solid-ui')
 var panes = require('../paneRegistry')
 
 var UserInputFormula // Formula to store references of user's work
-var TempFormula // Formula to store incomplete tripes (Requests),
+var TempFormula // Formula to store incomplete triples (Requests),
                  // temporarily disjoint with kb to avoid bugs
 
 module.exports = function UserInput (outline) {
@@ -207,7 +207,7 @@ module.exports = function UserInput (outline) {
  */
 
     // a general entry point for any event except Click&Enter(goes to literalModification)
-    // do a little inference to pick the right inputbox
+    // do a little inference to pick the right input box
     startFillInText: function startFillInText (selectedTd) {
       switch (this.whatSortOfEditCell(selectedTd)) {
         case 'DatatypeProperty-like':
@@ -320,7 +320,7 @@ module.exports = function UserInput (outline) {
            I shall write something about this but not now.
         */
         // this pops up the autocomplete menu
-        // Pops up the menu even though no keypress has occured
+        // Pops up the menu even though no keypress has occurred
         // 1 is a dummy variable for the "enterEvent"
       this.getAutoCompleteHandler(menu)(1)
     },

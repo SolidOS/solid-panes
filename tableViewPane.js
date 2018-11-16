@@ -1,7 +1,7 @@
 // Format an array of RDF statements as an HTML table.
 //
 // This can operate in one of three modes: when the class of object is given
-// or when the source document from whuch data is taken is given,
+// or when the source document from which data is taken is given,
 // or if a prepared query object is given.
 // (In principle it could operate with neither class nor document
 // given but typically

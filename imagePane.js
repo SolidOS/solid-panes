@@ -17,7 +17,7 @@ module.exports = {
       return null
     }
 
-    //   See aslo the source pane, which has lower precedence.
+    //   See also the source pane, which has lower precedence.
 
     var contentTypeMatch = function (kb, x, contentTypes) {
       var cts = kb.fetcher.getHeader(x, 'content-type')

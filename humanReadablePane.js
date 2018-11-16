@@ -14,7 +14,7 @@ module.exports = {
     var kb = UI.store
     var ns = UI.ns
 
-    //   See aslo tthe source pane, which has lower precedence.
+    //   See also the source pane, which has lower precedence.
 
     var allowed = ['text/plain',
       'text/html', 'application/xhtml+xml',
@@ -35,7 +35,7 @@ module.exports = {
       return false
     }
 
-    // This data coul d come from a fetch OR from ldp comtaimner
+    // This data could come from a fetch OR from ldp container
     var hasContentTypeIn2 = function (kb, x, displayables) {
       var t = kb.findTypeURIs(subject)
       for (var k = 0; k < displayables.length; k++) {
@@ -75,7 +75,7 @@ module.exports = {
       console.log('humanReadablePane: unknown content-type?')
     }
 
-    // @@ NOte beflow - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
+    // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
     // You can;'t have any sandbox and allow plugins.
     // We could sandbox only HTML files I suppose.
