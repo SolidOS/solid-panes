@@ -46,6 +46,15 @@
     "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
+
+    "pane-registry": ">=1.0.0",
+    "chat-pane": ">=1.2.0",
+    "contacts-pane": ">=1.0.0",
+    "issue-pane": ">=1.0.1",
+    "folder-pane": ">=1.0.1",
+    "meeting-pane": ">=1.0.1",
+    "source-pane": ">=1.0.1",
+
     "mime-types": "^2.1.13",
     "rdflib": ">=0.17.1",
     "solid-ui": ">=0.11.5"

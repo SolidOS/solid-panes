@@ -6,7 +6,7 @@
 */
 
 var UI = require('solid-ui')
-var panes = require('../paneRegistry')
+var panes = require('pane-registry')
 const ns = UI.ns
 
 module.exports = {

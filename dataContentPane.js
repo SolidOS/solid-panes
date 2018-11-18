@@ -10,7 +10,7 @@
 //         - original source view?  Use ffox view source
 
 var UI = require('solid-ui')
-var panes = require('./paneRegistry')
+var panes = require('pane-registry')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',

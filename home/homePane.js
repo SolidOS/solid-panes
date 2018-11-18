@@ -9,7 +9,7 @@
 */
 
 var UI = require('solid-ui')
-var panes = require('../paneRegistry')
+var panes = require('pane-registry')
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830

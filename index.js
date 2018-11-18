@@ -13,7 +13,7 @@
 // create the unique UI module on which to attach panes (no, don't attach as UI dot panes any more)
 // var UI = require('solid-ui') // Note we will add the panes register to this.
 
-const panes = require('./paneRegistry')
+const panes = require('pane-registry')
 
 module.exports = panes
 
@@ -47,8 +47,8 @@ if (typeof window !== 'undefined') {
 
 let register = panes.register
 
-register(require('./issue/pane.js'))
-register(require('./contact/contactPane.js'))
+register(require('issue-pane'))
+register(require('contacts-pane'))
 
 register(require('./pad/padPane.js'))
 // register(require('./argument/argumentPane.js')) // A position in an argument tree
@@ -58,7 +58,7 @@ register(require('./transaction/period.js'))
 register(require('chat-pane')) // was './chat/chatPane.js'
 register(require('./chat/longChatPane.js'))
 // register(require('./publication/publicationPane.js'))
-register(require('./meeting/meetingPane.js'))
+register(require('meeting-pane'))
 register(require('./tabbed/tabbedPane.js'))
 register(require('./schedule/schedulePane.js'))
 register(require('./links/linksPane.js'))
@@ -75,7 +75,7 @@ register(require('./video/videoPane.js')) // Video clip player
 register(require('./audio/audioPane.js')) // Audio clip player
 
 register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
-register(require('./folderPane.js')) // Should be above dataContentPane
+register(require('folder-pane')) // Should be above dataContentPane
 register(require('./classInstancePane.js')) // Should be above dataContentPane
 // register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
 register(require('./slideshow/slideshowPane.js'))
@@ -85,7 +85,7 @@ register(require('./socialPane.js'))
 register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
 register(require('./dataContentPane.js')) // Preferred for a data file
 
-register(require('./source/sourcePane.js')) // edit source
+register(require('source-pane')) // edit source
 register(require('./n3Pane.js'))
 register(require('./RDFXMLPane.js'))
 
