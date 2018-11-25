@@ -11,7 +11,7 @@
 */
 
 var UI = require('solid-ui')
-var panes = require('../paneRegistry')
+var panes = require('pane-registry')
 
 var UserInputFormula // Formula to store references of user's work
 var TempFormula // Formula to store incomplete triples (Requests),

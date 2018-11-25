@@ -4,7 +4,7 @@
 */
 
 var UI = require('solid-ui')
-var panes = require('./paneRegistry')
+var panes = require('pane-registry')
 
 var ns = UI.ns
 

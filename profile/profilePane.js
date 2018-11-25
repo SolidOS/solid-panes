@@ -12,7 +12,7 @@ var panes, UI
 
 if (nodeMode) {
   UI = require('solid-ui')
-  panes = require('../paneRegistry')
+  panes = require('pane-registry')
 } else { // Add to existing mashlib
   panes = window.panes
   UI = panes.UI

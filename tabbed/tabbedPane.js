@@ -4,7 +4,7 @@
 **
 */
 const UI = require('solid-ui')
-const panes = require('../paneRegistry')
+const panes = require('pane-registry')
 const ns = UI.ns
 const kb = UI.store
 

@@ -8,7 +8,7 @@
 */
 
 const UI = require('solid-ui')
-var panes = require('../paneRegistry')
+var panes = require('pane-registry')
 
 // console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
 module.exports = {

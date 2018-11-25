@@ -1,7 +1,7 @@
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */
-var panes = require('../paneRegistry')
+var panes = require('pane-registry')
 
 var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')

@@ -9,7 +9,7 @@
 */
 
 var UI = require('solid-ui')
-var panes = require('./paneRegistry')
+var panes = require('pane-registry')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',

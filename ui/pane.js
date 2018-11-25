@@ -3,7 +3,7 @@
 */
 
 const UI = require('solid-ui')
-const panes = require('../paneRegistry')
+const panes = require('pane-registry')
 
 module.exports = {
 

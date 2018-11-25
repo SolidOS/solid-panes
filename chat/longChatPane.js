@@ -7,7 +7,6 @@
 const UI = require('solid-ui')
 const ns = UI.ns
 const kb = UI.store
-// const panes = require('../paneRegistry')
 const mainClass = ns.meeting('LongChat') // @@ something from SIOC?
 
 module.exports = { // noun_704.svg Canoe   noun_346319.svg = 1 Chat  noun_1689339.svg = three chat
