@@ -55,8 +55,10 @@ register(require('./pad/padPane.js'))
 
 register(require('./transaction/pane.js'))
 register(require('./transaction/period.js'))
-register(require('chat-pane')) // was './chat/chatPane.js'
-register(require('./chat/longChatPane.js'))
+
+const chatPanes = require('chat-pane')
+register(chatPanes.shortChatPane) // was './chat/chatPane.js'
+register(chatPanes.longChatPane)
 // register(require('./publication/publicationPane.js'))
 register(require('meeting-pane'))
 register(require('./tabbed/tabbedPane.js'))
