@@ -1,0 +1,327 @@
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=windows-1252">
+    <style type="text/css">
+  body {
+  font-family: Trebuchet MS, Palatino, sans-serif;
+  color: black;
+  background: white;
+  margin-left: 3em ;  margin-right: 2em;
+  }
+  p , ul, ol { text-indent : 0em ;
+  margin-left: 0em  ; /* a bit of white space */ }
+  pre { margin-left: 1em; background-color: #eee; padding: 1em; font-size: 120%;}
+
+  table { border: collapse; }
+  td { background-color: #eee; padding: 0.3em;}
+
+  li { text-indent: 0; margin-bottom: 0.5em;}
+  h1 { text-align: center  }
+  h2 { font-style: bold;  margin-left: -1em; }
+  h3 { font-style: bold;  margin-left: 0em; }
+  h4 { font-style: italic;  margin-left: 0em; }
+
+  address { text-align: right }
+  a:link, a:active { color: #00e; background: transparent; text-decoration: none; }
+
+  a:visited {color: #529; background: transparent;}
+  div.intro {margin-left: 5%; margin-right: 5%; font-style: italic}
+  pre { font-family: monospace }
+  a:link img, a:visited img { border-style: none }
+
+  tt { font-size: 120%; background-color: #eee; padding: 0.1em }
+  </style>
+  </head>
+  <body>
+    <h1>A Visual Language for the Solid Databrowser</h1>
+    <p><br>
+    </p>
+    <p>There has been a call for a Visual Language for Solid, in the style for
+      example of the style of airbnb's blog on this.</p>
+    <p>It is true that solid apps using the solid store will typically end up
+      coming from many different places and using many different
+      languages.&nbsp;&nbsp; The stores and their generic API are designed to be
+      universal, so that any data at all can be put in Solid.&nbsp; So one would
+      not want to mandate that all client apps use the same UI language
+      everywhere forever.</p>
+    <p> However, there is a default app, the databrowser which ships as a sort
+      of basic operating system on many solid servers.&nbsp; Its language is
+      interesting for three reasons. Firstly, because it has&nbsp; - The
+      databrowser is a solid app, and so it is an example of the visual language
+      which ended up; secondly because it is useful for people designing for the
+      system to be able to design in the language, and thirdly because lots of
+      people have suggested that the databrowser UI could be improved, this may
+      give a focus for improving it! There are below as many questions asked and
+      unanswered as answered.</p>
+    <p>Some of the challenges in the UI of solid are that in the Solid world any
+      app can have any data about anything -- from linked data attitude that
+      anything can say anything about anything.&nbsp; Also as everything has a
+      URI, anything can be linked to anything else.&nbsp;&nbsp; </p>
+    <h2>Panes</h2>
+    <p>&nbsp;Something like person may start off with just having, say, contact
+      information, about themselves, but then someone may add more information
+      about their events, or messages,&nbsp; or tasks, and so on.&nbsp; </p>
+    <p>Panes are alternative views of a thing -- a think like a person or an
+      event or a photo or a track.&nbsp; They are produced by different software
+      modules, or apps.</p>
+    <h3>Pane layout</h3>
+    <p>Panes are rectangles -- HTML divs. They were originally designed to make
+      the most powerful use possible of a large screen.&nbsp; </p>
+    <h4>Large screen</h4>
+    <p>In solid panes, when used with a lot of screen real estate, a pane starts
+      at the top left corner of the space, and works downward, but isn't afraid
+      of of using the whole screen. </p>
+    <p>Panes do nest inside each other, but <strong>not</strong> like cute
+      wooden window panes.&nbsp; An outer pane is free to put inner panes
+      anywhere it likes to make sense and communicate well with the user. </p>
+    <p>Panes should be tested on large screen sizes as well as medium and
+      small.&nbsp; A user's journey might take them through some navigation
+      steps to find after a while a picture, or map, or a chart, which really
+      benefits from using up all the rest of the space.&nbsp; It can be very
+      frustrating when you find such a resource, you have a large screen, but a
+      developer at some point slapped a max width which suited their screen at
+      the time.&nbsp; Don't let the push for mobile first leave the folks who
+      delight in their huge screens facing a mobile-equivalents experience on
+      them!</p>
+    <h4>Small screen</h4>
+    <p> On a small screen, by contrast, they should typically take the whole
+      screen, but allow swipe navigation around a grid or a tree.&nbsp; There is
+      (2018-11) no code, but some UI mockups have been done for the databrowser
+      on mobile.&nbsp;&nbsp; The trick as ever is to re-use existing language
+      the users will have come across where it exists and works. When looking
+      for example at a attachment document in the materials of the meeting, you
+      have to be able to vertically swipe through the pages of the document, so
+      it is logical to horizontally swipe though the different documents, but to
+      the left of the leftmost document instead a document being a navigation
+      space at the top level of the meeting between between scheduling,
+      location, attendees, program, materials, and notes.</p>
+    <p>A challenge in Solid is that things link together and contain each other
+      in a very free way. Whereas a Meeting App might have a nav-bar with the
+      top level, [scheduling,location, attendees, program, materials, notes], in
+      Solid the meeting may be a property of the person who you had the meeting
+      with, and the nav bar be full things to do with the person. Not
+      insuperable problems, but things to think about.</p>
+    <p>&nbsp;&nbsp; While mobile first is an alternative in the works, the
+      original "power user first" mantra.&nbsp;&nbsp; As it does so, it may
+      invoke other panes to display things related to the main subject.</p>
+    <h2>Edit anything - edit state </h2>
+    <p>An attitude of the solid project has always been that collaboration
+      between different people and groups is the goal. Therefore, wherever a
+      user can view data they should be able, if authorized, to edit it too. To
+      make it clear when this is possible, when it is happening, there are
+      common colors for the different states of an input field</p>
+    <table width="100%" border="1">
+      <tbody>
+        <tr>
+          <td>Read, unedited</td>
+          <td>Black on white</td>
+        </tr>
+        <tr>
+          <td>Read, not editable</td>
+          <td>Grey on white</td>
+        </tr>
+        <tr>
+          <td>Edited, good syntax</td>
+          <td>Green on white</td>
+        </tr>
+        <tr>
+          <td>Edited, bad syntax</td>
+          <td>Red on white</td>
+        </tr>
+        <tr>
+          <td>Saving back</td>
+          <td>Black on grey</td>
+        </tr>
+        <tr>
+          <td>Error saving back</td>
+          <td>Black on pink</td>
+        </tr>
+        <tr>
+          <td>Saved back to the web</td>
+          <td>Black on white</td>
+        </tr>
+      </tbody>
+    </table>
+    <p><br>
+    </p>
+    <p>Examples of this are the fields in the form system, and the source
+      editing pane.&nbsp;&nbsp; The users should get used to any black on white
+      data being in sync with the web of data, and the system should always make
+      sure to indicate with the colors above when it is not the case.</p>
+    <p>When there are network errors saving user data, never through the data
+      away!</p>
+    <h3>Link to anything: Identity</h3>
+    <p>In Solid, you can store connections between anything any anything.&nbsp;
+      This doesn't always make sense, and may not always be useful, but we do
+      have to have a UI language which&nbsp; allows this.</p>
+    <p>In a desktop environment, drag and drop is more or less ubiquitous.&nbsp;
+      Anything can be dragged, and many things can be dropped on to.&nbsp; You
+      can drag a person into a group to add them to a group. You can drag a
+      person, or a group, or both, into the Sharing control&nbsp; to give them
+      access to something, dragging them around between the different roles
+      until they have the right form of access. You can drag things from outside
+      the solid world into a solid: a desktop file into a solid solid folder to
+      upload it; you can drag a URI from the URL bar icon of a browser into the
+      solid world to connect in the thing you were looking in the browser.&nbsp;
+      You can drag things out of the solid world .. for example if you drag some
+      item in a complex databrowser display onto the tab bar of the browser just
+      past the tabs, it will open a new tab viewing that specific thing.</p>
+    <p>As anything is drag-able, it must be consistently clear what that thing
+      is.&nbsp; One common widget used in many lists is a tree-part widget with
+      an icon on the left, a&nbsp; label in the middle, and some control buttons
+      ("delete this", "visit this", ...)in the right hand part.</p>
+    <p>The icon is ideally set to a specific image of the object, like a mugshot
+      of the person or logo of a company or project, otherwise set to an icon
+      for the class: a generic icon for a person, a group of people, a document,
+      and so on.</p>
+    <p>Where things are draggable in the desktop world, in the mobile world they
+      need to have places to press on in various ways to capture their
+      identity.&nbsp; The "Copy link" aka "Copy URI" functionality is very
+      common UI language.&nbsp; Will the solid world be able to get away with
+      just that, or will it need more "Mark this" where the marked thing is a
+      second clipboard; or "Push this" to push things onto a stack?&nbsp; Should
+      the things selected form an editable cache of interesting things which the
+      user can pick from as the&nbsp; to all kinds of operations later? Should
+      the user be able to scroll back through all the things they have every
+      copied to the clipboard? Today's mobile clipboard is often not powerful
+      enough, when you often need to copy the phone number and access code or
+      flight number and reservation number at the same time.</p>
+    <p>There is some design to be done here. </p>
+    <h3>Button Color Language</h3>
+    <p>We have tried to be consistent with colors:</p>
+    <table width="100%" border="1">
+      <tbody>
+        <tr>
+          <td>Green</td>
+          <td>Add Data</td>
+        </tr>
+        <tr>
+          <td>Red</td>
+          <td>Remove Data</td>
+        </tr>
+        <tr>
+          <td>Blue</td>
+          <td>Commit, eg send a message</td>
+        </tr>
+        <tr>
+          <td>Black &amp; White</td>
+          <td>Change view, delete view</td>
+        </tr>
+      </tbody>
+    </table>
+    <br>
+    <p>One inspiration was the Mac OS X contact view at the time, where a quite
+      readable view of someone's contact details was annotated with little green
+      pluses and little red minuses which made it clear where things could be
+      changed and how to change them. </p>
+    <p>The color language is that anything which does not add or delete data, or
+      commit the user to something, is monochrome.&nbsp;&nbsp; We have resisted
+      the temptation to us pretty colored icons -- even the Rainbow icon used
+      for sharing.&nbsp;&nbsp;&nbsp; We may totally revisit this, and one day
+      roll out a version with all the icons in really interesting colors
+      representing the class of object or the domain in some way, but that is
+      not the current language.&nbsp; We could also make it a user preference of
+      course.</p>
+    <p>The discipline of making the databrowser navigation of folders and lists
+      and people and meetings be essentially monochrome has meant that resources
+      like pictures and icons </p>
+    <h3>Labels: use the ontology</h3>
+    <p>The goal is of course to make everything as accessible as possible with
+      people with different abilities, using different
+      devices.&nbsp;&nbsp;&nbsp; The internationalization goals are most easily
+      met by using icons rather than text.&nbsp; Some people, however in fact
+      prefer text.</p>
+    <p>The data in the system is RDF data, and in RDF, classes (like <em>Person</em>)
+      and properties (like <em>friend</em>) have URIs.&nbsp; There are files
+      out there on the web with information about them, which includes a
+      human-readable label for the property.
+    </p>
+    <p>The labels are often in English, but on a good day, in many
+      languages.&nbsp; This means that if the UI generates&nbsp; up its labels
+      from the ontology you get potentially internationalization for free, if
+      there are alternative languages available in the ontology.</p>
+    <p>This has the benefit&nbsp; that it scales quite well, in that effort put
+      into translating the ontologies, which can possibly be crowd-sourced, pays
+      off as an immediate benefit for anyone </p>
+    <table width="100%" border="1">
+      <tbody>
+        <tr>
+          <td><em>Action</em></td>
+          <td><em>Button label</em></td>
+        </tr>
+        <tr>
+          <td>Create new instance of C</td>
+          <td>&#10024;New (label(C))</td>
+        </tr>
+        <tr>
+          <td>Create new thing related by property P</td>
+          <td>"New" icon + label(P)</td>
+        </tr>
+        <tr>
+          <td>Visit thing(s) related by P</td>
+          <td>label(P)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>In general a good rule when coding to to to try to involve introducing
+      any text for the user which would have to be translated.&nbsp; Use a
+      combination of icons and text looked up in the ontology.</p>
+    <p>Another idea is to make a composite icon out of the verb and the class,
+      so "New Group" would be a compose icon of a small green plus (or star)
+      superimposed on the icon for a group of people.&nbsp; This is quite common
+      in desktop software, so the language will be understood.</p>
+    <p>(Because you may want the ontology to be available offline, it may be a
+      good idea to import a copy into code. How to do that is beyond the scope
+      of this note)</p>
+    <h3>Link to anything: Relationship</h3>
+    <p>Demonstrating the relationship between two things typically involves a
+      table with the relationship in the left and the object of it, or value, on
+      the right. That <strong>labelled form field</strong> language is so
+      ubiquitous in computer UI, we use all over.&nbsp; Having a user preference
+      go flip it from left-right to right-left in locales where the user is
+      reading everything right-left would be ideal.</p>
+    <p>Relationships also show up in <strong>column labels for tables</strong>.&nbsp;
+      Just the same language applies as for a form field label.<br>
+    </p>
+    <p>It is often easier to have a recognizable for icon for classes, like
+      Person, Group, Adult, than for relationships like friend, child.&nbsp; So
+      icons tend to less useful for expressing relationships than classes.
+      However, when really there is only one main property linking thinks of
+      class C to things of class D, then one use the icon for the class.&nbsp;
+      If the only type of relationship a person can have an event, then the list
+      of attendees can be given the person icon. </p>
+    <h3>Link to anything; Potential relationship</h3>
+    <p>More complex is the question of how to allow the user to see what
+      potential relationships are available.&nbsp; As you drag in an object A to
+      a drop target B, how do you know what relationship you are going to
+      express?&nbsp; One way is for the drop zone mutate into a set of <strong>triage
+        drop zones</strong>: Drop here to make this person and invitee, here an
+      attendee, here an organizer.&nbsp; Another way is to just assume a default
+      relationship, invitee, say, and then allow the user to edit that once they
+      appear in the list.</p>
+    <p>There are programs which do that -- but they are very bold about
+      explaining to the user what is happening: large fonts in the labels.
+      Fortunately the ugliness of the labels is temporary just until the user
+      finishes the drop.</p>
+    <p>The original tabulator code had a feature to allow any new data to be
+      added to a form-like view, where the predicate was a pop-up choice of all
+      the properties which logically were reasonable to use on the class of
+      subject. Then the range of the property chosen would be looked up in the
+      ontology, and the type of UI for the object of it would be selected from
+      that.</p>
+    <p>The same choice in fact occurs when you are editing a form, and you add a
+      new field.</p>
+    <p></p>
+    <h3></h3>
+    <h2>Making up panes: Widgets and Forms</h2>
+    <p>Panes are the largest in the stack of UI systems.&nbsp; They are
+      implemented in terms of lower level things. IN the case of the solid-panes
+      solid-ui stack, the panes are implemented using widgets of various sizes ,
+      and forms make out of widgets.</p>
+    <p>A form is defined in the RDF data model. Typically a form is made by hand
+      in Turtle, or it can be edited using the form-editing form.</p>
+    <h3>To Be Continued</h3>
+    <p><br>
+    </p>
+  </body>
+</html>
