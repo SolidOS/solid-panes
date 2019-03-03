@@ -130,6 +130,7 @@ register(require('./internalPane.js'))
 // The home pane is a 2016 experiment. Always there.
 
 register(require('./profile/profilePane.js')) // edit your public profile
+register(require('./trustedApplications/trustedApplicationsPane.js')) // manage your trusted applications
 register(require('./home/homePane.js'))
 
 // ENDS
