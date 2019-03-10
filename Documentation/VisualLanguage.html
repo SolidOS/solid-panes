@@ -225,6 +225,28 @@
     <p>The discipline of making the databrowser navigation of folders and lists
       and people and meetings be essentially monochrome has meant that resources
       like pictures and icons </p>
+    <h3>Icon shapes</h3>
+    <p>Icons should be simple, a black drawing on a transparent
+      background.&nbsp; All should be monochrome black on transparent exact for
+      the few green, red or blue corresponding to the button color language
+      above.&nbsp; </p>
+    <p>We use<a href="https://thenounproject.com/"> the Noun project</a> as an
+      excellent resource. We pay a fee so that there is no obligation to give
+      attribution of the authorship, but still&nbsp; a way to extract all the
+      authors and list them as credits with links back would be awesome.</p>
+    <p>Icons should use SVG, not PNG or JPEG or GIF.&nbsp;&nbsp; Currently they
+      are all in a single module in solid-ui but ways of making that more
+      modular are possible in future.</p>
+    <p>Icons are used for panes (views), actions, and object.&nbsp; The
+      graphical form representing an object should be taken, in order or
+      preference,&nbsp; from:</p>
+    <ol>
+      <li>A foaf:icon for the thing</li>
+      <li>Any other image for the thing itself from data, such as foaf:image,
+        vcard:photo, etc, etc</li>
+      <li>An icon corresponding to the class of the thing, like Person, Group,
+        Meeting, etc</li>
+    </ol>
     <h3>Labels: use the ontology</h3>
     <p>The goal is of course to make everything as accessible as possible with
       people with different abilities, using different
@@ -319,7 +341,54 @@
       and forms make out of widgets.</p>
     <p>A form is defined in the RDF data model. Typically a form is made by hand
       in Turtle, or it can be edited using the form-editing form.</p>
-    <h3>To Be Continued</h3>
+    <p><br>
+    </p>
+    <h2>Fonts, Font Size</h2>
+    <h3>No Style Sheets</h3>
+    <p>The classic way to make a web app is with an HTML markup file, a CSS
+      style sheet&nbsp; and a JS script.&nbsp; When you build modular web apps
+      with modularity in different levels./&nbsp; But CSS style sheets have the
+      problem that they are global.&nbsp; Global in the sense if the document,
+      that you can't attach them (2018) to a subtree, only the whole document.
+      (Never mind shadow DOMs).&nbsp;&nbsp; The problem of distinguishing which
+      parts of the style sheet should apply to which parts of the tree, which
+      types of element, and the elements created by each widget, leads ttheo,
+      in&nbsp; big UI frameworks, a huge complex language of classes which are
+      attached to elements.</p>
+    <p>The databrowser does have a global style sheet, and it sets classes for
+      some early panes, but now the goal is to reduce the dependency on it to
+      zero.&nbsp;&nbsp; </p>
+    <h3>Font Size</h3>
+    <p>Legibility is really important.&nbsp; If your over-cute font means that
+      ageing people can't read it, drop it and go with something normal. </p>
+    <p>- Where you don't need to specify something, inherit it from enclosing
+      DOM elements.</p>
+    <p>&nbsp;&nbsp;&nbsp; Font, font size, color, background color, </p>
+    <p>- Where a widget must have a certain style, inject it directly from the
+      JS script.</p>
+    <p>There is style module which has some JS variables for things like input
+      element style so that can be shared through the code, rather than using
+      global CSS which typically involves a lot of complexity and hard
+      coordination between CSS writers and JS writers.</p>
+    <h2>Conclusion</h2>
+    <p>That's it, folks.</p>
+    <p><em>Edited with BlueGriffon with thanks to @glazou</em></p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
+    <p><br>
+    </p>
     <p><br>
     </p>
   </body>
