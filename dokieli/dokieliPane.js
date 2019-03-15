@@ -4,7 +4,8 @@
 ** The dokeili system allows the user to edit a document including anotations
 ** review.   It does not use turtle, but RDF/a
 */
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const mime = require('mime-types')
 
 // const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
 
@@ -65,17 +66,25 @@ module.exports = {
   // Create a new folder in a Solid system, with a dokieli editable document in it
   mintNew: function (newPaneOptions) {
     var kb = UI.store
-    var newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase)
-    console.log('New dok called with ' + newInstance)
-    var u = newInstance.uri
-    if (u.endsWith('/')) {
-      u = u + 'index.html'
+    var newInstance = newPaneOptions.newInstance
+    if (!newInstance) {
+      let uri = newPaneOptions.newBase
+      if (uri.endsWith('/')) {
+        uri = uri.slice(0, -1)
+        newPaneOptions.newBase = uri
+      }
+      newInstance = kb.sym(uri)
+      newPaneOptions.newInstance = newInstance
     }
-    if (!u.endsWith('.html')) {
-      u = u + '.html'
+
+    var contentType = mime.lookup(newInstance.uri)
+    if (!contentType || !contentType.includes('html')) {
+      let msg = 'A new text file has to have an file extension like .html .htm etc.'
+      alert(msg)
+      throw new Error(msg)
     }
-    newPaneOptions.newInstance = newInstance = kb.sym(u)
-    console.log('New dok will make: ' + newInstance)
+
+    console.log('New dokieli will make: ' + newInstance)
     /*
     return new Promise(function(resolve, reject){
       kb.fetcher.webCopy(DOKIELI_TEMPLATE_URI, newInstance.uri, 'text/html')
@@ -115,9 +124,9 @@ module.exports = {
     var cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     var ct = cts ? cts[0] : null
     if (ct) {
-      console.log('humanReadablePane: c-t:' + ct)
+      console.log('dokieliPane: c-t:' + ct)
     } else {
-      console.log('humanReadablePane: unknown content-type?')
+      console.log('dokieliPane: unknown content-type?')
     }
 
     // @@ NOte beflow - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
@@ -128,7 +137,7 @@ module.exports = {
 
     // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
-    iframe.setAttribute('style', 'resize = both; height: 120em; width:80em;')
+    iframe.setAttribute('style', 'resize = both; height: 40em; width:40em;') // @@ improve guess
     //        iframe.setAttribute('height', '480')
     //        iframe.setAttribute('width', '640')
     var tr = myDocument.createElement('TR')
