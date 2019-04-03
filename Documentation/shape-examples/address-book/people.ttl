@@ -1,0 +1,7 @@
+@prefix : <#>.
+@prefix ind: <Person/f3fa3d6c-220b-4444-b352-148abcecb4a7/index.ttl#>.
+@prefix n: <http://www.w3.org/2006/vcard/ns#>.
+@prefix in: <index.ttl#>.
+
+ind:this n:fn "Joseph Teller"; n:inAddressBook in:this.
+
