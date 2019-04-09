@@ -4,6 +4,8 @@
 ** The dokeili system allows the user to edit a document including anotations
 ** review.   It does not use turtle, but RDF/a
 */
+/* global alert */
+
 const UI = require('solid-ui')
 const mime = require('mime-types')
 
@@ -74,32 +76,25 @@ module.exports = {
         newPaneOptions.newBase = uri
       }
       newInstance = kb.sym(uri)
-      newPaneOptions.newInstance = newInstance
     }
 
     var contentType = mime.lookup(newInstance.uri)
     if (!contentType || !contentType.includes('html')) {
-      let msg = 'A new text file has to have an file extension like .html .htm etc.'
-      alert(msg)
-      throw new Error(msg)
+      newInstance = $rdf.sym(newInstance.uri + '.html')
     }
+    newPaneOptions.newInstance = newInstance // Save for creation system
 
     console.log('New dokieli will make: ' + newInstance)
-    /*
-    return new Promise(function(resolve, reject){
-      kb.fetcher.webCopy(DOKIELI_TEMPLATE_URI, newInstance.uri, 'text/html')
-      .then(function(){
-        console.log('new Dokieli document created at ' + newPaneOptions.newInstance)
-        resolve(newPaneOptions)
-      }).catch(function(err){
-        console.log('Error creating dokelili dok at ' +
-            newPaneOptions.newInstance + ': ' + err )
-      })
-    })
-    */
 
+    var htmlContents = DOKIELI_TEMPLATE
+    var filename = newInstance.uri.split('/').slice(-1)[0]
+    filename = decodeURIComponent(filename.split('.')[0])
+    const encodedTitle = filename.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    htmlContents = htmlContents.replace('<title>', '<title>' + encodedTitle)
+    htmlContents = htmlContents.replace('</article>', '<h1>' + encodedTitle + '</h1></article>')
+    console.log('@@ New HTML for Dok:' + htmlContents)
     return new Promise(function (resolve, reject) {
-      kb.fetcher.webOperation('PUT', newInstance.uri, { data: DOKIELI_TEMPLATE, contentType: 'text/html' })
+      kb.fetcher.webOperation('PUT', newInstance.uri, { data: htmlContents, contentType: 'text/html' })
         .then(function () {
           console.log('new Dokieli document created at ' + newPaneOptions.newInstance)
           resolve(newPaneOptions)
@@ -140,7 +135,7 @@ module.exports = {
     iframe.setAttribute('style', 'resize = both; height: 40em; width:40em;') // @@ improve guess
     //        iframe.setAttribute('height', '480')
     //        iframe.setAttribute('width', '640')
-    var tr = myDocument.createElement('TR')
+    var tr = myDocument.createElement('tr')
     tr.appendChild(iframe)
     div.appendChild(tr)
     return div
