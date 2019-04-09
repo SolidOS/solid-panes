@@ -13,7 +13,8 @@ const UI = require('solid-ui')
 
 module.exports = {
 
-  icon: UI.icons.iconBase + 'noun_123691.svg',
+  icon: UI.icons.iconBase + 'noun_locked_2160665_000000.svg', // noun_locked_2160665_000000.svg padlock
+  // noun_123691.svg was rainbow
 
   name: 'sharing',
 
