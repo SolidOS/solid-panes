@@ -17,61 +17,61 @@
 ## Addressbook
 
 You can create an addressbook containing persons and groups, by adding triples to RDF documents on your pod.
-To create an addressbook, create a document for it, e.g. addressBook.ttl, and add the following triples to that document:
-* <addressBook.ttl#this> a vcard:AddressBook
-* <addressBook.ttl#this> dc:title "New address Book"
-* <addressBook.ttl#this> acl:owner <owner.ttl#me>
+To create an addressbook, create a document for it, e.g. /address-book/index.ttl, and add the following triples to that document:
+* </address-book/index.ttl#this> a vcard:AddressBook
+* </address-book/index.ttl#this> dc:title "New address Book"
+* </address-book/index.ttl#this> acl:owner </profile/card#me>
 
-You can create separate documents for the people index and for the groups index, as long as you link to those from the main addressBook.ttl document in the following ways:
-* <addressBook.ttl#this> vcard:nameEmailIndex <peopleIndex.ttl>
-* <addressBook.ttl#this> vcard:groupIndex <groupIndex.ttl>
+You can create separate documents for the people index and for the groups index, as long as you link to those from the main /address-book/index.ttl document in the following ways:
+* </address-book/index.ttl#this> vcard:nameEmailIndex </address-book/peopleIndex.ttl>
+* </address-book/index.ttl#this> vcard:groupIndex </address-book/groupIndex.ttl>
 
-To indicate that a person johnDoe.ttl with full name "John Doe" is in addressbook addressBook.ttl, add the following triples:
-* <johnDoe.ttl#this> vcard:inAddressBook addressBook.ttl#this (NB: needs to be in peopleIndex.ttl)
-* <johnDoe.ttl#this> a vcard:Individual
-* <johnDoe.ttl#this> vcard:fn "John Doe"
+To indicate that a person /johnDoe.ttl with full name "John Doe" is in addressbook /address-book/index.ttl, add the following triples:
+* </johnDoe.ttl#this> vcard:inAddressBook /address-book/index.ttl#this (NB: needs to be in /address-book/peopleIndex.ttl)
+* </johnDoe.ttl#this> a vcard:Individual
+* </johnDoe.ttl#this> vcard:fn "John Doe"
 
-To indicate that addressbook addressBook.ttl has a group called "Colleagues", add the following triples:
+To indicate that addressbook /address-book/index.ttl has a group called "Colleagues", add the following triples:
 
-* <addressBook.ttl#this> vcard:includesGroup colleagues.ttl#this (NB: needs to be in groupIndex.ttl)
-* <colleagues.ttl#this> a vcard:Group
-* <colleagues.ttl#this> vcard:fn "Colleagues"
+* </address-book/index.ttl#this> vcard:includesGroup /address-book/colleagues.ttl#this (NB: needs to be in /address-book/groupIndex.ttl)
+* </address-book/colleagues.ttl#this> a vcard:Group
+* </address-book/colleagues.ttl#this> vcard:fn "Colleagues"
 
 ## Profile
 ### Profile document
-To add information to your webid profile, you can use the following triples. Suppose your webid is https://example.com/profile/card#me, then your profile document is https://example.com/profile/card (without the '#me'). Add the following triples to it:
-* <https://example.com/profile/card> a foaf:PersonalProfileDocument
-* <https://example.com/profile/card> foaf:maker <https://example.com/profile/card#me>
-* <https://example.com/profile/card> foaf:primaryTopic <https://example.com/profile/card#me>
+To add information to your webid profile, you can use the following triples. Suppose your webid is /profile/card#me, then your profile document is /profile/card (without the '#me'). Add the following triples to it:
+* </profile/card> a foaf:PersonalProfileDocument
+* </profile/card> foaf:maker </profile/card#me>
+* </profile/card> foaf:primaryTopic </profile/card#me>
 
 ### You as a person
 Now say your name is "John Doe", then add these triples to your profile document to publish your identity as a person:
-* <https://example.com/profile/card#me> a foaf:Person
-* <https://example.com/profile/card#me> a schema:Person
-* <https://example.com/profile/card#me> foaf:name "John Doe"
+* </profile/card#me> a foaf:Person
+* </profile/card#me> a schema:Person
+* </profile/card#me> foaf:name "John Doe"
 
 ### Linking to your pod
-Say your pod is at https://pod.example.com, with the LDN inbox at https://pod.example.com/inbox/, to link from your identity to your pod:
-* <https://example.com/profile/card#me> solid:account </>
-* <https://example.com/profile/card#me> pim:storage </>
-* <https://example.com/profile/card#me> ldp:inbox </inbox/>
+Say your pod is at /pod, with the LDN inbox at /pod/inbox/, to link from your identity to your pod:
+* </profile/card#me> solid:account </pod>
+* </profile/card#me> pim:storage </pod>
+* </profile/card#me> ldp:inbox </pod/inbox/>
 
 ### Preferences
 To publish some of your generic preferences to apps, use:
-* <https://example.com/profile/card#me> pim:preferencesFile </settings/prefs.ttl>
-* <https://example.com/profile/card#me> solid:publicTypeIndex </settings/publicTypeIndex.ttl>
-* <https://example.com/profile/card#me> solid:privateTypeIndex </settings/privateTypeIndex.ttl>
+* </profile/card#me> pim:preferencesFile </settings/prefs.ttl>
+* </profile/card#me> solid:publicTypeIndex </settings/publicTypeIndex.ttl>
+* </profile/card#me> solid:privateTypeIndex </settings/privateTypeIndex.ttl>
 
 # Chat
-To create a chat conversation, create a document, e.g. chat.ttl, and add the following triples to it:
-* <chat.ttl#this> a mee:LongChat
-* <chat.ttl#this> dc:author <https://example.com/profile/card#me>
-* <chat.ttl#this> dc:created "2018-07-06T21:36:04Z"^^XML:dateTime
-* <chat.ttl#this> dc:title "Chat channel"
+To create a chat conversation, create a document, e.g. /chat.ttl, and add the following triples to it:
+* </chat.ttl#this> a mee:LongChat
+* </chat.ttl#this> dc:author </profile/card#me>
+* </chat.ttl#this> dc:created "2018-07-06T21:36:04Z"^^XML:dateTime
+* </chat.ttl#this> dc:title "Chat channel"
 
-To add a message in the chat conversation, for instance where you say "hi", generate a timestamp like 1555487418787 and add the following triples to chat.ttl:
-* <chat.ttl#Msg1555487418787> dct:created "2019-04-17T07:50:18Z"^^XML:dateTime
-* <chat.ttl#Msg1555487418787> sioc:content "hi"
-* <chat.ttl#Msg1555487418787> foaf:maker <https://example.com/profile/card#me>
+To add a message in the chat conversation, for instance where you say "hi", generate a timestamp like 1555487418787 and add the following triples to /chat.ttl:
+* </chat.ttl#Msg1555487418787> dct:created "2019-04-17T07:50:18Z"^^XML:dateTime
+* </chat.ttl#Msg1555487418787> sioc:content "hi"
+* </chat.ttl#Msg1555487418787> foaf:maker </profile/card#me>
 
 Note that for historical reasons, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
