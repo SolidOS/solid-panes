@@ -57,7 +57,7 @@ To publish some of your generic preferences to apps, use:
 * </profile/card#me> solid:publicTypeIndex </settings/publicTypeIndex.ttl>
 * </profile/card#me> solid:privateTypeIndex </settings/privateTypeIndex.ttl>
 
-## Addressbook
+## Address Book
 You can create an addressbook containing persons and groups, by adding triples to RDF documents on your pod.
 To create an addressbook, create a document for it, e.g. /address-book/index.ttl, and add the following triples to that document:
 
@@ -156,7 +156,7 @@ To add a message in the chat conversation, for instance where you say "hi", gene
 
 Note that for historical reasons, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
 
-## LongChat
+## Long Chat
 LongChat is similar to Chat, except that it uses LDP containers to discover the triples that describe the chat conversation,
 instead of having all the triples in one chat.ttl doc.
 To create a chat conversation, pick a timestamp, e.g. 1555491215455, create an LDP container, for instance /long-chat/, and in there, create an index document, e.g. /long-chat/index.ttl. To the index document, add the following triples:
@@ -211,14 +211,14 @@ To add material to the meeting (let's say https://example.com/agenda-meeting.htm
 * </meeting.ttl#id1555492506279> rdf:label "Agenda"
 * </meeting.ttl#id1555492506279> mee:view "iframe"
 
-## Event
+## Schedulable Event
 // TODO
 
 ## Link
 // TODO
 
-## Document
-// TODO
+## Dokieli Document
+A 'Dokieli Document' is an HTML document with some linked-data annotations, but otherwise just HTML. So the 'Dokieli Document' tool does not store data in triples in RDF sources like most other tools do, but instead allows you to run an online HTML editor right on your pod. When you click 'Save' in the Dokieli editor, the HTML document is written to your pod using a http PUT request, and in that sense this editor makes use of the LDP (read-write web) functionalities of your pod. You can also use Dokieli as a third-party app, on https://dokie.li.
 
 ## Folder
 When you add a 'Folder' tool, the databrowser creates a new LDP container. As an example, here are the triples that describe an LDP container '/foo/' with subcontainer '/foo/sub/' and member document '/foo/bar.ttl':
