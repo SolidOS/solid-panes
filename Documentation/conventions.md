@@ -1,5 +1,11 @@
-# Data Shapes
-## Prefixes used:
+# Data Conventions used by the databrowser
+This document describes how the databrowser stores your data as triples in RDF documents on your pod.
+As most Solid pods will have at least some data on them that was edited through the databrowser,
+these conventions are a good place to start when you develop third-party apps. In the future, we'll
+see how this document can grow into a bigger participatory wiki of data shape conventions for Solid.
+
+For short-hand, we will use the following namespace prefixes here:
+
 * @prefix ab: <http://www.w3.org/ns/pim/ab#>.
 * @prefix acl: <http://www.w3.org/ns/auth/acl#>.
 * @prefix dc: <http://purl.org/dc/elements/1.1/>.
@@ -13,32 +19,13 @@
 * @prefix schema: <http://schema.org/>.
 * @prefix sioc: <http://rdfs.org/sioc/ns#>.
 * @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+* @prefix sioc: <http://rdfs.org/sioc/ns#>.
+* @prefix stat <http://www.w3.org/ns/posix/stat#>.
 * @prefix ui: <http://www.w3.org/ns/ui#>.
 * @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
 * @prefix xsd: <http://www.w3.org/2001/XMLSchema#>.
 
-## Addressbook
-
-You can create an addressbook containing persons and groups, by adding triples to RDF documents on your pod.
-To create an addressbook, create a document for it, e.g. /address-book/index.ttl, and add the following triples to that document:
-* </address-book/index.ttl#this> a vcard:AddressBook
-* </address-book/index.ttl#this> dc:title "New address Book"
-* </address-book/index.ttl#this> acl:owner </profile/card#me>
-
-You can create separate documents for the people index and for the groups index, as long as you link to those from the main /address-book/index.ttl document in the following ways:
-* </address-book/index.ttl#this> vcard:nameEmailIndex </address-book/peopleIndex.ttl>
-* </address-book/index.ttl#this> vcard:groupIndex </address-book/groupIndex.ttl>
-
-To indicate that a person /johnDoe.ttl with full name "John Doe" is in addressbook /address-book/index.ttl, add the following triples:
-* </johnDoe.ttl#this> vcard:inAddressBook /address-book/index.ttl#this (NB: needs to be in /address-book/peopleIndex.ttl)
-* </johnDoe.ttl#this> a vcard:Individual
-* </johnDoe.ttl#this> vcard:fn "John Doe"
-
-To indicate that addressbook /address-book/index.ttl has a group called "Colleagues", add the following triples:
-
-* </address-book/index.ttl#this> vcard:includesGroup /address-book/colleagues.ttl#this (NB: needs to be in /address-book/groupIndex.ttl)
-* </address-book/colleagues.ttl#this> a vcard:Group
-* </address-book/colleagues.ttl#this> vcard:fn "Colleagues"
+One of the most important RDF documents on your pod is your profile, which is the document that people get when they dereference your webid. We'll look at that first. After that, we'll look at each of the tools that can be created with the databrowser's + button: Addressbook, Notepad, Chat, LongChat, Meeting, Event, Link, Document, Folder, and Source.
 
 ## Profile
 ### Profile document
@@ -65,21 +52,29 @@ To publish some of your generic preferences to apps, use:
 * </profile/card#me> solid:publicTypeIndex </settings/publicTypeIndex.ttl>
 * </profile/card#me> solid:privateTypeIndex </settings/privateTypeIndex.ttl>
 
-# Chat
-To create a chat conversation, create a document, e.g. /chat.ttl, and add the following triples to it:
-* </chat.ttl#this> a mee:LongChat
-* </chat.ttl#this> dc:author </profile/card#me>
-* </chat.ttl#this> dc:created "2018-07-06T21:36:04Z"^^XML:dateTime
-* </chat.ttl#this> dc:title "Chat channel"
+## Addressbook
+You can create an addressbook containing persons and groups, by adding triples to RDF documents on your pod.
+To create an addressbook, create a document for it, e.g. /address-book/index.ttl, and add the following triples to that document:
+* </address-book/index.ttl#this> a vcard:AddressBook
+* </address-book/index.ttl#this> dc:title "New address Book"
+* </address-book/index.ttl#this> acl:owner </profile/card#me>
 
-To add a message in the chat conversation, for instance where you say "hi", generate a timestamp like 1555487418787 and add the following triples to /chat.ttl:
-* </chat.ttl#Msg1555487418787> dct:created "2019-04-17T07:50:18Z"^^XML:dateTime
-* </chat.ttl#Msg1555487418787> sioc:content "hi"
-* </chat.ttl#Msg1555487418787> foaf:maker </profile/card#me>
+You can create separate documents for the people index and for the groups index, as long as you link to those from the main /address-book/index.ttl document in the following ways:
+* </address-book/index.ttl#this> vcard:nameEmailIndex </address-book/peopleIndex.ttl>
+* </address-book/index.ttl#this> vcard:groupIndex </address-book/groupIndex.ttl>
 
-Note that for historical reasons, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
+To indicate that a person /johnDoe.ttl with full name "John Doe" is in addressbook /address-book/index.ttl, add the following triples:
+* </johnDoe.ttl#this> vcard:inAddressBook /address-book/index.ttl#this (NB: needs to be in /address-book/peopleIndex.ttl)
+* </johnDoe.ttl#this> a vcard:Individual
+* </johnDoe.ttl#this> vcard:fn "John Doe"
 
-# Notepad
+To indicate that addressbook /address-book/index.ttl has a group called "Colleagues", add the following triples:
+
+* </address-book/index.ttl#this> vcard:includesGroup /address-book/colleagues.ttl#this (NB: needs to be in /address-book/groupIndex.ttl)
+* </address-book/colleagues.ttl#this> a vcard:Group
+* </address-book/colleagues.ttl#this> vcard:fn "Colleagues"
+
+## Notepad
 To create a new notepad at /notepad.ttl, add the following triples into it:
 * </notepad.ttl#this> a pim:Notepad
 * </notepad.ttl#this> dc:author </profile/card#me>
@@ -128,3 +123,46 @@ Note that the first line still is the only line in the document, apart from the 
 * </notepad.ttl#id1555489499814> dc:author </profile/card#me>
 * </notepad.ttl#id1555489499814> dc:content "second line"
 * </notepad.ttl#id1555489499814> pim:next :</notepad.ttl#this>
+
+## Chat
+To create a chat conversation, create a document, e.g. /chat.ttl, and add the following triples to it:
+* </chat.ttl#this> a mee:LongChat
+* </chat.ttl#this> dc:author </profile/card#me>
+* </chat.ttl#this> dc:created "2018-07-06T21:36:04Z"^^XML:dateTime
+* </chat.ttl#this> dc:title "Chat channel"
+
+To add a message in the chat conversation, for instance where you say "hi", generate a timestamp like 1555487418787 and add the following triples to /chat.ttl:
+* </chat.ttl#Msg1555487418787> dct:created "2019-04-17T07:50:18Z"^^XML:dateTime
+* </chat.ttl#Msg1555487418787> sioc:content "hi"
+* </chat.ttl#Msg1555487418787> foaf:maker </profile/card#me>
+
+Note that for historical reasons, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
+
+## LongChat
+// TODO
+
+## Meeting
+// TODO
+
+## Event
+// TODO
+
+## Link
+// TODO
+
+## Document
+// TODO
+
+## Folder
+When you add a 'Folder' tool, the databrowser creates a new LDP container. As an example, here are the triples that describe an LDP container '/foo/' with subcontainer '/foo/sub/' and member document '/foo/bar.ttl':
+* </foo/> a ldp:BasicContainer
+* </foo/> a ldp:Container
+* </foo/> a ldp:Resource
+* </foo/> dct:modified "2019-04-17T08:42:16Z"^^XML:dateTime
+* </foo/> stat:mtime 1555490536.16
+* </foo/> stat:size 4096
+* </foo/> ldp:contains </foo/sub/>
+* </foo/> ldp:contains </foo/bar.ttl>
+
+## Source
+When you add a 'Source' tool to a container, it creates an empty document as an LDP resource. The content type will be guessed from the extension, for instance source.ttl will be a Turtle document, source.txt will be text/plain, etc.
