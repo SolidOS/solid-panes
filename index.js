@@ -131,6 +131,6 @@ register(require('./internalPane.js'))
 
 register(require('./profile/profilePane.js')) // edit your public profile
 register(require('./trustedApplications/trustedApplicationsPane.js')) // manage your trusted applications
-register(require('./home/homePane.js'))
+register(require('./home/homePane'))
 
 // ENDS
