@@ -8,10 +8,13 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'commonjs2',
   },
+  resolve: {
+    extensions: ['.mjs', '.js', '.ts'],
+  },
   module: {
     rules: [
       {
-        test: /\.m?js$/,
+        test: /\.(mjs|js|ts)$/,
         exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
