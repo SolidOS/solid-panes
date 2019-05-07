@@ -1,5 +1,6 @@
 const path = require('path');
 const webpack = require('webpack');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 module.exports = {
   entry: './index.js',
@@ -27,5 +28,6 @@ module.exports = {
       // Prevent solid-auth-tls (used by solid-ui) from running Node code:
       'global.IS_BROWSER': JSON.stringify(true),
     }),
+    new ForkTsCheckerWebpackPlugin(),
   ],
 };
