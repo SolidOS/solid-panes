@@ -1,3 +1,6 @@
+# Built code
+dist
+
 # Logs
 logs
 *.log
