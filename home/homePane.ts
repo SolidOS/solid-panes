@@ -8,10 +8,11 @@
 **
 */
 
+import { PaneDefinition } from '../types';
 var UI = require('solid-ui')
 var panes = require('pane-registry')
 
-module.exports = {
+const HomePane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830
 
   name: 'home',
@@ -30,7 +31,9 @@ module.exports = {
 
       div.appendChild(dom.createElement('h4')).textContent = 'Login status'
       var loginStatusDiv = div.appendChild(dom.createElement('div'))
-      loginStatusDiv.appendChild(UI.authn.loginStatusBox(dom, uri => {
+      // TODO: Find out what the actual type is:
+      type UriType = unknown;
+      loginStatusDiv.appendChild(UI.authn.loginStatusBox(dom, (uri: UriType) => {
         // Here we know new log in status
       }))
 
@@ -40,9 +43,11 @@ module.exports = {
       UI.create.newThingUI(creationContext, panes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
-      UI.authn.registrationList(context, {private: true}).then(function (context) {
+      // TODO: Replace by a common, representative interface
+      type AuthContext = unknown;
+      UI.authn.registrationList(context, {private: true}).then(function (context: AuthContext) {
         div.appendChild(dom.createElement('h4')).textContent = 'Public things'
-        UI.authn.registrationList(context, {public: true}).then(function (context) {
+        UI.authn.registrationList(context, {public: true}).then(function (context: AuthContext) {
           // done
         })
       })
@@ -58,3 +63,4 @@ module.exports = {
 } // pane object
 
 // ends
+module.exports = HomePane;
