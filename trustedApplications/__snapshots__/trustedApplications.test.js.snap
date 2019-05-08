@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getStatementsToAdd should return all required statements to add the given permissions for a given origin 1`] = `
+Array [
+  Statement {
+    "object": BlankNode {
+      "id": "bn_mock_app_id",
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#trustedApp",
+    },
+    "subject": Literal {
+      "termType": "Literal",
+      "value": "Mock profile",
+    },
+    "why": Literal {
+      "termType": "Literal",
+      "value": "Mock profile",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Mock origin",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#origin",
+    },
+    "subject": BlankNode {
+      "id": "bn_mock_app_id",
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
+    },
+    "why": Literal {
+      "termType": "Literal",
+      "value": "Mock profile",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#Read",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#mode",
+    },
+    "subject": BlankNode {
+      "id": "bn_mock_app_id",
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
+    },
+    "why": Literal {
+      "termType": "Literal",
+      "value": "Mock profile",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#Write",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#mode",
+    },
+    "subject": BlankNode {
+      "id": "bn_mock_app_id",
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
+    },
+    "why": Literal {
+      "termType": "Literal",
+      "value": "Mock profile",
+    },
+  },
+]
+`;
+
+exports[`getStatementsToDelete should return all statements for the given origin 1`] = `
+Array [
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Mock application",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#trustedApp",
+    },
+    "subject": Literal {
+      "termType": "Literal",
+      "value": "Mock profile",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "chrome:theSession",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Mock origin",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#origin",
+    },
+    "subject": Literal {
+      "termType": "Literal",
+      "value": "Mock application",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "chrome:theSession",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#Read",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/auth/acl#mode",
+    },
+    "subject": Literal {
+      "termType": "Literal",
+      "value": "Mock application",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "chrome:theSession",
+    },
+  },
+]
+`;

@@ -8,6 +8,8 @@
 
 /* global alert */
 const nodeMode = (typeof module !== 'undefined')
+
+const {getStatementsToAdd, getStatementsToDelete} = require('./trustedApplicationsUtils');
 var panes, UI
 
 if (nodeMode) {
