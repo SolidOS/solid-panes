@@ -8,6 +8,8 @@
 */
 
 const nodeMode = (typeof module !== 'undefined')
+
+const {getStatementsToAdd, getStatementsToDelete} = require('./trustedApplicationsUtils');
 var panes, UI
 
 if (nodeMode) {
@@ -152,24 +154,13 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
       return alert('Please provide an application URL you want to trust')
     }
 
-    // remove existing statements on same origin - if it exists
-    kb.statementsMatching(null, ns.acl('origin'), origin).forEach(st => {
-      kb.removeStatements([...kb.statementsMatching(null, ns.acl('trustedApp'), st.subject)])
-      kb.removeStatements([...kb.statementsMatching(st.subject)])
-    })
-
-    // add new triples
-    const application = new $rdf.BlankNode()
-    kb.add(subject, ns.acl('trustedApp'), application, subject)
-    kb.add(application, ns.acl('origin'), origin, subject)
-    trustedApplicationState.formElements.modes
+    var modes = trustedApplicationState.formElements.modes
       .filter(checkbox => checkbox.checked)
-      .map(checkbox => $rdf.sym(checkbox.value))
-      .forEach(mode => {
-        kb.add(application, ns.acl('mode'), mode)
-      })
+      .map(checkbox => checkbox.value)
 
-    save()
+    var deletions = getStatementsToDelete(origin, subject, kb, ns)
+    var additions = getStatementsToAdd(origin, generateRandomString(), modes, profile, ns)
+    kb.updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication() {
@@ -180,36 +171,15 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
       return alert('Please provide an application URL you want to trust')
     }
 
-    // remove existing statements on same origin - if it exists
-    kb.statementsMatching(null, ns.acl('origin'), origin).forEach(st => {
-      kb.removeStatements([...kb.statementsMatching(null, ns.acl('trustedApp'), st.subject)])
-      kb.removeStatements([...kb.statementsMatching(st.subject)])
-    })
-
-    save()
+    var deletions = getStatementsToDelete(origin, subject, kb, ns)
+    kb.updater.update(deletions, null, handleUpdateResponse)
   }
 
-  function save() {
-    // remove response triples - this should not be necessary, but do not know how to turn it off
-    kb.statementsMatching(null, ns.link('response')).forEach(st => {
-      kb.removeStatements([...kb.statementsMatching(st.subject)])
-      kb.removeStatements([...kb.statementsMatching(st.object)])
-    })
-
-    // serialize data
-    $rdf.serialize(null, kb, subject.uri, 'text/turtle', (err, data) => {
-      if (err) {
-        alert('Something went wrong when preparing data for the server. Try again.')
-        return
-      }
-      // save data to POD
-      kb.fetcher.webOperation('PUT', subject.uri, {
-        data,
-        saveMetadata: false,
-        contentType: 'text/turtle'
-      })
-        .then(() => updateTable())
-    })
+  function handleUpdateResponse(uri, success, errorBody) {
+    if (success) {
+      return updateTable()
+    }
+    console.error(uri, errorBody)
   }
 }
 
