@@ -8,11 +8,11 @@
 **
 */
 
-import { Node } from 'rdflib'
+import { PaneDefinition } from '../types';
 var UI = require('solid-ui')
 var panes = require('pane-registry')
 
-module.exports = {
+const HomePane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830
 
   name: 'home',
@@ -21,11 +21,11 @@ module.exports = {
   //
   //   yes, always!
   //
-  label: function (subject: Node) {
+  label: function (subject) {
     return 'home'
   },
 
-  render: function (subject: Node, dom: HTMLDocument) {
+  render: function (subject, dom) {
     var showContent = function () {
       var context = {div: div, dom: dom, statusArea: div, me: me}
 
@@ -63,3 +63,4 @@ module.exports = {
 } // pane object
 
 // ends
+module.exports = HomePane;
