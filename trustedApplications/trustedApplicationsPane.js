@@ -110,6 +110,8 @@ function createApplicationTable(subject) {
 
 function createApplicationEntry(subject, origin, appModes, updateTable) {
   var trustedApplicationState = { origin, appModes, formElements: { modes: [] } }
+  var profile = subject.doc()
+
   return createContainer('tr', [
     createContainer('td', [
       createElement('input', {
@@ -145,71 +147,55 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
   ])
 
   function addOrEditApplication() {
-    let origin
+    var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
     } catch (err) {
       return alert('Please provide an application URL you want to trust')
     }
 
-    // remove existing statements on same origin - if it exists
-    kb.statementsMatching(null, ns.acl('origin'), origin).forEach(st => {
-      kb.removeStatements([...kb.statementsMatching(null, ns.acl('trustedApp'), st.subject)])
-      kb.removeStatements([...kb.statementsMatching(st.subject)])
-    })
-
-    // add new triples
-    const application = new $rdf.BlankNode()
-    kb.add(subject, ns.acl('trustedApp'), application, subject)
-    kb.add(application, ns.acl('origin'), origin, subject)
-    trustedApplicationState.formElements.modes
-      .filter(checkbox => checkbox.checked)
-      .map(checkbox => $rdf.sym(checkbox.value))
-      .forEach(mode => {
-        kb.add(application, ns.acl('mode'), mode)
-      })
-
-    save()
+    var deletions = getStatementsToDelete(origin)
+    var additions = getStatementsToAdd(origin)
+    kb.updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication() {
-    let origin
+    var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
     } catch (err) {
-      return alert('Please provide an application URL you want to trust')
+      return alert('Please provide an application URL you want to remove trust from')
     }
 
-    // remove existing statements on same origin - if it exists
-    kb.statementsMatching(null, ns.acl('origin'), origin).forEach(st => {
-      kb.removeStatements([...kb.statementsMatching(null, ns.acl('trustedApp'), st.subject)])
-      kb.removeStatements([...kb.statementsMatching(st.subject)])
-    })
-
-    save()
+    var deletions = getStatementsToDelete(origin)
+    kb.updater.update(deletions, null, handleUpdateResponse)
   }
 
-  function save() {
-    // remove response triples - this should not be necessary, but do not know how to turn it off
-    kb.statementsMatching(null, ns.link('response')).forEach(st => {
-      kb.removeStatements([...kb.statementsMatching(st.subject)])
-      kb.removeStatements([...kb.statementsMatching(st.object)])
-    })
+  function getStatementsToAdd(origin) {
+    var application = new $rdf.BlankNode(`bn_${generateRandomString()}`)
+    return [
+      $rdf.st(subject, ns.acl('trustedApp'), application, profile),
+      $rdf.st(application, ns.acl('origin'), origin, profile),
+      ...trustedApplicationState.formElements.modes
+        .filter(checkbox => checkbox.checked)
+        .map(checkbox => $rdf.sym(checkbox.value))
+        .map(mode => $rdf.st(application, ns.acl('mode'), mode, profile))
+    ]
+  }
 
-    // serialize data
-    $rdf.serialize(null, kb, subject.uri, 'text/turtle', (err, data) => {
-      if (err) {
-        alert('Something went wrong when preparing data for the server. Try again.')
-        return
-      }
-      // save data to POD
-      kb.fetcher.webOperation('PUT', subject.uri, {
-        data,
-        saveMetadata: false,
-        contentType: 'text/turtle'
-      })
-        .then(() => updateTable())
-    })
+  function getStatementsToDelete(origin) {
+    var applicationStatements = kb.statementsMatching(null, ns.acl('origin'), origin)
+    return applicationStatements.reduce((memo, st) => memo
+        .concat(kb.statementsMatching(subject, ns.acl('trustedApp'), st.subject))
+        .concat(kb.statementsMatching(st.subject)),
+      [])
+  }
+
+  function handleUpdateResponse(uri, success, errorBody) {
+    if (success) {
+      return updateTable()
+    }
+    console.error(uri, errorBody)
   }
 }
 
@@ -251,6 +237,10 @@ function createModesInput({ appModes, formElements }) {
       createText('span', mode)
     ])
   })
+}
+
+function generateRandomString() {
+  return Math.random().toString(36).substring(7)
 }
 
 if (nodeMode) {
