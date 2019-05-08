@@ -8,6 +8,8 @@
 */
 
 const nodeMode = (typeof module !== 'undefined')
+
+const {getLabel} = require('./profilePaneUtils');
 var panes, UI
 
 if (nodeMode) {
@@ -29,11 +31,7 @@ const thisPane = { // 'noun_638141.svg' not editing
   name: 'profile',
 
   label: function (subject) {
-    var types = kb.findTypeURIs(subject)
-    if (types[UI.ns.foaf('Person').uri] || types[UI.ns.vcard('Individual').uri]) {
-      return 'Your Profile'
-    }
-    return 'Edit your profile' // At the monet, just allow on any object. Like home pane
+    return getLabel(subject, kb, UI.ns);
   },
 
   render: function (subject, dom) {
