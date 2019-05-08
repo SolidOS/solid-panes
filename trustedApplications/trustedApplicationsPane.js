@@ -111,8 +111,6 @@ function createApplicationTable (subject) {
 
 function createApplicationEntry (subject, origin, appModes, updateTable) {
   var trustedApplicationState = { origin, appModes, formElements: { modes: [] } }
-  var profile = subject.doc()
-
   return createContainer('tr', [
     createContainer('td', [
       createElement('input', {
