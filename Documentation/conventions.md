@@ -20,7 +20,6 @@ For short-hand, we will use the following namespace prefixes here:
 * @prefix schema: <http://schema.org/>.
 * @prefix sioc: <http://rdfs.org/sioc/ns#>.
 * @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-* @prefix sioc: <http://rdfs.org/sioc/ns#>.
 * @prefix stat <http://www.w3.org/ns/posix/stat#>.
 * @prefix ui: <http://www.w3.org/ns/ui#>.
 * @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
