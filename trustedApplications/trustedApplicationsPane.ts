@@ -9,23 +9,40 @@
 
 const nodeMode = (typeof module !== 'undefined')
 
-const {getStatementsToAdd, getStatementsToDelete} = require('./trustedApplicationsUtils');
-var panes, UI
+import solidUi, { SolidUi } from 'solid-ui';
+import { NamedNode, IndexedFormula } from 'rdflib';
+import { Namespaces } from 'solid-namespace';
+import paneRegistry from 'pane-registry';
+
+import {getStatementsToAdd, getStatementsToDelete} from './trustedApplicationsUtils';
+import { PaneDefinition } from '../types';
+
+let panes;
+let UI: SolidUi;
 
 if (nodeMode) {
-  UI = require('solid-ui')
-  panes = require('pane-registry')
+  UI = solidUi
+  panes = paneRegistry
 } else { // Add to existing mashlib
-  panes = window.panes
+  panes = (window as any).panes
   UI = panes.UI
 }
 
-const kb = UI.store
-const ns = UI.ns
+const kb: IndexedFormula = UI.store
+const ns: Namespaces = UI.ns
 
 const thisColor = '#418d99'
 
-const thisPane = {
+interface FormElements {
+  modes: HTMLInputElement[];
+  // This appears to be used to store either a node from the store,
+  // or a reference to the input (checkbox) element for a particular mode.
+  // These typings were created post-hoc, so I'm not sure if that was intentional.
+  // Thus, this union type should be considered as descriptive rather than prescriptive.
+  origin: (undefined | NamedNode | HTMLInputElement);
+};
+
+const thisPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_15177.svg', // Looks like an A - could say it's for Applications?
 
   name: 'trustedApplications',
@@ -49,8 +66,8 @@ const thisPane = {
     statusArea.setAttribute('style', 'padding: 0.7em;')
 
     var context = { dom: dom, div: main, statusArea: statusArea, me: null }
-    UI.authn.logInLoadProfile(context).then(context => {
-      subject = context.me
+    UI.authn.logInLoadProfile(context).then((context: any) => {
+      let subject: NamedNode = context.me
 
       var profile = subject.doc()
       var editable = UI.store.updater.editable(profile.uri, kb)
@@ -74,14 +91,14 @@ const thisPane = {
         main.appendChild(createText('li', 'They will not gain more access than you have.'))
       ]))
       main.appendChild(createText('p', 'Application URLs must be valid URL. Examples are http://localhost:3000, https://trusted.app, and https://sub.trusted.app.'))
-    }, err => {
+    }, (err: any) => {
       statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
     })
     return div
   } // render()
 } //
 
-function createApplicationTable(subject) {
+function createApplicationTable(subject: NamedNode) {
   var applicationsTable = createElement('table', {
     'class': 'results'
   })
@@ -92,13 +109,16 @@ function createApplicationTable(subject) {
     createText('th', 'Access modes'),
     createText('th', 'Actions')
   ])
-  applicationsTable.appendChild(header)
+  applicationsTable.appendChild(header);
 
   // creating rows
-  kb.each(subject, ns.acl('trustedApp'))
-    .flatMap(app => kb.each(app, ns.acl('origin')).map(origin => ({appModes: kb.each(app, ns.acl('mode')), origin})))
-    .sort(({origin: a}, {origin: b}) => a.value < b.value ? -1 : 1)
-    .forEach(({appModes, origin}) => applicationsTable.appendChild(createApplicationEntry(subject, origin, appModes, updateTable)))
+  (kb.each(subject, ns.acl('trustedApp'), undefined, undefined) as any)
+    .flatMap((app: any) => {
+      return kb.each(app, ns.acl('origin'), undefined, undefined)
+        .map(origin => ({appModes: kb.each(app, ns.acl('mode'), undefined, undefined), origin}))
+    })
+    .sort((a: any, b: any) => a.origin.value < b.origin.value ? -1 : 1)
+    .forEach(({appModes, origin}: {appModes: NamedNode[], origin: NamedNode}) => applicationsTable.appendChild(createApplicationEntry(subject, origin, appModes, updateTable)))
 
   // adding a row for new applications
   applicationsTable.appendChild(createApplicationEntry(subject, null, [ns.acl('Read')], updateTable))
@@ -106,14 +126,25 @@ function createApplicationTable(subject) {
   return applicationsTable
 
   function updateTable() {
-    applicationsTable.parentElement.replaceChild(createApplicationTable(subject), applicationsTable)
+    applicationsTable.parentElement!.replaceChild(createApplicationTable(subject), applicationsTable)
   }
 }
 
-function createApplicationEntry(subject, origin, appModes, updateTable) {
-  var trustedApplicationState = { origin, appModes, formElements: { modes: [] } }
+function createApplicationEntry(
+  subject: NamedNode,
+  origin: NamedNode | null,
+  appModes: NamedNode[],
+  updateTable: () => void,
+): HTMLTableRowElement {
+  var trustedApplicationState = {
+    origin,
+    appModes,
+    formElements: {
+      modes: [],
+      origin: undefined,
+    } as FormElements,
+  }
   var profile = subject.doc()
-
   return createContainer('tr', [
     createContainer('td', [
       createElement('input', {
@@ -151,7 +182,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
   function addOrEditApplication() {
     var origin
     try {
-      origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
+      origin = $rdf.sym(trustedApplicationState.formElements.origin!.value)
     } catch (err) {
       return alert('Please provide an application URL you want to trust')
     }
@@ -161,23 +192,23 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
       .map(checkbox => checkbox.value)
 
     var deletions = getStatementsToDelete(origin, subject, kb, ns)
-    var additions = getStatementsToAdd(origin, generateRandomString(), modes, profile, ns)
-    kb.updater.update(deletions, additions, handleUpdateResponse)
+    var additions = getStatementsToAdd(origin, generateRandomString(), modes, profile, ns);
+    (kb as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication() {
     var origin
     try {
-      origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
+      origin = $rdf.sym(trustedApplicationState.formElements.origin!.value)
     } catch (err) {
       return alert('Please provide an application URL you want to remove trust from')
     }
 
-    var deletions = getStatementsToDelete(origin, subject, kb, ns)
-    kb.updater.update(deletions, null, handleUpdateResponse)
+    var deletions = getStatementsToDelete(origin, subject, kb, ns);
+    (kb as any).updater.update(deletions, null, handleUpdateResponse)
   }
 
-  function handleUpdateResponse(uri, success, errorBody) {
+  function handleUpdateResponse(uri: any, success: boolean, errorBody: any) {
     if (success) {
       return updateTable()
     }
@@ -185,8 +216,13 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
   }
 }
 
-function createElement(elementName, attributes = {}, eventListeners = {}, onCreated = null) {
-  var element = document.createElement(elementName)
+function createElement<K extends keyof HTMLElementTagNameMap>(
+  elementName: K,
+  attributes: {[name: string]: string} = {},
+  eventListeners: {[eventName: string]: EventListener} = {},
+  onCreated: (null | ((createdElement: HTMLElementTagNameMap[K]) => void)) = null,
+) {
+  var element = document.createElement(elementName);
   if (onCreated) {
     onCreated(element)
   }
@@ -199,19 +235,31 @@ function createElement(elementName, attributes = {}, eventListeners = {}, onCrea
   return element
 }
 
-function createContainer(elementName, children, attributes = {}, eventListeners = {}, onCreated = null) {
+function createContainer<K extends keyof HTMLElementTagNameMap>(
+  elementName: K,
+  children: HTMLElement[],
+  attributes = {},
+  eventListeners = {},
+  onCreated = null,
+) {
   var element = createElement(elementName, attributes, eventListeners, onCreated)
   children.forEach(child => element.appendChild(child))
   return element
 }
 
-function createText(elementName, textContent, attributes = {}, eventListeners = {}, onCreated = null) {
+function createText<K extends keyof HTMLElementTagNameMap>(
+  elementName: K,
+  textContent: string | null,
+  attributes = {},
+  eventListeners = {},
+  onCreated = null,
+) {
   var element = createElement(elementName, attributes, eventListeners, onCreated)
   element.textContent = textContent
   return element
 }
 
-function createModesInput({ appModes, formElements }) {
+function createModesInput({ appModes, formElements }: { appModes: NamedNode[], formElements: FormElements}) {
   return ['Read', 'Write', 'Append', 'Control'].map(mode => {
     var isChecked = appModes.some(appMode => appMode.value === ns.acl(mode).value)
     return createContainer('label', [
@@ -229,9 +277,8 @@ function generateRandomString() {
   return Math.random().toString(36).substring(7)
 }
 
-if (nodeMode) {
-  module.exports = thisPane
-} else {
+export default thisPane
+if (!nodeMode) {
   console.log('*** patching in live pane: ' + thisPane.name)
   panes.register(thisPane)
 }

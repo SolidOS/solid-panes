@@ -9,8 +9,8 @@
 */
 
 import { PaneDefinition } from '../types';
-var UI = require('solid-ui')
-var panes = require('pane-registry')
+import UI from 'solid-ui'
+import panes from 'pane-registry'
 
 const HomePane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830
@@ -63,4 +63,4 @@ const HomePane: PaneDefinition = {
 } // pane object
 
 // ends
-module.exports = HomePane;
+export default HomePane;
