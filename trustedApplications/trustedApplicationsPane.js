@@ -112,6 +112,8 @@ function createApplicationTable(subject) {
 
 function createApplicationEntry(subject, origin, appModes, updateTable) {
   var trustedApplicationState = { origin, appModes, formElements: { modes: [] } }
+  var profile = subject.doc()
+
   return createContainer('tr', [
     createContainer('td', [
       createElement('input', {
@@ -147,7 +149,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
   ])
 
   function addOrEditApplication() {
-    let origin
+    var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
     } catch (err) {
@@ -164,11 +166,11 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
   }
 
   function removeApplication() {
-    let origin
+    var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
     } catch (err) {
-      return alert('Please provide an application URL you want to trust')
+      return alert('Please provide an application URL you want to remove trust from')
     }
 
     var deletions = getStatementsToDelete(origin, subject, kb, ns)
@@ -221,6 +223,10 @@ function createModesInput({ appModes, formElements }) {
       createText('span', mode)
     ])
   })
+}
+
+function generateRandomString() {
+  return Math.random().toString(36).substring(7)
 }
 
 if (nodeMode) {
