@@ -6,7 +6,8 @@
   "scripts": {
     "build-browserified": "npm run build",
     "build-dist": "webpack --progress --colors",
-    "build": "npm run clean && mkdir -p dist/ && npm run build-dist",
+    "build": "npm run clean && npm run build-dist",
+    "watch": "npm run clean && webpack --progress --colors --watch --mode=\"development\"",
     "clean": "rm -rf dist/",
     "test": "jest"
   },
