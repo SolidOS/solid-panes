@@ -1662,7 +1662,12 @@ module.exports = function (doc) {
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
 
-    if (solo && dom && dom.defaultView && dom.defaultView.history) {
+    if (
+      solo && dom && dom.defaultView && dom.defaultView.history
+      // Don't add the new location to the history if we arrived here through a direct link
+      // (i.e. when static/databrowser.html in node-solid-server called this method):
+      && document.location.href !== subject.uri
+    ) {
       let stateObj = pane ? { paneName: pane.name } : {}
       try { // can fail if different origin
         dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
