@@ -3,7 +3,7 @@ import { Namespaces } from 'solid-namespace';
 
 export function getStatementsToDelete(
   origin: NamedNode,
-  profile: NamedNode,
+  person: NamedNode,
   kb: IndexedFormula,
   ns: Namespaces,
 ) {
@@ -13,7 +13,7 @@ export function getStatementsToDelete(
   const statementsToDelete = applicationStatements.reduce(
     (memo, st) => {
       return memo
-        .concat(kb.statementsMatching(profile, ns.acl('trustedApp'), st.subject, null as any, false))
+        .concat(kb.statementsMatching(person, ns.acl('trustedApp'), st.subject, null as any, false))
         .concat(kb.statementsMatching(st.subject, null as any, null as any, null as any, false))
     },
     [] as Statement[],
@@ -25,15 +25,15 @@ export function getStatementsToAdd(
   origin: NamedNode,
   nodeName: string,
   modes: string[],
-  profile: NamedNode,
+  person: NamedNode,
   ns: Namespaces,
 ) {
   var application = new $rdf.BlankNode(`bn_${nodeName}`)
   return [
-    $rdf.st(profile, ns.acl('trustedApp'), application, profile),
-    $rdf.st(application, ns.acl('origin'), origin, profile),
+    $rdf.st(person, ns.acl('trustedApp'), application, person.doc()),
+    $rdf.st(application, ns.acl('origin'), origin, person.doc()),
     ...modes
       .map(mode => $rdf.sym(mode))
-      .map(mode => $rdf.st(application, ns.acl('mode'), mode, profile))
+      .map(mode => $rdf.st(application, ns.acl('mode'), mode, person.doc()))
   ]
 }

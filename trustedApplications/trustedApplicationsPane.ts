@@ -144,7 +144,6 @@ function createApplicationEntry(
       origin: undefined,
     } as FormElements,
   }
-  var profile = subject.doc()
   return createContainer('tr', [
     createContainer('td', [
       createElement('input', {
@@ -192,7 +191,7 @@ function createApplicationEntry(
       .map(checkbox => checkbox.value)
 
     var deletions = getStatementsToDelete(origin, subject, kb, ns)
-    var additions = getStatementsToAdd(origin, generateRandomString(), modes, profile, ns);
+    var additions = getStatementsToAdd(origin, generateRandomString(), modes, subject, ns);
     (kb as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
