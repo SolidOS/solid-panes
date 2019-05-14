@@ -12,19 +12,19 @@ Array [
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#trustedApp",
     },
-    "subject": Literal {
-      "termType": "Literal",
-      "value": "Mock profile",
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.profile#me",
     },
-    "why": Literal {
-      "termType": "Literal",
-      "value": "Mock profile",
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.profile",
     },
   },
   Statement {
-    "object": Literal {
-      "termType": "Literal",
-      "value": "Mock origin",
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.origin",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -35,9 +35,9 @@ Array [
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
     },
-    "why": Literal {
-      "termType": "Literal",
-      "value": "Mock profile",
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.profile",
     },
   },
   Statement {
@@ -54,9 +54,9 @@ Array [
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
     },
-    "why": Literal {
-      "termType": "Literal",
-      "value": "Mock profile",
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.profile",
     },
   },
   Statement {
@@ -73,9 +73,9 @@ Array [
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
     },
-    "why": Literal {
-      "termType": "Literal",
-      "value": "Mock profile",
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.profile",
     },
   },
 ]
@@ -84,17 +84,17 @@ Array [
 exports[`getStatementsToDelete should return all statements for the given origin 1`] = `
 Array [
   Statement {
-    "object": Literal {
-      "termType": "Literal",
-      "value": "Mock application",
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.app",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#trustedApp",
     },
-    "subject": Literal {
-      "termType": "Literal",
-      "value": "Mock profile",
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.profile#me",
     },
     "why": NamedNode {
       "termType": "NamedNode",
@@ -102,17 +102,17 @@ Array [
     },
   },
   Statement {
-    "object": Literal {
-      "termType": "Literal",
-      "value": "Mock origin",
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.origin",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#origin",
     },
-    "subject": Literal {
-      "termType": "Literal",
-      "value": "Mock application",
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.app",
     },
     "why": NamedNode {
       "termType": "NamedNode",
@@ -128,9 +128,9 @@ Array [
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#mode",
     },
-    "subject": Literal {
-      "termType": "Literal",
-      "value": "Mock application",
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://fake.app",
     },
     "why": NamedNode {
       "termType": "NamedNode",
