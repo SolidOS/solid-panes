@@ -7,18 +7,18 @@
 ** or standalone script adding onto existing mashlib.
 */
 
+import solidUi, { SolidUi } from 'solid-ui'
+import $rdf, { NamedNode, IndexedFormula } from 'rdflib'
+import { Namespaces } from 'solid-namespace'
+import paneRegistry from 'pane-registry'
+
+import { getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
+import { PaneDefinition } from '../types'
+
 const nodeMode = (typeof module !== 'undefined')
 
-import solidUi, { SolidUi } from 'solid-ui';
-import { NamedNode, IndexedFormula } from 'rdflib';
-import { Namespaces } from 'solid-namespace';
-import paneRegistry from 'pane-registry';
-
-import {getStatementsToAdd, getStatementsToDelete} from './trustedApplicationsUtils';
-import { PaneDefinition } from '../types';
-
-let panes;
-let UI: SolidUi;
+let panes
+let UI: SolidUi
 
 if (nodeMode) {
   UI = solidUi
@@ -98,7 +98,7 @@ const thisPane: PaneDefinition = {
   } // render()
 } //
 
-function createApplicationTable(subject: NamedNode) {
+function createApplicationTable (subject: NamedNode) {
   var applicationsTable = createElement('table', {
     'class': 'results'
   })
@@ -115,34 +115,34 @@ function createApplicationTable(subject: NamedNode) {
   (kb.each(subject, ns.acl('trustedApp'), undefined, undefined) as any)
     .flatMap((app: any) => {
       return kb.each(app, ns.acl('origin'), undefined, undefined)
-        .map(origin => ({appModes: kb.each(app, ns.acl('mode'), undefined, undefined), origin}))
+        .map(origin => ({ appModes: kb.each(app, ns.acl('mode'), undefined, undefined), origin }))
     })
     .sort((a: any, b: any) => a.origin.value < b.origin.value ? -1 : 1)
-    .forEach(({appModes, origin}: {appModes: NamedNode[], origin: NamedNode}) => applicationsTable.appendChild(createApplicationEntry(subject, origin, appModes, updateTable)))
+    .forEach(({ appModes, origin }: {appModes: NamedNode[], origin: NamedNode}) => applicationsTable.appendChild(createApplicationEntry(subject, origin, appModes, updateTable)))
 
   // adding a row for new applications
   applicationsTable.appendChild(createApplicationEntry(subject, null, [ns.acl('Read')], updateTable))
 
   return applicationsTable
 
-  function updateTable() {
+  function updateTable () {
     applicationsTable.parentElement!.replaceChild(createApplicationTable(subject), applicationsTable)
   }
 }
 
-function createApplicationEntry(
+function createApplicationEntry (
   subject: NamedNode,
   origin: NamedNode | null,
   appModes: NamedNode[],
-  updateTable: () => void,
+  updateTable: () => void
 ): HTMLTableRowElement {
   var trustedApplicationState = {
     origin,
     appModes,
     formElements: {
       modes: [],
-      origin: undefined,
-    } as FormElements,
+      origin: undefined
+    } as FormElements
   }
   return createContainer('tr', [
     createContainer('td', [
@@ -150,7 +150,7 @@ function createApplicationEntry(
         'class': 'textinput',
         placeholder: 'Write new URL here',
         value: origin ? origin.value : ''
-      }, {}, (element) => trustedApplicationState.formElements.origin = element)
+      }, {}, (element) => { trustedApplicationState.formElements.origin = element })
     ]),
     createContainer('td', createModesInput(trustedApplicationState)),
     createContainer('td', origin
@@ -178,7 +178,7 @@ function createApplicationEntry(
       ])
   ])
 
-  function addOrEditApplication() {
+  function addOrEditApplication () {
     var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin!.value)
@@ -195,7 +195,7 @@ function createApplicationEntry(
     (kb as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
-  function removeApplication() {
+  function removeApplication () {
     var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin!.value)
@@ -207,7 +207,7 @@ function createApplicationEntry(
     (kb as any).updater.update(deletions, null, handleUpdateResponse)
   }
 
-  function handleUpdateResponse(uri: any, success: boolean, errorBody: any) {
+  function handleUpdateResponse (uri: any, success: boolean, errorBody: any) {
     if (success) {
       return updateTable()
     }
@@ -215,13 +215,13 @@ function createApplicationEntry(
   }
 }
 
-function createElement<K extends keyof HTMLElementTagNameMap>(
+function createElement<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   attributes: {[name: string]: string} = {},
   eventListeners: {[eventName: string]: EventListener} = {},
-  onCreated: (null | ((createdElement: HTMLElementTagNameMap[K]) => void)) = null,
+  onCreated: (null | ((createdElement: HTMLElementTagNameMap[K]) => void)) = null
 ) {
-  var element = document.createElement(elementName);
+  var element = document.createElement(elementName)
   if (onCreated) {
     onCreated(element)
   }
@@ -234,31 +234,31 @@ function createElement<K extends keyof HTMLElementTagNameMap>(
   return element
 }
 
-function createContainer<K extends keyof HTMLElementTagNameMap>(
+function createContainer<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   children: HTMLElement[],
   attributes = {},
   eventListeners = {},
-  onCreated = null,
+  onCreated = null
 ) {
   var element = createElement(elementName, attributes, eventListeners, onCreated)
   children.forEach(child => element.appendChild(child))
   return element
 }
 
-function createText<K extends keyof HTMLElementTagNameMap>(
+function createText<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   textContent: string | null,
   attributes = {},
   eventListeners = {},
-  onCreated = null,
+  onCreated = null
 ) {
   var element = createElement(elementName, attributes, eventListeners, onCreated)
   element.textContent = textContent
   return element
 }
 
-function createModesInput({ appModes, formElements }: { appModes: NamedNode[], formElements: FormElements}) {
+function createModesInput ({ appModes, formElements }: { appModes: NamedNode[], formElements: FormElements}) {
   return ['Read', 'Write', 'Append', 'Control'].map(mode => {
     var isChecked = appModes.some(appMode => appMode.value === ns.acl(mode).value)
     return createContainer('label', [
@@ -272,7 +272,7 @@ function createModesInput({ appModes, formElements }: { appModes: NamedNode[], f
   })
 }
 
-function generateRandomString() {
+function generateRandomString () {
   return Math.random().toString(36).substring(7)
 }
 

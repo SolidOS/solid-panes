@@ -1,11 +1,11 @@
-import $rdf, { NamedNode, IndexedFormula, Statement } from 'rdflib';
-import { Namespaces } from 'solid-namespace';
+import $rdf, { NamedNode, IndexedFormula, Statement } from 'rdflib'
+import { Namespaces } from 'solid-namespace'
 
-export function getStatementsToDelete(
+export function getStatementsToDelete (
   origin: NamedNode,
   person: NamedNode,
   kb: IndexedFormula,
-  ns: Namespaces,
+  ns: Namespaces
 ) {
   // `as any` is used because the rdflib typings incorrectly require a Node to be passed,
   // even though null is also valid:
@@ -16,17 +16,17 @@ export function getStatementsToDelete(
         .concat(kb.statementsMatching(person, ns.acl('trustedApp'), st.subject, null as any, false))
         .concat(kb.statementsMatching(st.subject, null as any, null as any, null as any, false))
     },
-    [] as Statement[],
+    [] as Statement[]
   )
   return statementsToDelete
 }
 
-export function getStatementsToAdd(
+export function getStatementsToAdd (
   origin: NamedNode,
   nodeName: string,
   modes: string[],
   person: NamedNode,
-  ns: Namespaces,
+  ns: Namespaces
 ) {
   var application = new $rdf.BlankNode(`bn_${nodeName}`)
   return [
