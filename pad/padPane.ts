@@ -1,10 +1,12 @@
+import UI from 'solid-ui'
+import { PaneDefinition } from '../types'
+import $rdf, { NamedNode } from 'rdflib'
 /*   pad Pane
 **
 */
-var UI = require('solid-ui')
 var ns = UI.ns
 
-module.exports = {
+const paneDef: PaneDefinition = {
   // icon:  (module.__dirname || __dirname) + 'images/ColourOn.png',
   icon: UI.icons.iconBase + 'noun_79217.svg',
 
@@ -22,7 +24,7 @@ module.exports = {
 
   mintClass: ns.pad('Notepad'),
 
-  mintNew: function (newPaneOptions) {
+  mintNew: function (newPaneOptions: any) {
     var kb = UI.store
     var ns = UI.ns
     var updater = kb.updater
@@ -51,7 +53,7 @@ module.exports = {
         newPadDoc,
         kb.statementsMatching(undefined, undefined, undefined, newPadDoc),
         'text/turtle',
-        function (uri2, ok, message) {
+        function (uri2: string, ok: boolean, message: string) {
           if (ok) {
             resolve(newPaneOptions)
           } else {
@@ -62,15 +64,15 @@ module.exports = {
     })
   },
   // and follow instructions there
-  render: function (subject, dom, paneOptions) {
+  render: function (subject, dom, paneOptions: any) {
     // Utility functions
-    var complainIfBad = function (ok, message) {
+    var complainIfBad = function (ok: boolean, message: string) {
       if (!ok) {
         div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
       }
     }
 
-    var clearElement = function (ele) {
+    var clearElement = function (ele: HTMLElement) {
       while (ele.firstChild) {
         ele.removeChild(ele.firstChild)
       }
@@ -81,7 +83,7 @@ module.exports = {
 
     // Two variations of ACL for this app, public read and public read/write
     // In all cases owner has read write control
-    var genACLtext = function (docURI, aclURI, allWrite) {
+    var genACLtext = function (docURI: string, aclURI: string, allWrite: boolean) {
       var g = $rdf.graph()
       var auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
       var a = g.sym(aclURI + '#a1')
@@ -112,7 +114,7 @@ module.exports = {
      *
      * @returns {Promise<Response>}
      */
-    var setACL = function setACL (docURI, allWrite, callbackFunction) {
+    var setACL = function setACL (docURI: string, allWrite: boolean, callbackFunction: Function) {
       var aclDoc = kb.any(kb.sym(docURI),
         kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
 
@@ -120,13 +122,13 @@ module.exports = {
         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
         return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
-          .then(result => callbackFunction(true))
-          .catch(err => {
+          .then((_result: any) => callbackFunction(true))
+          .catch((err: Error) => {
             callbackFunction(false, err.message)
           })
       } else {
         return fetcher.load(docURI)
-          .catch(err => {
+          .catch((err: Error) => {
             callbackFunction(false, 'Getting headers for ACL: ' + err)
           })
           .then(() => {
@@ -142,8 +144,8 @@ module.exports = {
 
             return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
           })
-          .then(result => callbackFunction(true))
-          .catch(err => {
+          .then((_result: any) => callbackFunction(true))
+          .catch((err: Error) => {
             callbackFunction(false, err.message)
           })
       }
@@ -162,9 +164,9 @@ module.exports = {
     }
 
     // Option of either using the workspace system or just typing in a URI
-    var showBootstrap = function showBootstrap (thisInstance, container, noun) {
+    var showBootstrap = function showBootstrap (thisInstance: any, container: HTMLElement, noun: string) {
       var div = clearElement(container)
-      var appDetails = {'noun': 'notepad'}
+      var appDetails = { 'noun': 'notepad' }
       div.appendChild(UI.authn.newAppInstance(
         dom, appDetails, initializeNewInstanceInWorkspace))
 
@@ -175,15 +177,15 @@ module.exports = {
         'Give the URL of the directory where you would like the data stored.'
       var baseField = div.appendChild(dom.createElement('input'))
       baseField.setAttribute('type', 'text')
-      baseField.size = 80 // really a string
-      baseField.label = 'base URL'
+      baseField.size = 80; // really a string
+      (baseField as any).label = 'base URL'
       baseField.autocomplete = 'on'
 
       div.appendChild(dom.createElement('br')) // @@
 
       var button = div.appendChild(dom.createElement('button'))
       button.textContent = 'Start new ' + noun + ' at this URI'
-      button.addEventListener('click', function (e) {
+      button.addEventListener('click', function (_e) {
         var newBase = baseField.value
         if (newBase.slice(-1) !== '/') {
           newBase += '/'
@@ -193,7 +195,7 @@ module.exports = {
     }
 
     //  Create new document files for new instance of app
-    var initializeNewInstanceInWorkspace = function (ws) {
+    var initializeNewInstanceInWorkspace = function (ws: NamedNode) {
       var newBase = kb.any(ws, ns.space('uriPrefix'))
       if (!newBase) {
         newBase = ws.uri.split('#')[0]
@@ -210,7 +212,7 @@ module.exports = {
       initializeNewInstanceAtBase(thisInstance, newBase)
     }
 
-    var initializeNewInstanceAtBase = function (thisInstance, newBase) {
+    var initializeNewInstanceAtBase = function (thisInstance: any, newBase: string) {
       var here = $rdf.sym(thisInstance.uri.split('#')[0])
       var base = here // @@ ???
 
@@ -227,35 +229,35 @@ module.exports = {
 
       // $rdf.log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
 
-      var agenda = []
+      var agenda: Function[] = []
 
       var f //   @@ This needs some form of visible progress bar
       for (f = 0; f < toBeCopied.length; f++) {
         var item = toBeCopied[f]
-        var fun = function copyItem (item) {
+        var fun = function copyItem (item: any) {
           agenda.push(function () {
             var newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
 
             var setThatACL = function () {
-              setACL(newURI, false, function (ok, message) {
+              setACL(newURI, false, function (ok: boolean, message: string) {
                 if (!ok) {
                   complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
                   console.log('FAILED to set ACL ' + newURI + ' : ' + message)
                 } else {
-                  agenda.shift()() // beware too much nesting
+                  agenda.shift()!() // beware too much nesting
                 }
               })
             }
 
             kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
               .then(() => UI.authn.checkUser())
-              .then(webId => {
+              .then((webId: string) => {
                 me = webId
 
                 setThatACL()
               })
-              .catch(err => {
+              .catch((err: Error) => {
                 console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
                 complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + err.message)
               })
@@ -281,9 +283,9 @@ module.exports = {
           newPadDoc,
           kb.statementsMatching(undefined, undefined, undefined, newPadDoc),
           'text/turtle',
-          function (uri2, ok, message) {
+          function (_uri2: string, ok: boolean, message: string) {
             if (ok) {
-              agenda.shift()()
+              agenda.shift()!()
             } else {
               complainIfBad(ok, 'FAILED to save new notepad at: ' + newPadDoc.uri + ' : ' + message)
               console.log('FAILED to save new notepad at: ' + newPadDoc.uri + ' : ' + message)
@@ -293,9 +295,9 @@ module.exports = {
       })
 
       agenda.push(function () {
-        setACL(newPadDoc.uri, true, function (ok, body) {
+        setACL(newPadDoc.uri, true, function (ok: boolean, body: string) {
           complainIfBad(ok, 'Failed to set Read-Write ACL on pad data file: ' + body)
-          if (ok) agenda.shift()()
+          if (ok) agenda.shift()!()
         })
       })
 
@@ -309,18 +311,18 @@ module.exports = {
           "<br/><br/><a href='" + newIndexDoc.uri + "'>Go to new pad</a>"
       })
 
-      agenda.shift()()
+      agenda.shift()!()
       // Created new data files.
     }
 
     //  Update on incoming changes
-    var showResults = function (exists) {
+    var showResults = function (exists: boolean) {
       console.log('showResults()')
 
       me = UI.authn.currentUser()
 
       UI.authn.checkUser()
-        .then(webId => {
+        .then((webId: string) => {
           me = webId
         })
 
@@ -340,11 +342,11 @@ module.exports = {
 
     // Read or create empty data file
     var loadPadData = function () {
-      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (ok, body, response) {
+      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (ok: boolean, body: string, response: any) {
         if (!ok) {
           if (response.status === 404) { // /  Check explicitly for 404 error
             console.log('Initializing results file ' + padDoc)
-            updater.put(padDoc, [], 'text/turtle', function (uri2, ok, message) {
+            updater.put(padDoc, [], 'text/turtle', function (_uri2: string, ok: boolean, message: string) {
               if (ok) {
                 clearElement(naviMain)
                 showResults(false)
@@ -353,10 +355,10 @@ module.exports = {
                 console.log('FAILED to craete results file at: ' + padDoc.uri + ' : ' + message)
               }
             })
-          } else {  // Other error, not 404 -- do not try to overwite the file
+          } else { // Other error, not 404 -- do not try to overwite the file
             complainIfBad(ok, 'FAILED to read results file: ' + body)
           }
-        } else {  // Happy read
+        } else { // Happy read
           clearElement(naviMain)
           if (kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
             showBootstrap(subject, naviMain, 'pad')
@@ -374,7 +376,7 @@ module.exports = {
     var fetcher = UI.store.fetcher
     var updater = UI.store.updater
     var ns = UI.ns
-    var me
+    var me: any
 
     var PAD = $rdf.Namespace('http://www.w3.org/ns/pim/pad#')
 
@@ -411,12 +413,12 @@ module.exports = {
 
     var naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.setAttribute('class', 'naviMenu')
-//    naviMenu.setAttribute('style', 'margin-top: 3em;');
+    // naviMenu.setAttribute('style', 'margin-top: 3em;');
     naviMenu.appendChild(dom.createElement('td')) // naviLeft
     naviMenu.appendChild(dom.createElement('td'))
     naviMenu.appendChild(dom.createElement('td'))
 
-    var options = { statusArea: statusArea, timingArea: naviMiddle1 }
+    var options: any = { statusArea: statusArea, timingArea: naviMiddle1 }
 
     loadPadData()
 
@@ -424,3 +426,5 @@ module.exports = {
   }
 }
 // ends
+
+export default paneDef
