@@ -1,0 +1,620 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`getInitialisationStatements() should include author information if available 1`] = `
+Array [
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#Notepad",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Scratchpad (1/1/1970)",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/title",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-user",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/author",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+]
+`;
+
+exports[`getInitialisationStatements() should properly initialise a new notepad 1`] = `
+Array [
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#Notepad",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Scratchpad (1/1/1970)",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/title",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl#this",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://localhost:8443/public/0/index.ttl",
+    },
+  },
+]
+`;
+
+exports[`getSetContentsStatements() should clear previous content, if any 1`] = `
+Array [
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Existing content",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://arbitrary-line",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://arbitrary-line",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://arbitrary-line",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+]
+`;
+
+exports[`getSetContentsStatements() should include author information if available 1`] = `
+Array [
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Arbitrary content",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://rdfs.org/sioc/ns#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-user",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/author",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+]
+`;
+
+exports[`getSetContentsStatements() should properly set a notepad's contents 1`] = `
+Array [
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://rdfs.org/sioc/ns#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line1",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line0",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "Here's some arbitrary",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://rdfs.org/sioc/ns#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line1",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line1",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line2",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line1",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "multiline",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://rdfs.org/sioc/ns#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line2",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line2",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line3",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line2",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "content",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://rdfs.org/sioc/ns#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line3",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line3",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line4",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line3",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "termType": "Literal",
+      "value": "    ",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://rdfs.org/sioc/ns#content",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line4",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": Literal {
+      "datatype": NamedNode {
+        "termType": "NamedNode",
+        "value": "http://www.w3.org/2001/XMLSchema#dateTime",
+      },
+      "termType": "Literal",
+      "value": "1970-01-01T00:00:00Z",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://purl.org/dc/elements/1.1/created",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line4",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+  Statement {
+    "object": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+    "predicate": NamedNode {
+      "termType": "NamedNode",
+      "value": "http://www.w3.org/ns/pim/pad#next",
+    },
+    "subject": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad_line4",
+    },
+    "why": NamedNode {
+      "termType": "NamedNode",
+      "value": "https://mock-pad",
+    },
+  },
+]
+`;

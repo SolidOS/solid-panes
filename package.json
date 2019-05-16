@@ -45,6 +45,7 @@
     "solid-ui": "file://../../solid/solid-ui"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
     "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
