@@ -51,6 +51,7 @@ register(require('issue-pane'))
 register(require('contacts-pane'))
 
 register(require('./pad/padPane').default)
+register(require('./scratchpad/paneWrapper').default)
 // register(require('./argument/argumentPane.js')) // A position in an argument tree
 
 register(require('./transaction/pane.js'))

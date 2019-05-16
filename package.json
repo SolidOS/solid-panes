@@ -44,6 +44,7 @@
     "solid-ui": "file://../../solid/solid-ui"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
     "@solid/better-simple-slideshow": "^0.1.0",
     "chat-pane": ">=1.2.7",
     "contacts-pane": "^1.0.3",
