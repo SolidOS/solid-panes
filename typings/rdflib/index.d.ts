@@ -1184,11 +1184,6 @@ export class UpdateManager {
   update(
     statementsToDelete: Statement[],
     statementsToAdd: Statement[],
-  ): Promise<void>
-
-  update(
-    statementsToDelete: Statement[],
-    statementsToAdd: Statement[],
     callback: (uri: string | undefined, success: boolean, errorBody?: string) => void
   ): void
 }

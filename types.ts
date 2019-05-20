@@ -28,6 +28,6 @@ interface NewPaneOptions {
 
 export interface RevampPaneDefinition {
   canHandle: (subject: NamedNode, store: IndexedFormula) => boolean;
-  attach: (container: HTMLElement, subject: NamedNode, store: IndexedFormula) => void;
+  attach: (container: HTMLElement, subject: NamedNode, store: IndexedFormula, user?: NamedNode) => void;
   label: (subject: NamedNode, store: IndexedFormula) => string | null;
 };
