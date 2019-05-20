@@ -81,7 +81,7 @@ export function getSetContentsStatements (
 
   const oldLines = store.statementsMatching(null as any, ns.pad('next'), null as any, pad.doc(), false)
     .map(statement => statement.object)
-    .filter(line => line !== pad)
+    .filter(line => line.value !== pad.value)
   const statementsPerOldLine = oldLines.map(oldLine => {
     return store.statementsMatching(oldLine, null as any, null as any, pad.doc(), false)
   })
