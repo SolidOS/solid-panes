@@ -1,17 +1,12 @@
-import { NamedNode, IndexedFormula } from 'rdflib';
-import { getContents, getSetContentsStatements } from './data';
+import { getContents, getSetContentsStatements } from './data'
+import { ViewParams } from '../types'
 
-export function view(
-  container: HTMLElement,
-  subject: NamedNode,
-  store: IndexedFormula,
-  user?: NamedNode
-) {
+export function view ({ container, subject, store, user }: ViewParams) {
   toViewMode()
 
-  function toViewMode() {
+  function toViewMode () {
     const content = getContents(store, subject)
-    container.innerHTML = '';
+    container.innerHTML = ''
 
     const lines = content.split('\n')
     lines.forEach((line) => {
@@ -30,13 +25,13 @@ export function view(
     }
   }
 
-  function toEditMode() {
+  function toEditMode () {
     if (!user) {
       return
     }
 
     const content = getContents(store, subject)
-    container.innerHTML = '<form><textarea></textarea><button type="submit">Save</button></form>';
+    container.innerHTML = '<form><textarea></textarea><button type="submit">Save</button></form>'
 
     const textArea = container.getElementsByTagName('textarea')[0]
     textArea.textContent = content

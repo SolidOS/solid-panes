@@ -37,8 +37,12 @@ const paneWrapper: PaneDefinition = {
 
   render: function (subject, _dom) {
     const container = document.createElement('div')
-    const user = UI.authn.currentUser()
-    pane.attach(container, subject, UI.store, user)
+    pane.view({
+      container: container,
+      subject: subject,
+      store: UI.store,
+      user: UI.authn.currentUser()
+    })
     return container
   }
 }
