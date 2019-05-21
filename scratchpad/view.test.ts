@@ -30,7 +30,8 @@ describe('View mode', () => {
     view({
       container: container,
       subject: mockPad,
-      store: mockStore
+      store: mockStore,
+      visitNode: jest.fn()
     })
     const button = container.querySelector('button')
     expect(button).toBeNull()
@@ -47,7 +48,8 @@ describe('View mode', () => {
       container: container,
       subject: mockPad,
       store: mockStore,
-      user: mockUser
+      user: mockUser,
+      visitNode: jest.fn()
     })
     const button = container.querySelector('button')
     expect(button).toBeDefined()
@@ -63,7 +65,8 @@ describe('View mode', () => {
     view({
       container: container,
       subject: mockPad,
-      store: mockStore
+      store: mockStore,
+      visitNode: jest.fn()
     })
     expect(container.outerHTML).toMatchSnapshot()
   })
@@ -81,6 +84,7 @@ describe('Edit mode', () => {
       container: container,
       subject: mockPad,
       store: mockStore,
+      visitNode: jest.fn(),
       user: mockUser
     })
     const button = container.querySelector('button')
