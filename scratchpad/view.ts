@@ -26,6 +26,7 @@ export function view ({ container, subject, store, user }: ViewParams) {
   }
 
   function toEditMode () {
+    /* istanbul ignore if [This should not be able to happen, but since the view is not stateless, we cannot verify this in unit tests.] */
     if (!user) {
       return
     }
@@ -37,6 +38,7 @@ export function view ({ container, subject, store, user }: ViewParams) {
     textArea.textContent = content
 
     const form = container.getElementsByTagName('form')[0]
+    /* istanbul ignore next [Side effects get executed here, so do not run them in unit tests:] */
     form.addEventListener('submit', (event) => {
       event.preventDefault()
 

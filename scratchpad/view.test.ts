@@ -68,3 +68,25 @@ describe('View mode', () => {
     expect(container.outerHTML).toMatchSnapshot()
   })
 })
+
+describe('Edit mode', () => {
+  it('should switch to edit mode when clicking the edit button', async () => {
+    const mockStore = $rdf.graph()
+    const mockPad = addMockPad(mockStore)
+    const mockUser = $rdf.sym('https://mock-user')
+
+    const container = document.createElement('div')
+
+    view({
+      container: container,
+      subject: mockPad,
+      store: mockStore,
+      user: mockUser
+    })
+    const button = container.querySelector('button')
+    button!.dispatchEvent(new Event('click'))
+
+    const textarea = container.querySelector('textarea')
+    expect(textarea).toBeDefined()
+  })
+})
