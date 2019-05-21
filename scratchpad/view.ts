@@ -1,7 +1,11 @@
-import { getContents, getSetContentsStatements } from './data'
+import vocab from 'solid-namespace'
+import $rdf from 'rdflib'
+import { getContents, getSetContentsStatements, getLatestAuthor } from './data'
 import { ViewParams } from '../types'
 
-export function view ({ container, subject, store, user }: ViewParams) {
+const ns = vocab($rdf)
+
+export function view ({ container, subject, store, visitNode, user }: ViewParams) {
   toViewMode()
 
   function toViewMode () {
@@ -14,6 +18,8 @@ export function view ({ container, subject, store, user }: ViewParams) {
       container.appendChild(document.createElement('br'))
     })
 
+    container.appendChild(document.createElement('hr'))
+
     if (user) {
       const editButton = document.createElement('button')
       editButton.textContent = 'Edit'
@@ -22,6 +28,33 @@ export function view ({ container, subject, store, user }: ViewParams) {
         toEditMode()
       })
       container.appendChild(editButton)
+      container.appendChild(document.createElement('br'))
+    }
+
+    const authorContainer = document.createElement('small')
+    container.appendChild(authorContainer)
+    showLatestAuthor(authorContainer)
+  }
+
+  /* istanbul ignore next [This function depends on a side effect (fetch), so skip it for testing for now:] */
+  async function showLatestAuthor (authorContainer: HTMLElement) {
+    const latestAuthor = getLatestAuthor(store, subject)
+    if (latestAuthor) {
+      const fetcher = $rdf.fetcher(store, {})
+      await fetcher.load(latestAuthor.uri)
+      const [nameStatement] = store.statementsMatching(latestAuthor, ns.vcard('fn'), null, null, true)
+
+      authorContainer.appendChild(document.createTextNode('Latest author: '))
+      const authorLink = document.createElement('a')
+      authorLink.href = latestAuthor.uri
+      const name = (nameStatement) ? nameStatement.object.value : latestAuthor.uri
+      authorLink.textContent = name
+      authorLink.title = `View the profile of ${name}`
+      authorLink.addEventListener('click', (event) => {
+        event.preventDefault()
+        visitNode(latestAuthor)
+      })
+      authorContainer.appendChild(authorLink)
     }
   }
 

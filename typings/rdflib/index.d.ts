@@ -346,15 +346,15 @@ export class Statement {
   /**
    * The statement's subject
    */
-  subject: Node;
+  subject: NamedNode;
   /**
    * The statement's predicate
    */
-  predicate: Node;
+  predicate: NamedNode;
   /**
    * The statement's object
    */
-  object: Node;
+  object: NamedNode;
   /**
    * The origin of this statement
    */
@@ -1022,6 +1022,19 @@ export interface Handler {
   response: any;
   dom: any;
 }
+export interface FetchOptions {
+  fetch?: Function;
+  referringTerm?: NamedNode;
+  contentType?: string;
+  forceContentType?: string;
+  force?: boolean;
+  baseUri?: Node | string;
+  proxyUsed?: boolean;
+  withCredentials?: boolean;
+  clearPreviousData?: boolean;
+  noMeta?: boolean;
+  noRDFa?: boolean;
+}
 /**
 * Responsible for fetching RDF data
 */
@@ -1046,6 +1059,7 @@ export class Fetcher {
   static CONTENT_TYPE_BY_EXT: {
       [ext: string]: string;
   };
+  load: (uri: NamedNode[] | string[] | NamedNode | string, options?: FetchOptions) => Promise<Response>;
 }
 /**
 * Gets a node for the specified input
