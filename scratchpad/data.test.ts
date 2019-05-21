@@ -1,6 +1,6 @@
 /* eslint-env jest */
 import $rdf from 'rdflib'
-import { getInitialisationStatements, getSetContentsStatements, getContents, isPad, getTitle } from './data'
+import { getInitialisationStatements, getSetContentsStatements, getContents, isPad, getTitle, getLatestAuthor } from './data'
 import vocab from 'solid-namespace'
 
 const ns = vocab($rdf)
@@ -116,6 +116,67 @@ Second line`
     mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
 
     expect(getContents(mockStore, mockPad)).toBe('First line')
+  })
+})
+
+describe('getLatestAuthor()', () => {
+  it('should be able to get the latest author', async () => {
+    const mockStore = $rdf.graph()
+    const mockPad = $rdf.sym('https://mock-pad')
+    const mockEarlyAuthor = $rdf.sym('https:/mock-early-author')
+    const mockLateAuthor = $rdf.sym('https:/mock-late-author')
+
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
+    mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
+    mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
+    mockStore.add(mockFirstLine, ns.dc('author'), mockEarlyAuthor, mockPad.doc())
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
+    mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
+    mockStore.add(mockSecondLine, ns.dc('created'), new Date(24 * 60 * 60 * 1000), mockPad.doc())
+    mockStore.add(mockSecondLine, ns.dc('author'), mockLateAuthor, mockPad.doc())
+    mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
+
+    expect(getLatestAuthor(mockStore, mockPad)).toEqual(mockLateAuthor)
+  })
+
+  it('should return an author even when all lines were authored at the same time', async () => {
+    const mockStore = $rdf.graph()
+    const mockPad = $rdf.sym('https://mock-pad')
+    const mockEarlyAuthor = $rdf.sym('https:/mock-early-author')
+    const mockLateAuthor = $rdf.sym('https:/mock-late-author')
+
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
+    mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
+    mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
+    mockStore.add(mockFirstLine, ns.dc('author'), mockEarlyAuthor, mockPad.doc())
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
+    mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
+    mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
+    mockStore.add(mockSecondLine, ns.dc('author'), mockLateAuthor, mockPad.doc())
+    mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
+
+    expect(getLatestAuthor(mockStore, mockPad)).not.toBeNull()
+  })
+
+  it('should return null if no author data is present', async () => {
+    const mockStore = $rdf.graph()
+    const mockPad = $rdf.sym('https://mock-pad')
+
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
+    mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
+    mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
+    mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
+    mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
+    mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
+
+    expect(getLatestAuthor(mockStore, mockPad)).toBeNull()
   })
 })
 

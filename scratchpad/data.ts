@@ -134,3 +134,50 @@ export function getContents (
 
   return lines.join('\n')
 }
+
+export function getLatestAuthor (
+  store: IndexedFormula,
+  pad: NamedNode
+): NamedNode | null {
+  const [firstLineStatement] = store.statementsMatching(pad, ns.pad('next'), null, pad.doc(), true)
+  let prevLine: Node = firstLineStatement.object
+  const datesAndAuthors = []
+  while (prevLine.value !== pad.value) {
+    const [currentLineStatement] = store.statementsMatching(prevLine, ns.pad('next'), null, pad.doc(), true)
+    const [lineDateStatement] = store.statementsMatching(
+      currentLineStatement.subject,
+      ns.dc('created'),
+      null,
+      pad.doc(),
+      true
+    )
+    const [lineAuthorStatement] = store.statementsMatching(
+      currentLineStatement.subject,
+      ns.dc('author'),
+      null,
+      pad.doc(),
+      true
+    )
+    if (lineDateStatement && lineAuthorStatement) {
+      datesAndAuthors.push({
+        created: new Date(lineDateStatement.object.value),
+        author: lineAuthorStatement.object
+      })
+    }
+    prevLine = currentLineStatement.object
+  }
+
+  if (datesAndAuthors.length === 0) {
+    return null
+  }
+
+  const latestAuthor = datesAndAuthors.reduce(
+    (latestAuthor, lineDateAndAuthor) => {
+      return (latestAuthor.created.getTime() < lineDateAndAuthor.created.getTime())
+        ? lineDateAndAuthor
+        : latestAuthor
+    }
+  )
+
+  return latestAuthor.author
+}

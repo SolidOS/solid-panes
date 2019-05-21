@@ -3,7 +3,7 @@ import { pane } from './pane'
 import { initialise } from './data'
 import { Namespaces } from 'solid-namespace'
 import UI from 'solid-ui'
-import { IndexedFormula } from 'rdflib'
+import { IndexedFormula, NamedNode } from 'rdflib'
 
 const store: IndexedFormula = UI.store
 const ns: Namespaces = UI.ns
@@ -41,10 +41,16 @@ const paneWrapper: PaneDefinition = {
       container: container,
       subject: subject,
       store: UI.store,
+      visitNode: visitNode,
       user: UI.authn.currentUser()
     })
     return container
   }
+}
+
+function visitNode (node: NamedNode) {
+  const outliner = (window as any).panes.getOutliner(document)
+  outliner.GotoSubject(node, true, undefined, true, undefined)
 }
 
 export default paneWrapper

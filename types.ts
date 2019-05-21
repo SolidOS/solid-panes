@@ -30,6 +30,7 @@ export interface ViewParams {
   container: HTMLElement;
   subject: NamedNode;
   store: IndexedFormula;
+  visitNode: (node: NamedNode) => void;
   user?: NamedNode;
 };
 

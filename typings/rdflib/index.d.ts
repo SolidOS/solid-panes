@@ -347,15 +347,15 @@ export class Statement {
   /**
    * The statement's subject
    */
-  subject: Node;
+  subject: NamedNode;
   /**
    * The statement's predicate
    */
-  predicate: Node;
+  predicate: NamedNode;
   /**
    * The statement's object
    */
-  object: Node;
+  object: NamedNode;
   /**
    * The origin of this statement
    */
@@ -1089,10 +1089,13 @@ export class Fetcher {
   static CONTENT_TYPE_BY_EXT: {
       [ext: string]: string;
   };
+<<<<<<< HEAD
   /**
    * Loads a web resource or resources into the store.
    * @param uri Resource to load, provided either as a NamedNode object or a plain URL. If multiple resources are passed as an array, they will be fetched in parallel.
    */
+=======
+>>>>>>> d6d756b... Show a Scratchpad's author
   load: (uri: NamedNode[] | string[] | NamedNode | string, options?: FetchOptions) => Promise<Response>;
 }
 /**
