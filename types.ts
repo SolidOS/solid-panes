@@ -26,8 +26,15 @@ interface NewPaneOptions {
   refreshTarget: HTMLTableElement;
 }
 
+export interface ViewParams {
+  container: HTMLElement;
+  subject: NamedNode;
+  store: IndexedFormula;
+  user?: NamedNode;
+};
+
 export interface RevampPaneDefinition {
   canHandle: (subject: NamedNode, store: IndexedFormula) => boolean;
-  attach: (container: HTMLElement, subject: NamedNode, store: IndexedFormula, user?: NamedNode) => void;
+  view: (params: ViewParams) => void;
   label: (subject: NamedNode, store: IndexedFormula) => string | null;
 };
