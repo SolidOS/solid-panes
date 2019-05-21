@@ -101,6 +101,22 @@ describe('getContents()', () => {
 Second line`
     )
   })
+
+  it('should ignore lines without contents', async () => {
+    const mockStore = $rdf.graph()
+    const mockPad = $rdf.sym('https://mock-pad')
+
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
+    mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
+    mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
+    mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
+    mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
+
+    expect(getContents(mockStore, mockPad)).toBe('First line')
+  })
 })
 
 describe('getTitle()', () => {

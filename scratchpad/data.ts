@@ -5,6 +5,7 @@ import { InitialisationFunction } from './types'
 
 const ns = vocab($rdf)
 
+/* istanbul ignore next [Side effects are contained to initialise(), so ignore just that for test coverage] */
 export const initialise: InitialisationFunction = async (store, user) => {
   const creationDate = new Date()
   const [pad, initialisationAdditions] = getInitialisationStatements(creationDate, store, user)
