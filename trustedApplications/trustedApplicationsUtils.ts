@@ -1,6 +1,14 @@
 import $rdf, { NamedNode, IndexedFormula, Statement } from 'rdflib'
 import { Namespaces } from 'solid-namespace'
 
+/**
+ * Get a list of all current ACL statements in a given store.
+ * @param origin
+ * @param person
+ * @param kb The store that holds the ACL statements.
+ * @param ns
+ * @returns List of RDF statements.
+ */
 export function getStatementsToDelete (
   origin: NamedNode,
   person: NamedNode,
@@ -21,6 +29,16 @@ export function getStatementsToDelete (
   return statementsToDelete
 }
 
+/**
+ * Generate a list of ACL statements to represent a given set of permissions given to an origin.
+ *
+ * @param origin Origin of the app to add ACL statements for.
+ * @param nodeName Identifier used to refer to the app internally.
+ * @param modes Modes to enable for that origin, e.g. `read`, `write`, `append`, ...
+ * @param person
+ * @param ns
+ * @returns List of RDF statements that should be added to the RDF store to represent this app's permissions.
+ */
 export function getStatementsToAdd (
   origin: NamedNode,
   nodeName: string,
