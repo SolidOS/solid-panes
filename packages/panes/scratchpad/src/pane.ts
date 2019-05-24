@@ -1,4 +1,4 @@
-import { RevampPaneDefinition } from '../types'
+import { RevampPaneDefinition } from '../../../../types'
 import { isPad, getTitle } from './data'
 import { view as scratchpadView } from './view'
 

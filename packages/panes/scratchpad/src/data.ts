@@ -34,7 +34,7 @@ export function getInitialisationStatements (
   user?: NamedNode
 ): [NamedNode, Statement[]] {
   const storeNamespaces = store.namespaces
-  const padName = creationDate.getTime()
+  const padName = creationDate.getTime().toString()
   const pad = store.sym(storeNamespaces.pub + padName + '/index.ttl#this')
 
   const statementsToAdd = [

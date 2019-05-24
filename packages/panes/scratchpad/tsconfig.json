@@ -1,0 +1,11 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "declaration": true,                   /* Generates corresponding '.d.ts' file. */
+    "declarationMap": true,                /* Generates a sourcemap for each corresponding '.d.ts' file. */
+    "typeRoots": ["node_modules/@types", "../../../typings"]
+  },
+  // Override solid-panes's `exclude`, which excludes this package:
+  "exclude": ["node_modules", "dist"]
+}

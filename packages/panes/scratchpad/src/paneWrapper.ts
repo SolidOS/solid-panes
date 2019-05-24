@@ -1,11 +1,11 @@
-import { PaneDefinition } from '../types'
+import { PaneDefinition } from '../../../../types'
 import { pane } from './pane'
 import { initialise } from './data'
 import { Namespaces } from 'solid-namespace'
+// TODO: Remove UI
 import UI from 'solid-ui'
-import { IndexedFormula, NamedNode } from 'rdflib'
+import { NamedNode } from 'rdflib'
 
-const store: IndexedFormula = UI.store
 const ns: Namespaces = UI.ns
 
 const paneWrapper: PaneDefinition = {
@@ -14,7 +14,7 @@ const paneWrapper: PaneDefinition = {
 
   name: 'scratchpad',
 
-  label: function (subject) {
+  label: function (subject, _dom, store) {
     if (!pane.canHandle(subject, store)) {
       return null
     }
@@ -24,10 +24,8 @@ const paneWrapper: PaneDefinition = {
 
   mintClass: ns.pad('Notepad'),
 
-  mintNew: async function (newPaneOptions) {
-    var kb = UI.store
-
-    const createdPad = await initialise(kb, newPaneOptions.me)
+  mintNew: async function (newPaneOptions, store) {
+    const createdPad = await initialise(store, newPaneOptions.me)
 
     newPaneOptions.newInstance = createdPad
     newPaneOptions.newBase = createdPad.doc().value.replace(/\/index.ttl$/, '/')
@@ -35,12 +33,12 @@ const paneWrapper: PaneDefinition = {
     return newPaneOptions
   },
 
-  render: function (subject, _dom) {
+  render: function (subject, _dom, _options, store) {
     const container = document.createElement('div')
     pane.view({
       container: container,
       subject: subject,
-      store: UI.store,
+      store: store,
       visitNode: visitNode,
       user: UI.authn.currentUser()
     })

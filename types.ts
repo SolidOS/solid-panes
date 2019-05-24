@@ -4,12 +4,12 @@ import { IndexedFormula, NamedNode } from 'rdflib'
 export interface PaneDefinition {
   icon: string;
   name: string;
-  label: (subject: NamedNode) => string | null;
-  render: (subject: NamedNode, dom: HTMLDocument, options?: unknown) => HTMLElement;
+  label: (subject: NamedNode, dom: HTMLDocument, store: IndexedFormula) => string | null;
+  render: (subject: NamedNode, dom: HTMLDocument, options: unknown, store: IndexedFormula) => HTMLElement;
   shouldGetFocus?: (subject: NamedNode) => boolean;
   requireQueryButton?: boolean;
   mintClass?: NamedNode;
-  mintNew?: (options: NewPaneOptions) => Promise<NewPaneOptions & { newInstance: NamedNode }>;
+  mintNew?: (options: NewPaneOptions, store: IndexedFormula) => Promise<NewPaneOptions & { newInstance: NamedNode }>;
 };
 interface NewPaneOptions {
   appPathSegment: string;

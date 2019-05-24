@@ -305,7 +305,7 @@ module.exports = function (doc) {
     };
     for (var i = 0; i < panes.list.length; i++) {
       let pane = panes.list[i]
-      var lab = pane.label(subject, dom)
+      var lab = pane.label(subject, dom, UI.store)
       if (!lab) continue
 
       relevantPanes.push(pane)
@@ -358,10 +358,10 @@ module.exports = function (doc) {
               var paneDiv
               UI.log.info('outline: Rendering pane (2): ' + pane.name)
               if (UI.no_catch_pane_errors) { // for debugging
-                paneDiv = pane.render(subject, dom, options)
+                paneDiv = pane.render(subject, dom, options, UI.store)
               } else {
                 try {
-                  paneDiv = pane.render(subject, dom, options)
+                  paneDiv = pane.render(subject, dom, options, UI.store)
                 } catch (e) { // Easier debugging for pane developers
                   paneDiv = dom.createElement('div')
                   paneDiv.setAttribute('class', 'exceptionPane')
@@ -470,7 +470,7 @@ module.exports = function (doc) {
         var paneDiv
         try {
           UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
-          paneDiv = tr1.firstPane.render(subject, dom, options)
+          paneDiv = tr1.firstPane.render(subject, dom, options, UI.store)
         } catch (e) { // Easier debugging for pane developers
           paneDiv = dom.createElement('div')
           paneDiv.setAttribute('class', 'exceptionPane')

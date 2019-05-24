@@ -104,7 +104,8 @@ const paneDef: PaneDefinition = {
       if (allWrite) {
         g.add(a, auth('mode'), auth('Write'), acl)
       }
-      return $rdf.serialize(acl, g, aclURI, 'text/turtle')
+      // TODO: Figure out why `serialize` isn't on the type definition according to TypeScript:
+      return ($rdf as any).serialize(acl, g, aclURI, 'text/turtle')
     }
 
     /**
