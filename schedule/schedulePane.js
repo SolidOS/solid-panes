@@ -238,6 +238,7 @@ module.exports = {
 
       agenda.push(function () { // give the user links to the new app
         console.log('Finished minting new scheduler')
+        options.newInstance = newInstance
         resolve(options)
       })
 
