@@ -10,7 +10,8 @@
     "watch": "npm run clean && webpack --progress --colors --watch --mode=\"development\"",
     "clean": "rm -rf dist/",
     "lint": "eslint \"**/*.ts\"",
-    "test": "npm run lint && jest --onlyChanged --watch"
+    "test-watch": "npm run lint && jest --onlyChanged --watch",
+    "test": "npm run lint && jest"
   },
   "repository": {
     "type": "git",
