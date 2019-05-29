@@ -77,7 +77,9 @@ export function view ({ container, subject, store, visitNode, user }: ViewParams
 
       const creationDate = new Date()
       const [setContentDeletions, setContentAdditions] = getSetContentsStatements(textArea.value, creationDate, subject, store, user)
-      store.updater.update(setContentDeletions, setContentAdditions, toViewMode)
+      if (store.updater) {
+        store.updater.update(setContentDeletions, setContentAdditions, toViewMode)
+      }
     })
   }
 }
