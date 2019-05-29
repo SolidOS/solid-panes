@@ -12,7 +12,9 @@ export const initialise: InitialisationFunction = async (store, user) => {
   const [_setContentDeletions, setContentAdditions] = getSetContentsStatements('', creationDate, pad, store, user)
 
   const statementsToAdd = initialisationAdditions.concat(setContentAdditions)
-  await store.updater.put(pad, statementsToAdd, 'text/turtle', () => undefined)
+  if (store.updater) {
+    await store.updater.put(pad, statementsToAdd, 'text/turtle', () => undefined)
+  }
   return pad
 }
 
