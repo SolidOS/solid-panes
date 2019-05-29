@@ -3,3 +3,5 @@ install:
   - npm install
 script:
   - npm test
+  # Make sure it still builds successfully - the build isn't actually used yet:
+  - npm run build
