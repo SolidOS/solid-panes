@@ -4,5 +4,5 @@ declare module 'solid-namespace' {
   type toNamedNode = (label: string) => NamedNode
   export type Namespaces = {[alias: string]: toNamedNode}
 
-  export default function vocab(store: IndexedFormula): Namespaces
+  export default function vocab(rdflib: typeof import('rdflib')): Namespaces
 }

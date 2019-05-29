@@ -9,7 +9,35 @@ export interface PaneDefinition {
   shouldGetFocus?: (subject: NamedNode) => boolean;
   requireQueryButton?: boolean;
   mintClass?: NamedNode;
-  mintNew?: (options: NewPaneOptions, store: IndexedFormula) => Promise<NewPaneOptions & { newInstance: NamedNode }>;
+  mintNew?: (options: NewPaneOptions) => Promise<NewPaneOptions & { newInstance: NamedNode }>;
+};
+interface NewPaneOptions {
+  appPathSegment: string;
+  div: HTMLDivElement;
+  dom: HTMLDocument;
+  folder: NamedNode;
+  iconEle: HTMLImageElement;
+  me?: NamedNode;
+  newBase: string;
+  newInstance: NamedNode;
+  noIndexHTML: boolean;
+  noun: string;
+  pane: PaneDefinition;
+  refreshTarget: HTMLTableElement;
+}
+
+export interface ViewParams {
+  container: HTMLElement;
+  subject: NamedNode;
+  store: IndexedFormula;
+  visitNode: (node: NamedNode) => void;
+  user?: NamedNode;
+};
+
+export interface RevampPaneDefinition {
+  canHandle: (subject: NamedNode, store: IndexedFormula) => boolean;
+  view: (params: ViewParams) => void;
+  label: (subject: NamedNode, store: IndexedFormula) => string | null;
 };
 interface NewPaneOptions {
   appPathSegment: string;
