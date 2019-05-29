@@ -63,7 +63,6 @@ register(chatPanes.shortChatPane) // was './chat/chatPane.js'
 register(require('meeting-pane'))
 register(require('./tabbed/tabbedPane.js'))
 register(require('./schedule/schedulePane.js'))
-register(require('./links/linksPane.js'))
 
 register(require('./trip/tripPane.js'))
 // register(require('./airPane.js'))
