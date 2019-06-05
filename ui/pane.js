@@ -7,7 +7,8 @@ const panes = require('pane-registry')
 
 module.exports = {
 
-  icon: (module.__dirname || __dirname) + '22-builder.png',
+  // noun_170702.svg' builder   noun_122196.svg form
+  icon: UI.icons.iconBase + 'noun_170702.svg',
 
   name: 'ui',
 
@@ -62,7 +63,9 @@ module.exports = {
     }
     if (!store) store = kb.any(kb.sym(docuri), ns.link('annotationStore'))
     if (!store) store = UI.widgets.defaultAnnotationStore(subject)
-    if (!store) store = kb.sym('http://tabulator.org/wiki/ontologyAnnotation/common') // fallback
+
+    if (!store) store = kb.sym('https://formsregistry.solid.community/public/formRegistry/') // fallback
+    // if (!store) store = kb.sym('http://tabulator.org/wiki/ontologyAnnotation/common') // fallback
 
     // A fallback which gives a different store page for each ontology would be good @@
 
