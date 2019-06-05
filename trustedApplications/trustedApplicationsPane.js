@@ -1,12 +1,12 @@
-/*   Profile Editing Pane
+/*   Trusted Apps Editing Pane
 **
 ** Unlike most panes, this is available any place whatever the real subject,
-** and allows the user to edit their own profile.
+** and allows the user to edit their own profil, sepciufically the set of apps they trust.
 **
-** Usage: paneRegistry.register('profile/profilePane')
 ** or standalone script adding onto existing mashlib.
 */
 
+/* global alert */
 const nodeMode = (typeof module !== 'undefined')
 var panes, UI
 
@@ -29,11 +29,11 @@ const thisPane = {
   name: 'trustedApplications',
 
   label: function (subject) {
-    var types = kb.findTypeURIs(subject)
-    if (types[UI.ns.foaf('Person').uri] || types[UI.ns.vcard('Individual').uri]) {
-      return 'Manage your trusted applications'
-    }
-    return null
+    // var types = kb.findTypeURIs(subject) // Show aloways like home pane
+    // if (types[UI.ns.foaf('Person').uri] || types[UI.ns.vcard('Individual').uri]) {
+    return 'Manage your trusted applications'
+    // }
+    // return null
   },
 
   render: function (subject, dom) {
@@ -53,7 +53,7 @@ const thisPane = {
       var profile = subject.doc()
       var editable = UI.store.updater.editable(profile.uri, kb)
 
-      main.appendChild(createText('h3', 'Manage your trusted applications'))
+      main.appendChild(createText('h3', 'Manage your trusted Web Applications'))
 
       if (!editable) {
         main.appendChild(UI.widgets.errorMessageBlock(dom, `Your profile ${subject.doc().uri} is not editable, so we cannot do much here.`))
@@ -67,11 +67,12 @@ const thisPane = {
 
       main.appendChild(createText('h4', 'Notes'))
       main.appendChild(createContainer('ol', [
-        main.appendChild(createText('li', 'Trusted applications will get access to all resources that you have access to.')),
-        main.appendChild(createText('li', 'You can limit which modes they have by default.')),
-        main.appendChild(createText('li', 'They will not gain more access than you have.'))
+        main.appendChild(createText('li', 'If put a web app in this list, you can then add it to specific files or folders in the sharing pane.')),
+        main.appendChild(createText('li', 'You can also give an app acecss to ALL of you data, by checking the box here.  Only do that if you know the app very well.')),
+        main.appendChild(createText('li', 'When a person uses the web app, they AND the app must both have access.'))
       ]))
-      main.appendChild(createText('p', 'Application URLs must be valid URL. Examples are http://localhost:3000, https://trusted.app, and https://sub.trusted.app.'))
+      main.appendChild(createText('p', `Application URLs must be valid URL, without the trailing slash. Examples are https://mine.gihub.io,
+      http://localhost:3000, https://trusted.app, and https://sub.trusted.app.`))
     }, err => {
       statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
     })
@@ -79,7 +80,7 @@ const thisPane = {
   } // render()
 } //
 
-function createApplicationTable(subject) {
+function createApplicationTable (subject) {
   var applicationsTable = createElement('table', {
     'class': 'results'
   })
@@ -87,28 +88,28 @@ function createApplicationTable(subject) {
   // creating headers
   var header = createContainer('tr', [
     createText('th', 'Application URL'),
-    createText('th', 'Access modes'),
+    createText('th', 'Access modes to ALL your data'),
     createText('th', 'Actions')
   ])
   applicationsTable.appendChild(header)
 
   // creating rows
   kb.each(subject, ns.acl('trustedApp'))
-    .flatMap(app => kb.each(app, ns.acl('origin')).map(origin => ({appModes: kb.each(app, ns.acl('mode')), origin})))
-    .sort(({origin: a}, {origin: b}) => a.value < b.value ? -1 : 1)
-    .forEach(({appModes, origin}) => applicationsTable.appendChild(createApplicationEntry(subject, origin, appModes, updateTable)))
+    .flatMap(app => kb.each(app, ns.acl('origin')).map(origin => ({ appModes: kb.each(app, ns.acl('mode')), origin })))
+    .sort(({ origin: a }, { origin: b }) => a.value < b.value ? -1 : 1)
+    .forEach(({ appModes, origin }) => applicationsTable.appendChild(createApplicationEntry(subject, origin, appModes, updateTable)))
 
   // adding a row for new applications
   applicationsTable.appendChild(createApplicationEntry(subject, null, [ns.acl('Read')], updateTable))
 
   return applicationsTable
 
-  function updateTable() {
+  function updateTable () {
     applicationsTable.parentElement.replaceChild(createApplicationTable(subject), applicationsTable)
   }
 }
 
-function createApplicationEntry(subject, origin, appModes, updateTable) {
+function createApplicationEntry (subject, origin, appModes, updateTable) {
   var trustedApplicationState = { origin, appModes, formElements: { modes: [] } }
   var profile = subject.doc()
 
@@ -127,7 +128,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
           'class': 'controlButton',
           style: 'background: LightGreen;'
         }, {
-          click: () => addOrEditApplication()
+          click: () => addOrEditApplication(subject)
         }),
         createText('button', 'Delete', {
           'class': 'controlButton',
@@ -141,25 +142,26 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
           'class': 'controlButton',
           style: 'background: LightGreen;'
         }, {
-          click: () => addOrEditApplication()
+          click: () => addOrEditApplication(subject)
         })
       ])
   ])
 
-  function addOrEditApplication() {
-    var origin
+  function addOrEditApplication (me) {
+    const profile = me.doc()
+    let origin
     try {
-      origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
+      origin = $rdf.sym(trustedApplicationState.formElements.origin.value.trim())
     } catch (err) {
       return alert('Please provide an application URL you want to trust')
     }
 
     var deletions = getStatementsToDelete(origin)
-    var additions = getStatementsToAdd(origin)
+    var additions = getStatementsToAdd(origin, profile)
     kb.updater.update(deletions, additions, handleUpdateResponse)
   }
 
-  function removeApplication() {
+  function removeApplication () {
     var origin
     try {
       origin = $rdf.sym(trustedApplicationState.formElements.origin.value)
@@ -171,7 +173,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
     kb.updater.update(deletions, null, handleUpdateResponse)
   }
 
-  function getStatementsToAdd(origin) {
+  function getStatementsToAdd (origin, profile) {
     var application = new $rdf.BlankNode(`bn_${generateRandomString()}`)
     return [
       $rdf.st(subject, ns.acl('trustedApp'), application, profile),
@@ -183,7 +185,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
     ]
   }
 
-  function getStatementsToDelete(origin) {
+  function getStatementsToDelete (origin) {
     var applicationStatements = kb.statementsMatching(null, ns.acl('origin'), origin)
     return applicationStatements.reduce((memo, st) => memo
         .concat(kb.statementsMatching(subject, ns.acl('trustedApp'), st.subject))
@@ -191,7 +193,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
       [])
   }
 
-  function handleUpdateResponse(uri, success, errorBody) {
+  function handleUpdateResponse (uri, success, errorBody) {
     if (success) {
       return updateTable()
     }
@@ -199,7 +201,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
   }
 }
 
-function createElement(elementName, attributes = {}, eventListeners = {}, onCreated = null) {
+function createElement (elementName, attributes = {}, eventListeners = {}, onCreated = null) {
   var element = document.createElement(elementName)
   if (onCreated) {
     onCreated(element)
@@ -213,19 +215,19 @@ function createElement(elementName, attributes = {}, eventListeners = {}, onCrea
   return element
 }
 
-function createContainer(elementName, children, attributes = {}, eventListeners = {}, onCreated = null) {
+function createContainer (elementName, children, attributes = {}, eventListeners = {}, onCreated = null) {
   var element = createElement(elementName, attributes, eventListeners, onCreated)
   children.forEach(child => element.appendChild(child))
   return element
 }
 
-function createText(elementName, textContent, attributes = {}, eventListeners = {}, onCreated = null) {
+function createText (elementName, textContent, attributes = {}, eventListeners = {}, onCreated = null) {
   var element = createElement(elementName, attributes, eventListeners, onCreated)
   element.textContent = textContent
   return element
 }
 
-function createModesInput({ appModes, formElements }) {
+function createModesInput ({ appModes, formElements }) {
   return ['Read', 'Write', 'Append', 'Control'].map(mode => {
     var isChecked = appModes.some(appMode => appMode.value === ns.acl(mode).value)
     return createContainer('label', [
@@ -239,7 +241,7 @@ function createModesInput({ appModes, formElements }) {
   })
 }
 
-function generateRandomString() {
+function generateRandomString () {
   return Math.random().toString(36).substring(7)
 }
 
