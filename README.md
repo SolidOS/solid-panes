@@ -1,4 +1,8 @@
 # solid-panes
+
+[![NPM Package](https://img.shields.io/npm/v/solid-panes.svg)](https://www.npmjs.com/package/solid-panes)
+
+
 A set of core solid-compatible applets based on solid-ui
 
 These are a set of interlinked applications, or parts of applications, 
