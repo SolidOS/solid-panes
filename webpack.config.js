@@ -30,4 +30,7 @@ module.exports = {
     }),
     new ForkTsCheckerWebpackPlugin(),
   ],
-};
+  node: {
+    fs: 'empty'
+  }
+}
