@@ -1,6 +1,6 @@
-const path = require('path');
-const webpack = require('webpack');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const path = require('path')
+const webpack = require('webpack')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 module.exports = {
   entry: './index.js',
@@ -10,10 +10,11 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
+    extensions: ['.mjs', '.js', '.ts', '.tsx']
   },
   module: {
     rules: [
+      { test: /\.tsx$/, loader: 'surplus-loader!ts-loader' },
       {
         test: /\.(mjs|js|ts)$/,
         exclude: /(node_modules|bower_components)/,
