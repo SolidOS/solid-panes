@@ -1,7 +1,7 @@
 /* eslint-env jest */
 const $rdf = require('rdflib')
 const ns = require('solid-namespace')($rdf)
-const { getStatementsToDelete, getStatementsToAdd } = require('./trustedApplicationsUtils')
+const { getStatementsToDelete, getStatementsToAdd } = require('./trustedApplications.service')
 
 describe('getStatementsToDelete', () => {
   it('should return an empty array when there are no statements', () => {
