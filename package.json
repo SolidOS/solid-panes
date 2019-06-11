@@ -53,6 +53,7 @@
     "contacts-pane": "^1.0.3",
     "folder-pane": "^1.0.4",
     "issue-pane": "^1.0.4",
+    "marked": "^0.6.2",
     "meeting-pane": "^1.0.4",
     "mime-types": "^2.1.24",
     "pane-registry": "^1.0.4",
@@ -61,7 +62,9 @@
     "solid-namespace": "^0.2.0",
     "solid-ui": ">=0.11.5",
     "source-pane": "^1.0.3",
-    "surplus": "^0.5.3"
+    "surplus": "^0.5.3",
+    "surplus-mixin-data": "^0.5.0",
+    "surplus-mixin-on": "^0.5.0"
   },
   "dependenciesBackup": {
     "@solid/better-simple-slideshow": "^0.1.0",

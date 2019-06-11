@@ -1,13 +1,13 @@
-import * as Surplus from 'surplus'
 import { NewPaneOptions, PaneDefinition } from '../types'
 import solidUi from 'solid-ui'
 import { NamedNode, sym } from 'rdflib'
+import { MarkdownController } from './markdown.controller'
+import { MarkdownView } from './markdown.view'
 
-const { S } = Surplus
 const { icons, store } = solidUi
 
 export const Pane: PaneDefinition = {
-  icon: `${icons.iconBase}noun_15177.svg`,
+  icon: `${icons.iconBase}noun_79217.svg`,
   name: 'MarkdownPane',
   label: (subject: NamedNode) => subject.uri.endsWith('.md') ? 'Handle markdown file' : null,
   mintNew: function (options: NewPaneOptions) {
@@ -24,18 +24,9 @@ export const Pane: PaneDefinition = {
         console.error('Error creating new instance of markdown file', err)
       })
   },
-  render: () => {
-    let counter = 0
-    let counterData = S.data(counter)
-    const incr = () => {
-      counter++
-      counterData(counter)
-      console.log(counter, counterData())
-    }
-    return <div>
-      test --- <span>{counterData}</span>
-      <button onClick={incr}>Increment counter</button>
-    </div>
+  render: (subject: NamedNode) => {
+    const controller = new MarkdownController(subject.uri)
+    return MarkdownView(controller)
   }
 }
 
