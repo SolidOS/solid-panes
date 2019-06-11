@@ -181,5 +181,5 @@ export function getLatestAuthor (
     }
   )
 
-  return latestAuthor.author
+  return latestAuthor.author as NamedNode
 }
