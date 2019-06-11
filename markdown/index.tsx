@@ -3,6 +3,7 @@ import solidUi from 'solid-ui'
 import { NamedNode, sym } from 'rdflib'
 import { MarkdownController } from './markdown.controller'
 import { MarkdownView } from './markdown.view'
+import { saveMarkdown } from './markdown.service'
 
 const { icons, store } = solidUi
 
@@ -12,16 +13,14 @@ export const Pane: PaneDefinition = {
   label: (subject: NamedNode) => subject.uri.endsWith('.md') ? 'Handle markdown file' : null,
   mintNew: function (options: NewPaneOptions) {
     const newInstance = createFileName(options)
-    return store.fetcher.webOperation('PUT', newInstance, {
-      data: '# This is your markdown file\n\nHere be stuff!',
-      contentType: 'text/markdown; charset=UTF-8'
-    })
-      .then(() => ({
+    return saveMarkdown(newInstance.uri, '# This is your markdown file\n\nHere be stuff!')
+      .then((): NewPaneOptions => ({
         newInstance,
         ...options
       }))
       .catch((err: any) => {
         console.error('Error creating new instance of markdown file', err)
+        return options
       })
   },
   render: (subject: NamedNode) => {
