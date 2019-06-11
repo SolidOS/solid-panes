@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`View mode should properly render the pad's contents 1`] = `"<div>First line<br>Second line<br><hr><small></small></div>"`;

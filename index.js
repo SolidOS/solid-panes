@@ -50,7 +50,8 @@ let register = panes.register
 register(require('issue-pane'))
 register(require('contacts-pane'))
 
-register(require('./pad/padPane.js'))
+register(require('./pad/padPane').default)
+register(require('./scratchpad/paneWrapper').default)
 // register(require('./argument/argumentPane.js')) // A position in an argument tree
 
 register(require('./transaction/pane.js'))
@@ -63,7 +64,6 @@ register(chatPanes.shortChatPane) // was './chat/chatPane.js'
 register(require('meeting-pane'))
 register(require('./tabbed/tabbedPane.js'))
 register(require('./schedule/schedulePane.js'))
-register(require('./links/linksPane.js'))
 
 register(require('./trip/tripPane.js'))
 // register(require('./airPane.js'))
@@ -129,8 +129,8 @@ register(require('./sharing/sharingPane.js'))
 register(require('./internalPane.js'))
 // The home pane is a 2016 experiment. Always there.
 
-register(require('./profile/profilePane.js')) // edit your public profile
-register(require('./trustedApplications/trustedApplicationsPane.js')) // manage your trusted applications
-register(require('./home/homePane.js'))
+register(require('./profile/profilePane').default) // edit your public profile
+register(require('./trustedApplications/trustedApplicationsPane').default) // manage your trusted applications
+register(require('./home/homePane').default)
 
 // ENDS

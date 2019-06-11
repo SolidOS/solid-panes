@@ -7,14 +7,23 @@
 ** or standalone script adding onto existing mashlib.
 */
 
+import solidUi, { SolidUi } from 'solid-ui'
+import { NamedNode } from 'rdflib'
+import paneRegistry from 'pane-registry'
+
+import { PaneDefinition } from '../types'
+import { getLabel } from './profilePaneUtils'
+
 const nodeMode = (typeof module !== 'undefined')
-var panes, UI
+
+let panes: any
+let UI: SolidUi
 
 if (nodeMode) {
-  UI = require('solid-ui')
-  panes = require('pane-registry')
+  UI = solidUi
+  panes = paneRegistry
 } else { // Add to existing mashlib
-  panes = window.panes
+  panes = (window as any).panes
   UI = panes.UI
 }
 
@@ -23,21 +32,17 @@ const ns = UI.ns
 
 const thisColor = '#090'
 
-const thisPane = { // 'noun_638141.svg' not editing
+const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
   icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
 
   name: 'profile',
 
   label: function (subject) {
-    var types = kb.findTypeURIs(subject)
-    if (types[UI.ns.foaf('Person').uri] || types[UI.ns.vcard('Individual').uri]) {
-      return 'Your Profile'
-    }
-    return 'Edit your profile' // At the monet, just allow on any object. Like home pane
+    return getLabel(subject, kb, UI.ns)
   },
 
   render: function (subject, dom) {
-    function paneDiv (dom, subject, paneName) {
+    function paneDiv (dom: HTMLDocument, subject: NamedNode, paneName: string) {
       var p = panes.byName(paneName)
       var d = p.render(subject, dom)
       d.setAttribute('style', 'border: 0.3em solid #444; border-radius: 0.5em')
@@ -53,33 +58,33 @@ const thisPane = { // 'noun_638141.svg' not editing
     var statusArea = bottom.appendChild(dom.createElement('div'))
     statusArea.setAttribute('style', 'padding: 0.7em;')
 
-    function comment (str) {
+    function comment (str: string) {
       var p = main.appendChild(dom.createElement('p'))
       p.setAttribute('style', 'padding: 1em;')
       p.textContent = str
       return p
     }
 
-    function heading (str) {
+    function heading (str: string) {
       var h = main.appendChild(dom.createElement('h3'))
       h.setAttribute('style', 'color:' + thisColor + ';')
       h.textContent = str
       return h
     }
 
-    var context = {dom: dom, div: main, statusArea: statusArea, me: null}
-    UI.authn.logInLoadProfile(context).then(context => {
+    var context = { dom: dom, div: main, statusArea: statusArea, me: null }
+    UI.authn.logInLoadProfile(context).then((context: { me: NamedNode }) => {
       var me = context.me
       subject = me
 
       heading('Edit your public profile')
 
-      var profile = subject.doc()
+      var profile = me.doc()
       var editable = UI.store.updater.editable(profile.uri, kb)
 
       if (!editable) {
         statusArea.appendChild(UI.widgets.errorMessageBlock(dom,
-          `Your profile ${subject.doc().uri} is not editable, so we cannot do much here.`))
+          `Your profile ${me.doc().uri} is not editable, so we cannot do much here.`))
       }
 
       comment(`Everything you put here will be public.
@@ -87,7 +92,7 @@ const thisPane = { // 'noun_638141.svg' not editing
 
       heading('Your contact information')
 
-      main.appendChild(paneDiv(dom, subject, 'contact'))
+      main.appendChild(paneDiv(dom, me, 'contact'))
 
       heading('People you know who have webids')
 
@@ -107,7 +112,7 @@ const thisPane = { // 'noun_638141.svg' not editing
         noun: 'friend'
       })
       heading('Thank you for filling your profile.')
-    }, err => {
+    }, (err: Error) => {
       statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
     })
     return div
@@ -115,10 +120,5 @@ const thisPane = { // 'noun_638141.svg' not editing
 
 } //
 
-if (nodeMode) {
-  module.exports = thisPane
-} else {
-  console.log('*** patching in live pane: ' + thisPane.name)
-  panes.register(thisPane)
-}
+export default thisPane
 // ENDS
