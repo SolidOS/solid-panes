@@ -3,8 +3,8 @@ import * as ReactDOM from 'react-dom'
 import { PaneDefinition, NewPaneOptions } from '../types'
 import $rdf from 'rdflib'
 import solidUi from 'solid-ui'
-import { saveMarkdown, loadMarkdown } from './service'
-import { View } from './view'
+import { saveMarkdown } from './service'
+import { Container } from './container'
 
 const { icons, store } = solidUi
 
@@ -26,16 +26,8 @@ export const Pane: PaneDefinition = {
   },
   render: (subject) => {
     const container = document.createElement('div')
+    ReactDOM.render(<Container store={store} subject={subject}/>, container)
 
-    loadMarkdown(store, subject.uri).then((markdown) => {
-      const view = (
-        <View
-          markdown={markdown}
-          onSave={(newMarkdown) => saveMarkdown(store, subject.uri, newMarkdown)}
-        />
-      )
-      ReactDOM.render(view, container)
-    })
     return container
   }
 }

@@ -39,3 +39,8 @@ export interface RevampPaneDefinition {
   view: (params: ViewParams) => void;
   label: (subject: NamedNode, store: IndexedFormula) => string | null;
 };
+
+export interface ContainerProps {
+  store: IndexedFormula;
+  subject: NamedNode;
+}
