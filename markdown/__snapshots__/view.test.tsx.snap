@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Edit mode should properly render the edit form 1`] = `
+<div>
+  <form>
+    <textarea>
+      Arbitrary markdown
+    </textarea>
+    <button
+      type="submit"
+    >
+      RENDER
+    </button>
+    ,
+  </form>
+</div>
+`;
+
+exports[`should properly render markdown 1`] = `
+<div>
+  <form>
+    <p>
+      Some 
+      <strong>
+        awesome
+      </strong>
+       markdown
+    </p>
+    <button
+      type="submit"
+    >
+      EDIT
+    </button>
+  </form>
+</div>
+`;
