@@ -14,7 +14,8 @@
     "project": "./tsconfig.json"
   },
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "react"
   ],
   "rules": {
     "no-unused-vars": ["warn", {

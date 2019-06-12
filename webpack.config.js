@@ -10,12 +10,12 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
+    extensions: ['.mjs', '.js', '.ts', '.tsx'],
   },
   module: {
     rules: [
       {
-        test: /\.(mjs|js|ts)$/,
+        test: /\.(mjs|js|ts|tsx)$/,
         exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
