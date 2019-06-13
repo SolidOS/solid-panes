@@ -43,4 +43,5 @@ export interface RevampPaneDefinition {
 export interface ContainerProps {
   store: IndexedFormula;
   subject: NamedNode;
+  session?: any;
 }

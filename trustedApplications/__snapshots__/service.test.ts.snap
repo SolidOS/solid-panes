@@ -43,7 +43,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "http://www.w3.org/ns/auth/acl#Read",
+      "value": "http://www.w3.org/ns/auth/acl#read",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -62,7 +62,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "http://www.w3.org/ns/auth/acl#Write",
+      "value": "http://www.w3.org/ns/auth/acl#write",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
