@@ -5,26 +5,12 @@ export interface PaneDefinition {
   icon: string;
   name: string;
   label: (subject: NamedNode) => string | null;
-  render: (subject: NamedNode, dom: HTMLDocument, options?: unknown) => HTMLElement;
+  render: (subject: NamedNode, dom: HTMLDocument, options?: unknown) => HTMLElement | Element;
   shouldGetFocus?: (subject: NamedNode) => boolean;
   requireQueryButton?: boolean;
   mintClass?: NamedNode;
   mintNew?: (options: NewPaneOptions) => Promise<NewPaneOptions & { newInstance: NamedNode }>;
 };
-interface NewPaneOptions {
-  appPathSegment: string;
-  div: HTMLDivElement;
-  dom: HTMLDocument;
-  folder: NamedNode;
-  iconEle: HTMLImageElement;
-  me?: NamedNode;
-  newBase: string;
-  newInstance: NamedNode;
-  noIndexHTML: boolean;
-  noun: string;
-  pane: PaneDefinition;
-  refreshTarget: HTMLTableElement;
-}
 
 export interface ViewParams {
   container: HTMLElement;
@@ -39,7 +25,7 @@ export interface RevampPaneDefinition {
   view: (params: ViewParams) => void;
   label: (subject: NamedNode, store: IndexedFormula) => string | null;
 };
-interface NewPaneOptions {
+export interface NewPaneOptions {
   appPathSegment: string;
   div: HTMLDivElement;
   dom: HTMLDocument;

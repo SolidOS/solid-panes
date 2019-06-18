@@ -1,6 +1,7 @@
-const path = require('path');
-const webpack = require('webpack');
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const path = require('path')
+const webpack = require('webpack')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 module.exports = {
   entry: './index.js',
@@ -10,25 +11,46 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
+    extensions: ['.mjs', '.js', '.ts', '.vue']
   },
   module: {
     rules: [
       {
-        test: /\.(mjs|js|ts)$/,
-        exclude: /(node_modules|bower_components)/,
-        use: {
-          loader: 'babel-loader',
+        test: /\.scss$/,
+        exclude: /node_modules/,
+        use: [
+          'vue-style-loader',
+          'css-loader',
+          'sass-loader'
+        ]
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader',
+        exclude: /node_modules/
+      },
+      {
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        exclude: /node_modules/,
+        options: {
+          appendTsSuffixTo: [/\.vue$/],
         }
+      },
+      {
+        test: /\.(mjs|js)$/,
+        exclude: /node_modules/,
+        loader: 'babel-loader'
       }
-    ],
+    ]
   },
   plugins: [
     new webpack.DefinePlugin({
       // Prevent solid-auth-tls (used by solid-ui) from running Node code:
-      'global.IS_BROWSER': JSON.stringify(true),
+      'global.IS_BROWSER': JSON.stringify(true)
     }),
     new ForkTsCheckerWebpackPlugin(),
+    new VueLoaderPlugin()
   ],
   node: {
     fs: 'empty'

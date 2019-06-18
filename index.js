@@ -47,6 +47,8 @@ if (typeof window !== 'undefined') {
 
 let register = panes.register
 
+register(require('./markdown/index').Pane)
+
 register(require('issue-pane'))
 register(require('contacts-pane'))
 
