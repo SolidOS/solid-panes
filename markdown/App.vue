@@ -1,28 +1,23 @@
 <template>
     <div id="MarkdownApp">
         <div v-if="isLoading">LOADING</div>
-        <div v-if="isRendering">
-            <div v-html="text"></div>
-            <button @click="toggle">Edit</button>
-        </div>
-        <label v-if="isEditing">
-            <textarea v-model="markdown"></textarea>
-            <button @click="toggle">Show</button>
-        </label>
+        <MarkdownView v-if="isRendering" v-bind:markdown="markdown" v-on:edit="toggle" />
+        <MarkdownEdit v-if="isEditing" v-bind:markdown="markdown" v-on:save="toggle" />
     </div>
 </template>
 
 <script lang="ts">
   import { Component, Prop, Vue } from 'vue-property-decorator';
-  // import MarkdownView from './components/MarkdownView.vue'
+  import MarkdownView from './components/MarkdownView.vue'
   import { NamedNode } from 'rdflib'
   import { loadMarkdown, saveMarkdown, STATE } from './markdown.service'
-  import marked from 'marked'
+  import MarkdownEdit from './components/MarkdownEdit.vue'
 
   @Component({
-    // components: {
-    //   MarkdownView
-    // }
+    components: {
+      MarkdownEdit,
+      MarkdownView
+    }
   })
   export default class App extends Vue {
     state: STATE = STATE.LOADING
@@ -38,19 +33,16 @@
         })
     }
 
-    toggle (): void {
+    toggle (markdown: string): void {
       const wasEditing = this.state === STATE.EDITING
       if (wasEditing) {
         this.state = STATE.LOADING
-        saveMarkdown(this.subject.uri, this.markdown)
+        saveMarkdown(this.subject.uri, markdown)
+          .then(() => this.markdown = markdown)
           .then(() => this.state = STATE.RENDERING)
         return
       }
       this.state = STATE.EDITING
-    }
-
-    get text (): string {
-      return marked(this.markdown)
     }
 
     get isEditing (): boolean {
@@ -71,10 +63,5 @@
     #MarkdownApp {
         border: solid 3px red;
         padding: 3px;
-    }
-
-    textarea {
-        height: 10em;
-        width: 98%;
     }
 </style>
