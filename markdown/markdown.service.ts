@@ -13,3 +13,9 @@ export function saveMarkdown (uri: string, data: string): Promise<any> {
     contentType: 'text/markdown; charset=UTF-8'
   })
 }
+
+export enum STATE {
+  'LOADING',
+  'RENDERING',
+  'EDITING'
+}

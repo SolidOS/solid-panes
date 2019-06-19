@@ -26,8 +26,13 @@ export const Pane: PaneDefinition = {
   },
   render: (subject: NamedNode, dom: HTMLDocument) => {
     return new Vue({
-      render: h => h(App)
-    }).$mount('#MarkdownApp').$el
+      el: '#MarkdownApp',
+      render: h => h(App, {
+        props: {
+          subject
+        }
+      })
+    }).$el
   }
 }
 
