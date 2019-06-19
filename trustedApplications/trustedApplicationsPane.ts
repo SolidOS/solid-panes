@@ -12,7 +12,7 @@ import $rdf, { NamedNode, IndexedFormula } from 'rdflib'
 import { Namespaces } from 'solid-namespace'
 import paneRegistry from 'pane-registry'
 
-import { getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
+import { getStatementsToAdd, getStatementsToDelete } from './trustedApplications.service'
 import { PaneDefinition } from '../types'
 
 const nodeMode = (typeof module !== 'undefined')

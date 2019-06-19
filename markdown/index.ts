@@ -24,7 +24,7 @@ export const Pane: PaneDefinition = {
         return options
       })
   },
-  render: (subject: NamedNode, dom: HTMLDocument) => {
+  render: (subject: NamedNode) => {
     return new Vue({
       el: '#MarkdownApp',
       render: h => h(App, {
