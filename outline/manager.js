@@ -13,17 +13,7 @@ var queryByExample = require('./queryByExample.js')
 // XPathResult?
 
 module.exports = function (doc) {
-  var dom
-  if (UI.isExtension) {
-    var wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
-      .getService(Components.interfaces.nsIWindowMediator)
-    var window = wm.getMostRecentWindow('navigator:browser')
-    var gBrowser = window.getBrowser()
-    dom = doc || window.document
-  } else {
-    // window = document.window;
-    dom = doc
-  }
+  const dom = doc
 
   this.document = doc
   this.outlineIcons = outlineIcons
@@ -885,15 +875,6 @@ module.exports = function (doc) {
     if (about && dom.getElementById('UserURI')) {
       dom.getElementById('UserURI').value =
         (about.termType === 'NamedNode') ? about.uri : '' // blank if no URI
-    } else if (about && UI.isExtension) {
-      var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
-      tabStatusBar.setAttribute('style', 'display:block')
-      tabStatusBar.label = (about.termType === 'NamedNode') ? about.uri : '' // blank if no URI
-      if (tabStatusBar.label === '') {
-        tabStatusBar.setAttribute('style', 'display:none')
-      } else {
-        tabStatusBar.addEventListener('click', this.statusBarClick, false)
-      }
     }
   }
 
@@ -912,8 +893,6 @@ module.exports = function (doc) {
       var source = st.why
       if (source && source.uri) {
         sourceWidget.highlight(source, true)
-      } else if (UI.isExtension && source.termType === 'BlankNode') {
-        sourceWidget.highlight(kb.sym('resource://tabulator/'), true) // see extension
       }
     }
   }
@@ -941,8 +920,6 @@ module.exports = function (doc) {
 
       var about = UI.utils.getTerm(node) // show uri for a newly selectedTd
       thisOutline.showURI(about)
-      // if(UI.isExtension && about && about.termType=='NamedNode') gURLBar.value = about.uri;
-      // about==null when node is a TBD
 
       var st = node.AJAR_statement // show blue cross when the why of that triple is editable
       if (typeof st === 'undefined') st = node.parentNode.AJAR_statement
@@ -1394,6 +1371,13 @@ module.exports = function (doc) {
     if (e) e.stopPropagation()
   } // function TabulatorMousedown
 
+  function setUrlBarAndTitle (subject) {
+    dom.title = UI.utils.label(subject)
+    if (dom.location.href.startsWith(subject.site().uri)) {
+      dom.location = subject.uri
+    }
+  }
+
   function outlineExpand (p, subject1, options) {
     options = options || {}
     var pane = options.pane
@@ -1484,7 +1468,7 @@ module.exports = function (doc) {
         // Body of outlineExpand
 
     if (options.solo) {
-      dom.title = UI.utils.label(subject)
+      setUrlBarAndTitle(subject)
     }
     UI.log.debug('outlineExpand: dereferencing ' + subject)
     var status = dom.createElement('span')
@@ -1517,7 +1501,8 @@ module.exports = function (doc) {
           sf.lookUpThing(subject)
           render() // inital open, or else full if re-open
           if (options.solo) { // Update window title with new information
-            dom.title = UI.utils.label(subject)
+            // dom.title = UI.utils.label(subject)
+            setUrlBarAndTitle(subject)
           }
         } else {
           var message = dom.createElement('pre')
@@ -1574,10 +1559,6 @@ module.exports = function (doc) {
   }
 
   function outlineRefocus (p, subject) { // Shift-expand or shift-collapse: Maximize
-    if (UI.isExtension && subject.termType === 'symbol' && subject.uri.indexOf('#') < 0) {
-      gBrowser.selectedBrowser.loadURI(subject.uri)
-      return
-    }
     var outer = null
     for (var level = p.parentNode; level; level = level.parentNode) {
       UI.log.debug('level ' + level.tagName)
@@ -1637,17 +1618,6 @@ module.exports = function (doc) {
       return td
     }
 
-    if (UI.isExtension) {
-      var newURI = function (spec) {
-      // e.g. see http://www.nexgenmedia.net/docs/protocol/
-        const MozillaSimpoleURIContactId = '@mozilla.org/network/simple-uri;1'
-        var nsIURI = Components.interfaces.nsIURI
-        var uri = Components.classes[MozillaSimpoleURIContactId].createInstance(nsIURI)
-        uri.spec = spec
-        return uri
-      }
-    }
-
     var td = GotoSubjectDefault()
     // if (!td) td = GotoSubjectDefault(); //the first tr is required  // eh?
 
@@ -1676,27 +1646,6 @@ module.exports = function (doc) {
       }
     }
 
-    if (solo && UI.isExtension) {
-      // See https://developer.mozilla.org/en/NsIGlobalHistory2
-      // See <http://mxr.mozilla.org/mozilla-central/source/toolkit/
-      //     components/places/tests/mochitest/bug_411966/redirect.js#157>
-      var ghist2 = Components.classes['@mozilla.org/browser/global-history;2']
-      .getService(Components.interfaces.nsIGlobalHistory2)
-      ghist2.addURI(newURI(subject.uri), false, true, referrer)
-      /*
-                var historyService = Components.classes['@mozilla.org/browser/nav-history-service;1']
-                    .getService(Components.interfaces.nsINavHistoryService);
-                // See http://people.mozilla.com/~dietrich/places/interfacens_i_nav_history_service.html
-                // and https://developer.mozilla.org/en/NSPR_API_Reference/Date_and_Time and
-                // https://developer.mozilla.org/en/Using_the_Places_history_service
-                historyService.addVisit(newURI(subject.uri),
-                        undefined, @@
-                        undefined, // in nsIURI aReferringUR
-                        historyService.TRANSITION_LINK, // = 1
-                        false, // True if the given visit redirects to somewhere else. (hides it)
-                        0) // @@ Should be the session ID
-      */
-    }
     return subject
   }
 
@@ -1938,20 +1887,6 @@ module.exports = function (doc) {
   this.UserInput.deselectAll = deselectAll
   this.UserInput.views = views
   this.outlineExpand = outlineExpand
-
-  if (UI.isExtension) {
-    window.addEventListener('unload', function () {
-      var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
-      tabStatusBar.label = ''
-      tabStatusBar.setAttribute('style', 'display:none')
-    }, true)
-
-    gBrowser.mPanelContainer.addEventListener('select', function () {
-      var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
-      tabStatusBar.label = ''
-      tabStatusBar.setAttribute('style', 'display:none')
-    }, true)
-  }
 
   // this.panes = panes; // Allow external panes to register
 
