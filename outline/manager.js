@@ -2,6 +2,7 @@
    Outline Mode Manager
 */
 var panes = require('pane-registry')
+const $rdf = require('rdflib')
 
 var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')
@@ -9,7 +10,7 @@ var UserInput = require('./userInput.js')
 var UI = require('solid-ui')
 var queryByExample = require('./queryByExample.js')
 
-/* global Components, alert XPathResult sourceWidget */
+/* global alert XPathResult sourceWidget */
 // XPathResult?
 
 module.exports = function (doc) {
@@ -270,7 +271,9 @@ module.exports = function (doc) {
 
   function expandedHeaderTR (subject, requiredPane, options) {
     var tr = dom.createElement('tr')
-    tr.setAttribute('class', 'hoverControl')
+    if (options.hover) { // By default no hide till hover as community deems it confusing
+      tr.setAttribute('class', 'hoverControl')
+    }
     var td = tr.appendChild(dom.createElement('td'))
     td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
     td.setAttribute('notSelectable', 'false')
@@ -284,6 +287,22 @@ module.exports = function (doc) {
     var strong = td.appendChild(dom.createElement('strong'))
     strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
     UI.widgets.makeDraggable(strong, subject) // 2017
+
+    var globalNav
+    if (options.solo) { // Only when this is outermost pane
+      globalNav = td.appendChild(dom.createElement('div'))
+      global.style = 'padding: 0.1em; margin: 0; float: right;'
+      globalNav.style.backgroundColor = '#884488' // @@ placeholder
+
+      const menuIcon = UI.icons.iconBase + 'noun_897914.svg' // Lines (could also use dots
+      globalNav.appendChild(UI.widgets.button(dom, menuIcon, 'Menu', event => {
+        console.log('@@ Now write global nav menu code')
+      }))
+
+      globalNav.appendChild(UI.authn.loginStatusBox(dom, (me) => {
+        console.log('@@ Login status: ' + me) // Other panes subscribe to this change too
+      }))
+    }
 
     tr.firstPane = null
     var paneNumber = 0
@@ -1378,6 +1397,9 @@ module.exports = function (doc) {
     }
   }
 
+/** Expand an outline view
+* @param p {Element} - container
+*/
   function outlineExpand (p, subject1, options) {
     options = options || {}
     var pane = options.pane
@@ -1565,7 +1587,8 @@ module.exports = function (doc) {
       if (level.tagName === 'TD') outer = level
     } // find outermost td
     UI.utils.emptyNode(outer).appendChild(propertyTable(subject))
-    dom.title = UI.utils.label(subject)
+    setUrlBarAndTitle(subject)
+    // dom.title = UI.utils.label(subject)
     outer.setAttribute('about', subject.toNT())
   } // outlineRefocus
 
@@ -1596,15 +1619,15 @@ module.exports = function (doc) {
     this.GotoSubject(subject)
   }
 
-  // Display the subject in an outline view
-  //
-  // subject -- RDF term for teh thing to be presented
-  // expand  -- flag -- open the subject rather than keep folded closed
-  // pane    -- optional -- pane to be used for expanded display
-  // solo    -- optional -- the window will be cleared out and only the subject displayed
-  // referer -- optional -- where did we hear about this from anyway?
-  // table   -- option  -- a table element in which to put the outline.
+  /** Display the subject in an outline view
 
+  @param subject -- RDF term for teh thing to be presented
+  @param expand  -- flag -- open the subject rather than keep folded closed
+  @param pane    -- optional -- pane to be used for expanded display
+  @param solo    -- optional -- the window will be cleared out and only the subject displayed
+  @param referer -- optional -- where did we hear about this from anyway?
+  @param table   -- option  -- a table element in which to put the outline.
+*/
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
     if (!table) table = dom.getElementById('outline') // @@ if does not exist just add one
     if (solo) UI.utils.emptyNode(table)
@@ -1619,9 +1642,8 @@ module.exports = function (doc) {
     }
 
     var td = GotoSubjectDefault()
-    // if (!td) td = GotoSubjectDefault(); //the first tr is required  // eh?
 
-    if (solo) dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
+    if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
       outlineExpand(td, subject, {
@@ -1633,10 +1655,10 @@ module.exports = function (doc) {
     }
 
     if (
-      solo && dom && dom.defaultView && dom.defaultView.history
+      solo && dom && dom.defaultView && dom.defaultView.history &&
       // Don't add the new location to the history if we arrived here through a direct link
       // (i.e. when static/databrowser.html in node-solid-server called this method):
-      && document.location.href !== subject.uri
+      document.location.href !== subject.uri
     ) {
       let stateObj = pane ? { paneName: pane.name } : {}
       try { // can fail if different origin
@@ -1649,11 +1671,6 @@ module.exports = function (doc) {
     return subject
   }
 
-/*
-  this.GotoURIAndOpen = function (uri) {
-    GotoURI(uri)
-  }
-*/
   // / /////////////////////////////////////////////////////
   //
   //
@@ -1784,98 +1801,6 @@ module.exports = function (doc) {
     anchor.appendChild(dom.createTextNode(address))
     return anchor
   }
-    /* need to make unique calendar containers and names
-     * YAHOO.namespace(namespace) returns the namespace specified
-     * and creates it if it doesn't exist
-     * function 'uni' creates a unique namespace for a calendar and
-     * returns number ending
-     * ex: uni('cal') may create namespace YAHOO.cal1 and return 1
-     *
-     * YAHOO.namespace('foo.bar') makes YAHOO.foo.bar defined as an object,
-     * which can then have properties
-     */
-     /*
-  function uni (prefix) {
-    var n = counter()
-    var name = prefix + n
-    YAHOO.namespace(name)
-    return n
-  }
-  */
-    // counter for calendar ids,
-    /*
-  var counter = (function () {
-    var n = 0
-    return function () {
-      n += 1
-      return n
-    }
-  }())
-  */ // *note* those ending parens! I'm using function scope
-  /*
-  var renderHoliday = function (workingDate, cell) {
-    YAHOO.util.Dom.addClass(cell, 'holiday')
-  }
-  */
-    /* toggles whether element is displayed
-     * if elt.getAttribute('display') returns null,
-     * it will be assigned 'block'
-     */
-     /*
-  function toggle (eltname) {
-    var elt = dom.getElementById(eltname)
-    elt.style.display = (elt.style.display === 'none') ? 'block' : 'none'
-  }
-  */
-    /* Example of calendar Id: cal1
-     * 42 cells in one calendar. from top left counting, each table cell has
-     * ID: YAHOO.cal1_cell0 ... YAHOO.cal.1_cell41
-     * name: YAHOO.cal1__2006_3_2 for anchor inside calendar cell
-     * of date 3/02/2006
-     *
-     */
-     /* unused
-  function VIEWAS_cal (obj) {
-    var prefix = 'cal'
-    var cal = prefix + uni(prefix)
-
-    var containerId = cal + 'Container'
-    var table = dom.createElement('table')
-    table.setAttribute('style', 'width: 100%;')
-
-      // create link to hide/show calendar
-    var a = dom.createElement('a')
-      // a.appendChild(document.createTextNode('[toggle]'))
-    a.innerHTML = '<small>mm-dd: ' + obj.value + '[toggle]</small>'
-      // a.setAttribute('href',':toggle(''+containerId+'')');
-    a.onclick = function () {
-      toggle(containerId)
-    }
-    table.appendChild(a)
-
-    var dateArray = obj.value.split('-')
-    var m = dateArray[0]
-    var d = dateArray[1]
-    var yr = (dateArray.length > 2) ? dateArray[2] : (new Date()).getFullYear()
-
-      // hack: calendar will be appended to divCal at first, but will
-      // be moved to new location
-    dom.getElementById('divCal').appendChild(table)
-    var div = table.appendChild(dom.createElement('DIV'))
-    div.setAttribute('id', containerId)
-      // default hide calendar
-    div.style.display = 'none'
-    div.setAttribute('tag', 'calendar')
-    YAHOO[cal] = new YAHOO.widget.Calendar('YAHOO.' + cal, containerId, m + '/' + yr)
-
-    YAHOO[cal].addRenderer(m + '/' + d, renderHoliday)
-
-    YAHOO[cal].render()
-      // document.childNodes.removeChild(table);
-    return table
-  }
-*/
- //  VIEWAS_cal ends
 
   this.createTabURI = function () {
     dom.getElementById('UserURI').value =
