@@ -14,17 +14,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.profile#me",
+      "value": "https://profile.example#me",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.profile",
+      "value": "https://profile.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.origin",
+      "value": "https://origin.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -37,7 +37,7 @@ Array [
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.profile",
+      "value": "https://profile.example",
     },
   },
   Statement {
@@ -56,7 +56,7 @@ Array [
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.profile",
+      "value": "https://profile.example",
     },
   },
   Statement {
@@ -75,7 +75,7 @@ Array [
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.profile",
+      "value": "https://profile.example",
     },
   },
 ]
@@ -86,7 +86,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.app",
+      "value": "https://app.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -94,7 +94,7 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.profile#me",
+      "value": "https://profile.example#me",
     },
     "why": NamedNode {
       "termType": "NamedNode",
@@ -104,7 +104,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.origin",
+      "value": "https://origin.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -112,7 +112,7 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.app",
+      "value": "https://app.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
@@ -130,7 +130,7 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://fake.app",
+      "value": "https://app.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
