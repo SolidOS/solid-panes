@@ -26,7 +26,7 @@ describe('getStatementsToDelete', () => {
 
   it('should not return statements for a different origin', () => {
     const mockStore = $rdf.graph()
-    const mockApplication = $rdf.sym('https://app.example')a
+    const mockApplication = $rdf.sym('https://app.example')
     const mockOrigin = $rdf.sym('https://origin.example')
     const mockProfile = $rdf.sym('https://profile.example#me')
     mockStore.add(mockApplication, ns.acl('origin'), mockOrigin)
