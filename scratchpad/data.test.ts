@@ -104,13 +104,13 @@ Second line`
 
   it('should ignore lines without contents', async () => {
     const mockStore = $rdf.graph()
-    const mockPad = $rdf.sym('https://mock-pad')
+    const mockPad = $rdf.sym('https://pad.example')
 
-    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1.example')
     mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
     mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
     mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
-    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2.example')
     mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
     mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
     mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
@@ -122,16 +122,16 @@ Second line`
 describe('getLatestAuthor()', () => {
   it('should be able to get the latest author', async () => {
     const mockStore = $rdf.graph()
-    const mockPad = $rdf.sym('https://mock-pad')
-    const mockEarlyAuthor = $rdf.sym('https:/mock-early-author')
-    const mockLateAuthor = $rdf.sym('https:/mock-late-author')
+    const mockPad = $rdf.sym('https://pad.example')
+    const mockEarlyAuthor = $rdf.sym('https://early-author.example')
+    const mockLateAuthor = $rdf.sym('https://late-author.example')
 
-    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1.example')
     mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
     mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
     mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
     mockStore.add(mockFirstLine, ns.dc('author'), mockEarlyAuthor, mockPad.doc())
-    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2.example')
     mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
     mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
     mockStore.add(mockSecondLine, ns.dc('created'), new Date(24 * 60 * 60 * 1000), mockPad.doc())
@@ -143,16 +143,16 @@ describe('getLatestAuthor()', () => {
 
   it('should return an author even when all lines were authored at the same time', async () => {
     const mockStore = $rdf.graph()
-    const mockPad = $rdf.sym('https://mock-pad')
-    const mockEarlyAuthor = $rdf.sym('https:/mock-early-author')
-    const mockLateAuthor = $rdf.sym('https:/mock-late-author')
+    const mockPad = $rdf.sym('https://pad.example')
+    const mockEarlyAuthor = $rdf.sym('https://early-author.example')
+    const mockLateAuthor = $rdf.sym('https://late-author.example')
 
-    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1.example')
     mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
     mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
     mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
     mockStore.add(mockFirstLine, ns.dc('author'), mockEarlyAuthor, mockPad.doc())
-    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2.example')
     mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
     mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
     mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
@@ -164,13 +164,13 @@ describe('getLatestAuthor()', () => {
 
   it('should return null if no author data is present', async () => {
     const mockStore = $rdf.graph()
-    const mockPad = $rdf.sym('https://mock-pad')
+    const mockPad = $rdf.sym('https://pad.example')
 
-    const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
+    const mockFirstLine = $rdf.sym('https://arbitrary-line-1.example')
     mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
     mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
     mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
-    const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
+    const mockSecondLine = $rdf.sym('https://arbitrary-line-2.example')
     mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
     mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
     mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
@@ -183,7 +183,7 @@ describe('getLatestAuthor()', () => {
 describe('getTitle()', () => {
   it('should return a document\'s title', async () => {
     const mockStore = $rdf.graph()
-    const mockPad = $rdf.sym('https://mock-pad')
+    const mockPad = $rdf.sym('https://pad.example')
 
     mockStore.add(mockPad, ns.dc('title'), 'Some title', mockPad.doc())
 
@@ -194,7 +194,7 @@ describe('getTitle()', () => {
 describe('isPad()', () => {
   it('should recognise when a subject is not a Pad', async () => {
     const mockStore = $rdf.graph()
-    const mockNotAPad = $rdf.sym('https://mock-chat')
+    const mockNotAPad = $rdf.sym('https://chat.example')
     mockStore.add(mockNotAPad, ns.rdf('type'), ns.meeting('Chat'), mockNotAPad.doc())
 
     expect(isPad(mockNotAPad, mockStore)).toBe(false)
@@ -202,7 +202,7 @@ describe('isPad()', () => {
 
   it('should recognise when a subject is a Pad', async () => {
     const mockStore = $rdf.graph()
-    const mockPad = $rdf.sym('https://mock-pad')
+    const mockPad = $rdf.sym('https://pad.example')
     mockStore.add(mockPad, ns.rdf('type'), ns.pad('Notepad'), mockPad.doc())
 
     expect(isPad(mockPad, mockStore)).toBe(true)
