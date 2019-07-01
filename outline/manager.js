@@ -13,6 +13,8 @@ var queryByExample = require('./queryByExample.js')
 /* global alert XPathResult sourceWidget */
 // XPathResult?
 
+const iconHeight = '24px'
+
 module.exports = function (doc) {
   const dom = doc
 
@@ -269,6 +271,42 @@ module.exports = function (doc) {
     return predicateTD
   } // outlinePredicateTD
 
+/** Render Tabbed set of home app panes
+ * @returns {Element} - the div
+*/
+  function globalAppTabs () {
+    const div = dom.createElement('div')
+    const me = UI.authn.currentUser()
+    if (!me) {
+      alert('@@ Must be logged in for this')
+      throw new Error('Not logged in')
+    }
+    function renderTab (div, item) {
+      div.textContent = item.id()
+    }
+
+    function renderMain (containerDiv, item) { // Items are pane names
+      const pane = panes.byName[item]
+      containerDiv.innerHTML = ''
+      var table = containerDiv.appendChild(dom.createElement('table'))
+      const dummySubject = item
+      thisOutline.GotoSubject(dummySubject, true, pane, false, undefined, table)
+    }
+
+    const items = ['home', 'trustedApplications', 'profile']
+    const options = {dom,
+      subject: me,
+      items,
+      renderMain,
+      renderTab,
+      ordered: true,
+      orientation: 0,
+      backgroundColor: '#eeeeee'} // black?
+    // options.renderTabSettings = renderTabSettings  No tab-specific settings
+    div.appendChild(UI.tabs.tabWidget(options))
+    return div
+  }
+
   function expandedHeaderTR (subject, requiredPane, options) {
     var tr = dom.createElement('tr')
     if (options.hover) { // By default no hide till hover as community deems it confusing
@@ -286,22 +324,31 @@ module.exports = function (doc) {
 
     var strong = td.appendChild(dom.createElement('strong'))
     strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
-    UI.widgets.makeDraggable(strong, subject) // 2017
+    UI.widgets.makeDraggable(strong, subject)
 
     var globalNav
     if (options.solo) { // Only when this is outermost pane
+      const buttonStyle = 'padding: 0.1em; border-radius:0.1em; margin: 0.1em; font-size: 80%; height: 24px;' // @@
       globalNav = td.appendChild(dom.createElement('div'))
-      global.style = 'padding: 0.1em; margin: 0; float: right;'
+      globalNav.style = 'padding: 0.1em; margin: 0; float: right; height: 3em;'
       globalNav.style.backgroundColor = '#884488' // @@ placeholder
 
       const menuIcon = UI.icons.iconBase + 'noun_897914.svg' // Lines (could also use dots
-      globalNav.appendChild(UI.widgets.button(dom, menuIcon, 'Menu', event => {
+      const menuButton = UI.widgets.button(dom, menuIcon, 'Menu', event => {
         console.log('@@ Now write global nav menu code')
-      }))
+        tr.parent.appendChild(globalAppTabs())
+      })
+      menuButton.firstChild.style = buttonStyle
+      menuButton.firstChild.style.maxHeight = iconHeight
+      menuButton.disabled = !UI.authn.currentUser() // if not logged in
 
-      globalNav.appendChild(UI.authn.loginStatusBox(dom, (me) => {
-        console.log('@@ Login status: ' + me) // Other panes subscribe to this change too
-      }))
+      const loginBox = UI.authn.loginStatusBox(dom, (me) => {
+        console.log('Login status changed: ' + me) // Other panes subscribe to this change too
+        menuButton.disabled = !me
+      }, { buttonStyle })
+      globalNav.appendChild(menuButton)
+      globalNav.appendChild(loginBox)
+      // loginBox.appendChild(menuButton)
     }
 
     tr.firstPane = null
@@ -336,8 +383,8 @@ module.exports = function (doc) {
         let pane = relevantPanes[i]
         var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i], dom)
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
-        ico.style.maxWidth = '24px'
-        ico.style.maxHeight = '24px'
+        ico.style.maxWidth = iconHeight
+        ico.style.maxHeight = iconHeight
         var listen = function (ico, pane) { // Freeze scope for event time
           ico.addEventListener('click', function (event) {
               // Find the containing table for this subject
@@ -1393,7 +1440,7 @@ module.exports = function (doc) {
   function setUrlBarAndTitle (subject) {
     dom.title = UI.utils.label(subject)
     if (dom.location.href.startsWith(subject.site().uri)) {
-      dom.location = subject.uri
+      // dom.location = subject.uri  // No causes reload
     }
   }
 
@@ -1629,7 +1676,7 @@ module.exports = function (doc) {
   @param table   -- option  -- a table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    if (!table) table = dom.getElementById('outline') // @@ if does not exist just add one
+    table = table || dom.getElementById('outline') // if does not exist just add one? nowhere to out it
     if (solo) UI.utils.emptyNode(table)
 
     function GotoSubjectDefault () {
