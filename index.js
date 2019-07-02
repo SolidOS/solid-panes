@@ -127,7 +127,9 @@ register(require('./sharing/sharingPane.js'))
 
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internalPane.js'))
-// The home pane is a 2016 experiment. Always there.
+
+// The home pane is a 2016 experiment. Always there. In 2019 moved to global nav.
+// Global panes. {p.global}
 
 register(require('./profile/profilePane').default) // edit your public profile
 register(require('./trustedApplications/trustedApplicationsPane').default) // manage your trusted applications

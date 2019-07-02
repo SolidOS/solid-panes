@@ -33,6 +33,9 @@ const ns = UI.ns
 const thisColor = '#090'
 
 const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
+
+  global: true,
+  
   icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
 
   name: 'profile',

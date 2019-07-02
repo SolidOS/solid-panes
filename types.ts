@@ -3,6 +3,7 @@ import { NamedNode, IndexedFormula } from 'rdflib'
 // Note: there might be a more appropriate project to hold this definition:
 export interface PaneDefinition {
   icon: string;
+  global?: boolean;
   name: string;
   label: (subject: NamedNode) => string | null;
   render: (subject: NamedNode, dom: HTMLDocument, options?: unknown) => HTMLElement;

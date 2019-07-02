@@ -44,7 +44,7 @@ interface FormElements {
 
 const thisPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_15177.svg', // Looks like an A - could say it's for Applications?
-
+  global: true,
   name: 'trustedApplications',
 
   label: function (subject) {

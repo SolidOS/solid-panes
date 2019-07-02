@@ -282,15 +282,18 @@ module.exports = function (doc) {
       throw new Error('Not logged in')
     }
     function renderTab (div, item) {
-      div.textContent = item.id()
+      const map = { 'home': 'Your stuff',
+        'trustedApplications': 'Web apps you trust',
+        'profile': 'Edit your profile' }
+      div.textContent = map[item] || item
     }
 
     function renderMain (containerDiv, item) { // Items are pane names
-      const pane = panes.byName[item]
+      const pane = panes.byName(item) // 20190701
       containerDiv.innerHTML = ''
       var table = containerDiv.appendChild(dom.createElement('table'))
-      const dummySubject = item
-      thisOutline.GotoSubject(dummySubject, true, pane, false, undefined, table)
+      const me = UI.authn.currentUser()
+      thisOutline.GotoSubject(me, true, pane, false, undefined, table)
     }
 
     const items = ['home', 'trustedApplications', 'profile']
@@ -304,8 +307,39 @@ module.exports = function (doc) {
       backgroundColor: '#eeeeee'} // black?
     // options.renderTabSettings = renderTabSettings  No tab-specific settings
     div.appendChild(UI.tabs.tabWidget(options))
+    div.appendChild(UI.widgets.cancelButton(dom, event => {
+      div.parentNode.removeChild(div)
+    }))
     return div
   }
+
+  function globalNavigationBox () {
+    const buttonStyle = 'padding: 0.1em; border-radius:0.1em; margin: 0.1em; font-size: 100%; height: 1.2em;' // @@
+    const globalNav = dom.createElement('div')
+    globalNav.style = 'padding: 0; margin: 0; height: 100%; max-height: 2em; float:right;' //  float: right;
+    globalNav.style.backgroundColor = '#884488' // @@ placeholder
+
+    const menuIcon = UI.icons.iconBase + 'noun_897914.svg' // Lines (could also use dots
+    const menuButton = UI.widgets.button(dom, menuIcon, 'Menu', event => {
+      console.log('@@ Now write global nav menu code')
+      if (tr.nextSibling) tr.parentElement.removeChild(tr.nextSibling) // @@ hack - should use pane code
+      tr.parentElement.appendChild(globalAppTabs())
+    })
+    menuButton.style = 'float:right;' // unstyled div
+    menuButton.firstChild.style = buttonStyle
+    menuButton.firstChild.style.maxHeight = iconHeight
+    menuButton.disabled = !UI.authn.currentUser() // if not logged in
+
+    const loginBox = UI.authn.loginStatusBox(dom, (me) => {
+      console.log('Login status changed: ' + me) // Other panes subscribe to this change too
+      menuButton.disabled = !me
+    }, { buttonStyle })
+    loginBox.style.maxHeight = '2em'
+    globalNav.appendChild(menuButton)
+    globalNav.appendChild(loginBox)
+    return globalNav
+  }
+
 
   function expandedHeaderTR (subject, requiredPane, options) {
     var tr = dom.createElement('tr')
@@ -324,31 +358,11 @@ module.exports = function (doc) {
 
     var strong = td.appendChild(dom.createElement('strong'))
     strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
+    strong.style.padding = '0.1em'
     UI.widgets.makeDraggable(strong, subject)
 
-    var globalNav
-    if (options.solo) { // Only when this is outermost pane
-      const buttonStyle = 'padding: 0.1em; border-radius:0.1em; margin: 0.1em; font-size: 80%; height: 24px;' // @@
-      globalNav = td.appendChild(dom.createElement('div'))
-      globalNav.style = 'padding: 0.1em; margin: 0; float: right; height: 3em;'
-      globalNav.style.backgroundColor = '#884488' // @@ placeholder
-
-      const menuIcon = UI.icons.iconBase + 'noun_897914.svg' // Lines (could also use dots
-      const menuButton = UI.widgets.button(dom, menuIcon, 'Menu', event => {
-        console.log('@@ Now write global nav menu code')
-        tr.parent.appendChild(globalAppTabs())
-      })
-      menuButton.firstChild.style = buttonStyle
-      menuButton.firstChild.style.maxHeight = iconHeight
-      menuButton.disabled = !UI.authn.currentUser() // if not logged in
-
-      const loginBox = UI.authn.loginStatusBox(dom, (me) => {
-        console.log('Login status changed: ' + me) // Other panes subscribe to this change too
-        menuButton.disabled = !me
-      }, { buttonStyle })
-      globalNav.appendChild(menuButton)
-      globalNav.appendChild(loginBox)
-      // loginBox.appendChild(menuButton)
+    if (solo) {
+      td.appendChild(globalNavigationBox())
     }
 
     tr.firstPane = null
@@ -362,7 +376,7 @@ module.exports = function (doc) {
     for (var i = 0; i < panes.list.length; i++) {
       let pane = panes.list[i]
       var lab = pane.label(subject, dom)
-      if (!lab) continue
+      if (!lab || pane.global) continue
 
       relevantPanes.push(pane)
       if (pane === requiredPane) {

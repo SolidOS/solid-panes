@@ -15,6 +15,8 @@ import panes from 'pane-registry'
 const HomePane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830
 
+  global: true,
+
   name: 'home',
 
   // Does the subject deserve an home pane?
@@ -28,7 +30,7 @@ const HomePane: PaneDefinition = {
   render: function (subject, dom) {
     var showContent = function () {
       var context = { div: div, dom: dom, statusArea: div, me: me }
-
+/*
       div.appendChild(dom.createElement('h4')).textContent = 'Login status'
       var loginStatusDiv = div.appendChild(dom.createElement('div'))
       // TODO: Find out what the actual type is:
@@ -36,7 +38,7 @@ const HomePane: PaneDefinition = {
       loginStatusDiv.appendChild(UI.authn.loginStatusBox(dom, () => {
         // Here we know new log in status
       }))
-
+*/
       div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere'
       var creationDiv = div.appendChild(dom.createElement('div'))
       var creationContext = { div: creationDiv, dom: dom, statusArea: div, me: me }
@@ -47,6 +49,7 @@ const HomePane: PaneDefinition = {
       type AuthContext = unknown;
       UI.authn.registrationList(context, { private: true }).then(function (context: AuthContext) {
         div.appendChild(dom.createElement('h4')).textContent = 'Public things'
+        div.appendChild(dom.createElement('p')).textContent = 'Things in this list are visible to others.'
         UI.authn.registrationList(context, { public: true }).then(function () {
           // done
         })
