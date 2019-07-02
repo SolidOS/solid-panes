@@ -63,7 +63,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-user",
+      "value": "https://user.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -157,11 +157,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://arbitrary-line",
+      "value": "https://arbitrary-line.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -179,17 +179,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://arbitrary-line",
+      "value": "https://arbitrary-line.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://arbitrary-line",
+      "value": "https://arbitrary-line.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -197,11 +197,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
 ]
@@ -212,7 +212,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -220,11 +220,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -238,11 +238,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -260,17 +260,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-user",
+      "value": "https://user.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -278,17 +278,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -296,11 +296,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
 ]
@@ -311,7 +311,7 @@ Array [
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -319,11 +319,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -337,11 +337,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -359,17 +359,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line1",
+      "value": "https://pad.example_line1",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -377,11 +377,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line0",
+      "value": "https://pad.example_line0",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -395,11 +395,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line1",
+      "value": "https://pad.example_line1",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -417,17 +417,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line1",
+      "value": "https://pad.example_line1",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line2",
+      "value": "https://pad.example_line2",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -435,11 +435,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line1",
+      "value": "https://pad.example_line1",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -453,11 +453,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line2",
+      "value": "https://pad.example_line2",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -475,17 +475,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line2",
+      "value": "https://pad.example_line2",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line3",
+      "value": "https://pad.example_line3",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -493,11 +493,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line2",
+      "value": "https://pad.example_line2",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -511,11 +511,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line3",
+      "value": "https://pad.example_line3",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -533,17 +533,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line3",
+      "value": "https://pad.example_line3",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line4",
+      "value": "https://pad.example_line4",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -551,11 +551,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line3",
+      "value": "https://pad.example_line3",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -569,11 +569,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line4",
+      "value": "https://pad.example_line4",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
@@ -591,17 +591,17 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line4",
+      "value": "https://pad.example_line4",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
   Statement {
     "object": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -609,11 +609,11 @@ Array [
     },
     "subject": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad_line4",
+      "value": "https://pad.example_line4",
     },
     "why": NamedNode {
       "termType": "NamedNode",
-      "value": "https://mock-pad",
+      "value": "https://pad.example",
     },
   },
 ]
