@@ -128,10 +128,11 @@ register(require('./sharing/sharingPane.js'))
 
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internalPane.js'))
-// The home pane is a 2016 experiment. Always there.
 
 register(require('./profile/profilePane').default) // edit your public profile
 register(require('./trustedApplications/trustedApplicationsPane').default) // manage your trusted applications
+// The home pane is a 2016 experiment. Always there.
 register(require('./home/homePane').default)
+register(require('./dashboard/dashboardPane').default)
 
 // ENDS
