@@ -3,11 +3,12 @@ import $rdf from 'rdflib'
 import namespaces from 'solid-namespace'
 import { DataBrowserContext } from '../context'
 import { useWebId } from '../hooks/useWebId'
+import { ProfileBadge } from '../components/ProfileBadge'
 
 const ns = namespaces($rdf)
 
 export const ContactsWidget: React.FC = () => {
-  const { store, fetcher, podOrigin } = React.useContext(DataBrowserContext)
+  const { store, fetcher } = React.useContext(DataBrowserContext)
 
   const contacts = useContacts(store, fetcher)
 
@@ -21,7 +22,7 @@ export const ContactsWidget: React.FC = () => {
         <h2 className="title">Contacts</h2>
         <div className="content">
           <ul>
-            {contacts.slice(0, 5).map((contact) => <li key={contact}><a href={contact}>{contact}</a></li>)}
+            {contacts.slice(0, 5).map((contact) => <ProfileBadge key={contact} webId={contact}/>)}
           </ul>
         </div>
       </section>
