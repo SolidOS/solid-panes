@@ -22,7 +22,7 @@ export const ContactsWidget: React.FC = () => {
         <h2 className="title">Contacts</h2>
         <div className="content">
           <ul>
-            {contacts.slice(0, 5).map((contact) => <ProfileBadge key={contact} webId={contact}/>)}
+            {contacts.map((contact) => <ProfileBadge key={contact} webId={contact}/>)}
           </ul>
         </div>
       </section>

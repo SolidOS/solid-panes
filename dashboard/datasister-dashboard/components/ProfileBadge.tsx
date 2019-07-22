@@ -16,7 +16,6 @@ export const ProfileBadge: React.FC<Props> = (props) => {
   React.useEffect(() => {
     fetcher.load(props.webId).then(() => {
       const [ nameStatement ] = store.statementsMatching($rdf.sym(props.webId), ns.foaf('name'), null as any, null as any, true)
-      console.log({ nameStatement })
       if (nameStatement) {
         setName(nameStatement.object.value)
       }
