@@ -30,15 +30,15 @@ const HomePane: PaneDefinition = {
   render: function (subject, dom) {
     var showContent = function () {
       var context = { div: div, dom: dom, statusArea: div, me: me }
-/*
-      div.appendChild(dom.createElement('h4')).textContent = 'Login status'
-      var loginStatusDiv = div.appendChild(dom.createElement('div'))
-      // TODO: Find out what the actual type is:
-      type UriType = unknown;
-      loginStatusDiv.appendChild(UI.authn.loginStatusBox(dom, () => {
-        // Here we know new log in status
-      }))
-*/
+      /*
+            div.appendChild(dom.createElement('h4')).textContent = 'Login status'
+            var loginStatusDiv = div.appendChild(dom.createElement('div'))
+            // TODO: Find out what the actual type is:
+            type UriType = unknown;
+            loginStatusDiv.appendChild(UI.authn.loginStatusBox(dom, () => {
+              // Here we know new log in status
+            }))
+      */
       div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere'
       var creationDiv = div.appendChild(dom.createElement('div'))
       var creationContext = { div: creationDiv, dom: dom, statusArea: div, me: me }
