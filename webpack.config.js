@@ -10,12 +10,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
-    alias: {
-      'rdflib': '/devel/github.com/linkeddata/rdflib.js',
-      'solid-ui': '/devel/github.com/solid/solid-ui'    //   'chat-pane': '../../solid/chat-pane'
-    }
-
+    extensions: ['.mjs', '.js', '.ts']
   },
   module: {
     rules: [
@@ -28,14 +23,6 @@ module.exports = {
       }
     ],
   },
-/*
-  resolve: {
-    // alias: {
-      // 'rdflib': '/devel/github.com/linkeddata/rdflib.js',
-      // 'solid-ui': '/devel/github.com/solid/solid-ui'    //   'chat-pane': '../../solid/chat-pane'
-    // }
-  },
-  */
   plugins: [
     new webpack.DefinePlugin({
       // Prevent solid-auth-tls (used by solid-ui) from running Node code:
