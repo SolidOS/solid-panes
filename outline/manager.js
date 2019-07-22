@@ -316,7 +316,7 @@ module.exports = function (doc) {
   **
   ** This gives the user the ability to find and do stuff sfrom no context
   */
-  function globalNavigationBox (tr) {
+  function globalNavigationBox (tr, menuButtonId) {
     const buttonStyle = 'padding: 0.3em 0.5em; border-radius:0.2em; margin: 0 0.4em; font-size: 100%;' // @@
     const globalNav = dom.createElement('nav')
     var expanded = false
@@ -326,6 +326,7 @@ module.exports = function (doc) {
     // globalNav.style.backgroundColor = '#884488' // @@ placeholder
 
     var menuButton = dom.createElement('img')
+    menuButton.id = menuButtonId
     menuButton.setAttribute('src', UI.icons.iconBase + 'noun_547570.svg') // Lines (could also use dots or home or hamburger
     menuButton.style = 'padding: 0.2em;'
     menuButton.addEventListener('click', event => {
@@ -339,15 +340,7 @@ module.exports = function (doc) {
     })
     menuButton.style = buttonStyle
     menuButton.style.maxHeight = iconHeight
-    // menuButton.disabled = !UI.authn.currentUser() // if not logged in
-
-    const loginBox = UI.authn.loginStatusBox(dom, (me) => {
-      console.log('Login status changed: ' + me) // Other panes subscribe to this change too
-      menuButton.disabled = !me
-    }, { buttonStyle })
-    loginBox.style.maxHeight = '2em'
     globalNav.appendChild(menuButton)
-    globalNav.appendChild(loginBox)
     return globalNav
   }
 
@@ -509,7 +502,21 @@ module.exports = function (doc) {
     header.appendChild(renderPaneIconTray(td))
 
     if (options.solo) {
-      td.appendChild(globalNavigationBox(tr))
+      const menuButtonId = 'GlobalUserMenuButton'
+      td.appendChild(globalNavigationBox(tr, menuButtonId))
+      UI.authn.solidAuthClient.trackSession(function (session) {
+        const menuButton = document.getElementById(menuButtonId)
+        if (!menuButton) {
+          return
+        }
+        const isHidden = menuButton.style.display === 'none'
+        console.log(isHidden)
+        if (session) {
+          menuButton.style.display = 'block'
+        } else {
+          menuButton.style.display = 'none'
+        }
+      })
     }
 
       // set DOM methods
