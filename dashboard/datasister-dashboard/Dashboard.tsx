@@ -3,7 +3,6 @@ import { ProfileWidget } from './widgets/Profile'
 import { ContactsWidget } from './widgets/Contacts'
 import { BookmarksWidget } from './widgets/Bookmarks'
 import { FolderWidget } from './widgets/Folder'
-import { AppsWidget } from './widgets/Apps'
 
 export const Dashboard: React.FC<{
 }> = (props) => {
@@ -16,9 +15,6 @@ export const Dashboard: React.FC<{
           </div>
           <div className="column item">
             <ContactsWidget/>
-          </div>
-          <div className="column item">
-            <AppsWidget/>
           </div>
           <div className="column item">
             <FolderWidget/>
