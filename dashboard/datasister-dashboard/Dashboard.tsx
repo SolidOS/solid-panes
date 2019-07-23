@@ -10,20 +10,20 @@ export const Dashboard: React.FC<{
   return (
     <>
       <section className="section">
-        <div className="columns">
-          <div className="column">
+        <div className="columns grid ids-container__four-column">
+          <div className="column item">
             <ProfileWidget/>
           </div>
-          <div className="column">
+          <div className="column item">
             <ContactsWidget/>
           </div>
-          <div className="column">
+          <div className="column item">
             <AppsWidget/>
           </div>
-          <div className="column">
+          <div className="column item">
             <FolderWidget/>
           </div>
-          <div className="column">
+          <div className="column item">
             <BookmarksWidget/>
           </div>
         </div>
