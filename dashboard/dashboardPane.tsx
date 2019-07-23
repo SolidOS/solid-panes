@@ -20,7 +20,8 @@ const HomePane: PaneDefinition = {
 
   render: function (subject, dom) {
     const container = document.createElement('div')
-    const shadow = container.attachShadow({ mode: 'closed' })
+    const shadow = document.createElement('div')
+    container.appendChild(shadow)
     const wrapper = document.createElement('div')
     shadow.appendChild(wrapper)
     const link = document.createElement('link')
