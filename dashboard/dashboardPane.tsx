@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
 import UI from 'solid-ui'
-import panes from 'pane-registry'
 import { Wrapper } from './wrapper'
 import { PaneDefinition } from '../types'
 
@@ -24,20 +23,17 @@ const HomePane: PaneDefinition = {
     shadow.appendChild(wrapper)
     const link = document.createElement('link')
     link.rel = 'stylesheet'
-    link.href = 'https://design.inrupt.com/css/main.css'
+    link.href = '/common/css/bootstrap.min.css'
     shadow.appendChild(link)
-    const loadResource = (resourcePath: string) => {
-      panes.getOutliner(dom).GotoSubject(resourcePath, true, undefined, true)
-    }
     // TODO: Update the value of WebID when the user logs in/out:
+    const pod = `${location.protocol}//${location.host}`
     UI.authn.solidAuthClient.currentSession().then((session: any) => {
       ReactDOM.render(
         <Wrapper
           store={UI.store}
           fetcher={UI.store.fetcher}
           updater={UI.store.updater}
-          loadResource={loadResource}
-          webId={session ? session.webId : undefined}
+          pod={pod}
         />,
         wrapper
       )
