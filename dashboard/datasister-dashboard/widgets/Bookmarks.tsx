@@ -53,6 +53,9 @@ async function getBookmarks (store: $rdf.IndexedFormula, fetcher: $rdf.Fetcher, 
   await fetcher.load(publicTypeIndex as any as $rdf.NamedNode)
   const bookmarkClass = new $rdf.NamedNode('http://www.w3.org/2002/01/bookmark#Bookmark')
   const [ bookmarkRegistryStatement ] = store.statementsMatching(null, ns.solid('forClass'), bookmarkClass, publicTypeIndex, true)
+  if (!bookmarkRegistryStatement) {
+    return []
+  }
   const bookmarkRegistry = bookmarkRegistryStatement.subject
   const [ bookmarkRegistryInstanceStatement ] = store.statementsMatching(bookmarkRegistry, ns.solid('instance'), null, publicTypeIndex, true)
   const bookmarkRegistryInstance = bookmarkRegistryInstanceStatement.object
