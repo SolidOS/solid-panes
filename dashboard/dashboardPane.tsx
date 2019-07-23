@@ -1,5 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import $rdf from 'rdflib'
 import UI from 'solid-ui'
 import panes from 'pane-registry'
 import { Wrapper } from './wrapper'
@@ -27,7 +28,7 @@ const HomePane: PaneDefinition = {
     link.href = 'https://design.inrupt.com/css/main.css'
     shadow.appendChild(link)
     const loadResource = (resourcePath: string) => {
-      panes.getOutliner(dom).GotoSubject(resourcePath, true, undefined, true)
+      panes.getOutliner(dom).GotoSubject($rdf.sym(resourcePath), true, undefined, true)
     }
     // TODO: Update the value of WebID when the user logs in/out:
     UI.authn.solidAuthClient.currentSession().then((session: any) => {
