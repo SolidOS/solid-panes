@@ -49,6 +49,9 @@ function useBookmarks (store: $rdf.IndexedFormula, fetcher: $rdf.Fetcher) {
 async function getBookmarks (store: $rdf.IndexedFormula, fetcher: $rdf.Fetcher, webId: string) {
   const profile = $rdf.sym(webId)
   const [ publicTypeIndexStatement ] = store.statementsMatching(profile, ns.solid('publicTypeIndex'), null, profile.doc(), true)
+  if (!publicTypeIndexStatement) {
+    return []
+  }
   const publicTypeIndex = publicTypeIndexStatement.object
   await fetcher.load(publicTypeIndex as any as $rdf.NamedNode)
   const bookmarkClass = new $rdf.NamedNode('http://www.w3.org/2002/01/bookmark#Bookmark')
