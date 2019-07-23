@@ -7,8 +7,8 @@ interface Props {
   store: IndexedFormula,
   fetcher: Fetcher,
   updater: UpdateManager,
-  webId: string,
   loadResource: (resourcePath: string) => void
+  webId?: string,
 }
 export const Wrapper: React.FC<Props> = (props) => {
   const dataBrowserContext: DataBrowserContextData = {

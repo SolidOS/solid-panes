@@ -3,6 +3,7 @@ import { ProfileWidget } from './widgets/Profile'
 import { ContactsWidget } from './widgets/Contacts'
 import { BookmarksWidget } from './widgets/Bookmarks'
 import { FolderWidget } from './widgets/Folder'
+import { IsNotOwner } from './components/IsNotOwner'
 
 export const Dashboard: React.FC<{
 }> = (props) => {

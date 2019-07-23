@@ -4,6 +4,8 @@ import namespaces from 'solid-namespace'
 import { DataBrowserContext } from '../context'
 import { useWebId } from '../hooks/useWebId'
 import { ProfileBadge } from '../components/ProfileBadge'
+import { IsOwner } from '../components/IsOwner';
+import { IsNotOwner } from '../components/IsNotOwner';
 
 const ns = namespaces($rdf)
 
@@ -35,17 +37,21 @@ export const ContactsWidget: React.FC = () => {
     )
   }
 
+  const contactList = (contacts.length === 0)
+    ? <p>No contacts yet&hellip;</p>
+    : <ul>{contacts.map((contact) => <li key={contact}><ProfileBadge webId={contact}/></li>)}</ul>
+
   return (
     <div className="card">
       <section className="section">
         <h2 className="title">Contacts</h2>
         <div className="content">
-          <ul>
-            {contacts.map((contact) => <li key={contact}><ProfileBadge webId={contact}/></li>)}
-          </ul>
+          {contactList}
         </div>
-        <h3>Add a contact</h3>
-        <WebIdForm onSubmit={onAddContact}/>
+        <IsOwner>
+          <h3>Add a contact</h3>
+          <WebIdForm onSubmit={onAddContact}/>
+        </IsOwner>
       </section>
     </div>
   )

@@ -29,14 +29,15 @@ const HomePane: PaneDefinition = {
     const loadResource = (resourcePath: string) => {
       panes.getOutliner(dom).GotoSubject(resourcePath, true, undefined, true)
     }
+    // TODO: Update the value of WebID when the user logs in/out:
     UI.authn.solidAuthClient.currentSession().then((session: any) => {
       ReactDOM.render(
         <Wrapper
           store={UI.store}
           fetcher={UI.store.fetcher}
           updater={UI.store.updater}
-          webId={session.webId}
           loadResource={loadResource}
+          webId={session ? session.webId : undefined}
         />,
         wrapper
       )

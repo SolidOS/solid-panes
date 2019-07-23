@@ -2,6 +2,7 @@ import React from 'react'
 import $rdf from 'rdflib'
 import { ResourceLink } from '../components/ResourceLink'
 import { DataBrowserContext } from '../context'
+import { IsOwner } from '../components/IsOwner'
 
 export const FolderWidget: React.FC = () => {
   const { podOrigin } = React.useContext(DataBrowserContext)
@@ -15,10 +16,12 @@ export const FolderWidget: React.FC = () => {
             className="ids-link-filled ids-link-filled--primary"
             resource={$rdf.sym(`${podOrigin}/public/`)}
           >Public data</ResourceLink>
-          <ResourceLink
-            className="ids-link-stroke ids-link-stroke--primary"
-            resource={$rdf.sym(`${podOrigin}/private/`)}
-          >Private data</ResourceLink>
+          <IsOwner>
+            <ResourceLink
+              className="ids-link-stroke ids-link-stroke--primary"
+              resource={$rdf.sym(`${podOrigin}/private/`)}
+            >Private data</ResourceLink>
+          </IsOwner>
         </p>
       </section>
     </div>

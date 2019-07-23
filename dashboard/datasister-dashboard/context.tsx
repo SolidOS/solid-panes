@@ -6,7 +6,7 @@ export interface DataBrowserContextData {
   fetcher: Fetcher;
   updater: UpdateManager;
   podOrigin: string;
-  webId: string;
+  webId?: string;
   loadResource: (resourcePath: string) => void;
 };
 
@@ -15,7 +15,6 @@ const defaultContext: DataBrowserContextData = {
   store: $rdf.graph(),
   fetcher: new Fetcher($rdf.graph(), undefined),
   updater: new UpdateManager($rdf.graph()),
-  webId: 'http://example.com',
   loadResource: () => undefined
 }
 
