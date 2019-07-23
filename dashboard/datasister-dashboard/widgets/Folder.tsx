@@ -12,11 +12,11 @@ export const FolderWidget: React.FC = () => {
         <h2 className="title">Raw data</h2>
         <p className="buttons">
           <ResourceLink
-            className="button is-primary is-fullwidth is-medium"
+            className="ids-link-filled ids-link-filled--primary"
             resource={$rdf.sym(`${podOrigin}/public/`)}
           >Public data</ResourceLink>
           <ResourceLink
-            className="button is-fullwidth is-small"
+            className="ids-link-stroke ids-link-stroke--primary"
             resource={$rdf.sym(`${podOrigin}/private/`)}
           >Private data</ResourceLink>
         </p>

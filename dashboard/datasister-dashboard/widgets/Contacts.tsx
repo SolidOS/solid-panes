@@ -63,22 +63,22 @@ const WebIdForm: React.FC<{ onSubmit: (webId: string) => void }> = (props) => {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div className="field">
-        <label className="label">
+      <div className="input-wrap">
+        <label htmlFor="webid" className="label">
           WebID:
-          <input
-            type="url"
-            onChange={(e) => setWebId(e.target.value)}
-            value={webId}
-            placeholder="https://www.w3.org/People/Berners-Lee/card#i"
-            name="webid"
-            id="webid"
-            className="input"
-          />
         </label>
+        <input
+          type="url"
+          onChange={(e) => setWebId(e.target.value)}
+          value={webId}
+          placeholder="https://www.w3.org/People/Berners-Lee/card#i"
+          name="webid"
+          id="webid"
+          className="input"
+        />
       </div>
       <div className="control">
-        <input type="submit" value="Add" className="button"/>
+        <button type="submit">Add</button>
       </div>
     </form>
   )
