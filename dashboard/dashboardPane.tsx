@@ -11,11 +11,21 @@ const HomePane: PaneDefinition = {
   name: 'dashboard',
 
   label: function () {
-    return 'Dashboard'
+    if (`${location.origin}/` === location.href) {
+      return 'Dashboard'
+    }
+    return null
   },
 
   render: function (subject, dom) {
     const container = document.createElement('div')
+    const shadow = container.attachShadow({ mode: 'closed' })
+    const wrapper = document.createElement('div')
+    shadow.appendChild(wrapper)
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = 'https://design.inrupt.com/css/main.css'
+    shadow.appendChild(link)
     const loadResource = (resourcePath: string) => {
       panes.getOutliner(dom).GotoSubject(resourcePath, true, undefined, true)
     }
@@ -28,7 +38,7 @@ const HomePane: PaneDefinition = {
           webId={session.webId}
           loadResource={loadResource}
         />,
-        container
+        wrapper
       )
     })
 

@@ -47,6 +47,7 @@ if (typeof window !== 'undefined') {
 
 let register = panes.register
 
+register(require('./dashboard/dashboardPane').default)
 register(require('./markdown/index.tsx').Pane)
 register(require('issue-pane'))
 register(require('contacts-pane'))
@@ -133,6 +134,5 @@ register(require('./profile/profilePane').default) // edit your public profile
 register(require('./trustedApplications/trustedApplicationsPane').default) // manage your trusted applications
 // The home pane is a 2016 experiment. Always there.
 register(require('./home/homePane').default)
-register(require('./dashboard/dashboardPane').default)
 
 // ENDS
