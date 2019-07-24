@@ -10,7 +10,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
+    extensions: ['.mjs', '.js', '.ts']
   },
   module: {
     rules: [

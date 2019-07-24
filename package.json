@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npm run clean && npm run build-dist",
     "build-browserified": "npm run build",
-    "build-dist": "webpack --progress --colors",
+    "build-dist": "webpack --progress --colors --mode=production",
     "build-dev": "webpack --mode=development",
     "watch": "npm run clean && webpack --progress --colors --watch --mode=development",
     "clean": "rm -rf dist/",
@@ -37,14 +37,6 @@
     "url": "https://github.com/solid/solid-panes/issues"
   },
   "homepage": "https://github.com/solid/solid-panes",
-  "dependenciesFile": {
-    "@solid/better-simple-slideshow": "^0.1.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-metalab": "^1.0.0",
-    "mime-types": "^2.1.13",
-    "rdflib": "file://../../linkeddata/rdflib.js",
-    "solid-ui": "file://../../solid/solid-ui"
-  },
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
     "@solid/better-simple-slideshow": "^0.1.0",
@@ -59,16 +51,8 @@
     "pane-registry": "^1.0.4",
     "rdflib": "^0.20.1",
     "solid-namespace": "^0.2.0",
-    "solid-ui": "^0.12.2",
+    "solid-ui": "^0.12.5",
     "source-pane": "^1.0.3"
-  },
-  "dependenciesBackup": {
-    "@solid/better-simple-slideshow": "^0.1.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-preset-metalab": "^1.0.0",
-    "mime-types": "^2.1.13",
-    "rdflib": ">=0.17.1",
-    "solid-ui": ">=0.11.5"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",
