@@ -19,8 +19,11 @@ if (nodeMode) {
 export const dashboardPane: PaneDefinition = {
   icon: UI.icons.iconBase + "noun_547570.svg",
   name: "dashboard",
-  label: () => {
-    return "Dashboard"
+  label: (subject) => {
+    if (subject.uri === `${location.origin}/`) {
+      return "Dashboard"
+    }
+    return null
   },
   render: (subject, dom) => {
     const container = dom.createElement("div")
