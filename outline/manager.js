@@ -282,9 +282,11 @@ module.exports = function (doc) {
       throw new Error('Not logged in')
     }
     function renderTab (div, item) {
-      const map = { 'home': 'Your stuff',
+      const map = {
+        'home': 'Your stuff',
         'trustedApplications': 'Web apps you trust',
-        'profile': 'Edit your profile' }
+        'profile': 'Edit your profile'
+      }
       div.textContent = map[item] || item
     }
 
@@ -330,7 +332,7 @@ module.exports = function (doc) {
     menuButton.setAttribute('src', UI.icons.iconBase + 'noun_547570.svg') // Lines (could also use dots or home or hamburger
     menuButton.style = 'padding: 0.2em;'
     menuButton.addEventListener('click', event => {
-      [expanded, expandedControl] = showDashboard(expanded, expandedControl)
+      [expanded, expandedControl] = showDashboard(expanded, expandedControl, tr)
     })
     menuButton.style = buttonStyle
     menuButton.style.maxHeight = iconHeight
@@ -338,20 +340,15 @@ module.exports = function (doc) {
     return globalNav
   }
 
-  function showDashboard (expanded = false, expandedControl) {
-    const container = document.getElementById('outline').querySelector('table tr:last-child').firstChild
+  function showDashboard (expanded, expandedControl, container) {
     if (expanded) {
       expandedControl.parentNode.removeChild(expandedControl)
     } else {
-      if (container.nextSibling) container.parentElement.removeChild(container.nextSibling) // @@ hack - should use pane code
-      expandedControl = container.parentElement.appendChild(globalAppTabs())
+      if (container.nextSibling) container.removeChild(container.nextSibling) // @@ hack - should use pane code
+      expandedControl = container.appendChild(globalAppTabs())
     }
     expanded = !expanded
     return [expanded, expandedControl]
-    menuButton.style = buttonStyle
-    menuButton.style.maxHeight = iconHeight
-    globalNav.appendChild(menuButton)
-    return globalNav
   }
   this.showDashboard = showDashboard
 
@@ -444,10 +441,13 @@ module.exports = function (doc) {
                   dom.getElementById('queryButton').removeAttribute('style')
                 }
                 var second = t.firstChild.nextSibling
-                if (second) t.insertBefore(paneDiv, second)
-                else t.appendChild(paneDiv)
-                paneDiv.pane = pane
-                paneDiv.paneButton = ico
+                var row = dom.createElement('tr')
+                var cell = row.appendChild(dom.createElement('td'))
+                cell.appendChild(paneDiv)
+                if (second) t.insertBefore(row, second)
+                else t.appendChild(row)
+                row.pane = pane
+                row.paneButton = ico
               }
               var state
               state = ico.getAttribute('class')
@@ -521,7 +521,6 @@ module.exports = function (doc) {
           return
         }
         const isHidden = menuButton.style.display === 'none'
-        console.log(isHidden)
         if (session) {
           menuButton.style.display = 'block'
         } else {
@@ -599,12 +598,15 @@ module.exports = function (doc) {
           pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
         }
 
+        var row = dom.createElement('tr')
+        var cell = row.appendChild(dom.createElement('td'))
+        cell.appendChild(paneDiv)
         if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
           dom.getElementById('queryButton').removeAttribute('style')
         }
-        table.appendChild(paneDiv)
-        paneDiv.pane = tr1.firstPane
-        paneDiv.paneButton = tr1.paneButton
+        table.appendChild(row)
+        row.pane = tr1.firstPane
+        row.paneButton = tr1.paneButton
       }
 
       return table

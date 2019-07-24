@@ -48,7 +48,7 @@ function buildPage (container: HTMLElement, webId: NamedNode | null, dom: HTMLDo
 
 function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
   const outliner = panes.getOutliner(dom)
-  outliner.showDashboard(false, container)
+  outliner.showDashboard(false, container, container)
 }
 
 function buildHomePage (container: HTMLElement) {
