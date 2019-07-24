@@ -1,12 +1,12 @@
-import { PaneDefinition, SolidSession } from "../types"
-import solidUi, { SolidUi } from "solid-ui"
-import paneRegistry from "pane-registry"
-import { NamedNode, sym } from "rdflib"
+import { PaneDefinition, SolidSession } from '../types'
+import solidUi, { SolidUi } from 'solid-ui'
+import paneRegistry from 'pane-registry'
+import { NamedNode, sym } from 'rdflib'
 
 let panes: any
 let UI: SolidUi
 
-const nodeMode = (typeof module !== "undefined")
+const nodeMode = (typeof module !== 'undefined')
 
 if (nodeMode) {
   UI = solidUi
@@ -17,20 +17,20 @@ if (nodeMode) {
 }
 
 export const dashboardPane: PaneDefinition = {
-  icon: UI.icons.iconBase + "noun_547570.svg",
-  name: "dashboard",
+  icon: UI.icons.iconBase + 'noun_547570.svg',
+  name: 'dashboard',
   label: (subject) => {
     if (subject.uri === `${location.origin}/`) {
-      return "Dashboard"
+      return 'Dashboard'
     }
     return null
   },
   render: (subject, dom) => {
-    const container = dom.createElement("div")
+    const container = dom.createElement('div')
     const webId = UI.authn.currentUser()
     buildPage(container, webId, dom)
     UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
-      container.innerHTML = ""
+      container.innerHTML = ''
       buildPage(container, session ? sym(session.webId) : null, dom)
     })
 
@@ -55,8 +55,7 @@ function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
 }
 
 function buildHomePage (container: HTMLElement) {
-  container.innerText = "HOMEPAGE"
+  container.innerText = 'HOMEPAGE'
 }
-
 
 export default dashboardPane
