@@ -2,6 +2,7 @@ import { PaneDefinition, SolidSession } from "../types"
 import solidUi, { SolidUi } from "solid-ui"
 import paneRegistry from "pane-registry"
 import { NamedNode, sym } from "rdflib"
+import { generateHomepage } from "./homepage"
 
 let panes: any
 let UI: SolidUi
@@ -55,7 +56,14 @@ function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
 }
 
 function buildHomePage (container: HTMLElement) {
-  container.innerText = "HOMEPAGE"
+  const wrapper = document.createElement('div')
+  container.appendChild(wrapper)
+  const shadow = wrapper.attachShadow({ mode: 'open' })
+  const link = document.createElement('link')
+  link.rel = 'stylesheet'
+  link.href = '/common/css/bootstrap.min.css'
+  shadow.appendChild(link)
+  generateHomepage(UI.store, UI.store.fetcher).then(homepage => shadow.appendChild(homepage))
 }
 
 
