@@ -274,7 +274,7 @@ module.exports = function (doc) {
 /** Render Tabbed set of home app panes
  * @returns {Element} - the div
 */
-  function globalAppTabs () {
+  function globalAppTabs (selectedTab) {
     const div = dom.createElement('div')
     const me = UI.authn.currentUser()
     if (!me) {
@@ -282,9 +282,12 @@ module.exports = function (doc) {
       throw new Error('Not logged in')
     }
     function renderTab (div, item) {
-      const map = { 'home': 'Your stuff',
-        'trustedApplications': 'Web apps you trust',
-        'profile': 'Edit your profile' }
+      const map = {
+        'home': 'Your stuff',
+        'trustedApplications': 'Preferences',
+        'profile': 'Edit your profile'
+      }
+      div.dataset.name = item
       div.textContent = map[item] || item
     }
 
@@ -304,45 +307,24 @@ module.exports = function (doc) {
       renderTab,
       ordered: true,
       orientation: 0,
-      backgroundColor: '#eeeeee'} // black?
+      backgroundColor: '#eeeeee',
+      selectedTab} // black?
     // options.renderTabSettings = renderTabSettings  No tab-specific settings
     div.appendChild(UI.tabs.tabWidget(options))
-    div.appendChild(UI.widgets.cancelButton(dom, event => {
-      div.parentNode.removeChild(div)
-    }))
     return div
   }
-  /** Global Navigation tool
-  **
-  ** This gives the user the ability to find and do stuff sfrom no context
-  */
-  function globalNavigationBox (tr, menuButtonId) {
-    const buttonStyle = 'padding: 0.3em 0.5em; border-radius:0.2em; margin: 0 0.4em; font-size: 100%;' // @@
-    const globalNav = dom.createElement('nav')
-    var expanded = false
-    var expandedControl
-    globalNav.style = 'padding: 0; margin: 0; height: 100%; max-height: 2em;' +
-      'display:flex; justify-content: flex-end; flex-grow: 1; align-items: center;'
-    // globalNav.style.backgroundColor = '#884488' // @@ placeholder
 
-    var menuButton = dom.createElement('img')
-    menuButton.id = menuButtonId
-    menuButton.setAttribute('src', UI.icons.iconBase + 'noun_547570.svg') // Lines (could also use dots or home or hamburger
-    menuButton.style = 'padding: 0.2em;'
-    menuButton.addEventListener('click', event => {
-      if (expanded) {
-        expandedControl.parentNode.removeChild(expandedControl)
-      } else {
-        if (tr.nextSibling) tr.parentElement.removeChild(tr.nextSibling) // @@ hack - should use pane code
-        expandedControl = tr.parentElement.appendChild(globalAppTabs())
-      }
-      expanded = !expanded
-    })
-    menuButton.style = buttonStyle
-    menuButton.style.maxHeight = iconHeight
-    globalNav.appendChild(menuButton)
-    return globalNav
+  function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
+    container.innerHTML = ''
+    // console.log(container)
+    const currentPane = dom.querySelector('#outline .paneShown')
+    if (unselectCurrentPane && currentPane) {
+      // eslint-disable-next-line no-undef
+      // currentPane.dispatchEvent(new Event('click'))
+    }
+    return container.appendChild(globalAppTabs(globalPaneToSelect))
   }
+  this.showDashboard = showDashboard
 
   function expandedHeaderTR (subject, requiredPane, options) {
     function renderPaneIconTray (td) {
@@ -433,10 +415,13 @@ module.exports = function (doc) {
                   dom.getElementById('queryButton').removeAttribute('style')
                 }
                 var second = t.firstChild.nextSibling
-                if (second) t.insertBefore(paneDiv, second)
-                else t.appendChild(paneDiv)
-                paneDiv.pane = pane
-                paneDiv.paneButton = ico
+                var row = dom.createElement('tr')
+                var cell = row.appendChild(dom.createElement('td'))
+                cell.appendChild(paneDiv)
+                if (second) t.insertBefore(row, second)
+                else t.appendChild(row)
+                row.pane = pane
+                row.paneButton = ico
               }
               var state
               state = ico.getAttribute('class')
@@ -500,24 +485,6 @@ module.exports = function (doc) {
     UI.widgets.makeDraggable(strong, subject)
 
     header.appendChild(renderPaneIconTray(td))
-
-    if (options.solo) {
-      const menuButtonId = 'GlobalUserMenuButton'
-      td.appendChild(globalNavigationBox(tr, menuButtonId))
-      UI.authn.solidAuthClient.trackSession(function (session) {
-        const menuButton = document.getElementById(menuButtonId)
-        if (!menuButton) {
-          return
-        }
-        const isHidden = menuButton.style.display === 'none'
-        console.log(isHidden)
-        if (session) {
-          menuButton.style.display = 'block'
-        } else {
-          menuButton.style.display = 'none'
-        }
-      })
-    }
 
       // set DOM methods
     tr.firstChild.tabulatorSelect = function () {
@@ -588,12 +555,15 @@ module.exports = function (doc) {
           pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
         }
 
+        var row = dom.createElement('tr')
+        var cell = row.appendChild(dom.createElement('td'))
+        cell.appendChild(paneDiv)
         if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
           dom.getElementById('queryButton').removeAttribute('style')
         }
-        table.appendChild(paneDiv)
-        paneDiv.pane = tr1.firstPane
-        paneDiv.paneButton = tr1.paneButton
+        table.appendChild(row)
+        row.pane = tr1.firstPane
+        row.paneButton = tr1.paneButton
       }
 
       return table

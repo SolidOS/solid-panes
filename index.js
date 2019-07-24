@@ -47,6 +47,7 @@ if (typeof window !== 'undefined') {
 
 let register = panes.register
 
+register(require('./dashboard/dashboardPane').default)
 register(require('issue-pane'))
 register(require('contacts-pane'))
 
