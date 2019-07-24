@@ -311,9 +311,6 @@ module.exports = function (doc) {
       selectedTab} // black?
     // options.renderTabSettings = renderTabSettings  No tab-specific settings
     div.appendChild(UI.tabs.tabWidget(options))
-    div.appendChild(UI.widgets.cancelButton(dom, event => {
-      div.parentNode.removeChild(div)
-    }))
     return div
   }
 
