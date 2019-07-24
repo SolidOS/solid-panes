@@ -3,7 +3,7 @@ import solidUi, { SolidUi } from "solid-ui"
 import paneRegistry from "pane-registry"
 import { NamedNode, sym } from "rdflib"
 
-let panes
+let panes: any
 let UI: SolidUi
 
 const nodeMode = (typeof module !== "undefined")
@@ -25,34 +25,34 @@ export const dashboardPane: PaneDefinition = {
   render: (subject, dom) => {
     const container = dom.createElement("div")
     const webId = UI.authn.currentUser()
-    buildPage(container, webId)
-
+    buildPage(container, webId, dom)
     UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
-      container.innerHTML = ''
-      buildPage(container, session ? sym(session.webId) : null)
+      container.innerHTML = ""
+      buildPage(container, session ? sym(session.webId) : null, dom)
     })
-    
+
     return container
   }
 }
 
-function buildPage(container: HTMLElement, webId: NamedNode | null) {
+function buildPage (container: HTMLElement, webId: NamedNode | null, dom: HTMLDocument) {
   if (!webId) {
     return buildHomePage(container)
   }
   const webIdDefaultPod = new URL(webId.uri).origin
   if (webIdDefaultPod === location.origin) {
-    return buildDashboard(container)
+    return buildDashboard(container, dom)
   }
   return buildHomePage(container)
 }
 
-function buildDashboard(container: HTMLElement) {
-  container.innerText = 'DASHBOARD'
+function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
+  const outliner = panes.getOutliner(dom)
+  outliner.showDashboard(false, container)
 }
 
-function buildHomePage(container: HTMLElement) {
-  container.innerText = 'HOMEPAGE'
+function buildHomePage (container: HTMLElement) {
+  container.innerText = "HOMEPAGE"
 }
 
 

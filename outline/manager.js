@@ -330,19 +330,30 @@ module.exports = function (doc) {
     menuButton.setAttribute('src', UI.icons.iconBase + 'noun_547570.svg') // Lines (could also use dots or home or hamburger
     menuButton.style = 'padding: 0.2em;'
     menuButton.addEventListener('click', event => {
-      if (expanded) {
-        expandedControl.parentNode.removeChild(expandedControl)
-      } else {
-        if (tr.nextSibling) tr.parentElement.removeChild(tr.nextSibling) // @@ hack - should use pane code
-        expandedControl = tr.parentElement.appendChild(globalAppTabs())
-      }
-      expanded = !expanded
+      [expanded, expandedControl] = showDashboard(expanded, expandedControl)
     })
     menuButton.style = buttonStyle
     menuButton.style.maxHeight = iconHeight
     globalNav.appendChild(menuButton)
     return globalNav
   }
+
+  function showDashboard (expanded = false, expandedControl) {
+    const container = document.getElementById('outline').querySelector('table tr:last-child').firstChild
+    if (expanded) {
+      expandedControl.parentNode.removeChild(expandedControl)
+    } else {
+      if (container.nextSibling) container.parentElement.removeChild(container.nextSibling) // @@ hack - should use pane code
+      expandedControl = container.parentElement.appendChild(globalAppTabs())
+    }
+    expanded = !expanded
+    return [expanded, expandedControl]
+    menuButton.style = buttonStyle
+    menuButton.style.maxHeight = iconHeight
+    globalNav.appendChild(menuButton)
+    return globalNav
+  }
+  this.showDashboard = showDashboard
 
   function expandedHeaderTR (subject, requiredPane, options) {
     function renderPaneIconTray (td) {
