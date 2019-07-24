@@ -3,8 +3,8 @@ import UI from "solid-ui"
 
 const ns = UI.ns
 
-export async function generateHomepage(store: IndexedFormula, fetcher: Fetcher): Promise<HTMLElement> {
-  const pod = location.origin
+export async function generateHomepage(subject: NamedNode, store: IndexedFormula, fetcher: Fetcher): Promise<HTMLElement> {
+  const pod = subject.site().uri
   const ownersProfile = await loadProfile(`${pod}/profile/card#me`, fetcher)
   const name = getName(store, ownersProfile)
 

@@ -284,7 +284,7 @@ module.exports = function (doc) {
     function renderTab (div, item) {
       const map = {
         'home': 'Your stuff',
-        'trustedApplications': 'Web apps you trust',
+        'trustedApplications': 'Preferences',
         'profile': 'Edit your profile'
       }
       div.dataset.name = item
