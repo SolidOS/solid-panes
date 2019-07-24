@@ -274,7 +274,7 @@ module.exports = function (doc) {
 /** Render Tabbed set of home app panes
  * @returns {Element} - the div
 */
-  function globalAppTabs () {
+  function globalAppTabs (selectedTab) {
     const div = dom.createElement('div')
     const me = UI.authn.currentUser()
     if (!me) {
@@ -287,6 +287,7 @@ module.exports = function (doc) {
         'trustedApplications': 'Web apps you trust',
         'profile': 'Edit your profile'
       }
+      div.dataset.name = item
       div.textContent = map[item] || item
     }
 
@@ -306,7 +307,8 @@ module.exports = function (doc) {
       renderTab,
       ordered: true,
       orientation: 0,
-      backgroundColor: '#eeeeee'} // black?
+      backgroundColor: '#eeeeee',
+      selectedTab} // black?
     // options.renderTabSettings = renderTabSettings  No tab-specific settings
     div.appendChild(UI.tabs.tabWidget(options))
     div.appendChild(UI.widgets.cancelButton(dom, event => {
@@ -315,7 +317,7 @@ module.exports = function (doc) {
     return div
   }
 
-  function showDashboard (container, unselectCurrentPane) {
+  function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
     container.innerHTML = ''
     // console.log(container)
     const currentPane = dom.querySelector('#outline .paneShown')
@@ -323,7 +325,7 @@ module.exports = function (doc) {
       // eslint-disable-next-line no-undef
       // currentPane.dispatchEvent(new Event('click'))
     }
-    return container.appendChild(globalAppTabs())
+    return container.appendChild(globalAppTabs(globalPaneToSelect))
   }
   this.showDashboard = showDashboard
 
