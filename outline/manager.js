@@ -284,6 +284,7 @@ module.exports = function (doc) {
     function renderTab (div, item) {
       const map = {
         'home': 'Your stuff',
+        'folder': 'Your files',
         'trustedApplications': 'Web apps you trust',
         'profile': 'Edit your profile'
       }
@@ -296,10 +297,12 @@ module.exports = function (doc) {
       containerDiv.innerHTML = ''
       var table = containerDiv.appendChild(dom.createElement('table'))
       const me = UI.authn.currentUser()
-      thisOutline.GotoSubject(me, true, pane, false, undefined, table)
+      // @@ Using document.location.origin here is a hack, inserted there because Tim wants this before his presentation Thursday:
+      const subject = (item === 'folder') ? $rdf.sym(document.location.origin) : me
+      thisOutline.GotoSubject(subject, true, pane, false, undefined, table)
     }
 
-    const items = ['home', 'trustedApplications', 'profile']
+    const items = ['home', 'folder', 'trustedApplications', 'profile']
     const options = {dom,
       subject: me,
       items,
