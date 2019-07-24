@@ -7,7 +7,7 @@ import { generateHomepage } from "./homepage"
 let panes: any
 let UI: SolidUi
 
-const nodeMode = (typeof module !== "undefined")
+const nodeMode = (typeof module !== 'undefined')
 
 if (nodeMode) {
   UI = solidUi
@@ -18,8 +18,8 @@ if (nodeMode) {
 }
 
 export const dashboardPane: PaneDefinition = {
-  icon: UI.icons.iconBase + "noun_547570.svg",
-  name: "dashboard",
+  icon: UI.icons.iconBase + 'noun_547570.svg',
+  name: 'dashboard',
   label: (subject) => {
     if (subject.uri === subject.site().uri) {
       return "Dashboard"
@@ -27,7 +27,7 @@ export const dashboardPane: PaneDefinition = {
     return null
   },
   render: (subject, dom) => {
-    const container = dom.createElement("div")
+    const container = dom.createElement('div')
     const webId = UI.authn.currentUser()
     buildPage(container, webId, dom, subject)
     UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
@@ -64,6 +64,5 @@ function buildHomePage (container: HTMLElement, subject: NamedNode) {
   shadow.appendChild(link)
   generateHomepage(subject, UI.store, UI.store.fetcher).then(homepage => shadow.appendChild(homepage))
 }
-
 
 export default dashboardPane

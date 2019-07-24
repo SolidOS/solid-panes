@@ -66,12 +66,16 @@ export interface SolidSession {
 }
 
 interface SolidAuthorization {
+  // eslint-disable-next-line camelcase
   access_token: string;
+  // eslint-disable-next-line camelcase
   client_id: string;
+  // eslint-disable-next-line camelcase
   id_token: string;
 }
 
 interface SolidClaim {
+  // eslint-disable-next-line camelcase
   at_hash: string;
   aud: string;
   azp: string;
