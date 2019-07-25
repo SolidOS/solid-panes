@@ -300,6 +300,20 @@ module.exports = function (doc) {
       // @@ Using document.location.origin here is a hack, inserted there because Tim wants this before his presentation Thursday:
       const subject = (item === 'folder') ? $rdf.sym(document.location.origin) : me
       thisOutline.GotoSubject(subject, true, pane, false, undefined, table)
+
+      if (item === 'trustedApplications') {
+        // The trustedApplications Pane is labelled "Preferences", so that seems like
+        // a good place for a "Delete account" link
+        const wrapper = document.createElement('p')
+        wrapper.style.padding = '0.7em'
+        const link = document.createElement('a')
+        // @@ This is a hack to get it ready for Tim's presentation tonight,
+        // since it assumes account deletion is always through the below URL:
+        link.setAttribute('href', subject.site().uri + 'account/delete')
+        link.textContent = 'Delete account'
+        wrapper.appendChild(link)
+        table.appendChild(wrapper)
+      }
     }
 
     const items = ['home', 'folder', 'trustedApplications', 'profile']
