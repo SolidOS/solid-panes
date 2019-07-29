@@ -275,25 +275,46 @@ module.exports = function (doc) {
  * @returns {Element} - the div
 */
   function globalAppTabs (selectedTab) {
+    console.log('globalAppTabs @@')
     const div = dom.createElement('div')
     const me = UI.authn.currentUser()
+    var items = [ {paneName: 'folder', label: 'Your files', subject: me.site()},
+                   {paneName: 'home', label: 'Your stuff'},
+                   {paneName: 'trustedApplications', label: 'Preferences'},
+                   {paneName: 'profile', label: 'Edit your profile'},
+                   {paneName: 'trustedApplications', label: 'Preferences'}
+    ]
+
     if (!me) {
       alert('Must be logged in for this')
       throw new Error('Not logged in')
     }
-    function renderTab (div, item) {
-      const map = {
-        'home': 'Your stuff',
-        'folder': 'Your files',
-        'trustedApplications': 'Preferences',
-        'profile': 'Edit your profile'
+    var context = {me, div, dom}
+    try {
+      context = UI.authn.findAppInstances(context, ns.vcard('AddressBook'))
+      if (context.instances) {
+        for (var book of context.instances) {
+          items.push({paneName: 'contact', label: 'Contacts', subject: book})
+          console.log(`   Adding address book ${book} to dashboard`)
+        }
       }
+    } catch (err) {
+      console.error('oops in globalAppTabs AddressBook')
+    }
+
+    const storages = kb.each(me, ns.space('storage'), null, me.doc())
+    for (var pod of storages) {
+      var label = storages.length > 1 ? pod.uri.split('//')[1] : 'Your files'
+      items.push({paneName: 'folder', label: label, subject: pod})
+    }
+
+    function renderTab (div, item) {
       div.dataset.name = item
-      div.textContent = map[item] || item
+      div.textContent = item.label
     }
 
     function renderMain (containerDiv, item) { // Items are pane names
-      const pane = panes.byName(item) // 20190701
+      const pane = panes.byName(item.panName) // 20190701
       containerDiv.innerHTML = ''
       var table = containerDiv.appendChild(dom.createElement('table'))
       const me = UI.authn.currentUser()
@@ -302,7 +323,6 @@ module.exports = function (doc) {
       thisOutline.GotoSubject(subject, true, pane, false, undefined, table)
     }
 
-    const items = ['home', 'folder', 'trustedApplications', 'profile']
     const options = {dom,
       subject: me,
       items,
