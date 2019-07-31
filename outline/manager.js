@@ -13,7 +13,7 @@ var queryByExample = require('./queryByExample.js')
 /* global alert XPathResult sourceWidget */
 // XPathResult?
 
-const iconHeight = '24px'
+// const iconHeight = '24px'
 
 module.exports = function (doc) {
   const dom = doc
@@ -272,17 +272,16 @@ module.exports = function (doc) {
   } // outlinePredicateTD
 
 /** Render Tabbed set of home app panes
- * @returns {Element} - the div
+ * @returns Promise<{Element}> - the div
 */
-  function globalAppTabs (selectedTab) {
+  async function globalAppTabs (selectedTab) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
     const me = UI.authn.currentUser()
-    var items = [ {paneName: 'folder', label: 'Your files', subject: me.site()},
-                   {paneName: 'home', label: 'Your stuff'},
-                   {paneName: 'trustedApplications', label: 'Preferences'},
-                   {paneName: 'profile', label: 'Edit your profile'},
-                   {paneName: 'trustedApplications', label: 'Preferences'}
+    var items = [ // {paneName: 'folder', label: 'Your files', subject: me.site()}, // replaced with storages
+                   {paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg'},
+                   {paneName: 'trustedApplications', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'},
+                   {paneName: 'profile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg'}
     ]
 
     if (!me) {
@@ -291,10 +290,10 @@ module.exports = function (doc) {
     }
     var context = {me, div, dom}
     try {
-      context = UI.authn.findAppInstances(context, ns.vcard('AddressBook'))
+      context = await UI.authn.findAppInstances(context, ns.vcard('AddressBook'))
       if (context.instances) {
         for (var book of context.instances) {
-          items.push({paneName: 'contact', label: 'Contacts', subject: book})
+          items.push({paneName: 'contact', label: 'Contacts', subject: book, icon: UI.icons.iconBase + 'noun_15695.svg'})
           console.log(`   Adding address book ${book} to dashboard`)
         }
       }
@@ -304,8 +303,8 @@ module.exports = function (doc) {
 
     const storages = kb.each(me, ns.space('storage'), null, me.doc())
     for (var pod of storages) {
-      var label = storages.length > 1 ? pod.uri.split('//')[1] : 'Your files'
-      items.push({paneName: 'folder', label: label, subject: pod})
+      var label = storages.length > 1 ? pod.uri.split('//')[1].slice(0,-1) : 'Your storage'
+      items.push({paneName: 'folder', label: label, subject: pod, icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'})
     }
 
     function renderTab (div, item) {
@@ -314,13 +313,13 @@ module.exports = function (doc) {
     }
 
     function renderMain (containerDiv, item) { // Items are pane names
-      const pane = panes.byName(item.panName) // 20190701
+      const pane = panes.byName(item.paneName) // 20190701
       containerDiv.innerHTML = ''
       var table = containerDiv.appendChild(dom.createElement('table'))
       const me = UI.authn.currentUser()
       // @@ Using document.location.origin here is a hack, inserted there because Tim wants this before his presentation Thursday:
       const subject = (item === 'folder') ? $rdf.sym(document.location.origin) : me
-      thisOutline.GotoSubject(subject, true, pane, false, undefined, table)
+      thisOutline.GotoSubject(item.subject || me, true, pane, false, undefined, table)
     }
 
     const options = {dom,
@@ -337,15 +336,16 @@ module.exports = function (doc) {
     return div
   }
 
-  function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
+  async function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
     container.innerHTML = ''
     // console.log(container)
     const currentPane = dom.querySelector('#outline .paneShown')
     if (unselectCurrentPane && currentPane) {
       // eslint-disable-next-line no-undef
-      // currentPane.dispatchEvent(new Event('click'))
+      // currentPane.dispatchEvent(new Event('clglobalAppTabsick'))
     }
-    return container.appendChild(globalAppTabs(globalPaneToSelect))
+    let ele = await globalAppTabs(globalPaneToSelect)
+    return container.appendChild(ele)
   }
   this.showDashboard = showDashboard
 

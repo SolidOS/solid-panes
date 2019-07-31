@@ -1,13 +1,13 @@
 {
   "name": "solid-panes",
-  "version": "1.3.4-1",
+  "version": "1.3.4-2",
   "description": "Solid-compatible Panes: applets for the mashlib and databrowser",
-  "main": "./dist/main.js",
+  "main": "./index.js",
   "scripts": {
     "build": "npm run clean && npm run build-dist",
     "build-browserified": "npm run build",
     "build-dist": "webpack --progress --colors --mode=production",
-    "build-dev": "webpack --mode=development",
+    "build-dev": "webpack --progress --colors --mode=development",
     "watch": "npm run clean && webpack --progress --colors --watch --mode=development",
     "clean": "rm -rf dist/",
     "lint": "eslint \"**/*.ts\"",
