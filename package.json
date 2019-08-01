@@ -51,8 +51,11 @@
     "pane-registry": "^1.0.4",
     "rdflib": "^0.20.1",
     "solid-namespace": "^0.2.0",
-    "solid-ui": "^0.12.6",
-    "source-pane": "^1.0.3"
+    "solid-ui": "^0.12.7",
+    "source-pane": "^1.0.3",
+    "ts-lint": "^4.5.1",
+    "tslint": "^5.18.0",
+    "tslint-config-standard": "^8.0.1"
   },
   "devDependencies": {
     "@babel/cli": "^7.4.4",

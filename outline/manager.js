@@ -281,7 +281,7 @@ module.exports = function (doc) {
     var items = [ // {paneName: 'folder', label: 'Your files', subject: me.site()}, // replaced with storages
                    {paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg'},
                    {paneName: 'trustedApplications', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'},
-                   {paneName: 'profile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg'}
+                   {paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg'}
     ]
 
     if (!me) {
