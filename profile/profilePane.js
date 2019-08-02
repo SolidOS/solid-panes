@@ -101,6 +101,8 @@ var thisPane = {
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
+                            if (!subject)
+                                throw new Error('subject missing');
                             profile = subject.doc();
                             otherProfiles = kb.each(subject, ns.rdfs('seeAlso'), null, profile);
                             if (!(otherProfiles.length > 0)) return [3 /*break*/, 4];

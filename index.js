@@ -48,8 +48,10 @@ if (typeof window !== 'undefined') {
 let register = panes.register
 
 register(require('./profile/profilePane').default) // View someone's public profile - dominates all other panes.
+register(require('./profile/editProfilePane').default) // Edit my profile. App. 201900802
 
 register(require('./dashboard/dashboardPane').default)
+register(require('./dashboard/basicPreferences').default) // 20190702
 register(require('issue-pane'))
 register(require('contacts-pane'))
 
