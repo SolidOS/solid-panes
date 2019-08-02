@@ -6,6 +6,9 @@ import { generateHomepage } from "./homepage"
 
 let panes: any
 let UI: SolidUi
+const kb = UI.store
+const $rdf = UI.rdf
+const ns = UI.ns
 
 const nodeMode = (typeof module !== 'undefined')
 
@@ -19,7 +22,7 @@ if (nodeMode) {
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
-  name: 'preferences',
+  name: 'basicPreferences',
   label: (subject) => {
     if (subject.uri === subject.site().uri) {
       return "Prefs"
@@ -29,8 +32,17 @@ export const basicPreferencesPane: PaneDefinition = {
 
   // Render the pane
   // The subject should be the logged in user.
-  render: (subject, dom) => {
+  render: (subject: NamedNode, dom: HTMLDocument, paneOptions: any) => {
+    function complainIfBad (ok: Boolean, mess: any) {
+      if (ok) return
+      container.appendChild(UI.widgets.errorMessageBlock(dom, mess, '#fee'))
+    }
+
     const container = dom.createElement('div')
+
+    const formArea = container.appendChild(dom.createElement('div'))
+    const statusArea = container.appendChild(dom.createElement('div'))
+
 
     /* Preferences
     **
@@ -51,8 +63,8 @@ export const basicPreferencesPane: PaneDefinition = {
   :this
     <http://purl.org/dc/elements/1.1/title> "Basic preferences" ;
     a ui:Form ;
-    ui:part :powerUser, :developerUser, :newestFirst, :inlineImageHeightEms;
-    ui:parts ( :powerUser :developerUser :newestFirst :inlineImageHeightEms ).
+    ui:part :powerUser, :developerUser;
+    ui:parts ( :powerUser :developerUser  ).
 
 :powerUser a ui:BooleanField; ui:property solid:powerUser;
   ui:label "Color user input by user".
@@ -70,10 +82,13 @@ export const basicPreferencesPane: PaneDefinition = {
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
       $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle') // Load form directly
     }
-    let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(st => st.object)
-
-    var context = {noun: 'chat room', me: me, statusArea: statusArea, div: menuArea, dom, kb}
-    container.appendChild(UI.preferences.renderPreferencesForm(chatChannel, mainClass, preferencesForm, context))
+    // todo make Statement type for fn nelow
+    let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st: any) {return st.object})
+    var me = UI.authn.currentUser()
+    // var context = {noun: 'chat room', me: me, statusArea: statusArea, div: formArea, dom, kb}
+    // container.appendChild(UI.preferences.renderPreferencesForm(me, mainClass, preferencesForm, context))
+    UI.widgets.appendForm(dom, formArea, {}, me, preferencesForm, me.doc(), complainIfBad)
+    return container
   }
 }
 // ends

@@ -13,7 +13,7 @@
 // import UI from 'solid-ui'
 // import solidUi, { SolidUi } from 'solid-ui'
 import { NamedNode } from 'rdflib'
-import panes from 'pane-registry'
+// import panes from 'pane-registry'
 
 import { PaneDefinition } from '../types'
 import { getLabel } from './profilePaneUtils'
@@ -62,7 +62,8 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       return d
     }
 
-    async function doRender(container, subject, dom) {
+    async function doRender(container: HTMLElement, subject: NamedNode | null, dom: HTMLDocument) {
+      if (!subject) throw new Error('subject missing')
       const profile = subject.doc()
       let otherProfiles = kb.each(subject, ns.rdfs('seeAlso'), null, profile)
       if (otherProfiles.length > 0) {

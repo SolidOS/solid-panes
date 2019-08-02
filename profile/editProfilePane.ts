@@ -94,7 +94,7 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
     } // renderProfileForm
 
     var div = dom.createElement('div')
-    var editableProfile
+    var editableProfile: NamedNode | null
     div.setAttribute('style', 'border: 0.3em solid ' + highlightColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
 
     var table = div.appendChild(dom.createElement('table'))

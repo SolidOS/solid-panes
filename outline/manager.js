@@ -280,7 +280,8 @@ module.exports = function (doc) {
     const me = UI.authn.currentUser()
     var items = [ // {paneName: 'folder', label: 'Your files', subject: me.site()}, // replaced with storages
                    {paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg'},
-                   {paneName: 'trustedApplications', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'},
+                   {paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'},
+                   {paneName: 'trustedApplications', label: 'Trusted Aps', icon: UI.icons.iconBase + 'noun_15177.svg.svg'},
                    {paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg'}
     ]
 
@@ -303,7 +304,7 @@ module.exports = function (doc) {
 
     const storages = kb.each(me, ns.space('storage'), null, me.doc())
     for (var pod of storages) {
-      var label = storages.length > 1 ? pod.uri.split('//')[1].slice(0,-1) : 'Your storage'
+      var label = storages.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
       items.push({paneName: 'folder', label: label, subject: pod, icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'})
     }
 
@@ -317,8 +318,6 @@ module.exports = function (doc) {
       containerDiv.innerHTML = ''
       var table = containerDiv.appendChild(dom.createElement('table'))
       const me = UI.authn.currentUser()
-      // @@ Using document.location.origin here is a hack, inserted there because Tim wants this before his presentation Thursday:
-      const subject = (item === 'folder') ? $rdf.sym(document.location.origin) : me
       thisOutline.GotoSubject(item.subject || me, true, pane, false, undefined, table)
     }
 
