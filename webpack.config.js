@@ -3,6 +3,7 @@ const webpack = require('webpack');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 module.exports = {
+  mode: 'production',
   entry: './index.js',
   output: {
     filename: 'main.js',
@@ -32,5 +33,6 @@ module.exports = {
   ],
   node: {
     fs: 'empty'
-  }
+  },
+  devtool: 'source-map'
 }
