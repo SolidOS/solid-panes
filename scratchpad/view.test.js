@@ -38,9 +38,9 @@ var _this = this;
 exports.__esModule = true;
 /* eslint-env jest */
 var $rdf = require("rdflib");
-var solid_namespace_1 = require("solid-namespace");
+var vocab = require("solid-namespace");
 var view_1 = require("./view");
-var ns = solid_namespace_1["default"]($rdf);
+var ns = vocab($rdf);
 function addMockPad(mockStore) {
     var mockPad = $rdf.sym('https://mock-pad');
     var mockFirstLine = $rdf.sym('https://arbitrary-line-1');

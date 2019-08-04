@@ -38,8 +38,8 @@ var _this = this;
 exports.__esModule = true;
 require("@babel/polyfill");
 var $rdf = require("rdflib");
-var solid_namespace_1 = require("solid-namespace");
-var ns = solid_namespace_1["default"]($rdf);
+var vocab = require("solid-namespace");
+var ns = vocab($rdf);
 /* istanbul ignore next [Side effects are contained to initialise(), so ignore just that for test coverage] */
 exports.initialise = function (store, user) { return __awaiter(_this, void 0, void 0, function () {
     var creationDate, _a, pad, initialisationAdditions, _b, _setContentDeletions, setContentAdditions, statementsToAdd;

@@ -10,7 +10,7 @@
 
 import { PaneDefinition } from '../types'
 import * as UI from 'solid-ui'
-import panes from 'pane-registry'
+import * as panes from 'pane-registry'
 
 const HomePane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830

@@ -2,9 +2,9 @@
 exports.__esModule = true;
 /* eslint-env jest */
 var $rdf = require("rdflib");
-var solid_namespace_1 = require("solid-namespace");
+var namespaces = require("solid-namespace");
 var profilePaneUtils_1 = require("./profilePaneUtils");
-var ns = solid_namespace_1["default"]($rdf);
+var ns = namespaces($rdf);
 describe('getLabel', function () {
     it('should return "Edit your profile" by default', function () {
         var mockStore = $rdf.graph();

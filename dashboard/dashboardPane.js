@@ -36,21 +36,11 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 exports.__esModule = true;
-var solid_ui_1 = require("solid-ui");
-var pane_registry_1 = require("pane-registry");
 var rdflib_1 = require("rdflib");
 var homepage_1 = require("./homepage");
 var panes;
 var UI;
 var nodeMode = (typeof module !== 'undefined');
-if (nodeMode) {
-    UI = solid_ui_1["default"];
-    panes = pane_registry_1["default"];
-}
-else { // Add to existing mashlib
-    panes = window.panes;
-    UI = panes.UI;
-}
 exports.dashboardPane = {
     icon: UI.icons.iconBase + 'noun_547570.svg',
     name: 'dashboard',

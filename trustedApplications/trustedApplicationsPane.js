@@ -19,21 +19,9 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 exports.__esModule = true;
-var solid_ui_1 = require("solid-ui");
+var UI = require("solid-ui");
 var $rdf = require("rdflib");
-var pane_registry_1 = require("pane-registry");
 var trustedApplicationsUtils_1 = require("./trustedApplicationsUtils");
-var nodeMode = (typeof module !== 'undefined');
-var panes;
-var UI;
-if (nodeMode) {
-    UI = solid_ui_1["default"];
-    panes = pane_registry_1["default"];
-}
-else { // Add to existing mashlib
-    panes = window.panes;
-    UI = panes.UI;
-}
 var kb = UI.store;
 var ns = UI.ns;
 var thisColor = '#418d99';

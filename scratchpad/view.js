@@ -35,10 +35,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-var solid_namespace_1 = require("solid-namespace");
+var vocab = require("solid-namespace");
 var $rdf = require("rdflib");
 var data_1 = require("./data");
-var ns = solid_namespace_1["default"]($rdf);
+var ns = vocab($rdf);
 function view(_a) {
     var container = _a.container, subject = _a.subject, store = _a.store, visitNode = _a.visitNode, user = _a.user;
     toViewMode();

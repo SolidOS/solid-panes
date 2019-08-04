@@ -10,7 +10,7 @@
 */
 exports.__esModule = true;
 var UI = require("solid-ui");
-var pane_registry_1 = require("pane-registry");
+var panes = require("pane-registry");
 var HomePane = {
     icon: UI.icons.iconBase + 'noun_547570.svg',
     global: true,
@@ -37,7 +37,7 @@ var HomePane = {
             div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere';
             var creationDiv = div.appendChild(dom.createElement('div'));
             var creationContext = { div: creationDiv, dom: dom, statusArea: div, me: me };
-            UI.create.newThingUI(creationContext, pane_registry_1["default"]); // newUI Have to pass panes down
+            UI.create.newThingUI(creationContext, panes); // newUI Have to pass panes down
             div.appendChild(dom.createElement('h4')).textContent = 'Private things';
             UI.authn.registrationList(context, { private: true }).then(function (context) {
                 div.appendChild(dom.createElement('h4')).textContent = 'Public things';

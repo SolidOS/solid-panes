@@ -1,6 +1,6 @@
 import { PaneDefinition, SolidSession } from "../types"
-import solidUi, { SolidUi } from "solid-ui"
-import paneRegistry from "pane-registry"
+import * as UI from "solid-ui"
+import * as paneRegistry from "pane-registry"
 import { NamedNode, sym } from "rdflib"
 import { generateHomepage } from "./homepage"
 
@@ -8,14 +8,6 @@ let panes: any
 let UI: SolidUi
 
 const nodeMode = (typeof module !== 'undefined')
-
-if (nodeMode) {
-  UI = solidUi
-  panes = paneRegistry
-} else { // Add to existing mashlib
-  panes = (window as any).panes
-  UI = panes.UI
-}
 
 export const dashboardPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg',

@@ -1,7 +1,7 @@
 /* eslint-env jest */
 import * as $rdf from 'rdflib'
 import { getInitialisationStatements, getSetContentsStatements, getContents, isPad, getTitle, getLatestAuthor } from './data'
-import vocab from 'solid-namespace'
+import * as vocab from 'solid-namespace'
 
 const ns = vocab($rdf)
 

@@ -39,8 +39,8 @@ exports.__esModule = true;
 /* eslint-env jest */
 var $rdf = require("rdflib");
 var data_1 = require("./data");
-var solid_namespace_1 = require("solid-namespace");
-var ns = solid_namespace_1["default"]($rdf);
+var vocab = require("solid-namespace");
+var ns = vocab($rdf);
 describe('getInitialisationStatements()', function () {
     it('should properly initialise a new notepad', function () { return __awaiter(_this, void 0, void 0, function () {
         var mockStore, _a, _pad, additions;

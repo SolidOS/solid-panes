@@ -1,6 +1,6 @@
 /* eslint-env jest */
 import * as $rdf from 'rdflib'
-import vocab from 'solid-namespace'
+import * as vocab from 'solid-namespace'
 import { view } from './view'
 
 const ns = vocab($rdf)

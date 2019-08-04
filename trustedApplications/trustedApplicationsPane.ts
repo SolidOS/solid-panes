@@ -7,28 +7,15 @@
 ** or standalone script adding onto existing mashlib.
 */
 
-import solidUi, { SolidUi } from 'solid-ui'
+import * as UI from 'solid-ui'
 import { NamedNode, IndexedFormula } from 'rdflib'
 import * as $rdf from 'rdflib'
 
 import { Namespaces } from 'solid-namespace'
-import paneRegistry from 'pane-registry'
+import * as paneRegistry from 'pane-registry'
 
 import { getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
 import { PaneDefinition } from '../types'
-
-const nodeMode = (typeof module !== 'undefined')
-
-let panes
-let UI: SolidUi
-
-if (nodeMode) {
-  UI = solidUi
-  panes = paneRegistry
-} else { // Add to existing mashlib
-  panes = (window as any).panes
-  UI = panes.UI
-}
 
 const kb: IndexedFormula = UI.store
 const ns: Namespaces = UI.ns

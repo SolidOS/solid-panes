@@ -1,7 +1,7 @@
 import '@babel/polyfill'
 import { IndexedFormula, NamedNode, Statement, Node } from 'rdflib'
 import * as $rdf from 'rdflib'
-import vocab from 'solid-namespace'
+import * as vocab from 'solid-namespace'
 import { InitialisationFunction } from './types'
 
 const ns = vocab($rdf)
