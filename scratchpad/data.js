@@ -37,9 +37,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var _this = this;
 exports.__esModule = true;
 require("@babel/polyfill");
-var rdflib_1 = require("rdflib");
+var $rdf = require("rdflib");
 var solid_namespace_1 = require("solid-namespace");
-var ns = solid_namespace_1["default"](rdflib_1["default"]);
+var ns = solid_namespace_1["default"]($rdf);
 /* istanbul ignore next [Side effects are contained to initialise(), so ignore just that for test coverage] */
 exports.initialise = function (store, user) { return __awaiter(_this, void 0, void 0, function () {
     var creationDate, _a, pad, initialisationAdditions, _b, _setContentDeletions, setContentAdditions, statementsToAdd;
@@ -69,12 +69,12 @@ function getInitialisationStatements(creationDate, store, user) {
     var padName = creationDate.getTime();
     var pad = store.sym(storeNamespaces.pub + padName + '/index.ttl#this');
     var statementsToAdd = [
-        rdflib_1["default"].st(pad, ns.rdf('type'), ns.pad('Notepad'), pad.doc()),
-        rdflib_1["default"].st(pad, ns.dc('title'), "Scratchpad (" + creationDate.toLocaleDateString() + ")", pad.doc()),
-        rdflib_1["default"].st(pad, ns.dc('created'), creationDate, pad.doc())
+        $rdf.st(pad, ns.rdf('type'), ns.pad('Notepad'), pad.doc()),
+        $rdf.st(pad, ns.dc('title'), "Scratchpad (" + creationDate.toLocaleDateString() + ")", pad.doc()),
+        $rdf.st(pad, ns.dc('created'), creationDate, pad.doc())
     ];
     if (user) {
-        statementsToAdd.push(rdflib_1["default"].st(pad, ns.dc('author'), user, pad.doc()));
+        statementsToAdd.push($rdf.st(pad, ns.dc('author'), user, pad.doc()));
     }
     return [pad, statementsToAdd];
 }
@@ -85,14 +85,14 @@ function getSetContentsStatements(contents, creationDate, pad, store, user) {
     var statementsToAdd = lines.reduce(function (statementsToAdd, lineContents, lineNr) {
         var line = store.sym(pad.uri + ("_line" + lineNr));
         var prevLine = (lineNr === 0) ? pad : statementsToAdd[statementsToAdd.length - 1].subject;
-        statementsToAdd.push(rdflib_1["default"].st(prevLine, ns.pad('next'), line, pad.doc()), rdflib_1["default"].st(line, ns.sioc('content'), lineContents, pad.doc()), rdflib_1["default"].st(line, ns.dc('created'), creationDate, pad.doc()));
+        statementsToAdd.push($rdf.st(prevLine, ns.pad('next'), line, pad.doc()), $rdf.st(line, ns.sioc('content'), lineContents, pad.doc()), $rdf.st(line, ns.dc('created'), creationDate, pad.doc()));
         if (user) {
-            statementsToAdd.push(rdflib_1["default"].st(line, ns.dc('author'), user, pad.doc()));
+            statementsToAdd.push($rdf.st(line, ns.dc('author'), user, pad.doc()));
         }
         return statementsToAdd;
     }, []);
     var lastLine = statementsToAdd[statementsToAdd.length - 1].subject;
-    statementsToAdd.push(rdflib_1["default"].st(lastLine, ns.pad('next'), pad, pad.doc()));
+    statementsToAdd.push($rdf.st(lastLine, ns.pad('next'), pad, pad.doc()));
     var oldLines = store.statementsMatching(null, ns.pad('next'), null, pad.doc(), false)
         .map(function (statement) { return statement.object; })
         .filter(function (line) { return line.value !== pad.value; });

@@ -1,5 +1,5 @@
 import vocab from 'solid-namespace'
-import $rdf from 'rdflib'
+import * as $rdf from 'rdflib'
 import { getContents, getSetContentsStatements, getLatestAuthor } from './data'
 import { ViewParams } from '../types'
 

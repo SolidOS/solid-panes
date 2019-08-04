@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import $rdf from 'rdflib'
+import * as $rdf from 'rdflib'
 import { getInitialisationStatements, getSetContentsStatements, getContents, isPad, getTitle, getLatestAuthor } from './data'
 import vocab from 'solid-namespace'
 

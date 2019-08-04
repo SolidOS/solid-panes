@@ -1,4 +1,5 @@
-import $rdf, { NamedNode, IndexedFormula, Statement } from 'rdflib'
+import { NamedNode, IndexedFormula, Statement } from 'rdflib'
+import * as $rdf from 'rdflib'
 import { Namespaces } from 'solid-namespace'
 
 export function getStatementsToDelete (

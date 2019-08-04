@@ -37,17 +37,17 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 var _this = this;
 exports.__esModule = true;
 /* eslint-env jest */
-var rdflib_1 = require("rdflib");
+var $rdf = require("rdflib");
 var solid_namespace_1 = require("solid-namespace");
 var view_1 = require("./view");
-var ns = solid_namespace_1["default"](rdflib_1["default"]);
+var ns = solid_namespace_1["default"]($rdf);
 function addMockPad(mockStore) {
-    var mockPad = rdflib_1["default"].sym('https://mock-pad');
-    var mockFirstLine = rdflib_1["default"].sym('https://arbitrary-line-1');
+    var mockPad = $rdf.sym('https://mock-pad');
+    var mockFirstLine = $rdf.sym('https://arbitrary-line-1');
     mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc());
     mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc());
     mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc());
-    var mockSecondLine = rdflib_1["default"].sym('https://arbitrary-line-2');
+    var mockSecondLine = $rdf.sym('https://arbitrary-line-2');
     mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc());
     mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc());
     mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc());
@@ -58,7 +58,7 @@ describe('View mode', function () {
     it('should not show an edit button when the user is not logged in', function () { return __awaiter(_this, void 0, void 0, function () {
         var mockStore, mockPad, container, button;
         return __generator(this, function (_a) {
-            mockStore = rdflib_1["default"].graph();
+            mockStore = $rdf.graph();
             mockPad = addMockPad(mockStore);
             container = document.createElement('div');
             view_1.view({
@@ -75,9 +75,9 @@ describe('View mode', function () {
     it('should show an edit button when the user is logged in', function () { return __awaiter(_this, void 0, void 0, function () {
         var mockStore, mockPad, mockUser, container, button;
         return __generator(this, function (_a) {
-            mockStore = rdflib_1["default"].graph();
+            mockStore = $rdf.graph();
             mockPad = addMockPad(mockStore);
-            mockUser = rdflib_1["default"].sym('https://mock-user');
+            mockUser = $rdf.sym('https://mock-user');
             container = document.createElement('div');
             view_1.view({
                 container: container,
@@ -95,7 +95,7 @@ describe('View mode', function () {
     it('should properly render the pad\'s contents', function () { return __awaiter(_this, void 0, void 0, function () {
         var mockStore, mockPad, container;
         return __generator(this, function (_a) {
-            mockStore = rdflib_1["default"].graph();
+            mockStore = $rdf.graph();
             mockPad = addMockPad(mockStore);
             container = document.createElement('div');
             view_1.view({
@@ -113,9 +113,9 @@ describe('Edit mode', function () {
     it('should switch to edit mode when clicking the edit button', function () { return __awaiter(_this, void 0, void 0, function () {
         var mockStore, mockPad, mockUser, container, button, textarea;
         return __generator(this, function (_a) {
-            mockStore = rdflib_1["default"].graph();
+            mockStore = $rdf.graph();
             mockPad = addMockPad(mockStore);
-            mockUser = rdflib_1["default"].sym('https://mock-user');
+            mockUser = $rdf.sym('https://mock-user');
             container = document.createElement('div');
             view_1.view({
                 container: container,

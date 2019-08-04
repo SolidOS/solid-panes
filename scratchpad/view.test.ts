@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import $rdf from 'rdflib'
+import * as $rdf from 'rdflib'
 import vocab from 'solid-namespace'
 import { view } from './view'
 

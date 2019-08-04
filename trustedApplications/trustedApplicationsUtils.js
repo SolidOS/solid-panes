@@ -1,6 +1,6 @@
 "use strict";
 exports.__esModule = true;
-var rdflib_1 = require("rdflib");
+var $rdf = require("rdflib");
 function getStatementsToDelete(origin, person, kb, ns) {
     // `as any` is used because the rdflib typings incorrectly require a Node to be passed,
     // even though null is also valid:
@@ -14,12 +14,12 @@ function getStatementsToDelete(origin, person, kb, ns) {
 }
 exports.getStatementsToDelete = getStatementsToDelete;
 function getStatementsToAdd(origin, nodeName, modes, person, ns) {
-    var application = new rdflib_1["default"].BlankNode("bn_" + nodeName);
+    var application = new $rdf.BlankNode("bn_" + nodeName);
     return [
-        rdflib_1["default"].st(person, ns.acl('trustedApp'), application, person.doc()),
-        rdflib_1["default"].st(application, ns.acl('origin'), origin, person.doc())
+        $rdf.st(person, ns.acl('trustedApp'), application, person.doc()),
+        $rdf.st(application, ns.acl('origin'), origin, person.doc())
     ].concat(modes
-        .map(function (mode) { return rdflib_1["default"].sym(mode); })
-        .map(function (mode) { return rdflib_1["default"].st(application, ns.acl('mode'), mode, person.doc()); }));
+        .map(function (mode) { return $rdf.sym(mode); })
+        .map(function (mode) { return $rdf.st(application, ns.acl('mode'), mode, person.doc()); }));
 }
 exports.getStatementsToAdd = getStatementsToAdd;

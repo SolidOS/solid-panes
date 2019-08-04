@@ -1,5 +1,5 @@
 /* eslint-env jest */
-import $rdf from 'rdflib'
+import * as $rdf from 'rdflib'
 import namespaces from 'solid-namespace'
 import { getLabel } from './profilePaneUtils'
 

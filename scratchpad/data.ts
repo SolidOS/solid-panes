@@ -1,5 +1,6 @@
 import '@babel/polyfill'
-import $rdf, { IndexedFormula, NamedNode, Statement, Node } from 'rdflib'
+import { IndexedFormula, NamedNode, Statement, Node } from 'rdflib'
+import * as $rdf from 'rdflib'
 import vocab from 'solid-namespace'
 import { InitialisationFunction } from './types'
 

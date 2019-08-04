@@ -8,7 +8,9 @@
 */
 
 import solidUi, { SolidUi } from 'solid-ui'
-import $rdf, { NamedNode, IndexedFormula } from 'rdflib'
+import { NamedNode, IndexedFormula } from 'rdflib'
+import * as $rdf from 'rdflib'
+
 import { Namespaces } from 'solid-namespace'
 import paneRegistry from 'pane-registry'
 

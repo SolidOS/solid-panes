@@ -1,7 +1,7 @@
 "use strict";
 exports.__esModule = true;
 var UI = require("solid-ui");
-var rdflib_1 = require("rdflib");
+var $rdf = require("rdflib");
 /*   pad Pane
 **
 */
@@ -73,8 +73,8 @@ var paneDef = {
         // Two variations of ACL for this app, public read and public read/write
         // In all cases owner has read write control
         var genACLtext = function (docURI, aclURI, allWrite) {
-            var g = rdflib_1["default"].graph();
-            var auth = rdflib_1["default"].Namespace('http://www.w3.org/ns/auth/acl#');
+            var g = $rdf.graph();
+            var auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#');
             var a = g.sym(aclURI + '#a1');
             var acl = g.sym(aclURI);
             var doc = g.sym(docURI);
@@ -93,7 +93,7 @@ var paneDef = {
                 g.add(a, auth('mode'), auth('Write'), acl);
             }
             // TODO: Figure out why `serialize` isn't on the type definition according to TypeScript:
-            return rdflib_1["default"].serialize(acl, g, aclURI, 'text/turtle');
+            return $rdf.serialize(acl, g, aclURI, 'text/turtle');
         };
         /**
          * @param docURI
@@ -175,7 +175,7 @@ var paneDef = {
                 newBase = newBase.value;
             }
             if (newBase.slice(-1) !== '/') {
-                rdflib_1["default"].log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
+                $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase); // @@ paramater?
                 newBase = newBase + '/';
             }
             var now = new Date();
@@ -183,7 +183,7 @@ var paneDef = {
             initializeNewInstanceAtBase(thisInstance, newBase);
         };
         var initializeNewInstanceAtBase = function (thisInstance, newBase) {
-            var here = rdflib_1["default"].sym(thisInstance.uri.split('#')[0]);
+            var here = $rdf.sym(thisInstance.uri.split('#')[0]);
             var base = here; // @@ ???
             var kb = UI.store;
             var newPadDoc = kb.sym(newBase + 'pad.ttl');
@@ -320,7 +320,7 @@ var paneDef = {
         var updater = UI.store.updater;
         var ns = UI.ns;
         var me;
-        var PAD = rdflib_1["default"].Namespace('http://www.w3.org/ns/pim/pad#');
+        var PAD = $rdf.Namespace('http://www.w3.org/ns/pim/pad#');
         var thisInstance = subject;
         var padDoc = subject.doc();
         var padEle;

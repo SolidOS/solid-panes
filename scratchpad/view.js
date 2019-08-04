@@ -36,9 +36,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var solid_namespace_1 = require("solid-namespace");
-var rdflib_1 = require("rdflib");
+var $rdf = require("rdflib");
 var data_1 = require("./data");
-var ns = solid_namespace_1["default"](rdflib_1["default"]);
+var ns = solid_namespace_1["default"]($rdf);
 function view(_a) {
     var container = _a.container, subject = _a.subject, store = _a.store, visitNode = _a.visitNode, user = _a.user;
     toViewMode();
@@ -74,7 +74,7 @@ function view(_a) {
                     case 0:
                         latestAuthor = data_1.getLatestAuthor(store, subject);
                         if (!latestAuthor) return [3 /*break*/, 2];
-                        fetcher = rdflib_1["default"].fetcher(store, {});
+                        fetcher = $rdf.fetcher(store, {});
                         return [4 /*yield*/, fetcher.load(latestAuthor.uri)];
                     case 1:
                         _a.sent();

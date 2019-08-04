@@ -20,7 +20,7 @@ var __assign = (this && this.__assign) || function () {
 };
 exports.__esModule = true;
 var solid_ui_1 = require("solid-ui");
-var rdflib_1 = require("rdflib");
+var $rdf = require("rdflib");
 var pane_registry_1 = require("pane-registry");
 var trustedApplicationsUtils_1 = require("./trustedApplicationsUtils");
 var nodeMode = (typeof module !== 'undefined');
@@ -158,7 +158,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
     function addOrEditApplication() {
         var origin;
         try {
-            origin = rdflib_1["default"].sym(trustedApplicationState.formElements.origin.value);
+            origin = $rdf.sym(trustedApplicationState.formElements.origin.value);
         }
         catch (err) {
             return alert('Please provide an application URL you want to trust');
@@ -173,7 +173,7 @@ function createApplicationEntry(subject, origin, appModes, updateTable) {
     function removeApplication() {
         var origin;
         try {
-            origin = rdflib_1["default"].sym(trustedApplicationState.formElements.origin.value);
+            origin = $rdf.sym(trustedApplicationState.formElements.origin.value);
         }
         catch (err) {
             return alert('Please provide an application URL you want to remove trust from');

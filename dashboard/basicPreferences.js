@@ -1,21 +1,10 @@
 "use strict";
 exports.__esModule = true;
-var solid_ui_1 = require("solid-ui");
-var pane_registry_1 = require("pane-registry");
+var $rdf = require("rdflib");
 var panes;
 var UI;
 var kb = UI.store;
-var $rdf = UI.rdf;
 var ns = UI.ns;
-var nodeMode = (typeof module !== 'undefined');
-if (nodeMode) {
-    UI = solid_ui_1["default"];
-    panes = pane_registry_1["default"];
-}
-else { // Add to existing mashlib
-    panes = window.panes;
-    UI = panes.UI;
-}
 exports.basicPreferencesPane = {
     icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
     name: 'basicPreferences',
