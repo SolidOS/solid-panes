@@ -9,7 +9,7 @@
 */
 
 import { PaneDefinition } from '../types'
-import UI from 'solid-ui'
+import * as UI from 'solid-ui'
 import panes from 'pane-registry'
 
 const HomePane: PaneDefinition = {

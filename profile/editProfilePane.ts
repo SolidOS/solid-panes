@@ -7,11 +7,10 @@
 ** or standalone script adding onto existing mashlib.
 */
 
-// import UI from 'solid-ui'
-// import solidUi, { SolidUi } from 'solid-ui'
+import * as UI from 'solid-ui'
+import * as panes from 'panes-registry'
 
 import { NamedNode } from 'rdflib'
-import paneRegistry from 'pane-registry'
 
 import { PaneDefinition } from '../types'
 import { getLabel } from './profilePaneUtils'
@@ -21,8 +20,8 @@ const nodeMode = (typeof module !== 'undefined')
 // let panes: any
 // let UI
 
-const UI = require('solid-ui')
-const panes = require('pane-registry')
+// const UI = require('solid-ui')
+// const panes = require('pane-registry')
 
 if (nodeMode) {
 

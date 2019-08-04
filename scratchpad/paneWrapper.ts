@@ -2,7 +2,7 @@ import { PaneDefinition } from '../types'
 import { pane } from './pane'
 import { initialise } from './data'
 import { Namespaces } from 'solid-namespace'
-import UI from 'solid-ui'
+import * as UI from 'solid-ui'
 import { IndexedFormula, NamedNode } from 'rdflib'
 
 const store: IndexedFormula = UI.store
