@@ -9,10 +9,10 @@
 **
 */
 exports.__esModule = true;
-var solid_ui_1 = require("solid-ui");
+var UI = require("solid-ui");
 var pane_registry_1 = require("pane-registry");
 var HomePane = {
-    icon: solid_ui_1["default"].icons.iconBase + 'noun_547570.svg',
+    icon: UI.icons.iconBase + 'noun_547570.svg',
     global: true,
     name: 'home',
     // Does the subject deserve an home pane?
@@ -37,18 +37,18 @@ var HomePane = {
             div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere';
             var creationDiv = div.appendChild(dom.createElement('div'));
             var creationContext = { div: creationDiv, dom: dom, statusArea: div, me: me };
-            solid_ui_1["default"].create.newThingUI(creationContext, pane_registry_1["default"]); // newUI Have to pass panes down
+            UI.create.newThingUI(creationContext, pane_registry_1["default"]); // newUI Have to pass panes down
             div.appendChild(dom.createElement('h4')).textContent = 'Private things';
-            solid_ui_1["default"].authn.registrationList(context, { private: true }).then(function (context) {
+            UI.authn.registrationList(context, { private: true }).then(function (context) {
                 div.appendChild(dom.createElement('h4')).textContent = 'Public things';
                 div.appendChild(dom.createElement('p')).textContent = 'Things in this list are visible to others.';
-                solid_ui_1["default"].authn.registrationList(context, { public: true }).then(function () {
+                UI.authn.registrationList(context, { public: true }).then(function () {
                     // done
                 });
             });
         };
         var div = dom.createElement('div');
-        var me = solid_ui_1["default"].authn.currentUser();
+        var me = UI.authn.currentUser();
         showContent();
         return div;
     }

@@ -36,8 +36,8 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var rdflib_1 = require("rdflib");
-var solid_ui_1 = require("solid-ui");
-var ns = solid_ui_1["default"].ns;
+var UI = require("solid-ui");
+var ns = UI.ns;
 function generateHomepage(subject, store, fetcher) {
     return __awaiter(this, void 0, void 0, function () {
         var pod, ownersProfile, name, wrapper;

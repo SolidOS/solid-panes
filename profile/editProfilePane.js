@@ -8,12 +8,14 @@
 ** or standalone script adding onto existing mashlib.
 */
 exports.__esModule = true;
+var UI = require("solid-ui");
+var panes = require("panes-registry");
 var profilePaneUtils_1 = require("./profilePaneUtils");
 var nodeMode = (typeof module !== 'undefined');
 // let panes: any
 // let UI
-var UI = require('solid-ui');
-var panes = require('pane-registry');
+// const UI = require('solid-ui')
+// const panes = require('pane-registry')
 if (nodeMode) {
     // UI = solidUi
     // panes = paneRegistry
