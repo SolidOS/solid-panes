@@ -9,7 +9,7 @@
 */
 exports.__esModule = true;
 var UI = require("solid-ui");
-var panes = require("panes-registry");
+var panes = require("pane-registry");
 var profilePaneUtils_1 = require("./profilePaneUtils");
 var nodeMode = (typeof module !== 'undefined');
 // let panes: any

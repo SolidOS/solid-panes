@@ -8,7 +8,7 @@
 */
 
 import * as UI from 'solid-ui'
-import * as panes from 'panes-registry'
+import * as panes from 'pane-registry'
 
 import { NamedNode } from 'rdflib'
 
