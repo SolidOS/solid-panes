@@ -1,11 +1,8 @@
 import { PaneDefinition, SolidSession } from "../types"
 import * as UI from "solid-ui"
-import * as paneRegistry from "pane-registry"
+import * as panes from "pane-registry"
 import { NamedNode, sym } from "rdflib"
 import { generateHomepage } from "./homepage"
-
-let panes: any
-let UI: SolidUi
 
 const nodeMode = (typeof module !== 'undefined')
 

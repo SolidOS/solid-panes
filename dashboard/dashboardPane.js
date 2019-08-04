@@ -36,10 +36,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var _this = this;
 exports.__esModule = true;
+var UI = require("solid-ui");
+var panes = require("pane-registry");
 var rdflib_1 = require("rdflib");
 var homepage_1 = require("./homepage");
-var panes;
-var UI;
 var nodeMode = (typeof module !== 'undefined');
 exports.dashboardPane = {
     icon: UI.icons.iconBase + 'noun_547570.svg',

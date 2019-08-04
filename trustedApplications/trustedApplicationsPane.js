@@ -222,8 +222,4 @@ function generateRandomString() {
     return Math.random().toString(36).substring(7);
 }
 exports["default"] = thisPane;
-if (!nodeMode) {
-    console.log('*** patching in live pane: ' + thisPane.name);
-    panes.register(thisPane);
-}
 // ENDS
