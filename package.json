@@ -1,18 +1,19 @@
 {
   "name": "solid-panes",
   "version": "1.3.15",
-  "description": "Solid-compatible Panes: applets for the mashlib and databrowser",
+  "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "./index.js",
   "scripts": {
     "build": "npm run clean && npm run build-dist",
     "build-browserified": "npm run build",
-    "build-dist": "webpack --progress --colors --mode=production",
-    "build-dev": "webpack --progress --colors --mode=development",
+    "build-dist": "npm run pre && webpack --progress --colors --mode=production",
+    "build-dev": "npm run pre && webpack --progress --colors --mode=development",
     "watch": "npm run clean && webpack --progress --colors --watch --mode=development",
     "clean": "rm -rf dist/",
     "lint": "eslint \"**/*.ts\"",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
-    "test": "npm run lint && jest"
+    "test": "npm run lint && jest",
+    "pre": "./timestamp.sh > versionInfo.js && tsc --lib es2018,dom `ls -d */*.ts | grep -v node_modules`"
   },
   "repository": {
     "type": "git",

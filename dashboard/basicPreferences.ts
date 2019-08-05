@@ -1,12 +1,10 @@
 import { PaneDefinition, SolidSession } from "../types"
 import * as UI from "solid-ui"
-import * as paneRegistry from "pane-registry"
+import * as panes from "pane-registry"
 import { NamedNode, sym } from "rdflib"
 import * as $rdf from "rdflib"
 import { generateHomepage } from "./homepage"
 
-let panes: any
-let UI: SolidUi
 const kb = UI.store
 const ns = UI.ns
 
@@ -70,7 +68,7 @@ export const basicPreferencesPane: PaneDefinition = {
     const preferencesForm = kb.sym('https://solid.github.io/solid-panes/dashboard/basicPreferencesForm.ttl#this')
     const preferencesFormDoc = preferencesForm.doc()
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
-      $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle') // Load form directly
+      $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null) // Load form directly
     }
     // todo make Statement type for fn nelow
     let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st: any) {return st.object})

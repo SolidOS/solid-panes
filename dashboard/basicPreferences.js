@@ -1,8 +1,7 @@
 "use strict";
 exports.__esModule = true;
+var UI = require("solid-ui");
 var $rdf = require("rdflib");
-var panes;
-var UI;
 var kb = UI.store;
 var ns = UI.ns;
 exports.basicPreferencesPane = {
@@ -37,7 +36,7 @@ exports.basicPreferencesPane = {
         var preferencesForm = kb.sym('https://solid.github.io/solid-panes/dashboard/basicPreferencesForm.ttl#this');
         var preferencesFormDoc = preferencesForm.doc();
         if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
-            $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle'); // Load form directly
+            $rdf.parse(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null); // Load form directly
         }
         // todo make Statement type for fn nelow
         var preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st) { return st.object; });

@@ -17,6 +17,8 @@ const panes = require('pane-registry')
 
 module.exports = panes
 
+panes.versionInfo = require(versionInfo.js)
+
 // We attach the solid-UI lower-level system for convenience
 // Currently most panes are built using it anyway.
 // It also gives access to rdflib as panes.UI.rdf
