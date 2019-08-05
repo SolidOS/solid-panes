@@ -17,7 +17,7 @@ const panes = require('pane-registry')
 
 module.exports = panes
 
-panes.versionInfo = require(versionInfo.js)
+panes.versionInfo = require('./versionInfo.js')
 
 // We attach the solid-UI lower-level system for convenience
 // Currently most panes are built using it anyway.
@@ -49,16 +49,16 @@ if (typeof window !== 'undefined') {
 
 let register = panes.register
 
-register(require('./profile/profilePane').default) // View someone's public profile - dominates all other panes.
-register(require('./profile/editProfilePane').default) // Edit my profile. App. 201900802
+register(require('./profile/profilePane')) // View someone's public profile - dominates all other panes.
+register(require('./profile/editProfilePane')) // Edit my profile. App. 201900802
 
-register(require('./dashboard/dashboardPane').default)
-register(require('./dashboard/basicPreferences').default) // 20190702
+register(require('./dashboard/dashboardPane'))
+register(require('./dashboard/basicPreferences')) // 20190702
 register(require('issue-pane'))
 register(require('contacts-pane'))
 
-register(require('./pad/padPane').default)
-register(require('./scratchpad/paneWrapper').default)
+register(require('./pad/padPane'))
+register(require('./scratchpad/paneWrapper'))
 // register(require('./argument/argumentPane.js')) // A position in an argument tree
 
 register(require('./transaction/pane.js'))
@@ -135,8 +135,7 @@ register(require('./sharing/sharingPane.js'))
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internalPane.js'))
 
-register(require('./profile/editProfilePane').default) // Edit your public profile
-register(require('./trustedApplications/trustedApplicationsPane').default) // manage your trusted applications
-register(require('./home/homePane').default)
+register(require('./trustedApplications/trustedApplicationsPane')) // manage your trusted applications
+register(require('./home/homePane'))
 
 // ENDS

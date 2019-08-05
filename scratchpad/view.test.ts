@@ -3,7 +3,7 @@ import * as $rdf from 'rdflib'
 import * as vocab from 'solid-namespace'
 import { view } from './view'
 
-const ns = vocab($rdf)
+const ns = (vocab as any)($rdf)
 
 function addMockPad (mockStore: $rdf.IndexedFormula): $rdf.NamedNode {
   const mockPad = $rdf.sym('https://mock-pad')

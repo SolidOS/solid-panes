@@ -12,7 +12,6 @@ import { NamedNode, IndexedFormula } from 'rdflib'
 import * as $rdf from 'rdflib'
 
 import { Namespaces } from 'solid-namespace'
-import * as panes from 'pane-registry'
 
 import { getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
 import { PaneDefinition } from '../types'

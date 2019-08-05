@@ -13,11 +13,9 @@
 import * as UI from 'solid-ui'
 import { NamedNode } from 'rdflib'
 import * as panes from 'pane-registry'
-
 import { PaneDefinition } from '../types'
-import { getLabel } from './profilePaneUtils'
 
-const nodeMode = (typeof module !== 'undefined')
+// const nodeMode = (typeof module !== 'undefined')
 
 // const UI = require('solid-ui')
 // const panes = require('pane-registry')

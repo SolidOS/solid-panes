@@ -4,7 +4,7 @@ import * as $rdf from 'rdflib'
 import * as vocab from 'solid-namespace'
 import { InitialisationFunction } from './types'
 
-const ns = vocab($rdf)
+const ns = (vocab as any)($rdf)
 
 /* istanbul ignore next [Side effects are contained to initialise(), so ignore just that for test coverage] */
 export const initialise: InitialisationFunction = async (store, user) => {

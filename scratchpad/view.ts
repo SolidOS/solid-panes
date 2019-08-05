@@ -3,7 +3,7 @@ import * as $rdf from 'rdflib'
 import { getContents, getSetContentsStatements, getLatestAuthor } from './data'
 import { ViewParams } from '../types'
 
-const ns = vocab($rdf)
+const ns = (vocab as any)($rdf)
 
 export function view ({ container, subject, store, visitNode, user }: ViewParams) {
   toViewMode()

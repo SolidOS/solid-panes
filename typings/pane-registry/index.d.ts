@@ -1,4 +1,4 @@
 declare module 'pane-registry' {
-  const registry: any
-  export default registry
+  export const byName: any
+  export let getOutliner: any
 }

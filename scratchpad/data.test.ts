@@ -3,7 +3,7 @@ import * as $rdf from 'rdflib'
 import { getInitialisationStatements, getSetContentsStatements, getContents, isPad, getTitle, getLatestAuthor } from './data'
 import * as vocab from 'solid-namespace'
 
-const ns = vocab($rdf)
+const ns = (vocab as any)($rdf)
 
 describe('getInitialisationStatements()', () => {
   it('should properly initialise a new notepad', async () => {
