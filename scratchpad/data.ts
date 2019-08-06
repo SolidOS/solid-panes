@@ -1,10 +1,9 @@
 import '@babel/polyfill'
-import { IndexedFormula, NamedNode, Statement, Node } from 'rdflib'
-import * as $rdf from 'rdflib'
-import * as vocab from 'solid-namespace'
+import $rdf, { IndexedFormula, NamedNode, Statement, Node } from 'rdflib'
+import vocab from 'solid-namespace'
 import { InitialisationFunction } from './types'
 
-const ns = (vocab as any)($rdf)
+const ns = vocab($rdf)
 
 /* istanbul ignore next [Side effects are contained to initialise(), so ignore just that for test coverage] */
 export const initialise: InitialisationFunction = async (store, user) => {

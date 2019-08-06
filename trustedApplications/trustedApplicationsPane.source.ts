@@ -7,9 +7,8 @@
 ** or standalone script adding onto existing mashlib.
 */
 
-import * as UI from 'solid-ui'
-import { NamedNode, IndexedFormula } from 'rdflib'
-import * as $rdf from 'rdflib'
+import UI from 'solid-ui'
+import $rdf, { NamedNode, IndexedFormula } from 'rdflib'
 
 import { Namespaces } from 'solid-namespace'
 

@@ -1,9 +1,9 @@
-import * as vocab from 'solid-namespace'
-import * as $rdf from 'rdflib'
+import vocab from 'solid-namespace'
+import $rdf from 'rdflib'
 import { getContents, getSetContentsStatements, getLatestAuthor } from './data'
 import { ViewParams } from '../types'
 
-const ns = (vocab as any)($rdf)
+const ns = vocab($rdf)
 
 export function view ({ container, subject, store, visitNode, user }: ViewParams) {
   toViewMode()

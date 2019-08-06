@@ -1,26 +1,22 @@
-import { PaneDefinition, SolidSession } from "../types"
-import * as UI from "solid-ui"
-import * as panes from "pane-registry"
-import { NamedNode, sym } from "rdflib"
-import * as $rdf from "rdflib"
-import { generateHomepage } from "./homepage"
+import { PaneDefinition } from '../types'
+import UI from 'solid-ui'
+import $rdf, { NamedNode } from 'rdflib'
 
 const kb = UI.store
-const ns = UI.ns
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
   name: 'basicPreferences',
   label: (subject) => {
     if (subject.uri === subject.site().uri) {
-      return "Prefs"
+      return 'Prefs'
     }
     return null
   },
 
   // Render the pane
   // The subject should be the logged in user.
-  render: (subject: NamedNode, dom: HTMLDocument, paneOptions: any) => {
+  render: (subject: NamedNode, dom: HTMLDocument) => {
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
       container.appendChild(UI.widgets.errorMessageBlock(dom, mess, '#fee'))
@@ -29,8 +25,6 @@ export const basicPreferencesPane: PaneDefinition = {
     const container = dom.createElement('div')
 
     const formArea = container.appendChild(dom.createElement('div'))
-    const statusArea = container.appendChild(dom.createElement('div'))
-
 
     /* Preferences
     **
@@ -70,8 +64,8 @@ export const basicPreferencesPane: PaneDefinition = {
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
       ($rdf.parse as any)(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null) // Load form directly
     }
-    // todo make Statement type for fn nelow
-    let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st: any) {return st.object})
+    // todo make Statement type for fn below
+    // let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st: any) { return st.object })
     var me = UI.authn.currentUser()
     // var context = {noun: 'chat room', me: me, statusArea: statusArea, div: formArea, dom, kb}
     // container.appendChild(UI.preferences.renderPreferencesForm(me, mainClass, preferencesForm, context))

@@ -7,8 +7,8 @@
 ** or standalone script adding onto existing mashlib.
 */
 
-import * as UI from 'solid-ui'
-import * as panes from 'pane-registry'
+import UI from 'solid-ui'
+import panes from 'pane-registry'
 
 import { NamedNode } from 'rdflib'
 
@@ -89,7 +89,6 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       }
 
       UI.widgets.appendForm(dom, div, {}, subject, preferencesForm, editableProfile, complainIfBad)
-
     } // renderProfileForm
 
     var div = dom.createElement('div')
@@ -131,7 +130,7 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
         editableProfile = profile
       }
       statusArea.appendChild(UI.widgets.errorMessageBlock(dom,
-         `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`, 'straw'))
+        `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`, 'straw'))
 
       comment(`Everything you put here will be public.
      There will be other places to record private things..`)

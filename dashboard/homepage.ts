@@ -1,10 +1,9 @@
-import { Fetcher, IndexedFormula, NamedNode } from "rdflib"
-import * as $rdf from 'rdflib'
-import * as UI from 'solid-ui'
+import $rdf, { Fetcher, IndexedFormula, NamedNode } from 'rdflib'
+import UI from 'solid-ui'
 
 const ns = UI.ns
 
-export async function generateHomepage(subject: NamedNode, store: IndexedFormula, fetcher: Fetcher): Promise<HTMLElement> {
+export async function generateHomepage (subject: NamedNode, store: IndexedFormula, fetcher: Fetcher): Promise<HTMLElement> {
   const pod = subject.site().uri
   const ownersProfile = await loadProfile(`${pod}/profile/card#me`, fetcher)
   const name = getName(store, ownersProfile)
@@ -17,7 +16,7 @@ export async function generateHomepage(subject: NamedNode, store: IndexedFormula
   return wrapper
 }
 
-function createDataSection(name: string): HTMLElement {
+function createDataSection (name: string): HTMLElement {
   const dataSection = document.createElement('section')
 
   const title = document.createElement('h2')
@@ -37,7 +36,7 @@ function createDataSection(name: string): HTMLElement {
   return dataSection
 }
 
-function createTitle(uri: string, name: string): HTMLElement {
+function createTitle (uri: string, name: string): HTMLElement {
   const profileLink = document.createElement('a')
   profileLink.href = uri
   profileLink.innerText = name
@@ -52,17 +51,14 @@ function createTitle(uri: string, name: string): HTMLElement {
   return title
 }
 
-
-async function loadProfile(profileUrl: string, fetcher: Fetcher): Promise<NamedNode> {
+async function loadProfile (profileUrl: string, fetcher: Fetcher): Promise<NamedNode> {
   const webId = $rdf.sym(profileUrl)
   await fetcher.load(webId)
   return webId
 }
 
-
-
 function getName (store: IndexedFormula, ownersProfile: NamedNode): string {
-  return (store.anyValue as any)(ownersProfile, ns.vcard("fn"), null, ownersProfile.doc())
-    || (store.anyValue as any)(ownersProfile, ns.foaf("name"), null, ownersProfile.doc())
-    || new URL(ownersProfile.uri).host.split('.')[0]
+  return (store.anyValue as any)(ownersProfile, ns.vcard('fn'), null, ownersProfile.doc()) ||
+    (store.anyValue as any)(ownersProfile, ns.foaf('name'), null, ownersProfile.doc()) ||
+    new URL(ownersProfile.uri).host.split('.')[0]
 }

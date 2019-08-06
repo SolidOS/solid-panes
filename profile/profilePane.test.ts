@@ -1,9 +1,9 @@
 /* eslint-env jest */
-import * as $rdf from 'rdflib'
-import * as namespaces from 'solid-namespace'
+import $rdf from 'rdflib'
+import namespaces from 'solid-namespace'
 import { getLabel } from './profilePaneUtils'
 
-const ns = (namespaces as any)($rdf)
+const ns = namespaces($rdf)
 
 describe('getLabel', () => {
   it('should return "Edit your profile" by default', () => {

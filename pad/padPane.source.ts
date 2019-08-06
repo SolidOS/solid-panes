@@ -1,7 +1,6 @@
-import * as UI from 'solid-ui'
+import UI from 'solid-ui'
 import { PaneDefinition } from '../types'
-import { NamedNode } from 'rdflib'
-import * as $rdf from 'rdflib'
+import $rdf, { NamedNode } from 'rdflib'
 /*   pad Pane
 **
 */

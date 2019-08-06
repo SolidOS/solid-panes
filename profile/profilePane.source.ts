@@ -10,9 +10,9 @@
 ** or standalone script adding onto existing mashlib.
 */
 
-import * as UI from 'solid-ui'
+import UI from 'solid-ui'
 import { NamedNode } from 'rdflib'
-import * as panes from 'pane-registry'
+import panes from 'pane-registry'
 import { PaneDefinition } from '../types'
 
 // const nodeMode = (typeof module !== 'undefined')
@@ -42,10 +42,10 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
 
   label: function (subject) {
     var t = kb.findTypeURIs(subject)
-    if (t[ns.vcard('Individual').uri]
-       || t[ns.vcard('Organization').uri]
-       || t[ns.foaf('Person').uri]
-       || t[ns.schema('Person').uri]) return 'Profile'
+    if (t[ns.vcard('Individual').uri] ||
+       t[ns.vcard('Organization').uri] ||
+       t[ns.foaf('Person').uri] ||
+       t[ns.schema('Person').uri]) return 'Profile'
     return null
   },
 
@@ -57,7 +57,7 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       return d
     }
 
-    async function doRender(container: HTMLElement, subject: NamedNode | null, dom: HTMLDocument) {
+    async function doRender (container: HTMLElement, subject: NamedNode | null, dom: HTMLDocument) {
       if (!subject) throw new Error('subject missing')
       const profile = subject.doc()
       let otherProfiles = kb.each(subject, ns.rdfs('seeAlso'), null, profile)
@@ -69,11 +69,10 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
         }
       }
 
-
-      var backgroundColor = kb.anyValue(subject, ns.solid('profileBackgroundColor'))  || '#ffffff'
+      var backgroundColor = kb.anyValue(subject, ns.solid('profileBackgroundColor')) || '#ffffff'
       // Todo: check format of color matches regexp and not too dark
       container.style.backgroundColor = backgroundColor // @@ Limit to pale?
-      var highlightColor = kb.anyValue(subject, ns.solid('profileHighlightColor'))  || '#090' // @@ beware injection attack
+      var highlightColor = kb.anyValue(subject, ns.solid('profileHighlightColor')) || '#090' // @@ beware injection attack
 
       container.setAttribute('style', 'border: 0.3em solid ' + highlightColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
       var table = container.appendChild(dom.createElement('table'))
@@ -82,13 +81,6 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       var bottom = table.appendChild(dom.createElement('tr'))
       var statusArea = bottom.appendChild(dom.createElement('div'))
       statusArea.setAttribute('style', 'padding: 0.7em;')
-
-      function comment (str: string) {
-        var p = main.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'padding: 1em;')
-        p.textContent = str
-        return p
-      }
 
       function heading (str: string) {
         var h = main.appendChild(dom.createElement('h3'))
@@ -111,7 +103,7 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
         })
       }
     }
-    var  container = dom.createElement('div')
+    var container = dom.createElement('div')
     doRender(container, subject, dom) // async
     return container // initially unpopulated
   } // render()

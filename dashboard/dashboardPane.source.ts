@@ -1,17 +1,15 @@
-import { PaneDefinition, SolidSession } from "../types"
-import * as UI from "solid-ui"
-import * as panes from "pane-registry"
-import { NamedNode, sym } from "rdflib"
-import { generateHomepage } from "./homepage"
-
-const nodeMode = (typeof module !== 'undefined')
+import { PaneDefinition, SolidSession } from '../types'
+import UI from 'solid-ui'
+import panes from 'pane-registry'
+import { NamedNode, sym } from 'rdflib'
+import { generateHomepage } from './homepage'
 
 export const dashboardPaneSource: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
   label: (subject) => {
     if (subject.uri === subject.site().uri) {
-      return "Dashboard"
+      return 'Dashboard'
     }
     return null
   },
@@ -20,7 +18,7 @@ export const dashboardPaneSource: PaneDefinition = {
     const webId = UI.authn.currentUser()
     buildPage(container, webId, dom, subject)
     UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
-      container.innerHTML = ""
+      container.innerHTML = ''
       buildPage(container, session ? sym(session.webId) : null, dom, subject)
     })
 
