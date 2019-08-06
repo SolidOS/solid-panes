@@ -16,7 +16,7 @@ export const dashboardPaneSource: PaneDefinition = {
   render: (subject, dom) => {
     const container = dom.createElement('div')
     const webId = UI.authn.currentUser()
-    buildPage(container, webId, dom, subject)
+    // buildPage(container, webId, dom, subject)
     UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
       container.innerHTML = ''
       buildPage(container, session ? sym(session.webId) : null, dom, subject)
@@ -27,10 +27,7 @@ export const dashboardPaneSource: PaneDefinition = {
 }
 
 function buildPage (container: HTMLElement, webId: NamedNode | null, dom: HTMLDocument, subject: NamedNode) {
-  if (!webId) {
-    return buildHomePage(container, subject)
-  }
-  if (webId.site().uri === subject.site().uri) {
+  if (webId && webId.site().uri === subject.site().uri) {
     return buildDashboard(container, dom)
   }
   return buildHomePage(container, subject)
