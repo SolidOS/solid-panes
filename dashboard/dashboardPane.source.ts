@@ -15,8 +15,6 @@ export const dashboardPaneSource: PaneDefinition = {
   },
   render: (subject, dom) => {
     const container = dom.createElement('div')
-    const webId = UI.authn.currentUser()
-    // buildPage(container, webId, dom, subject)
     UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
       container.innerHTML = ''
       buildPage(container, session ? sym(session.webId) : null, dom, subject)
