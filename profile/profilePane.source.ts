@@ -69,10 +69,10 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
         }
       }
 
-      var backgroundColor = kb.anyValue(subject, ns.solid('profileBackgroundColor')) || '#ffffff'
+      var backgroundColor = kb.anyValue(subject, ns.solid('profileBackgroundColor'), null, subject.doc()) || '#ffffff'
       // Todo: check format of color matches regexp and not too dark
       container.style.backgroundColor = backgroundColor // @@ Limit to pale?
-      var highlightColor = kb.anyValue(subject, ns.solid('profileHighlightColor')) || '#090' // @@ beware injection attack
+      var highlightColor = kb.anyValue(subject, ns.solid('profileHighlightColor', null, subject.doc())) || '#090' // @@ beware injection attack
 
       container.setAttribute('style', 'border: 0.3em solid ' + highlightColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
       var table = container.appendChild(dom.createElement('table'))
