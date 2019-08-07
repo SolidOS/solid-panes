@@ -281,7 +281,7 @@ module.exports = function (doc) {
     var items = [ // {paneName: 'folder', label: 'Your files', subject: me.site()}, // replaced with storages
                    {paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg'},
                    {paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'},
-                   {paneName: 'trustedApplications', label: 'Trusted Aps', icon: UI.icons.iconBase + 'noun_15177.svg.svg'},
+                   {paneName: 'trustedApplications', label: 'Trusted Apps', icon: UI.icons.iconBase + 'noun_15177.svg.svg'},
                    {paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg'}
     ]
 
@@ -309,7 +309,7 @@ module.exports = function (doc) {
     }
 
     function renderTab (div, item) {
-      div.dataset.name = item
+      div.dataset.name = item.paneName
       div.textContent = item.label
     }
 
