@@ -7,12 +7,7 @@ const kb = UI.store
 export const basicPreferencesPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
   name: 'basicPreferences',
-  label: (subject) => {
-    if (subject.uri === subject.site().uri) {
-      return 'Prefs'
-    }
-    return null
-  },
+  label: () => null,
 
   // Render the pane
   // The subject should be the logged in user.

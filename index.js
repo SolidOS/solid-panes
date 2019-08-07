@@ -58,7 +58,7 @@ register(require('issue-pane'))
 register(require('contacts-pane'))
 
 register(require('./pad/padPane'))
-register(require('./scratchpad/paneWrapper'))
+// register(require('./scratchpad/paneWrapper'))
 // register(require('./argument/argumentPane.js')) // A position in an argument tree
 
 register(require('./transaction/pane.js'))
@@ -66,7 +66,7 @@ register(require('./transaction/period.js'))
 
 const chatPanes = require('chat-pane')
 register(chatPanes.longChatPane) // Long pane must have prio in case short pane tries to do a long pane
-register(chatPanes.shortChatPane) // was './chat/chatPane.js'
+// register(chatPanes.shortChatPane) // was './chat/chatPane.js'
 // register(require('./publication/publicationPane.js'))
 register(require('meeting-pane'))
 register(require('./tabbed/tabbedPane.js'))
@@ -118,7 +118,7 @@ register(require('./ui/pane.js'))
 // Note must use // not /* to comment out to make sure expander sees it
 // register(require("lawPane.js"))
 
-register(require('./microblogPane/microblogPane.js'))
+// register(require('./microblogPane/microblogPane.js'))
 
 // register(require("./social/pane.js")) // competitor to other social
 // register(require("./airPane.js"))
