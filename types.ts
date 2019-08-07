@@ -11,6 +11,8 @@ export interface PaneDefinition {
   requireQueryButton?: boolean;
   mintClass?: NamedNode;
   mintNew?: (options: NewPaneOptions) => Promise<NewPaneOptions & { newInstance: NamedNode }>;
+  predicates?: { [key: string]: number };
+  classes?: { [key: string]: number }
 };
 interface NewPaneOptions {
   appPathSegment: string;
