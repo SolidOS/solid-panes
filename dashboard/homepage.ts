@@ -4,8 +4,7 @@ import UI from 'solid-ui'
 const ns = UI.ns
 
 export async function generateHomepage (subject: NamedNode, store: IndexedFormula, fetcher: Fetcher): Promise<HTMLElement> {
-  const pod = subject.site().uri
-  const ownersProfile = await loadProfile(`${pod}/profile/card#me`, fetcher)
+  const ownersProfile = await loadProfile(subject, fetcher)
   const name = getName(store, ownersProfile)
 
   const wrapper = document.createElement('div')
@@ -51,14 +50,16 @@ function createTitle (uri: string, name: string): HTMLElement {
   return title
 }
 
-async function loadProfile (profileUrl: string, fetcher: Fetcher): Promise<NamedNode> {
-  const webId = $rdf.sym(profileUrl)
+async function loadProfile (subject: NamedNode, fetcher: Fetcher): Promise<NamedNode> {
+  const pod = subject.site().uri
+  // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
+  const webId = $rdf.sym(`${pod}profile/card#me`)
   await fetcher.load(webId)
   return webId
 }
 
 function getName (store: IndexedFormula, ownersProfile: NamedNode): string {
-  return (store.anyValue as any)(ownersProfile, ns.vcard('fn'), null, ownersProfile.doc()) ||
-    (store.anyValue as any)(ownersProfile, ns.foaf('name'), null, ownersProfile.doc()) ||
+  return store.anyValue(ownersProfile, ns.vcard('fn'), null, ownersProfile.doc()) ||
+    store.anyValue(ownersProfile, ns.foaf('name'), null, ownersProfile.doc()) ||
     new URL(ownersProfile.uri).host.split('.')[0]
 }
