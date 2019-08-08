@@ -159,7 +159,7 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       })
 
       heading('The style of your public profile')
-      renderProfileForm(div, subject)
+      renderProfileForm(main, subject)
 
       heading('Thank you for filling your profile.')
     }, (err: Error) => {
