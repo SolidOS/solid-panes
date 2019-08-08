@@ -128,9 +128,10 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
         editableProfile = kb.any(subject, ns.solid('editableProfile'))
       } else if (UI.store.updater.editable(profile.uri, kb)) {
         editableProfile = profile
+      } else {
+        statusArea.appendChild(UI.widgets.errorMessageBlock(dom, `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`, 'straw'))
+        return
       }
-      statusArea.appendChild(UI.widgets.errorMessageBlock(dom,
-        `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`, 'straw'))
 
       comment(`Everything you put here will be public.
      There will be other places to record private things..`)
