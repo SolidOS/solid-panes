@@ -314,6 +314,10 @@ module.exports = function (doc) {
   async function getDashboardItems () {
     const me = UI.authn.currentUser()
     const div = dom.createElement('div')
+    const [books, pods] = await Promise.all([
+      getAddressBooks(),
+      getPods()
+    ])
     return [
       { paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg' },
       // TODO: Fix basicPreferences properly then reintroduce when ready
@@ -321,10 +325,17 @@ module.exports = function (doc) {
       { paneName: 'trustedApplications', label: 'Trusted Apps', icon: UI.icons.iconBase + 'noun_15177.svg.svg' },
       { paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg' }
     ]
-      .concat(await getAddressBooks())
-      .concat(getPods())
+      .concat(books)
+      .concat(pods)
 
-    function getPods () {
+    async function getPods () {
+      try {
+        // need to make sure that profile is loaded
+        await kb.fetcher.load(me.doc())
+      } catch (err) {
+        console.error('Unable to load profile', err)
+        return []
+      }
       const pods = kb.each(me, ns.space('storage'), null, me.doc())
       return pods.map((pod, index) => {
         let label = pods.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
