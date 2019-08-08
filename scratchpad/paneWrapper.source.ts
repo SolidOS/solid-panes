@@ -10,7 +10,7 @@ const ns: Namespaces = UI.ns
 
 const paneWrapper: PaneDefinition = {
   // TODO: Replace
-  icon: UI.icons.iconBase + 'noun_79217.svg',
+  icon: UI.icons.iconBase + 'noun_160517.svg',
 
   name: 'scratchpad',
 
