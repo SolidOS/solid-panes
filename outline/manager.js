@@ -278,45 +278,21 @@ module.exports = function (doc) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
     const me = UI.authn.currentUser()
-    var items = [ // {paneName: 'folder', label: 'Your files', subject: me.site()}, // replaced with storages
-                   {paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg'},
-                   {paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'},
-                   {paneName: 'trustedApplications', label: 'Trusted Apps', icon: UI.icons.iconBase + 'noun_15177.svg.svg'},
-                   {paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg'}
-    ]
-
     if (!me) {
       alert('Must be logged in for this')
       throw new Error('Not logged in')
     }
-    var context = {me, div, dom}
-    try {
-      context = await UI.authn.findAppInstances(context, ns.vcard('AddressBook'))
-      if (context.instances) {
-        for (var book of context.instances) {
-          items.push({paneName: 'contact', label: 'Contacts', subject: book, icon: UI.icons.iconBase + 'noun_15695.svg'})
-          console.log(`   Adding address book ${book} to dashboard`)
-        }
-      }
-    } catch (err) {
-      console.error('oops in globalAppTabs AddressBook')
-    }
-
-    const storages = kb.each(me, ns.space('storage'), null, me.doc())
-    for (var pod of storages) {
-      var label = storages.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
-      items.push({paneName: 'folder', label: label, subject: pod, icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'})
-    }
+    const items = await getDashboardItems()
 
     function renderTab (div, item) {
-      div.dataset.name = item.paneName
+      div.dataset.name = item.tabName || item.paneName
       div.textContent = item.label
     }
 
     function renderMain (containerDiv, item) { // Items are pane names
       const pane = panes.byName(item.paneName) // 20190701
       containerDiv.innerHTML = ''
-      var table = containerDiv.appendChild(dom.createElement('table'))
+      const table = containerDiv.appendChild(dom.createElement('table'))
       const me = UI.authn.currentUser()
       thisOutline.GotoSubject(item.subject || me, true, pane, false, undefined, table)
     }
@@ -334,6 +310,50 @@ module.exports = function (doc) {
     div.appendChild(UI.tabs.tabWidget(options))
     return div
   }
+
+  async function getDashboardItems () {
+    const me = UI.authn.currentUser()
+    const div = dom.createElement('div')
+    return [
+      { paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg' },
+      { paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg' },
+      { paneName: 'trustedApplications', label: 'Trusted Apps', icon: UI.icons.iconBase + 'noun_15177.svg.svg' },
+      { paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg' }
+    ]
+      .concat(await getAddressBooks())
+      .concat(getPods())
+
+    function getPods () {
+      const pods = kb.each(me, ns.space('storage'), null, me.doc())
+      return pods.map((pod, index) => {
+        let label = pods.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
+        return {
+          paneName: 'folder',
+          tabName: `folder-${index}`,
+          label,
+          subject: pod,
+          icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
+        }
+      })
+    }
+
+    async function getAddressBooks () {
+      try {
+        const context = await UI.authn.findAppInstances({me, div, dom}, ns.vcard('AddressBook'))
+        return (context.instances || []).map((book, index) => ({
+          paneName: 'contact',
+          tabName: `contact-${index}`,
+          label: 'Contacts',
+          subject: book,
+          icon: UI.icons.iconBase + 'noun_15695.svg'
+        }))
+      } catch (err) {
+        console.error('oops in globalAppTabs AddressBook')
+      }
+      return []
+    }
+  }
+  this.getDashboardItems = getDashboardItems
 
   async function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
     container.innerHTML = ''
