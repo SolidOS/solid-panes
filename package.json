@@ -52,7 +52,7 @@
     "pane-registry": "^1.0.4",
     "rdflib": "^0.21.1",
     "solid-namespace": "^0.2.0",
-    "solid-ui": "^0.12.8-1",
+    "solid-ui": "^0.12.8-2",
     "source-pane": "^1.0.3",
     "ts-lint": "^4.5.1",
     "tslint": "^5.18.0",
