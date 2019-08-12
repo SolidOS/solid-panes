@@ -17,6 +17,8 @@ const panes = require('pane-registry')
 
 module.exports = panes
 
+panes.versionInfo = require('./versionInfo.js')
+
 // We attach the solid-UI lower-level system for convenience
 // Currently most panes are built using it anyway.
 // It also gives access to rdflib as panes.UI.rdf
@@ -47,11 +49,16 @@ if (typeof window !== 'undefined') {
 
 let register = panes.register
 
+register(require('./profile/profilePane')) // View someone's public profile - dominates all other panes.
+register(require('./profile/editProfilePane')) // Edit my profile. App. 201900802
+
+register(require('./dashboard/dashboardPane'))
+register(require('./dashboard/basicPreferences')) // 20190702
 register(require('issue-pane'))
 register(require('contacts-pane'))
 
-register(require('./pad/padPane').default)
-register(require('./scratchpad/paneWrapper').default)
+register(require('./pad/padPane'))
+register(require('./scratchpad/paneWrapper'))
 // register(require('./argument/argumentPane.js')) // A position in an argument tree
 
 register(require('./transaction/pane.js'))
@@ -59,7 +66,7 @@ register(require('./transaction/period.js'))
 
 const chatPanes = require('chat-pane')
 register(chatPanes.longChatPane) // Long pane must have prio in case short pane tries to do a long pane
-register(chatPanes.shortChatPane) // was './chat/chatPane.js'
+// register(chatPanes.shortChatPane) // was './chat/chatPane.js'
 // register(require('./publication/publicationPane.js'))
 register(require('meeting-pane'))
 register(require('./tabbed/tabbedPane.js'))
@@ -111,7 +118,7 @@ register(require('./ui/pane.js'))
 // Note must use // not /* to comment out to make sure expander sees it
 // register(require("lawPane.js"))
 
-register(require('./microblogPane/microblogPane.js'))
+// register(require('./microblogPane/microblogPane.js'))
 
 // register(require("./social/pane.js")) // competitor to other social
 // register(require("./airPane.js"))
@@ -126,11 +133,9 @@ register(require('./microblogPane/microblogPane.js'))
 register(require('./sharing/sharingPane.js'))
 
 // The internals pane is always (almost?) the last as it is the least user-friendly
-register(require('./internalPane.js'))
-// The home pane is a 2016 experiment. Always there.
+register(require('./internal/internalPane'))
 
-register(require('./profile/profilePane').default) // edit your public profile
-register(require('./trustedApplications/trustedApplicationsPane').default) // manage your trusted applications
-register(require('./home/homePane').default)
+register(require('./trustedApplications/trustedApplicationsPane')) // manage your trusted applications
+register(require('./home/homePane'))
 
 // ENDS

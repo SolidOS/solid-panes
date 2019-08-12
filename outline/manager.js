@@ -2,6 +2,7 @@
    Outline Mode Manager
 */
 var panes = require('pane-registry')
+const $rdf = require('rdflib')
 
 var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')
@@ -9,21 +10,13 @@ var UserInput = require('./userInput.js')
 var UI = require('solid-ui')
 var queryByExample = require('./queryByExample.js')
 
-/* global Components, alert XPathResult sourceWidget */
+/* global alert XPathResult sourceWidget */
 // XPathResult?
 
+// const iconHeight = '24px'
+
 module.exports = function (doc) {
-  var dom
-  if (UI.isExtension) {
-    var wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
-      .getService(Components.interfaces.nsIWindowMediator)
-    var window = wm.getMostRecentWindow('navigator:browser')
-    var gBrowser = window.getBrowser()
-    dom = doc || window.document
-  } else {
-    // window = document.window;
-    dom = doc
-  }
+  const dom = doc
 
   this.document = doc
   this.outlineIcons = outlineIcons
@@ -278,137 +271,274 @@ module.exports = function (doc) {
     return predicateTD
   } // outlinePredicateTD
 
-  function expandedHeaderTR (subject, requiredPane, options) {
-    var tr = dom.createElement('tr')
-    tr.setAttribute('class', 'hoverControl')
-    var td = tr.appendChild(dom.createElement('td'))
-    td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;')
-    td.setAttribute('notSelectable', 'false')
-    td.setAttribute('about', subject.toNT())
-    td.setAttribute('colspan', '2')
-
-    var icon = td.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase +
-        'tbl-collapse.png', 'collapse', undefined, dom))
-    icon.addEventListener('click', collapseMouseDownListener)
-
-    var strong = td.appendChild(dom.createElement('strong'))
-    strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
-    UI.widgets.makeDraggable(strong, subject) // 2017
-
-    tr.firstPane = null
-    var paneNumber = 0
-    var relevantPanes = []
-    var labels = []
-
-    if (requiredPane) {
-      tr.firstPane = requiredPane
-    };
-    for (var i = 0; i < panes.list.length; i++) {
-      let pane = panes.list[i]
-      var lab = pane.label(subject, dom)
-      if (!lab) continue
-
-      relevantPanes.push(pane)
-      if (pane === requiredPane) {
-        paneNumber = relevantPanes.length - 1 // point to this one
-      }
-      labels.push(lab)
-        // steal the focus
-      if (!tr.firstPane && pane.shouldGetFocus && pane.shouldGetFocus(subject)) {
-        tr.firstPane = pane
-        paneNumber = relevantPanes.length - 1
-        UI.log.info('the ' + i + 'th pane steals the focus')
-      }
+/** Render Tabbed set of home app panes
+ * @returns Promise<{Element}> - the div
+*/
+  async function globalAppTabs (selectedTab) {
+    console.log('globalAppTabs @@')
+    const div = dom.createElement('div')
+    const me = UI.authn.currentUser()
+    if (!me) {
+      alert('Must be logged in for this')
+      throw new Error('Not logged in')
     }
-    if (!relevantPanes.length) relevantPanes.push(panes.internalPane)
-    tr.firstPane = tr.firstPane || relevantPanes[0]
-    if (relevantPanes.length !== 1) { // if only one, simplify interface
-      for (let i = 0; i < relevantPanes.length; i++) {
-        let pane = relevantPanes[i]
-        var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i], dom)
-          // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
-        ico.style.maxWidth = '24px'
-        ico.style.maxHeight = '24px'
-        var listen = function (ico, pane) { // Freeze scope for event time
-          ico.addEventListener('click', function (event) {
-              // Find the containing table for this subject
-            for (var t = td; t.parentNode; t = t.parentNode) {
-              if (t.nodeName === 'TABLE') break
-            }
-            if (t.nodeName !== 'TABLE') throw new Error('outline: internal error.')
-            var removePanes = function (specific) {
-              for (var d = t.firstChild; d; d = d.nextSibling) {
-                if (typeof d.pane !== 'undefined') {
-                  if (!specific || d.pane === specific) {
-                    if (d.paneButton) {
-                      d.paneButton.setAttribute('class', 'paneHidden')
-                    }
-                    removeAndRefresh(d)
-                        // If we just delete the node d, ffox doesn't refresh the display properly.
-                        // state = 'paneHidden';
-                    if (d.pane.requireQueryButton && t.parentNode.className /* outer table */ &&
-                      numberOfPanesRequiringQueryButton === 1 && dom.getElementById('queryButton')) {
-                      dom.getElementById('queryButton').setAttribute('style', 'display:none;')
+    const items = await getDashboardItems()
+
+    function renderTab (div, item) {
+      div.dataset.name = item.tabName || item.paneName
+      div.textContent = item.label
+    }
+
+    function renderMain (containerDiv, item) { // Items are pane names
+      const pane = panes.byName(item.paneName) // 20190701
+      containerDiv.innerHTML = ''
+      const table = containerDiv.appendChild(dom.createElement('table'))
+      const me = UI.authn.currentUser()
+      thisOutline.GotoSubject(item.subject || me, true, pane, false, undefined, table)
+    }
+
+    const options = {dom,
+      subject: me,
+      items,
+      renderMain,
+      renderTab,
+      ordered: true,
+      orientation: 0,
+      backgroundColor: '#eeeeee',
+      selectedTab} // black?
+    // options.renderTabSettings = renderTabSettings  No tab-specific settings
+    div.appendChild(UI.tabs.tabWidget(options))
+    return div
+  }
+
+  async function getDashboardItems () {
+    const me = UI.authn.currentUser()
+    const div = dom.createElement('div')
+    const [books, pods] = await Promise.all([
+      getAddressBooks(),
+      getPods()
+    ])
+    return [
+      { paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg' },
+      // TODO: Fix basicPreferences properly then reintroduce when ready
+      // { paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg' },
+      { paneName: 'trustedApplications', label: 'Trusted Apps', icon: UI.icons.iconBase + 'noun_15177.svg.svg' },
+      { paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg' }
+    ]
+      .concat(books)
+      .concat(pods)
+
+    async function getPods () {
+      try {
+        // need to make sure that profile is loaded
+        await kb.fetcher.load(me.doc())
+      } catch (err) {
+        console.error('Unable to load profile', err)
+        return []
+      }
+      const pods = kb.each(me, ns.space('storage'), null, me.doc())
+      return pods.map((pod, index) => {
+        let label = pods.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
+        return {
+          paneName: 'folder',
+          tabName: `folder-${index}`,
+          label,
+          subject: pod,
+          icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
+        }
+      })
+    }
+
+    async function getAddressBooks () {
+      try {
+        const context = await UI.authn.findAppInstances({me, div, dom}, ns.vcard('AddressBook'))
+        return (context.instances || []).map((book, index) => ({
+          paneName: 'contact',
+          tabName: `contact-${index}`,
+          label: 'Contacts',
+          subject: book,
+          icon: UI.icons.iconBase + 'noun_15695.svg'
+        }))
+      } catch (err) {
+        console.error('oops in globalAppTabs AddressBook')
+      }
+      return []
+    }
+  }
+  this.getDashboardItems = getDashboardItems
+
+  async function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
+    container.innerHTML = ''
+    // console.log(container)
+    const currentPane = dom.querySelector('#outline .paneShown')
+    if (unselectCurrentPane && currentPane) {
+      // eslint-disable-next-line no-undef
+      // currentPane.dispatchEvent(new Event('clglobalAppTabsick'))
+    }
+    let ele = await globalAppTabs(globalPaneToSelect)
+    return container.appendChild(ele)
+  }
+  this.showDashboard = showDashboard
+
+  function expandedHeaderTR (subject, requiredPane, options) {
+    function renderPaneIconTray (td) {
+      const paneShownStyle = 'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
+      const paneHiddenStyle = 'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
+      const paneIconTray = td.appendChild(dom.createElement('nav'))
+      paneIconTray.style = 'display:flex; justify-content: flex-start; align-items: center;'
+
+      tr.firstPane = null
+      var paneNumber = 0
+      var relevantPanes = []
+      var labels = []
+
+      if (requiredPane) {
+        tr.firstPane = requiredPane
+      };
+      for (var i = 0; i < panes.list.length; i++) {
+        let pane = panes.list[i]
+        var lab = pane.label(subject, dom)
+        if (!lab || pane.global) continue
+
+        relevantPanes.push(pane)
+        if (pane === requiredPane) {
+          paneNumber = relevantPanes.length - 1 // point to this one
+        }
+        labels.push(lab)
+          // steal the focus
+        if (!tr.firstPane && pane.shouldGetFocus && pane.shouldGetFocus(subject)) {
+          tr.firstPane = pane
+          paneNumber = relevantPanes.length - 1
+          UI.log.info('the ' + i + 'th pane steals the focus')
+        }
+      }
+      if (!relevantPanes.length) relevantPanes.push(panes.internalPane)
+      tr.firstPane = tr.firstPane || relevantPanes[0]
+
+      if (relevantPanes.length !== 1) { // if only one, simplify interface
+        for (let i = 0; i < relevantPanes.length; i++) {
+          let pane = relevantPanes[i]
+          var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i], dom)
+          ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
+            // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
+          // ico.style.width = iconHeight
+          // ico.style.height = iconHeight
+          var listen = function (ico, pane) { // Freeze scope for event time
+            ico.addEventListener('click', function (event) {
+                // Find the containing table for this subject
+              for (var t = td; t.parentNode; t = t.parentNode) {
+                if (t.nodeName === 'TABLE') break
+              }
+              if (t.nodeName !== 'TABLE') throw new Error('outline: internal error.')
+              var removePanes = function (specific) {
+                for (var d = t.firstChild; d; d = d.nextSibling) {
+                  if (typeof d.pane !== 'undefined') {
+                    if (!specific || d.pane === specific) {
+                      if (d.paneButton) {
+                        d.paneButton.setAttribute('class', 'paneHidden')
+                        d.paneButton.style = paneHiddenStyle
+                      }
+                      removeAndRefresh(d)
+                          // If we just delete the node d, ffox doesn't refresh the display properly.
+                          // state = 'paneHidden';
+                      if (d.pane.requireQueryButton && t.parentNode.className /* outer table */ &&
+                        numberOfPanesRequiringQueryButton === 1 && dom.getElementById('queryButton')) {
+                        dom.getElementById('queryButton').setAttribute('style', 'display:none;')
+                      }
                     }
                   }
                 }
               }
-            }
-            var renderPane = function (pane) {
-              var paneDiv
-              UI.log.info('outline: Rendering pane (2): ' + pane.name)
-              if (UI.no_catch_pane_errors) { // for debugging
-                paneDiv = pane.render(subject, dom, options)
-              } else {
-                try {
+              var renderPane = function (pane) {
+                var paneDiv
+                UI.log.info('outline: Rendering pane (2): ' + pane.name)
+                if (UI.no_catch_pane_errors) { // for debugging
                   paneDiv = pane.render(subject, dom, options)
-                } catch (e) { // Easier debugging for pane developers
-                  paneDiv = dom.createElement('div')
-                  paneDiv.setAttribute('class', 'exceptionPane')
-                  var pre = dom.createElement('pre')
-                  paneDiv.appendChild(pre)
-                  pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
+                } else {
+                  try {
+                    paneDiv = pane.render(subject, dom, options)
+                  } catch (e) { // Easier debugging for pane developers
+                    paneDiv = dom.createElement('div')
+                    paneDiv.setAttribute('class', 'exceptionPane')
+                    var pre = dom.createElement('pre')
+                    paneDiv.appendChild(pre)
+                    pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
+                  }
                 }
+                if (pane.requireQueryButton && dom.getElementById('queryButton')) {
+                  dom.getElementById('queryButton').removeAttribute('style')
+                }
+                var second = t.firstChild.nextSibling
+                var row = dom.createElement('tr')
+                var cell = row.appendChild(dom.createElement('td'))
+                cell.appendChild(paneDiv)
+                if (second) t.insertBefore(row, second)
+                else t.appendChild(row)
+                row.pane = pane
+                row.paneButton = ico
               }
-              if (pane.requireQueryButton && dom.getElementById('queryButton')) {
-                dom.getElementById('queryButton').removeAttribute('style')
+              var state
+              state = ico.getAttribute('class')
+              if (state === 'paneHidden') {
+                if (!event.shiftKey) { // shift means multiple select
+                  removePanes()
+                }
+                renderPane(pane)
+                ico.setAttribute('class', 'paneShown')
+                ico.style = paneShownStyle
+              } else {
+                removePanes(pane)
+                ico.setAttribute('class', 'paneHidden')
+                ico.style = paneHiddenStyle
               }
-              var second = t.firstChild.nextSibling
-              if (second) t.insertBefore(paneDiv, second)
-              else t.appendChild(paneDiv)
-              paneDiv.pane = pane
-              paneDiv.paneButton = ico
-            }
-            var state
-            state = ico.getAttribute('class')
-            if (state === 'paneHidden') {
-              if (!event.shiftKey) { // shift means multiple select
-                removePanes()
+
+                // If the view already exists, remove it
+              state = 'paneShown'
+              var numberOfPanesRequiringQueryButton = 0
+              for (var d = t.firstChild; d; d = d.nextSibling) {
+                if (d.pane && d.pane.requireQueryButton) numberOfPanesRequiringQueryButton++
               }
-              renderPane(pane)
-              ico.setAttribute('class', 'paneShown')
-            } else {
-              removePanes(pane)
-              ico.setAttribute('class', 'paneHidden')
-            }
+            }, false)
+          } // listen
 
-              // If the view already exists, remove it
-            state = 'paneShown'
-            var numberOfPanesRequiringQueryButton = 0
-            for (var d = t.firstChild; d; d = d.nextSibling) {
-              if (d.pane && d.pane.requireQueryButton) numberOfPanesRequiringQueryButton++
-            }
-
-              // paneEventClick();
-          }, false)
-        } // listen
-
-        listen(ico, pane)
-        ico.setAttribute('class', (i !== paneNumber) ? 'paneHidden' : 'paneShown')
-        if (i === paneNumber) tr.paneButton = ico
-        tr.firstChild.childNodes[1].appendChild(ico)
+          listen(ico, pane)
+          ico.setAttribute('class', (i !== paneNumber) ? 'paneHidden' : 'paneShown')
+          if (i === paneNumber) tr.paneButton = ico
+          paneIconTray.appendChild(ico)
+        }
       }
+      return paneIconTray
+    } // renderPaneIconTray
+
+    // Body of expandedHeaderTR
+    var tr = dom.createElement('tr')
+    if (options.hover) { // By default no hide till hover as community deems it confusing
+      tr.setAttribute('class', 'hoverControl')
     }
+    var td = tr.appendChild(dom.createElement('td'))
+    td.setAttribute('style', 'margin: 0.2em; border: none; padding: 0; vertical-align: top;' +
+    'display:flex; justify-content: space-between; flex-direction: row;'
+    )
+    td.setAttribute('notSelectable', 'true')
+    td.setAttribute('about', subject.toNT())
+    td.setAttribute('colspan', '2')
+
+    // Stuff at the right about the subject
+    const header = td.appendChild(dom.createElement('div'))
+    header.style = 'display:flex; justify-content: flex-start; align-items: center; flex-wrap: wrap;'
+
+    if (!options.solo) {
+      var icon = header.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase +
+          'tbl-collapse.png', 'collapse', undefined, dom))
+      icon.addEventListener('click', collapseMouseDownListener)
+    }
+
+    var strong = header.appendChild(dom.createElement('h1'))
+    strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
+    strong.style = 'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
+    UI.widgets.makeDraggable(strong, subject)
+
+    header.appendChild(renderPaneIconTray(td))
 
       // set DOM methods
     tr.firstChild.tabulatorSelect = function () {
@@ -479,12 +609,15 @@ module.exports = function (doc) {
           pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
         }
 
+        var row = dom.createElement('tr')
+        var cell = row.appendChild(dom.createElement('td'))
+        cell.appendChild(paneDiv)
         if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
           dom.getElementById('queryButton').removeAttribute('style')
         }
-        table.appendChild(paneDiv)
-        paneDiv.pane = tr1.firstPane
-        paneDiv.paneButton = tr1.paneButton
+        table.appendChild(row)
+        row.pane = tr1.firstPane
+        row.paneButton = tr1.paneButton
       }
 
       return table
@@ -885,15 +1018,6 @@ module.exports = function (doc) {
     if (about && dom.getElementById('UserURI')) {
       dom.getElementById('UserURI').value =
         (about.termType === 'NamedNode') ? about.uri : '' // blank if no URI
-    } else if (about && UI.isExtension) {
-      var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
-      tabStatusBar.setAttribute('style', 'display:block')
-      tabStatusBar.label = (about.termType === 'NamedNode') ? about.uri : '' // blank if no URI
-      if (tabStatusBar.label === '') {
-        tabStatusBar.setAttribute('style', 'display:none')
-      } else {
-        tabStatusBar.addEventListener('click', this.statusBarClick, false)
-      }
     }
   }
 
@@ -912,8 +1036,6 @@ module.exports = function (doc) {
       var source = st.why
       if (source && source.uri) {
         sourceWidget.highlight(source, true)
-      } else if (UI.isExtension && source.termType === 'BlankNode') {
-        sourceWidget.highlight(kb.sym('resource://tabulator/'), true) // see extension
       }
     }
   }
@@ -941,8 +1063,6 @@ module.exports = function (doc) {
 
       var about = UI.utils.getTerm(node) // show uri for a newly selectedTd
       thisOutline.showURI(about)
-      // if(UI.isExtension && about && about.termType=='NamedNode') gURLBar.value = about.uri;
-      // about==null when node is a TBD
 
       var st = node.AJAR_statement // show blue cross when the why of that triple is editable
       if (typeof st === 'undefined') st = node.parentNode.AJAR_statement
@@ -1268,7 +1388,7 @@ module.exports = function (doc) {
     var target = thisOutline.targetOf(e)
     var subject = UI.utils.getAbout(kb, target)
     var pane = e.altKey ? panes.internalPane : undefined
-    var p = target.parentNode
+    var p = target.parentNode.parentNode
     outlineCollapse(p, subject, pane)
   }
 
@@ -1394,6 +1514,16 @@ module.exports = function (doc) {
     if (e) e.stopPropagation()
   } // function TabulatorMousedown
 
+  function setUrlBarAndTitle (subject) {
+    dom.title = UI.utils.label(subject)
+    if (dom.location.href.startsWith(subject.site().uri)) {
+      // dom.location = subject.uri  // No causes reload
+    }
+  }
+
+/** Expand an outline view
+* @param p {Element} - container
+*/
   function outlineExpand (p, subject1, options) {
     options = options || {}
     var pane = options.pane
@@ -1484,7 +1614,7 @@ module.exports = function (doc) {
         // Body of outlineExpand
 
     if (options.solo) {
-      dom.title = UI.utils.label(subject)
+      setUrlBarAndTitle(subject)
     }
     UI.log.debug('outlineExpand: dereferencing ' + subject)
     var status = dom.createElement('span')
@@ -1517,7 +1647,8 @@ module.exports = function (doc) {
           sf.lookUpThing(subject)
           render() // inital open, or else full if re-open
           if (options.solo) { // Update window title with new information
-            dom.title = UI.utils.label(subject)
+            // dom.title = UI.utils.label(subject)
+            setUrlBarAndTitle(subject)
           }
         } else {
           var message = dom.createElement('pre')
@@ -1574,17 +1705,14 @@ module.exports = function (doc) {
   }
 
   function outlineRefocus (p, subject) { // Shift-expand or shift-collapse: Maximize
-    if (UI.isExtension && subject.termType === 'symbol' && subject.uri.indexOf('#') < 0) {
-      gBrowser.selectedBrowser.loadURI(subject.uri)
-      return
-    }
     var outer = null
     for (var level = p.parentNode; level; level = level.parentNode) {
       UI.log.debug('level ' + level.tagName)
       if (level.tagName === 'TD') outer = level
     } // find outermost td
     UI.utils.emptyNode(outer).appendChild(propertyTable(subject))
-    dom.title = UI.utils.label(subject)
+    setUrlBarAndTitle(subject)
+    // dom.title = UI.utils.label(subject)
     outer.setAttribute('about', subject.toNT())
   } // outlineRefocus
 
@@ -1615,18 +1743,21 @@ module.exports = function (doc) {
     this.GotoSubject(subject)
   }
 
-  // Display the subject in an outline view
-  //
-  // subject -- RDF term for teh thing to be presented
-  // expand  -- flag -- open the subject rather than keep folded closed
-  // pane    -- optional -- pane to be used for expanded display
-  // solo    -- optional -- the window will be cleared out and only the subject displayed
-  // referer -- optional -- where did we hear about this from anyway?
-  // table   -- option  -- a table element in which to put the outline.
+  /** Display the subject in an outline view
 
+  @param subject -- RDF term for teh thing to be presented
+  @param expand  -- flag -- open the subject rather than keep folded closed
+  @param pane    -- optional -- pane to be used for expanded display
+  @param solo    -- optional -- the window will be cleared out and only the subject displayed
+  @param referer -- optional -- where did we hear about this from anyway?
+  @param table   -- option  -- a table element in which to put the outline.
+*/
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    if (!table) table = dom.getElementById('outline') // @@ if does not exist just add one
-    if (solo) UI.utils.emptyNode(table)
+    table = table || dom.getElementById('outline') // if does not exist just add one? nowhere to out it
+    if (solo) {
+      UI.utils.emptyNode(table)
+      table.style.width = '100%'
+    }
 
     function GotoSubjectDefault () {
       var tr = dom.createElement('TR')
@@ -1637,21 +1768,9 @@ module.exports = function (doc) {
       return td
     }
 
-    if (UI.isExtension) {
-      var newURI = function (spec) {
-      // e.g. see http://www.nexgenmedia.net/docs/protocol/
-        const MozillaSimpoleURIContactId = '@mozilla.org/network/simple-uri;1'
-        var nsIURI = Components.interfaces.nsIURI
-        var uri = Components.classes[MozillaSimpoleURIContactId].createInstance(nsIURI)
-        uri.spec = spec
-        return uri
-      }
-    }
-
     var td = GotoSubjectDefault()
-    // if (!td) td = GotoSubjectDefault(); //the first tr is required  // eh?
 
-    if (solo) dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
+    if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
       outlineExpand(td, subject, {
@@ -1663,10 +1782,10 @@ module.exports = function (doc) {
     }
 
     if (
-      solo && dom && dom.defaultView && dom.defaultView.history
+      solo && dom && dom.defaultView && dom.defaultView.history &&
       // Don't add the new location to the history if we arrived here through a direct link
       // (i.e. when static/databrowser.html in node-solid-server called this method):
-      && document.location.href !== subject.uri
+      document.location.href !== subject.uri
     ) {
       let stateObj = pane ? { paneName: pane.name } : {}
       try { // can fail if different origin
@@ -1676,35 +1795,9 @@ module.exports = function (doc) {
       }
     }
 
-    if (solo && UI.isExtension) {
-      // See https://developer.mozilla.org/en/NsIGlobalHistory2
-      // See <http://mxr.mozilla.org/mozilla-central/source/toolkit/
-      //     components/places/tests/mochitest/bug_411966/redirect.js#157>
-      var ghist2 = Components.classes['@mozilla.org/browser/global-history;2']
-      .getService(Components.interfaces.nsIGlobalHistory2)
-      ghist2.addURI(newURI(subject.uri), false, true, referrer)
-      /*
-                var historyService = Components.classes['@mozilla.org/browser/nav-history-service;1']
-                    .getService(Components.interfaces.nsINavHistoryService);
-                // See http://people.mozilla.com/~dietrich/places/interfacens_i_nav_history_service.html
-                // and https://developer.mozilla.org/en/NSPR_API_Reference/Date_and_Time and
-                // https://developer.mozilla.org/en/Using_the_Places_history_service
-                historyService.addVisit(newURI(subject.uri),
-                        undefined, @@
-                        undefined, // in nsIURI aReferringUR
-                        historyService.TRANSITION_LINK, // = 1
-                        false, // True if the given visit redirects to somewhere else. (hides it)
-                        0) // @@ Should be the session ID
-      */
-    }
     return subject
   }
 
-/*
-  this.GotoURIAndOpen = function (uri) {
-    GotoURI(uri)
-  }
-*/
   // / /////////////////////////////////////////////////////
   //
   //
@@ -1835,98 +1928,6 @@ module.exports = function (doc) {
     anchor.appendChild(dom.createTextNode(address))
     return anchor
   }
-    /* need to make unique calendar containers and names
-     * YAHOO.namespace(namespace) returns the namespace specified
-     * and creates it if it doesn't exist
-     * function 'uni' creates a unique namespace for a calendar and
-     * returns number ending
-     * ex: uni('cal') may create namespace YAHOO.cal1 and return 1
-     *
-     * YAHOO.namespace('foo.bar') makes YAHOO.foo.bar defined as an object,
-     * which can then have properties
-     */
-     /*
-  function uni (prefix) {
-    var n = counter()
-    var name = prefix + n
-    YAHOO.namespace(name)
-    return n
-  }
-  */
-    // counter for calendar ids,
-    /*
-  var counter = (function () {
-    var n = 0
-    return function () {
-      n += 1
-      return n
-    }
-  }())
-  */ // *note* those ending parens! I'm using function scope
-  /*
-  var renderHoliday = function (workingDate, cell) {
-    YAHOO.util.Dom.addClass(cell, 'holiday')
-  }
-  */
-    /* toggles whether element is displayed
-     * if elt.getAttribute('display') returns null,
-     * it will be assigned 'block'
-     */
-     /*
-  function toggle (eltname) {
-    var elt = dom.getElementById(eltname)
-    elt.style.display = (elt.style.display === 'none') ? 'block' : 'none'
-  }
-  */
-    /* Example of calendar Id: cal1
-     * 42 cells in one calendar. from top left counting, each table cell has
-     * ID: YAHOO.cal1_cell0 ... YAHOO.cal.1_cell41
-     * name: YAHOO.cal1__2006_3_2 for anchor inside calendar cell
-     * of date 3/02/2006
-     *
-     */
-     /* unused
-  function VIEWAS_cal (obj) {
-    var prefix = 'cal'
-    var cal = prefix + uni(prefix)
-
-    var containerId = cal + 'Container'
-    var table = dom.createElement('table')
-    table.setAttribute('style', 'width: 100%;')
-
-      // create link to hide/show calendar
-    var a = dom.createElement('a')
-      // a.appendChild(document.createTextNode('[toggle]'))
-    a.innerHTML = '<small>mm-dd: ' + obj.value + '[toggle]</small>'
-      // a.setAttribute('href',':toggle(''+containerId+'')');
-    a.onclick = function () {
-      toggle(containerId)
-    }
-    table.appendChild(a)
-
-    var dateArray = obj.value.split('-')
-    var m = dateArray[0]
-    var d = dateArray[1]
-    var yr = (dateArray.length > 2) ? dateArray[2] : (new Date()).getFullYear()
-
-      // hack: calendar will be appended to divCal at first, but will
-      // be moved to new location
-    dom.getElementById('divCal').appendChild(table)
-    var div = table.appendChild(dom.createElement('DIV'))
-    div.setAttribute('id', containerId)
-      // default hide calendar
-    div.style.display = 'none'
-    div.setAttribute('tag', 'calendar')
-    YAHOO[cal] = new YAHOO.widget.Calendar('YAHOO.' + cal, containerId, m + '/' + yr)
-
-    YAHOO[cal].addRenderer(m + '/' + d, renderHoliday)
-
-    YAHOO[cal].render()
-      // document.childNodes.removeChild(table);
-    return table
-  }
-*/
- //  VIEWAS_cal ends
 
   this.createTabURI = function () {
     dom.getElementById('UserURI').value =
@@ -1938,20 +1939,6 @@ module.exports = function (doc) {
   this.UserInput.deselectAll = deselectAll
   this.UserInput.views = views
   this.outlineExpand = outlineExpand
-
-  if (UI.isExtension) {
-    window.addEventListener('unload', function () {
-      var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
-      tabStatusBar.label = ''
-      tabStatusBar.setAttribute('style', 'display:none')
-    }, true)
-
-    gBrowser.mPanelContainer.addEventListener('select', function () {
-      var tabStatusBar = gBrowser.ownerDocument.getElementById('tabulator-display')
-      tabStatusBar.label = ''
-      tabStatusBar.setAttribute('style', 'display:none')
-    }, true)
-  }
 
   // this.panes = panes; // Allow external panes to register
 

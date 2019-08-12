@@ -1,0 +1,11 @@
+{
+  "extends": ["tslint-config-standard"],
+  "defaultSeverity": "error",
+  "linterOptions": {
+    "exclude": [
+      "node_modules/**/*.ts"
+    ]
+  },
+  "lib": "es2018,dom",
+  "rules": {}
+}

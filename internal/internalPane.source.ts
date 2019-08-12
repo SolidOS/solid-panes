@@ -5,18 +5,19 @@
 */
 /* global alert confirm */
 
-const UI = require('solid-ui')
-const panes = require('pane-registry')
+import { PaneDefinition } from '../types'
+import UI from 'solid-ui'
+import panes from 'pane-registry'
+import { IndexedFormula, NamedNode } from 'rdflib'
 
 const ns = UI.ns
 
-module.exports = {
+const pane: PaneDefinition = {
   icon: UI.icons.originalIconBase + 'tango/22-emblem-system.png',
 
   name: 'internal',
 
-  label: function (subject) {
-    // if (subject.uri)
+  label: function () {
     return 'under the hood' // There is often a URI even of no statements
   },
 
@@ -25,35 +26,44 @@ module.exports = {
     var kb = UI.store
     subject = kb.canon(subject)
     var types = kb.findTypeURIs(subject)
-    function filter (pred, inverse) {
+
+    function filter (pred: NamedNode) {
       if (types['http://www.w3.org/2007/ont/link#ProtocolEvent']) return true // display everything for them
-      return !!(typeof panes.internal.predicates[pred.uri] !== 'undefined')
+      return !!(typeof (panes as any).internal.predicates[pred.uri] !== 'undefined')
     }
+
     var div = dom.createElement('div')
     div.setAttribute('class', 'internalPane')
     div.setAttribute('style', 'background-color: #ddddff; padding: 0.5em; border-radius: 1em;')
 
-    function deleteRecursive (kb, folder) {
+    function deleteRecursive (kb: IndexedFormula, folder: NamedNode) {
+      const fetcher = (kb as any).fetcher
+      if (!fetcher) {
+        console.error('No fetcher available')
+        return
+      }
       return new Promise(function (resolve, reject) {
-        kb.fetcher.load(folder).then(function () {
+        fetcher.load(folder).then(function () {
           let promises = kb.each(folder, ns.ldp('contains')).map(file => {
             if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
-              return deleteRecursive(kb, file)
+              return deleteRecursive(kb, file as NamedNode)
             } else {
               console.log('deleteRecursive leaf file: ' + file)
-              return kb.fetcher.webOperation('DELETE', file.uri)
+              return fetcher.webOperation('DELETE', (file as NamedNode).uri)
             }
           })
-          Promise.all(promises).then(res => {
+          Promise.all(promises).then(() => {
             console.log('deleteRecursive empty folder: ' + folder)
-            kb.fetcher.webOperation('DELETE', folder.uri).then(res => {
-              console.log('Deleted Ok: ' + folder)
-              resolve()
-            }, err => {
-              var str = 'Unable to delete ' + folder + ': ' + err
-              console.log(str)
-              reject(new Error(str))
-            })
+            fetcher.webOperation('DELETE', folder.uri)
+              .then(() => {
+                console.log('Deleted Ok: ' + folder)
+                resolve()
+              })
+              .catch((err: string) => {
+                var str = 'Unable to delete ' + folder + ': ' + err
+                console.log(str)
+                reject(new Error(str))
+              })
             resolve()
           }, err => {
             alert(err)
@@ -66,35 +76,41 @@ module.exports = {
     const isDocument = subject.uri && !subject.uri.includes('#')
     if (isDocument) {
       const controls = div.appendChild(dom.createElement('table'))
-      controls.style = 'width: 100%; margin: 1em;'
+      controls.style.width = '100%'
+      controls.style.margin = '1em'
       const controlRow = controls.appendChild(dom.createElement('tr'))
 
       const deleteCell = controlRow.appendChild(dom.createElement('td'))
       const isFolder = ((subject.uri && subject.uri.endsWith('/')) ||
         kb.holds(subject, ns.rdf('type'), ns.ldp('Container')))
       const noun = isFolder ? 'folder' : 'file'
-      var deleteButton = UI.widgets.deleteButtonWithCheck(dom, deleteCell, noun, function () {
-        if (!confirm('Are you sure you want to delete ' + subject + '? This cannot be undone.')) return
-        var promise = isFolder ? deleteRecursive(kb, subject)
-          : kb.fetcher.webOperation('DELETE', subject.uri)
-        promise.then(response => {
-          var str = 'Deleted: ' + subject
-          console.log(str)
-        }, err => {
-          var str = 'Unable to delete ' + subject + ': ' + err
-          console.log(str)
-          alert(str)
+      if (!isProtectedUri(subject)) {
+        console.log(subject)
+        var deleteButton = UI.widgets.deleteButtonWithCheck(dom, deleteCell, noun, function () {
+          if (!confirm('Are you sure you want to delete ' + subject + '? This cannot be undone.')) return
+          var promise = isFolder ? deleteRecursive(kb, subject)
+            : kb.fetcher.webOperation('DELETE', subject.uri)
+          promise
+            .then(() => {
+              var str = 'Deleted: ' + subject
+              console.log(str)
+            })
+            .catch((err: any) => {
+              var str = 'Unable to delete ' + subject + ': ' + err
+              console.log(str)
+              alert(str)
+            })
         })
-      })
-      deleteButton.style = 'height: 2em;'
-      deleteButton.class = '' // Remove hover hide
-      deleteCell.appendChild(deleteButton)
+        deleteButton.style = 'height: 2em;'
+        deleteButton.class = '' // Remove hover hide
+        deleteCell.appendChild(deleteButton)
+      }
 
       const refreshCell = controlRow.appendChild(dom.createElement('td'))
       const refreshButton = UI.widgets.button(dom, UI.icons.iconBase + 'noun_479395.svg', 'refresh')
       refreshCell.appendChild(refreshButton)
-      refreshButton.addEventListener('click', event => {
-        kb.fetcher.refresh(subject, function (ok, errm, res) {
+      refreshButton.addEventListener('click', () => {
+        kb.fetcher.refresh(subject, function (ok: boolean, errm: string) {
           let str
           if (ok) {
             str = 'Refreshed OK: ' + subject
@@ -153,9 +169,25 @@ module.exports = {
     'http://www.w3.org/2000/01/rdf-schema#seeAlso': 1,
     'http://www.w3.org/2002/07/owl#': 1
   },
+
   classes: { // Things which are inherently already undercover
     'http://www.w3.org/2007/ont/link#ProtocolEvent': 1
   }
 }
+
+function isProtectedUri (subject: NamedNode): boolean {
+  // TODO: Could make the code below smarter by removing some of the redundancy by creating a recursive function, but did not bother now
+  const siteUri = subject.site().uri
+  return subject.uri === siteUri ||
+    subject.uri === siteUri + 'profile/' ||
+    subject.uri === siteUri + 'profile/card' ||
+    subject.uri === siteUri + 'settings/' ||
+    subject.uri === siteUri + 'settings/prefs.ttl' ||
+    subject.uri === siteUri + 'settings/privateTypeIndex.ttl' ||
+    subject.uri === siteUri + 'settings/publicTypeIndex.ttl' ||
+    subject.uri === siteUri + 'settings/serverSide.ttl'
+}
+
+export default pane
 
 // ends

@@ -1,20 +1,21 @@
 /* eslint-env jest */
-import $rdf from 'rdflib'
 import vocab from 'solid-namespace'
 import { view } from './view'
+import $rdf, { DataFactory, IndexedFormula, NamedNode } from 'rdflib'
 
+const { lit } = DataFactory
 const ns = vocab($rdf)
 
-function addMockPad (mockStore: $rdf.IndexedFormula): $rdf.NamedNode {
+function addMockPad (mockStore: IndexedFormula): NamedNode {
   const mockPad = $rdf.sym('https://mock-pad')
   const mockFirstLine = $rdf.sym('https://arbitrary-line-1')
   mockStore.add(mockPad, ns.pad('next'), mockFirstLine, mockPad.doc())
-  mockStore.add(mockFirstLine, ns.sioc('content'), 'First line', mockPad.doc())
-  mockStore.add(mockFirstLine, ns.dc('created'), new Date(0), mockPad.doc())
+  mockStore.add(mockFirstLine, ns.sioc('content'), lit('First line'), mockPad.doc())
+  mockStore.add(mockFirstLine, ns.dc('created'), lit(new Date(0).toString()), mockPad.doc())
   const mockSecondLine = $rdf.sym('https://arbitrary-line-2')
   mockStore.add(mockFirstLine, ns.pad('next'), mockSecondLine, mockPad.doc())
-  mockStore.add(mockSecondLine, ns.sioc('content'), 'Second line', mockPad.doc())
-  mockStore.add(mockSecondLine, ns.dc('created'), new Date(0), mockPad.doc())
+  mockStore.add(mockSecondLine, ns.sioc('content'), lit('Second line'), mockPad.doc())
+  mockStore.add(mockSecondLine, ns.dc('created'), lit(new Date(0).toString()), mockPad.doc())
   mockStore.add(mockSecondLine, ns.pad('next'), mockPad, mockPad.doc())
 
   return mockPad

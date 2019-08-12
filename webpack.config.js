@@ -10,7 +10,7 @@ module.exports = {
     libraryTarget: 'commonjs2',
   },
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
+    extensions: ['.mjs', '.js', '.ts']
   },
   module: {
     rules: [
@@ -18,19 +18,25 @@ module.exports = {
         test: /\.(mjs|js|ts)$/,
         exclude: /(node_modules|bower_components)/,
         use: {
-          loader: 'babel-loader',
+          loader: 'babel-loader'
         }
       }
-    ],
+    ]
+  },
+  externals: {
+    rdflib: 'rdflib',
+    'solid-namespace': 'solid-namespace',
+    'solid-ui': 'solid-ui'
   },
   plugins: [
     new webpack.DefinePlugin({
       // Prevent solid-auth-tls (used by solid-ui) from running Node code:
-      'global.IS_BROWSER': JSON.stringify(true),
+      'global.IS_BROWSER': JSON.stringify(true)
     }),
-    new ForkTsCheckerWebpackPlugin(),
+    new ForkTsCheckerWebpackPlugin()
   ],
   node: {
     fs: 'empty'
-  }
+  },
+  devtool: 'source-map'
 }

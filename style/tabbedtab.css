@@ -58,7 +58,7 @@ td.internal  {  }
 
 /*   Moved into code:
 div.internalPane { background-color: #ddddff; padding: 0.5em;
- -moz-border-radius: 1em;   border-radius: .4em;  }
+ border-radius: 1em;   border-radius: .4em;  }
 
 div.instancePane {
         border-top: solid 1px #777; border-bottom: solid 1px #777;
@@ -73,7 +73,7 @@ div.container {
     border-right: solid 5px black;
     margin-top: 0.5em;
     margin-bottom: 0.5em;
-    -moz-border-radius: 0.75em;
+    border-radius: 0.75em;
 }
 /*
 div.nonCompliantPane {
@@ -84,7 +84,7 @@ div.nonCompliantPane {
     padding: 0.5em;
     background-color: #fbf0f7;
     margin-top: 0.5em; margin-bottom: 0.5em;
-    -moz-border-radius: 1em;
+    border-radius: 1em;
 }
 
 div.compliantPane {
@@ -95,7 +95,7 @@ div.compliantPane {
     padding: 0.5em;
     background-color: #def8e0;
     margin-top: 0.5em; margin-bottom: 0.5em;
-    -moz-border-radius: 1em;
+    border-radius: 1em;
 }
 */
 div.justification {
@@ -120,7 +120,7 @@ div.description {
     margin-bottom: 0.5em;
     margin-left: 0.5em;
     margin-right: 0.5em;
-    -moz-border-radius: 0.75em;
+    border-radius: 0.75em;
     position:relative;
     left:0%
 }
@@ -138,7 +138,7 @@ div.premises {
     margin-bottom: 0.5em;
     margin-left: 0.5em;
     margin-right: 0.5em;
-    -moz-border-radius: 0.75em;
+    border-radius: 0.75em;
     position:relative;
     left:0% /*May be we could shift the left margin a bit?*/
 }
@@ -201,7 +201,7 @@ table.inputForm { font-size: 100% }
 .navBlock .navSection {
     border: solid 0.05em gray;
     padding: 0.5em;
- -moz-border-radius: 0.5em; /* CSS3: border-radius: .4em; */
+ border-radius: 0.5em; /* CSS3: border-radius: .4em; */
 }
 
 div.socialPane h2 { color: #202 }
@@ -222,7 +222,7 @@ div.social_linkButton {
   .tip  { font-style: normal; color: #333; margin: 1em;}
   .task  { font-style: normal; color: #333; margin: 1em;
         background-color: #ffe; padding: 1em;
- -moz-border-radius: 1em; /* CSS3: border-radius: 1em; */
+ border-radius: 1em; /* CSS3: border-radius: 1em; */
   }
   .success {background-color: #efe }
   .failure {background-color: white ; border: 0.5em red}
@@ -253,7 +253,7 @@ div.exceptionPane pre { background-color: #fee; }
 .categoryTable { padding-left: 2em;}
 .categoryPane { background-color: #f8fff8; padding: 0.5em;
     border-width: 0.1em; border-color: #777777;
- -moz-border-radius: 1em; /* CSS3: border-radius: .4em; */ }
+ border-radius: 1em; /* CSS3: border-radius: .4em; */ }
 
 .categoryPane a.categoryWhy      { color: #ddd}
 .categoryPane a.categoryWhy:link { color: #ddd; text-decoration: none; font-weight: bold}
@@ -271,7 +271,7 @@ div.exceptionPane pre { background-color: #fee; }
     background-color: #F2F6DA;
     border-width: 0.1em;
     border-color: #777777;
-    -moz-border-radius: 1em; /* CSS3: border-radius: .4em; */
+    border-radius: 1em; /* CSS3: border-radius: .4em; */
     padding: 1em;
 
     text-decoration: none;
@@ -365,7 +365,7 @@ div.dataContentPane {
     border-bottom: solid 1px #777;
     border-right: solid 1px #777;
     padding: 0.5em;
-     -moz-border-radius: 0.5em;
+     border-radius: 0.5em;
 }
 
 div.dataContentPane td {
@@ -460,7 +460,7 @@ img.hideTillHover:hover  {
 
 /* Pane icons: */
 
-
+/*
 .hoverControl .paneShown{ border-radius: 0.5em;
             border-top:         solid #222 1px;
             border-left:        solid #222 0.1em; border-bottom: solid #eee 0.1em;
@@ -479,8 +479,11 @@ img.hideTillHover:hover  {
 
 .paneHidden { border-radius: 0.5em; margin-left: 1em; padding: 3px}
 
-.hoverControl .paneHidden { -moz-border-radius: 0.5em; margin-left: 1em; padding: 3px;  visibility:hidden;}
-.hoverControl:hover .paneHidden { -moz-border-radius: 0.5em; margin-left: 1em; padding: 3px; visibility:visible; }
+.hoverControl .paneHidden { border-radius: 0.5em; margin-left: 1em; padding: 3px;  visibility:hidden;}
+.hoverControl:hover .paneHidden { border-radius: 0.5em; margin-left: 1em; padding: 3px; visibility:visible; }
+*/
+
+
 
 /* outline object view */
 img.outlineImage { max-height: 20em; max-width: 30em } /* save vertical space */

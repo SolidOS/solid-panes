@@ -3,7 +3,7 @@ import $rdf from 'rdflib'
 import namespaces from 'solid-namespace'
 import { getLabel } from './profilePaneUtils'
 
-const ns = namespaces($rdf as any)
+const ns = namespaces($rdf)
 
 describe('getLabel', () => {
   it('should return "Edit your profile" by default', () => {
