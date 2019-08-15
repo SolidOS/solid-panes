@@ -381,7 +381,7 @@ module.exports = function (doc) {
   this.showDashboard = showDashboard
 
   function expandedHeaderTR (subject, requiredPane, options) {
-    function renderPaneIconTray (td, hideList) {
+    function renderPaneIconTray (td, options = {}) {
       const paneShownStyle = 'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
       const paneHiddenStyle = 'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
@@ -398,7 +398,7 @@ module.exports = function (doc) {
       for (var i = 0; i < panes.list.length; i++) {
         let pane = panes.list[i]
         var lab = pane.label(subject, dom)
-        if (!lab || pane.global || hideList) continue
+        if (!lab || pane.global || options.hideList) continue
 
         relevantPanes.push(pane)
         if (pane === requiredPane) {
@@ -540,7 +540,9 @@ module.exports = function (doc) {
       UI.widgets.makeDraggable(strong, subject)
     }
 
-    header.appendChild(renderPaneIconTray(td, showHeader))
+    header.appendChild(renderPaneIconTray(td, {
+      hideList: showHeader
+    }))
 
     // set DOM methods
     tr.firstChild.tabulatorSelect = function () {
