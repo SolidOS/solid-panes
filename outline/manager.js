@@ -381,7 +381,7 @@ module.exports = function (doc) {
   this.showDashboard = showDashboard
 
   function expandedHeaderTR (subject, requiredPane, options) {
-    function renderPaneIconTray (td) {
+    function renderPaneIconTray (td, hideList) {
       const paneShownStyle = 'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
       const paneHiddenStyle = 'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
@@ -394,11 +394,11 @@ module.exports = function (doc) {
 
       if (requiredPane) {
         tr.firstPane = requiredPane
-      };
+      }
       for (var i = 0; i < panes.list.length; i++) {
         let pane = panes.list[i]
         var lab = pane.label(subject, dom)
-        if (!lab || pane.global) continue
+        if (!lab || pane.global || hideList) continue
 
         relevantPanes.push(pane)
         if (pane === requiredPane) {
@@ -527,20 +527,22 @@ module.exports = function (doc) {
     const header = td.appendChild(dom.createElement('div'))
     header.style = 'display:flex; justify-content: flex-start; align-items: center; flex-wrap: wrap;'
 
-    if (!options.solo) {
+    const showHeader = !!requiredPane
+
+    if (!options.solo && !showHeader) {
       var icon = header.appendChild(UI.utils.AJARImage(UI.icons.originalIconBase +
           'tbl-collapse.png', 'collapse', undefined, dom))
       icon.addEventListener('click', collapseMouseDownListener)
+
+      var strong = header.appendChild(dom.createElement('h1'))
+      strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
+      strong.style = 'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
+      UI.widgets.makeDraggable(strong, subject)
     }
 
-    var strong = header.appendChild(dom.createElement('h1'))
-    strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
-    strong.style = 'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
-    UI.widgets.makeDraggable(strong, subject)
+    header.appendChild(renderPaneIconTray(td, showHeader))
 
-    header.appendChild(renderPaneIconTray(td))
-
-      // set DOM methods
+    // set DOM methods
     tr.firstChild.tabulatorSelect = function () {
       setSelected(this, true)
     }
