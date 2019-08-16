@@ -49,7 +49,7 @@ export const basicPreferencesPane: PaneDefinition = {
   ui:label "I am a Developer".
 
 `
-    const preferencesForm = kb.sym('https://solid.github.io/solid-panes/dashboard/basicPreferencesForm.ttl#this')
+    const preferencesForm = kb.sym('urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this')
     const preferencesFormDoc = preferencesForm.doc()
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
       (parse as any)(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null) // Load form directly
