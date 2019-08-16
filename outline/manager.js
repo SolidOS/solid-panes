@@ -320,8 +320,7 @@ module.exports = function (doc) {
     ])
     return [
       { paneName: 'home', label: 'Your stuff', icon: UI.icons.iconBase + 'noun_547570.svg' },
-      // TODO: Fix basicPreferences properly then reintroduce when ready
-      // { paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg' },
+      { paneName: 'basicPreferences', label: 'Preferences', icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg' },
       { paneName: 'trustedApplications', label: 'Trusted Apps', icon: UI.icons.iconBase + 'noun_15177.svg.svg' },
       { paneName: 'editProfile', label: 'Edit your profile', icon: UI.icons.iconBase + 'noun_492246.svg' }
     ]
