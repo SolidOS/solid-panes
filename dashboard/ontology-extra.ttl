@@ -1,0 +1,33 @@
+
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix solid: <http://www.w3.org/ns/solid/terms#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix schema: <http:/schema.org/>.
+@prefix ui: <http://www.w3.org/ns/ui#>.
+@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+@prefix : <#>.
+
+solid:User a rdfs:Class;
+  rdfs:label "user"@en, "utilisateur"@fr;
+  rdfs:comment """Any person who might use a Solid-based system""";
+  rdfs:subClassOf foaf:Person, schema:Person, vcard:Indivudual.
+
+solid:NewUser a rdfs:Class;
+  rdfs:label "new user"@en;
+  rdfs:comment """A person who might use a Solid-based system who has low
+  level of familarity with technical details.""";
+  rdfs:subClassOf solid:User.
+    
+solid:PowerUser a rdfs:Class;
+  rdfs:label "power user"@en;
+  rdfs:comment """A person who might use a Solid-based system
+  who is prepared to be given a more complex interface in order
+  to be provided with more pwerful features.""";
+  rdfs:subClassOf solid:User.
+
+  solid:User a rdfs:Class;
+    rdfs:label "Developer";
+    rdfs:comment """Any person who might use a Solid-based system,
+    who has software development skills.""";
+    rdfs:subClassOf solid:User.
