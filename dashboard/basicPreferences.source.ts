@@ -44,14 +44,9 @@ export const basicPreferencesPane: PaneDefinition = {
     ui:parts ( :powerUser :developerUser  ).
 
 :powerUser a ui:BooleanField; ui:property solid:powerUser;
-  ui:label "Color user input by user".
+  ui:label "I am a Power User".
 :developerUser a ui:BooleanField; ui:property solid:developerUser;
-  ui:label "Expand image URLs inline".
-:newestFirst a ui:BooleanField; ui:property solid:newestFirst;
-  ui:label "Newest messages at the top".
-
-:inlineImageHeightEms a ui:IntegerField; ui:property solid:inlineImageHeightEms;
-  ui:label "Inline image height (lines)".
+  ui:label "I am a Developer".
 
 `
     const preferencesForm = kb.sym('https://solid.github.io/solid-panes/dashboard/basicPreferencesForm.ttl#this')
