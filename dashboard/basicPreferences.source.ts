@@ -29,50 +29,38 @@ export const basicPreferencesPane: PaneDefinition = {
 
     const formArea = container.appendChild(dom.createElement('div'))
 
-    function loadData (doc: NamedNode, turtle: String) {
-      doc = doc.doc() // remove # from URI if nec
-      if (!kb.holds(undefined, undefined, undefined, doc)) {
-        // If not loaded already
-        ;(parse as any)(turtle, kb, doc.uri, 'text/turtle', null) // Load form directly
-      }
-    }
-    const preferencesForm = kb.sym(
-      'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this'
-    )
-    loadData(preferencesForm, preferencesFormText)
+    /* Preferences
+    **
+    **  Things like whether to color text by author webid, to expand image URLs inline,
+    ** expanded inline image height. ...
+    ** In general, preferences can be set per user, per user/app combo, per instance,
+    ** and per instance/user combo. (Seee the long chat pane preferences for an example.)
+    ** Here in the basic preferences, we are only setting  per-user defaults.
+    */
 
-    const ontologyExtra = kb.sym(
-      'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597-ONT'
-    )
-    loadData(ontologyExtra, ontologyData)
+    const preferencesFormText = `
 
-    async function doRender () {
-      const context = await UI.authn.logInLoadPreferences({
-        dom,
-        div: container
-      })
-      if (!context.preferencesFile) {
-        // Could be CORS
-        console.log(
-          'Not doing private class preferences as no access to preferences file. ' +
-            context.preferencesFileError
-        )
-        return
-      }
-      addDeletionLinks(container, kb, context.me)
-      const appendedForm = UI.widgets.appendForm(
-        dom,
-        formArea,
-        {},
-        context.me,
-        preferencesForm,
-        context.preferencesFile,
-        complainIfBad
-      )
-      appendedForm.style.borderStyle = 'none'
+  @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+  @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+  @prefix ui: <http://www.w3.org/ns/ui#>.
+  @prefix : <#>.
 
-      const trustedApplicationSettings = renderTrustedApplicationsOptions(dom)
-      container.appendChild(trustedApplicationSettings)
+  :this
+    <http://purl.org/dc/elements/1.1/title> "Basic preferences" ;
+    a ui:Form ;
+    ui:part :powerUser, :developerUser;
+    ui:parts ( :powerUser :developerUser  ).
+
+:powerUser a ui:BooleanField; ui:property solid:powerUser;
+  ui:label "I am a Power User".
+:developerUser a ui:BooleanField; ui:property solid:developerUser;
+  ui:label "I am a Developer".
+
+`
+    const preferencesForm = kb.sym('urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this')
+    const preferencesFormDoc = preferencesForm.doc()
+    if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
+      ($rdf.parse as any)(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null) // Load form directly
     }
     doRender()
 
