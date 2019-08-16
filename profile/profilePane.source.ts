@@ -104,16 +104,14 @@ const thisPane: PaneDefinition = {
 
       function heading (str: string) {
         var h = main.appendChild(dom.createElement('h3'))
-        h.setAttribute(
-          'style',
-          'font-size: 120%; color:' + highlightColor + ';'
-        )
+        h.setAttribute('style', 'font-size: 120%; color:' + highlightColor + ';')
         h.textContent = str
         return h
       }
 
       // Todo: only show this if there is vcard info
       heading('Contact')
+      main.appendChild(paneDiv(dom, subject, 'contact'))
       const contactDisplay = paneDiv(dom, subject, 'contact')
       contactDisplay.border = '0em' // override form
       main.appendChild(contactDisplay)
