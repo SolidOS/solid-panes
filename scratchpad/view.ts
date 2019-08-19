@@ -1,9 +1,9 @@
 import vocab from 'solid-namespace'
-import $rdf from 'rdflib'
 import { getContents, getSetContentsStatements, getLatestAuthor } from './data'
 import { ViewParams } from '../types'
+import { fetcher, namedNode } from "rdflib"
 
-const ns = vocab($rdf)
+const ns = vocab({ namedNode })
 
 export function view ({ container, subject, store, visitNode, user }: ViewParams) {
   toViewMode()
@@ -40,8 +40,8 @@ export function view ({ container, subject, store, visitNode, user }: ViewParams
   async function showLatestAuthor (authorContainer: HTMLElement) {
     const latestAuthor = getLatestAuthor(store, subject)
     if (latestAuthor) {
-      const fetcher = $rdf.fetcher(store, {})
-      await fetcher.load(latestAuthor.uri)
+      const latestAuthorFetcher = fetcher(store, {})
+      await latestAuthorFetcher.load(latestAuthor.uri)
       const [nameStatement] = store.statementsMatching(latestAuthor, ns.vcard('fn'), null, null, true)
 
       authorContainer.appendChild(document.createTextNode('Latest author: '))

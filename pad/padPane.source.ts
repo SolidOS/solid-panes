@@ -1,6 +1,6 @@
 import UI from 'solid-ui'
 import { PaneDefinition } from '../types'
-import $rdf, { NamedNode } from 'rdflib'
+import { graph, log, NamedNode, Namespace, sym } from "rdflib"
 /*   pad Pane
 **
 */
@@ -84,8 +84,8 @@ const paneDef: PaneDefinition = {
     // Two variations of ACL for this app, public read and public read/write
     // In all cases owner has read write control
     var genACLtext = function (docURI: string, aclURI: string, allWrite: boolean) {
-      var g = $rdf.graph()
-      var auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
+      var g = graph()
+      var auth = Namespace('http://www.w3.org/ns/auth/acl#')
       var a = g.sym(aclURI + '#a1')
       var acl = g.sym(aclURI)
       var doc = g.sym(docURI)
@@ -204,7 +204,7 @@ const paneDef: PaneDefinition = {
         newBase = newBase.value
       }
       if (newBase.slice(-1) !== '/') {
-        $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase) // @@ paramater?
+        log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase) // @@ paramater?
         newBase = newBase + '/'
       }
       var now = new Date()
@@ -214,7 +214,7 @@ const paneDef: PaneDefinition = {
     }
 
     var initializeNewInstanceAtBase = function (thisInstance: any, newBase: string) {
-      var here = $rdf.sym(thisInstance.uri.split('#')[0])
+      var here = sym(thisInstance.uri.split('#')[0])
       var base = here // @@ ???
 
       var kb = UI.store
@@ -228,7 +228,7 @@ const paneDef: PaneDefinition = {
 
       let newInstance = kb.sym(newPadDoc.uri + '#thisPad')
 
-      // $rdf.log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
+      // log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
 
       var agenda: Function[] = []
 
@@ -379,7 +379,7 @@ const paneDef: PaneDefinition = {
     var ns = UI.ns
     var me: any
 
-    var PAD = $rdf.Namespace('http://www.w3.org/ns/pim/pad#')
+    var PAD = Namespace('http://www.w3.org/ns/pim/pad#')
 
     var thisInstance = subject
     var padDoc = subject.doc()

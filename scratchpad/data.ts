@@ -1,9 +1,9 @@
 import '@babel/polyfill'
-import $rdf, { IndexedFormula, NamedNode, Statement, Node } from 'rdflib'
+import { IndexedFormula, NamedNode, Statement, Node, st, namedNode } from "rdflib"
 import vocab from 'solid-namespace'
 import { InitialisationFunction } from './types'
 
-const ns = vocab($rdf)
+const ns = vocab({ namedNode })
 
 /* istanbul ignore next [Side effects are contained to initialise(), so ignore just that for test coverage] */
 export const initialise: InitialisationFunction = async (store, user) => {
@@ -40,13 +40,13 @@ export function getInitialisationStatements (
   const pad = store.sym(storeNamespaces.pub + padName + '/index.ttl#this')
 
   const statementsToAdd = [
-    $rdf.st(pad, ns.rdf('type'), ns.pad('Notepad'), pad.doc()),
-    $rdf.st(pad, ns.dc('title'), `Scratchpad (${creationDate.toLocaleDateString()})`, pad.doc()),
-    $rdf.st(pad, ns.dc('created'), creationDate, pad.doc())
+    st(pad, ns.rdf('type'), ns.pad('Notepad'), pad.doc()),
+    st(pad, ns.dc('title'), `Scratchpad (${creationDate.toLocaleDateString()})`, pad.doc()),
+    st(pad, ns.dc('created'), creationDate, pad.doc())
   ]
   if (user) {
     statementsToAdd.push(
-      $rdf.st(pad, ns.dc('author'), user, pad.doc())
+      st(pad, ns.dc('author'), user, pad.doc())
     )
   }
 
@@ -67,20 +67,20 @@ export function getSetContentsStatements (
       const line = store.sym(pad.uri + `_line${lineNr}`)
       const prevLine = (lineNr === 0) ? pad : statementsToAdd[statementsToAdd.length - 1].subject
       statementsToAdd.push(
-        $rdf.st(prevLine, ns.pad('next'), line, pad.doc()),
-        $rdf.st(line, ns.sioc('content'), lineContents, pad.doc()),
-        $rdf.st(line, ns.dc('created'), creationDate, pad.doc())
+        st(prevLine, ns.pad('next'), line, pad.doc()),
+        st(line, ns.sioc('content'), lineContents, pad.doc()),
+        st(line, ns.dc('created'), creationDate, pad.doc())
       )
       if (user) {
-        statementsToAdd.push($rdf.st(line, ns.dc('author'), user, pad.doc()))
+        statementsToAdd.push(st(line, ns.dc('author'), user, pad.doc()))
       }
 
       return statementsToAdd
     },
-    [] as $rdf.Statement[]
+    [] as Statement[]
   )
   const lastLine = statementsToAdd[statementsToAdd.length - 1].subject
-  statementsToAdd.push($rdf.st(lastLine, ns.pad('next'), pad, pad.doc()))
+  statementsToAdd.push(st(lastLine, ns.pad('next'), pad, pad.doc()))
 
   const oldLines = store.statementsMatching(null as any, ns.pad('next'), null as any, pad.doc(), false)
     .map(statement => statement.object)
@@ -94,7 +94,7 @@ export function getSetContentsStatements (
       statementsToDelete.push(...oldLineStatements)
       return statementsToDelete
     },
-    [] as $rdf.Statement[]
+    [] as Statement[]
   )
   const [startingLink] = store.statementsMatching(pad, ns.pad('next'), null as any, pad.doc(), true)
   if (startingLink) {

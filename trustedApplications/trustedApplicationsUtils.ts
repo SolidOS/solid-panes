@@ -1,4 +1,4 @@
-import $rdf, { NamedNode, IndexedFormula, Statement } from 'rdflib'
+import { NamedNode, IndexedFormula, Statement, BlankNode, st, sym } from "rdflib"
 import { Namespaces } from 'solid-namespace'
 
 export function getStatementsToDelete (
@@ -28,12 +28,12 @@ export function getStatementsToAdd (
   person: NamedNode,
   ns: Namespaces
 ) {
-  var application = new $rdf.BlankNode(`bn_${nodeName}`)
+  var application = new BlankNode(`bn_${nodeName}`)
   return [
-    $rdf.st(person, ns.acl('trustedApp'), application, person.doc()),
-    $rdf.st(application, ns.acl('origin'), origin, person.doc()),
+    st(person, ns.acl('trustedApp'), application, person.doc()),
+    st(application, ns.acl('origin'), origin, person.doc()),
     ...modes
-      .map(mode => $rdf.sym(mode))
-      .map(mode => $rdf.st(application, ns.acl('mode'), mode, person.doc()))
+      .map(mode => sym(mode))
+      .map(mode => st(application, ns.acl('mode'), mode, person.doc()))
   ]
 }

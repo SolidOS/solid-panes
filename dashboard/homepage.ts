@@ -1,4 +1,4 @@
-import $rdf, { Fetcher, IndexedFormula, NamedNode } from 'rdflib'
+import { Fetcher, IndexedFormula, NamedNode, sym } from "rdflib"
 import UI from 'solid-ui'
 
 const ns = UI.ns
@@ -53,7 +53,7 @@ function createTitle (uri: string, name: string): HTMLElement {
 async function loadProfile (subject: NamedNode, fetcher: Fetcher): Promise<NamedNode> {
   const pod = subject.site().uri
   // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
-  const webId = $rdf.sym(`${pod}profile/card#me`)
+  const webId = sym(`${pod}profile/card#me`)
   await fetcher.load(webId)
   return webId
 }
