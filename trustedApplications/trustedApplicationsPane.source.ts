@@ -8,7 +8,7 @@
 */
 
 import UI from 'solid-ui'
-import { NamedNode, IndexedFormula, sym } from "rdflib"
+import { NamedNode, IndexedFormula, sym } from 'rdflib'
 
 import { Namespaces } from 'solid-namespace'
 

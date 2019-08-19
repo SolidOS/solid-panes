@@ -23,7 +23,7 @@ Array [
   Statement {
     "object": Literal {
       "termType": "Literal",
-      "value": "Scratchpad (1/1/1970)",
+      "value": "Scratchpad (1970-1-1)",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",
@@ -104,7 +104,7 @@ Array [
   Statement {
     "object": Literal {
       "termType": "Literal",
-      "value": "Scratchpad (1/1/1970)",
+      "value": "Scratchpad (1970-1-1)",
     },
     "predicate": NamedNode {
       "termType": "NamedNode",

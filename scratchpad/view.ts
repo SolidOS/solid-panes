@@ -1,7 +1,7 @@
 import vocab from 'solid-namespace'
 import { getContents, getSetContentsStatements, getLatestAuthor } from './data'
 import { ViewParams } from '../types'
-import { fetcher, namedNode } from "rdflib"
+import { fetcher, namedNode } from 'rdflib'
 
 const ns = vocab({ namedNode })
 

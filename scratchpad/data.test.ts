@@ -1,8 +1,8 @@
 /* eslint-env jest */
 import { getInitialisationStatements, getSetContentsStatements, getContents, isPad, getTitle, getLatestAuthor } from './data'
 import vocab from 'solid-namespace'
-import { graph, lit, sym } from "rdflib"
-const ns = vocab($rdf)
+import { graph, lit, namedNode, sym } from 'rdflib'
+const ns = vocab({ namedNode })
 
 describe('getInitialisationStatements()', () => {
   it('should properly initialise a new notepad', async () => {

@@ -1,9 +1,9 @@
 /* eslint-env jest */
 import namespaces from 'solid-namespace'
 import { getLabel } from './profilePaneUtils'
-import { graph, sym } from "rdflib"
+import { graph, namedNode, sym } from 'rdflib'
 
-const ns = namespaces($rdf)
+const ns = namespaces({ namedNode })
 
 describe('getLabel', () => {
   it('should return "Edit your profile" by default', () => {

@@ -1,4 +1,4 @@
-import { Fetcher, IndexedFormula, NamedNode, sym } from "rdflib"
+import { Fetcher, IndexedFormula, NamedNode, sym } from 'rdflib'
 import UI from 'solid-ui'
 
 const ns = UI.ns

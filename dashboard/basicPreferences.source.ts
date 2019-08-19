@@ -1,6 +1,6 @@
 import { PaneDefinition } from '../types'
 import UI from 'solid-ui'
-import { NamedNode, parse } from "rdflib"
+import { NamedNode, parse } from 'rdflib'
 
 const kb = UI.store
 

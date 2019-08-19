@@ -1,6 +1,6 @@
 import UI from 'solid-ui'
 import { PaneDefinition } from '../types'
-import { graph, log, NamedNode, Namespace, sym } from "rdflib"
+import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
 /*   pad Pane
 **
 */
@@ -105,7 +105,7 @@ const paneDef: PaneDefinition = {
         g.add(a, auth('mode'), auth('Write'), acl)
       }
       // TODO: Figure out why `serialize` isn't on the type definition according to TypeScript:
-      return ($rdf as any).serialize(acl, g, aclURI, 'text/turtle')
+      return serialize(acl, g, aclURI, 'text/turtle')
     }
 
     /**
