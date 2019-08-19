@@ -15,6 +15,8 @@ import { NamedNode } from 'rdflib'
 import { PaneDefinition } from '../types'
 import { getLabel } from './profilePaneUtils'
 
+import preferencesFormText from './preferencesFormText.ttl'
+
 const nodeMode = (typeof module !== 'undefined')
 
 // let panes: any
@@ -63,25 +65,6 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
     }
 
     function renderProfileForm (div: HTMLElement, subject: NamedNode) {
-      const preferencesFormText = `
-
-    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-    @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-    @prefix ui: <http://www.w3.org/ns/ui#>.
-    @prefix : <#>.
-
-    :this
-      <http://purl.org/dc/elements/1.1/title> "Profile style form" ;
-      a ui:Form ;
-      ui:part :backgroundColor, :highlightColor;
-      ui:parts ( :backgroundColor :highlightColor ).
-
-  :backgroundColor a ui:ColorField; ui:property solid:profileBackgroundColor;
-    ui:label "Background color"; ui:default "#ffffff".
-    :highlightColor a ui:ColorField; ui:property solid:profileHighlightColor;
-      ui:label "Highlight color"; ui:default "#000000".
-
-  `
       const preferencesForm = kb.sym('https://solid.github.io/solid-panes/dashboard/profileStyle.ttl#this')
       const preferencesFormDoc = preferencesForm.doc()
       if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
