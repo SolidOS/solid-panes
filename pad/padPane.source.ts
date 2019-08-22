@@ -1,5 +1,8 @@
 import UI from 'solid-ui'
 import { PaneDefinition } from '../types'
+// @ts-ignore
+// @@ TODO: serialize is not part rdflib type definitions
+// Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
 import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
 /*   pad Pane
 **
