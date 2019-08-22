@@ -93,7 +93,6 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
 
       // Todo: only show this if there is vcard info
       heading('Contact')
-      main.appendChild(paneDiv(dom, subject, 'contact'))
       const contactDisplay = paneDiv(dom, subject, 'contact')
       contactDisplay.border = '0em' // override form
       main.appendChild(contactDisplay)
