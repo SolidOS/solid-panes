@@ -26,35 +26,7 @@ export const basicPreferencesPane: PaneDefinition = {
 
     const formArea = container.appendChild(dom.createElement('div'))
 
-    /* Preferences
-    **
-    **  Things like whether to color text by author webid, to expand image URLs inline,
-    ** expanded inline image height. ...
-    ** In general, preferences can be set per user, per user/app combo, per instance,
-    ** and per instance/user combo. (Seee the long chat pane preferences for an example.)
-    ** Here in the basic preferences, we are only setting  per-user defaults.
-    */
-
     const preferencesFormText = `
-
-  @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-  @prefix solid: <http://www.w3.org/ns/solid/terms#>.
-  @prefix ui: <http://www.w3.org/ns/ui#>.
-  @prefix : <#>.
-
-  :this
-    <http://purl.org/dc/elements/1.1/title> "Basic preferences" ;
-    a ui:Form ;
-    ui:part :powerUser, :developerUser;
-    ui:parts ( :powerUser :developerUser  ).
-
-:powerUser a ui:BooleanField; ui:property solid:powerUser;
-  ui:label "I am a Power User".
-:developerUser a ui:BooleanField; ui:property solid:developerUser;
-  ui:label "I am a Developer".
-`
-
-const preferencesFormText2 = `
 
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix solid: <http://www.w3.org/ns/solid/terms#>.
@@ -72,7 +44,7 @@ ui:parts ( :personalInformationHeading :privateComment :categorizeUser ).
 :categorizeUser a ui:Classifier; ui:label "Level of user"; ui:property rdf:type ; ui:category solid:User.
 `
 
-const ontologyData = `
+    const ontologyData = `
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
 @prefix solid: <http://www.w3.org/ns/solid/terms#>.
@@ -116,14 +88,14 @@ solid:PowerUser a rdfs:Class;
       }
     }
     const preferencesForm = kb.sym('urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this')
-    loadData(preferencesForm, preferencesFormText2)
+    loadData(preferencesForm, preferencesFormText)
 
     const ontologyExtra = kb.sym('urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597-ONT')
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      var context = await UI.authn.logInLoadPreferences({dom, div: container})
-      if (!context.preferencesFile) {  // Could be CORS
+      var context = await UI.authn.logInLoadPreferences({ dom, div: container })
+      if (!context.preferencesFile) { // Could be CORS
         console.log('Not doing private class preferences as no access to preferences file. ' + context.preferencesFileError)
         return
       }
