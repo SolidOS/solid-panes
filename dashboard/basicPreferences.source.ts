@@ -1,11 +1,6 @@
 import { PaneDefinition } from '../types'
 import UI from 'solid-ui'
-import namespace from 'solid-namespace'
-import { NamedNode, parse, namedNode, IndexedFormula } from 'rdflib'
-import { renderTrustedApplicationsOptions } from './trustedApplications/trustedApplicationsPane'
-
-import preferencesFormText from './preferencesFormText.ttl'
-import ontologyData from './ontologyData.ttl'
+import * as $rdf from 'rdflib'
 
 const kb = UI.store
 const ns = namespace({ namedNode } as any)
@@ -19,7 +14,7 @@ export const basicPreferencesPane: PaneDefinition = {
 
   // Render the pane
   // The subject should be the logged in user.
-  render: (subject: NamedNode, dom: HTMLDocument) => {
+  render: (subject: $rdf.NamedNode, dom: HTMLDocument) => {
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
       container.appendChild(UI.widgets.errorMessageBlock(dom, mess, '#fee'))
@@ -112,7 +107,7 @@ solid:PowerUser a rdfs:Class;
     who has software development skills.""";
     rdfs:subClassOf solid:User.
 `
-    function loadData (doc: NamedNode, turtle: String) {
+    function loadData (doc: $rdf.NamedNode, turtle: String) {
       doc = doc.doc() // remove # from URI if nec
       if (!kb.holds(undefined, undefined, undefined, doc)) { // If not loaded already
         ($rdf.parse as any)(turtle, kb, doc.uri, 'text/turtle', null) // Load form directly
