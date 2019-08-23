@@ -36,7 +36,6 @@ export const basicPreferencesPane: PaneDefinition = {
 :this
 <http://purl.org/dc/elements/1.1/title> "Basic preferences" ;
 a ui:Form ;
-ui:part :categorizeUser, :privateComment, :personalInformationHeading;
 ui:parts ( :personalInformationHeading :privateComment :categorizeUser ).
 
 :personalInformationHeading a ui:Heading; ui:contents "Personal information".
