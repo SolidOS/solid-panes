@@ -1,6 +1,6 @@
 import { PaneDefinition } from '../types'
 import UI from 'solid-ui'
-import $rdf, { NamedNode } from 'rdflib'
+import { NamedNode, parse } from 'rdflib'
 
 const kb = UI.store
 
@@ -57,7 +57,7 @@ export const basicPreferencesPane: PaneDefinition = {
     const preferencesForm = kb.sym('https://solid.github.io/solid-panes/dashboard/basicPreferencesForm.ttl#this')
     const preferencesFormDoc = preferencesForm.doc()
     if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) { // If not loaded already
-      ($rdf.parse as any)(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null) // Load form directly
+      (parse as any)(preferencesFormText, kb, preferencesFormDoc.uri, 'text/turtle', null) // Load form directly
     }
     // todo make Statement type for fn below
     // let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st: any) { return st.object })

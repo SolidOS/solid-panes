@@ -8,7 +8,7 @@
 */
 
 import UI from 'solid-ui'
-import $rdf, { NamedNode, IndexedFormula } from 'rdflib'
+import { NamedNode, IndexedFormula, sym } from 'rdflib'
 
 import { Namespaces } from 'solid-namespace'
 
@@ -168,7 +168,7 @@ function createApplicationEntry (
   function addOrEditApplication () {
     var origin
     try {
-      origin = $rdf.sym(trustedApplicationState.formElements.origin!.value)
+      origin = sym(trustedApplicationState.formElements.origin!.value)
     } catch (err) {
       return alert('Please provide an application URL you want to trust')
     }
@@ -185,7 +185,7 @@ function createApplicationEntry (
   function removeApplication () {
     var origin
     try {
-      origin = $rdf.sym(trustedApplicationState.formElements.origin!.value)
+      origin = sym(trustedApplicationState.formElements.origin!.value)
     } catch (err) {
       return alert('Please provide an application URL you want to remove trust from')
     }
