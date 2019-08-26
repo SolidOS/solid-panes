@@ -103,11 +103,6 @@ solid:PowerUser a rdfs:Class;
     }
     doRender()
 
-    // todo make Statement type for fn below
-    // let preferenceProperties = kb.statementsMatching(null, ns.ui.property, null, preferencesFormDoc).map(function (st: any) { return st.object })
-    // var me = UI.authn.currentUser()
-    // var context = {noun: 'chat room', me: me, statusArea: statusArea, div: formArea, dom, kb}
-    // container.appendChild(UI.preferences.renderPreferencesForm(me, mainClass, preferencesForm, context))
     return container
   }
 }
