@@ -90,7 +90,7 @@ solid:PowerUser a rdfs:Class;
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      var context = await UI.authn.logInLoadPreferences({ dom, div: container })
+      const context = await UI.authn.logInLoadPreferences({ dom, div: container })
       if (!context.preferencesFile) { // Could be CORS
         console.log('Not doing private class preferences as no access to preferences file. ' + context.preferencesFileError)
         return
