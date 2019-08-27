@@ -3,6 +3,9 @@ import UI from 'solid-ui'
 import { NamedNode, parse } from 'rdflib'
 import { renderTrustedApplicationsOptions } from './trustedApplications/trustedApplicationsPane'
 
+import preferencesFormText from './preferencesFormText.ttl'
+import ontologyData from './ontologyData.ttl'
+
 const kb = UI.store
 
 export const basicPreferencesPane: PaneDefinition = {
@@ -24,60 +27,6 @@ export const basicPreferencesPane: PaneDefinition = {
 
     const formArea = container.appendChild(dom.createElement('div'))
 
-    const preferencesFormText = `
-
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix solid: <http://www.w3.org/ns/solid/terms#>.
-@prefix ui: <http://www.w3.org/ns/ui#>.
-@prefix : <#>.
-
-:this
-<http://purl.org/dc/elements/1.1/title> "Basic preferences" ;
-a ui:Form ;
-ui:parts ( :personalInformationHeading :privateComment :categorizeUser ).
-
-:personalInformationHeading a ui:Heading; ui:contents "Personal information".
-:privateComment a ui:Comment; ui:contents "This information is private.".
-:categorizeUser a ui:Classifier; ui:label "Level of user"; ui:property rdf:type ; ui:category solid:User.
-`
-
-    const ontologyData = `
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
-@prefix solid: <http://www.w3.org/ns/solid/terms#>.
-@prefix foaf: <http://xmlns.com/foaf/0.1/>.
-@prefix schema: <http:/schema.org/>.
-@prefix ui: <http://www.w3.org/ns/ui#>.
-@prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
-@prefix : <#>.
-
-solid:User a rdfs:Class;
-  rdfs:label "user"@en, "utilisateur"@fr;
-  rdfs:comment """Any person who might use a Solid-based system""";
-  rdfs:subClassOf foaf:Person, schema:Person, vcard:Individual.
-
-# Since these options are opt-in, it is a bit strange to have new users opt in
-# That they are new users - also we do not use this class for anything specific
-# yet
-# solid:NewUser a rdfs:Class;
-#  rdfs:label "new user"@en;
-#  rdfs:comment """A person who might use a Solid-based system who has low
-#  level of familarity with technical details.""";
-#  rdfs:subClassOf solid:User.
-
-solid:PowerUser a rdfs:Class;
-  rdfs:label "power user"@en;
-  rdfs:comment """A person who might use a Solid-based system
-  who is prepared to be given a more complex interface in order
-  to be provided with more pwerful features.""";
-  rdfs:subClassOf solid:User.
-
-  solid:Developer a rdfs:Class;
-    rdfs:label "Developer";
-    rdfs:comment """Any person who might use a Solid-based system,
-    who has software development skills.""";
-    rdfs:subClassOf solid:User.
-`
     function loadData (doc: NamedNode, turtle: String) {
       doc = doc.doc() // remove # from URI if nec
       if (!kb.holds(undefined, undefined, undefined, doc)) { // If not loaded already
