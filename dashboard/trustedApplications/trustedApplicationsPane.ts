@@ -1,19 +1,9 @@
-/*   Profile Editing Pane
-**
-** Unlike most panes, this is available any place whatever the real subject,
-** and allows the user to edit their own profile.
-**
-** Usage: paneRegistry.register('profile/profilePane')
-** or standalone script adding onto existing mashlib.
-*/
-
 import UI from 'solid-ui'
 import { NamedNode, IndexedFormula, sym } from 'rdflib'
 
 import { Namespaces } from 'solid-namespace'
 
 import { getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
-import { PaneDefinition } from '../types'
 
 const kb: IndexedFormula = UI.store
 const ns: Namespaces = UI.ns
@@ -29,61 +19,47 @@ interface FormElements {
   origin: (undefined | NamedNode | HTMLInputElement);
 };
 
-const thisPane: PaneDefinition = {
-  icon: UI.icons.iconBase + 'noun_15177.svg', // Looks like an A - could say it's for Applications?
-  global: true,
-  name: 'trustedApplications',
+export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
+  var div = dom.createElement('div')
+  div.classList.add('trusted-applications-pane')
+  div.setAttribute('style', 'border: 0.3em solid ' + thisColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
+  var table = div.appendChild(dom.createElement('table'))
+  var main = table.appendChild(dom.createElement('tr'))
+  var bottom = table.appendChild(dom.createElement('tr'))
+  var statusArea = bottom.appendChild(dom.createElement('div'))
+  statusArea.setAttribute('style', 'padding: 0.7em;')
 
-  label: function (subject) {
-    var types = kb.findTypeURIs(subject)
-    if (types[UI.ns.foaf('Person').uri] || types[UI.ns.vcard('Individual').uri]) {
-      return 'Manage your trusted applications'
+  var context = { dom: dom, div: main, statusArea: statusArea, me: null }
+  UI.authn.logInLoadProfile(context).then((context: any) => {
+    let subject: NamedNode = context.me
+
+    var profile = subject.doc()
+    var editable = UI.store.updater.editable(profile.uri, kb)
+
+    main.appendChild(createText('h3', 'Manage your trusted applications'))
+
+    if (!editable) {
+      main.appendChild(UI.widgets.errorMessageBlock(dom, `Your profile ${subject.doc().uri} is not editable, so we cannot do much here.`))
+      return
     }
-    return null
-  },
 
-  render: function (subject, dom) {
-    var div = dom.createElement('div')
-    div.classList.add('trusted-applications-pane')
-    div.setAttribute('style', 'border: 0.3em solid ' + thisColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
-    var table = div.appendChild(dom.createElement('table'))
-    var main = table.appendChild(dom.createElement('tr'))
-    var bottom = table.appendChild(dom.createElement('tr'))
-    var statusArea = bottom.appendChild(dom.createElement('div'))
-    statusArea.setAttribute('style', 'padding: 0.7em;')
+    main.appendChild(createText('p', 'Here you can manage the applications you trust.'))
 
-    var context = { dom: dom, div: main, statusArea: statusArea, me: null }
-    UI.authn.logInLoadProfile(context).then((context: any) => {
-      let subject: NamedNode = context.me
+    const applicationsTable = createApplicationTable(subject)
+    main.appendChild(applicationsTable)
 
-      var profile = subject.doc()
-      var editable = UI.store.updater.editable(profile.uri, kb)
-
-      main.appendChild(createText('h3', 'Manage your trusted applications'))
-
-      if (!editable) {
-        main.appendChild(UI.widgets.errorMessageBlock(dom, `Your profile ${subject.doc().uri} is not editable, so we cannot do much here.`))
-        return
-      }
-
-      main.appendChild(createText('p', 'Here you can manage the applications you trust.'))
-
-      const applicationsTable = createApplicationTable(subject)
-      main.appendChild(applicationsTable)
-
-      main.appendChild(createText('h4', 'Notes'))
-      main.appendChild(createContainer('ol', [
-        main.appendChild(createText('li', 'Trusted applications will get access to all resources that you have access to.')),
-        main.appendChild(createText('li', 'You can limit which modes they have by default.')),
-        main.appendChild(createText('li', 'They will not gain more access than you have.'))
-      ]))
-      main.appendChild(createText('p', 'Application URLs must be valid URL. Examples are http://localhost:3000, https://trusted.app, and https://sub.trusted.app.'))
-    }, (err: any) => {
-      statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
-    })
-    return div
-  } // render()
-} //
+    main.appendChild(createText('h4', 'Notes'))
+    main.appendChild(createContainer('ol', [
+      main.appendChild(createText('li', 'Trusted applications will get access to all resources that you have access to.')),
+      main.appendChild(createText('li', 'You can limit which modes they have by default.')),
+      main.appendChild(createText('li', 'They will not gain more access than you have.'))
+    ]))
+    main.appendChild(createText('p', 'Application URLs must be valid URL. Examples are http://localhost:3000, https://trusted.app, and https://sub.trusted.app.'))
+  }, (err: any) => {
+    statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
+  })
+  return div
+}
 
 function createApplicationTable (subject: NamedNode) {
   var applicationsTable = createElement('table', {
@@ -262,7 +238,5 @@ function createModesInput ({ appModes, formElements }: { appModes: NamedNode[], 
 function generateRandomString () {
   return Math.random().toString(36).substring(7)
 }
-
-export default thisPane
 
 // ENDS
