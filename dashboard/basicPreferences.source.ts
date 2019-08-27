@@ -1,13 +1,14 @@
 import { PaneDefinition } from '../types'
 import UI from 'solid-ui'
 import { NamedNode, parse } from 'rdflib'
+import { renderTrustedApplicationsOptions } from './trustedApplications/trustedApplicationsPane'
 
 const kb = UI.store
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
   name: 'basicPreferences',
-  label: (subject) => {
+  label: (_subject) => {
     return null
   },
 
@@ -97,6 +98,9 @@ solid:PowerUser a rdfs:Class;
       }
       const appendedForm = UI.widgets.appendForm(dom, formArea, {}, context.me, preferencesForm, context.preferencesFile, complainIfBad)
       appendedForm.style.borderStyle = 'none'
+
+      const trustedApplicationSettings = renderTrustedApplicationsOptions(dom)
+      container.appendChild(trustedApplicationSettings)
     }
     doRender()
 

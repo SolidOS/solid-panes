@@ -135,7 +135,6 @@ register(require('./sharing/sharingPane.js'))
 // The internals pane is always (almost?) the last as it is the least user-friendly
 register(require('./internal/internalPane'))
 
-register(require('./trustedApplications/trustedApplicationsPane')) // manage your trusted applications
 register(require('./home/homePane'))
 
 // ENDS
