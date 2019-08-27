@@ -33,7 +33,7 @@ function buildPage (container: HTMLElement, webId: NamedNode | null, dom: HTMLDo
 
 function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
   const outliner = panes.getOutliner(dom)
-  outliner.showDashboard(container)
+  outliner.getDashboard().then((dashboard: HTMLElement) => container.appendChild(dashboard))
 }
 
 function buildHomePage (container: HTMLElement, subject: NamedNode) {

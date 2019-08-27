@@ -42,7 +42,7 @@ module.exports = function (doc) {
   var outlineElement = this.outlineElement
 
   this.init = function () {
-    var table = dom.getElementById('outline')
+    var table = getOutlineContainer()
     table.outline = this
   }
 
@@ -272,9 +272,11 @@ module.exports = function (doc) {
   } // outlinePredicateTD
 
 /** Render Tabbed set of home app panes
+ * @param {Object} [options] A set of options you can provide
+ * @param {string} [options.selectedTab] To open a specific dashboard pane
  * @returns Promise<{Element}> - the div
 */
-  async function globalAppTabs (selectedTab) {
+  async function globalAppTabs (options = {}) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
     const me = UI.authn.currentUser()
@@ -297,19 +299,20 @@ module.exports = function (doc) {
       thisOutline.GotoSubject(item.subject || me, true, pane, false, undefined, table)
     }
 
-    const options = {dom,
+    div.appendChild(UI.tabs.tabWidget({
+      dom,
       subject: me,
       items,
       renderMain,
       renderTab,
       ordered: true,
       orientation: 0,
-      backgroundColor: '#eeeeee',
-      selectedTab} // black?
-    // options.renderTabSettings = renderTabSettings  No tab-specific settings
-    div.appendChild(UI.tabs.tabWidget(options))
+      backgroundColor: '#eeeeee',  // black?
+      selectedTab: options.selectedTab
+    }))
     return div
   }
+  this.getDashboard = globalAppTabs
 
   async function getDashboardItems () {
     const me = UI.authn.currentUser()
@@ -365,18 +368,72 @@ module.exports = function (doc) {
   }
   this.getDashboardItems = getDashboardItems
 
-  async function showDashboard (container, unselectCurrentPane, globalPaneToSelect) {
-    container.innerHTML = ''
-    // console.log(container)
-    const currentPane = dom.querySelector('#outline .paneShown')
-    if (unselectCurrentPane && currentPane) {
-      // eslint-disable-next-line no-undef
-      // currentPane.dispatchEvent(new Event('clglobalAppTabsick'))
+  /**
+   *
+   * @param {HTMLElement} container The element that the dashboard should append dashboard to
+   * @param {Object} [options] A set of options that can be passed
+   * @param {string} [options.pane] To open a specific dashboard pane
+   * @returns {Promise<void>}
+   */
+  async function showDashboard (options = {}) {
+    const dashboardContainer = getDashboardContainer()
+    const outlineContainer = getOutlineContainer()
+    // reuse dashboard if already children already is inserted
+    if (dashboardContainer.childNodes.length > 0 && options.pane) {
+      outlineContainer.style.display = 'none'
+      dashboardContainer.style.display = 'inherit'
+      const tab = dashboardContainer.querySelector(`[data-name="${options.pane}"]`) ||
+        dashboardContainer.querySelector('[data-name]')
+      if (tab) {
+        tab.click()
+        return
+      }
+      console.warn('Found no tabs in global dashboard to open')
+      dashboardContainer.innerHTML = ''
     }
-    let ele = await globalAppTabs(globalPaneToSelect)
-    return container.appendChild(ele)
+    UI.authn.solidAuthClient.trackSession((session) => {
+      if (session) {
+        return
+      }
+      // close the dashboard if user log out
+      closeDashboard()
+    })
+    const dashboard = await globalAppTabs({
+      selectedTab: options.pane
+    })
+    dashboard.appendChild(UI.widgets.cancelButton(dom, closeDashboard))
+
+    // switch to showing dashboard
+    outlineContainer.style.display = 'none'
+    dashboardContainer.appendChild(dashboard)
+
+    function closeDashboard () {
+      dashboardContainer.style.display = 'none'
+      outlineContainer.style.display = 'inherit'
+    }
   }
   this.showDashboard = showDashboard
+
+  function getDashboardContainer () {
+    return getOrCreateContainer('GlobalDashboard')
+  }
+
+  function getOutlineContainer () {
+    return getOrCreateContainer('outline')
+  }
+
+  /**
+   * Get element with id or create a new on the fly with that id
+   * @returns {HTMLElement}
+   */
+  function getOrCreateContainer (id) {
+    return document.getElementById(id) || (() => {
+      const dashboardContainer = document.createElement('div')
+      dashboardContainer.id = id
+      const mainContainer = document.querySelector('[role="main"]') || document.body
+      return mainContainer.appendChild(dashboardContainer)
+    })()
+  }
 
   async function getRelevantPanes (panes, subject, dom) {
     const relevantPanes = panes.list.filter(pane => pane.label(subject, dom) && !pane.global)
