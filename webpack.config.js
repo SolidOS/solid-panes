@@ -20,6 +20,12 @@ module.exports = {
         use: {
           loader: 'babel-loader'
         }
+      },
+      {
+        test: /\.ttl$/i,
+        use: {
+          loader: 'raw-loader'
+        }
       }
     ]
   },
