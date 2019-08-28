@@ -276,6 +276,7 @@ module.exports = function (doc) {
  *
  * @param {Object} [options] A set of options you can provide
  * @param {string} [options.selectedTab] To open a specific dashboard pane
+ * @param {Function} [options.onClose] If given, will present an X for the dashboard, and call this method when clicked
  * @returns Promise<{Element}> - the div that holds the dashboard
 */
   async function globalAppTabs (options = {}) {
@@ -310,7 +311,8 @@ module.exports = function (doc) {
       ordered: true,
       orientation: 0,
       backgroundColor: '#eeeeee',  // black?
-      selectedTab: options.selectedTab
+      selectedTab: options.selectedTab,
+      onClose: options.onClose
     }))
     return div
   }
@@ -393,25 +395,30 @@ module.exports = function (doc) {
       console.warn('Found no tabs in global dashboard to open')
       dashboardContainer.innerHTML = ''
     }
-    UI.authn.solidAuthClient.trackSession((session) => {
-      if (session) {
-        return
-      }
-      // close the dashboard if user log out
-      closeDashboard()
-    })
-    const dashboard = await globalAppTabs({
-      selectedTab: options.pane
-    })
-    dashboard.appendChild(UI.widgets.cancelButton(dom, closeDashboard))
 
-    // switch to showing dashboard
+    // create a new dashboard if not already present
+    const dashboard = await globalAppTabs({
+      selectedTab: options.pane,
+      onClose: closeDashboard
+    })
+
+    // close the dashboard if user log out
+    UI.authn.solidAuthClient.trackSession(closeDashboardIfLoggedOut)
+
+    // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
     dashboardContainer.appendChild(dashboard)
 
     function closeDashboard () {
       dashboardContainer.style.display = 'none'
       outlineContainer.style.display = 'inherit'
+    }
+
+    function closeDashboardIfLoggedOut (session) {
+      if (session) {
+        return
+      }
+      closeDashboard()
     }
   }
   this.showDashboard = showDashboard
