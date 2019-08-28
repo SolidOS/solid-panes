@@ -290,7 +290,7 @@ module.exports = function (doc) {
     const items = await getDashboardItems()
 
     function renderTab (div, item) {
-      div.dataset.name = item.tabName || item.paneName
+      div.dataset.globalPaneName = item.tabName || item.paneName
       div.textContent = item.label
     }
 
@@ -386,8 +386,8 @@ module.exports = function (doc) {
     if (dashboardContainer.childNodes.length > 0 && options.pane) {
       outlineContainer.style.display = 'none'
       dashboardContainer.style.display = 'inherit'
-      const tab = dashboardContainer.querySelector(`[data-name="${options.pane}"]`) ||
-        dashboardContainer.querySelector('[data-name]')
+      const tab = dashboardContainer.querySelector(`[data-global-pane-name="${options.pane}"]`) ||
+        dashboardContainer.querySelector('[data-global-pane-name]')
       if (tab) {
         tab.click()
         return
