@@ -378,6 +378,25 @@ module.exports = function (doc) {
   }
   this.showDashboard = showDashboard
 
+  function getRelevantPaneContainers (panes, subject, dom) {
+    const relevantPaneContainers = panes.list
+      .map(pane => ({
+        pane,
+        label: pane.label(subject, dom)
+      }))
+      .filter(({ pane, label }) => label && !pane.global)
+    return relevantPaneContainers.length
+      ? relevantPaneContainers
+      : [{
+        pane: panes.internalPane,
+        label: panes.internalPane.label(subject, dom)
+      }]
+  }
+
+  function getPane (relevantPanes, subject) {
+    return relevantPanes.find(pane => pane.shouldGetFocus && pane.shouldGetFocus(subject)) || relevantPanes[0]
+  }
+
   function expandedHeaderTR (subject, requiredPane, options) {
     function renderPaneIconTray (td, options = {}) {
       const paneShownStyle = 'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
@@ -385,45 +404,21 @@ module.exports = function (doc) {
       const paneIconTray = td.appendChild(dom.createElement('nav'))
       paneIconTray.style = 'display:flex; justify-content: flex-start; align-items: center;'
 
-      tr.firstPane = null
-      var paneNumber = 0
-      var relevantPanes = []
-      var labels = []
+      const relevantPaneContainers = options.hideList ? [] : getRelevantPaneContainers(panes, subject, dom)
+      const relevantPanes = relevantPaneContainers.map(({ pane }) => pane)
+      tr.firstPane = requiredPane || getPane(relevantPanes, subject)
+      const paneNumber = relevantPanes.indexOf(tr.firstPane)
 
-      if (requiredPane) {
-        tr.firstPane = requiredPane
-      }
-      for (var i = 0; i < panes.list.length; i++) {
-        let pane = panes.list[i]
-        var lab = pane.label(subject, dom)
-        if (!lab || pane.global || options.hideList) continue
-
-        relevantPanes.push(pane)
-        if (pane === requiredPane) {
-          paneNumber = relevantPanes.length - 1 // point to this one
-        }
-        labels.push(lab)
-          // steal the focus
-        if (!tr.firstPane && pane.shouldGetFocus && pane.shouldGetFocus(subject)) {
-          tr.firstPane = pane
-          paneNumber = relevantPanes.length - 1
-          UI.log.info('the ' + i + 'th pane steals the focus')
-        }
-      }
-      if (!relevantPanes.length) relevantPanes.push(panes.internalPane)
-      tr.firstPane = tr.firstPane || relevantPanes[0]
-
-      if (relevantPanes.length !== 1) { // if only one, simplify interface
-        for (let i = 0; i < relevantPanes.length; i++) {
-          let pane = relevantPanes[i]
-          var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i], dom)
+      if (relevantPaneContainers.length !== 1) { // if only one, simplify interface
+        relevantPaneContainers.forEach(({ pane, label }, index) => {
+          const ico = UI.utils.AJARImage(pane.icon, label, label, dom)
           ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
-            // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
+          // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
           // ico.style.width = iconHeight
           // ico.style.height = iconHeight
           var listen = function (ico, pane) { // Freeze scope for event time
             ico.addEventListener('click', function (event) {
-                // Find the containing table for this subject
+              // Find the containing table for this subject
               for (var t = td; t.parentNode; t = t.parentNode) {
                 if (t.nodeName === 'TABLE') break
               }
@@ -437,8 +432,8 @@ module.exports = function (doc) {
                         d.paneButton.style = paneHiddenStyle
                       }
                       removeAndRefresh(d)
-                          // If we just delete the node d, ffox doesn't refresh the display properly.
-                          // state = 'paneHidden';
+                      // If we just delete the node d, ffox doesn't refresh the display properly.
+                      // state = 'paneHidden';
                       if (d.pane.requireQueryButton && t.parentNode.className /* outer table */ &&
                         numberOfPanesRequiringQueryButton === 1 && dom.getElementById('queryButton')) {
                         dom.getElementById('queryButton').setAttribute('style', 'display:none;')
@@ -475,8 +470,7 @@ module.exports = function (doc) {
                 row.pane = pane
                 row.paneButton = ico
               }
-              var state
-              state = ico.getAttribute('class')
+              var state = ico.getAttribute('class')
               if (state === 'paneHidden') {
                 if (!event.shiftKey) { // shift means multiple select
                   removePanes()
@@ -490,8 +484,7 @@ module.exports = function (doc) {
                 ico.style = paneHiddenStyle
               }
 
-                // If the view already exists, remove it
-              state = 'paneShown'
+              // If the view already exists, remove it
               var numberOfPanesRequiringQueryButton = 0
               for (var d = t.firstChild; d; d = d.nextSibling) {
                 if (d.pane && d.pane.requireQueryButton) numberOfPanesRequiringQueryButton++
@@ -500,10 +493,10 @@ module.exports = function (doc) {
           } // listen
 
           listen(ico, pane)
-          ico.setAttribute('class', (i !== paneNumber) ? 'paneHidden' : 'paneShown')
-          if (i === paneNumber) tr.paneButton = ico
+          ico.setAttribute('class', (index !== paneNumber) ? 'paneHidden' : 'paneShown')
+          if (index === paneNumber) tr.paneButton = ico
           paneIconTray.appendChild(ico)
-        }
+        })
       }
       return paneIconTray
     } // renderPaneIconTray
