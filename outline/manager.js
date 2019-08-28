@@ -271,10 +271,12 @@ module.exports = function (doc) {
     return predicateTD
   } // outlinePredicateTD
 
-/** Render Tabbed set of home app panes
+/**
+ * Render Tabbed set of home app panes
+ *
  * @param {Object} [options] A set of options you can provide
  * @param {string} [options.selectedTab] To open a specific dashboard pane
- * @returns Promise<{Element}> - the div
+ * @returns Promise<{Element}> - the div that holds the dashboard
 */
   async function globalAppTabs (options = {}) {
     console.log('globalAppTabs @@')
@@ -369,8 +371,8 @@ module.exports = function (doc) {
   this.getDashboardItems = getDashboardItems
 
   /**
+   * Call this method to show the global dashboard.
    *
-   * @param {HTMLElement} container The element that the dashboard should append dashboard to
    * @param {Object} [options] A set of options that can be passed
    * @param {string} [options.pane] To open a specific dashboard pane
    * @returns {Promise<void>}
@@ -424,6 +426,8 @@ module.exports = function (doc) {
 
   /**
    * Get element with id or create a new on the fly with that id
+   *
+   * @param {string} id The ID of the element you want to get or create
    * @returns {HTMLElement}
    */
   function getOrCreateContainer (id) {
