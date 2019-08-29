@@ -475,7 +475,6 @@ module.exports = function (doc) {
                 ico.style = paneHiddenStyle
               }
 
-              // If the view already exists, remove it
               var numberOfPanesRequiringQueryButton = 0
               for (var d = t.firstChild; d; d = d.nextSibling) {
                 if (d.pane && d.pane.requireQueryButton) numberOfPanesRequiringQueryButton++
