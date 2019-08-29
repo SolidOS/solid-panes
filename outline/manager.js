@@ -380,8 +380,21 @@ module.exports = function (doc) {
 
   async function getRelevantPanes (panes, subject, dom) {
     const relevantPanes = panes.list.filter(pane => pane.label(subject, dom) && !pane.global)
+    if (relevantPanes.length === 0) {
+      // there are no relevant panes, simply return default pane (which ironically is internalPane)
+      return [panes.internal]
+    }
     const filteredPanes = await UI.authn.filterAvailablePanes(relevantPanes)
-    return filteredPanes.length ? filteredPanes : [panes.internalPane]
+    if (filteredPanes.length === 0) {
+      // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
+      return [relevantPanes[0]]
+    }
+    const firstRelevantPaneIndex = panes.list.indexOf(relevantPanes[0])
+    const firstFilteredPaneIndex = panes.list.indexOf(filteredPanes[0])
+    // if the first relevant pane is loaded before the panes available wrt role, we still want to offer the most relevant pane
+    return firstRelevantPaneIndex < firstFilteredPaneIndex
+      ? [relevantPanes[0]].concat(filteredPanes)
+      : filteredPanes
   }
 
   function getPane (relevantPanes, subject) {
