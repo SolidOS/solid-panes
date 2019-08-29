@@ -5,6 +5,7 @@ export interface PaneDefinition {
   icon: string;
   global?: boolean;
   name: string;
+  audience?: NamedNode[]
   label: (subject: NamedNode) => string | null;
   render: (subject: NamedNode, dom: HTMLDocument, options?: unknown) => HTMLElement;
   shouldGetFocus?: (subject: NamedNode) => boolean;

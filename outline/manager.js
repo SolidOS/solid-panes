@@ -378,39 +378,30 @@ module.exports = function (doc) {
   }
   this.showDashboard = showDashboard
 
-  function getRelevantPaneContainers (panes, subject, dom) {
-    const relevantPaneContainers = panes.list
-      .map(pane => ({
-        pane,
-        label: pane.label(subject, dom)
-      }))
-      .filter(({ pane, label }) => label && !pane.global)
-    return relevantPaneContainers.length
-      ? relevantPaneContainers
-      : [{
-        pane: panes.internalPane,
-        label: panes.internalPane.label(subject, dom)
-      }]
+  async function getRelevantPanes (panes, subject, dom) {
+    const relevantPanes = panes.list.filter(pane => pane.label(subject, dom) && !pane.global)
+    const filteredPanes = await UI.authn.filterAvailablePanes(relevantPanes)
+    return filteredPanes.length ? filteredPanes : [panes.internalPane]
   }
 
   function getPane (relevantPanes, subject) {
     return relevantPanes.find(pane => pane.shouldGetFocus && pane.shouldGetFocus(subject)) || relevantPanes[0]
   }
 
-  function expandedHeaderTR (subject, requiredPane, options) {
-    function renderPaneIconTray (td, options = {}) {
+  async function expandedHeaderTR (subject, requiredPane, options) {
+    async function renderPaneIconTray (td, options = {}) {
       const paneShownStyle = 'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
       const paneHiddenStyle = 'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
       paneIconTray.style = 'display:flex; justify-content: flex-start; align-items: center;'
 
-      const relevantPaneContainers = options.hideList ? [] : getRelevantPaneContainers(panes, subject, dom)
-      const relevantPanes = relevantPaneContainers.map(({ pane }) => pane)
+      const relevantPanes = options.hideList ? [] : await getRelevantPanes(panes, subject, dom)
       tr.firstPane = requiredPane || getPane(relevantPanes, subject)
       const paneNumber = relevantPanes.indexOf(tr.firstPane)
 
-      if (relevantPaneContainers.length !== 1) { // if only one, simplify interface
-        relevantPaneContainers.forEach(({ pane, label }, index) => {
+      if (relevantPanes.length !== 1) { // if only one, simplify interface
+        relevantPanes.forEach((pane, index) => {
+          const label = pane.label(subject, dom)
           const ico = UI.utils.AJARImage(pane.icon, label, label, dom)
           ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
@@ -531,7 +522,7 @@ module.exports = function (doc) {
       UI.widgets.makeDraggable(strong, subject)
     }
 
-    header.appendChild(renderPaneIconTray(td, {
+    header.appendChild(await renderPaneIconTray(td, {
       hideList: showHeader
     }))
 
@@ -588,32 +579,33 @@ module.exports = function (doc) {
     if (!table) { // Create a new property table
       table = dom.createElement('table')
       table.setAttribute('style', 'width: 100%;')
-      var tr1 = expandedHeaderTR(subject, pane, options)
-      table.appendChild(tr1)
+      expandedHeaderTR(subject, pane, options).then(tr1 => {
+        table.appendChild(tr1)
 
-      if (tr1.firstPane) {
-        var paneDiv
-        try {
-          UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
-          paneDiv = tr1.firstPane.render(subject, dom, options)
-        } catch (e) { // Easier debugging for pane developers
-          paneDiv = dom.createElement('div')
-          paneDiv.setAttribute('class', 'exceptionPane')
-          var pre = dom.createElement('pre')
-          paneDiv.appendChild(pre)
-          pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
-        }
+        if (tr1.firstPane) {
+          var paneDiv
+          try {
+            UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
+            paneDiv = tr1.firstPane.render(subject, dom, options)
+          } catch (e) { // Easier debugging for pane developers
+            paneDiv = dom.createElement('div')
+            paneDiv.setAttribute('class', 'exceptionPane')
+            var pre = dom.createElement('pre')
+            paneDiv.appendChild(pre)
+            pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
+          }
 
-        var row = dom.createElement('tr')
-        var cell = row.appendChild(dom.createElement('td'))
-        cell.appendChild(paneDiv)
-        if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
-          dom.getElementById('queryButton').removeAttribute('style')
+          var row = dom.createElement('tr')
+          var cell = row.appendChild(dom.createElement('td'))
+          cell.appendChild(paneDiv)
+          if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
+            dom.getElementById('queryButton').removeAttribute('style')
+          }
+          table.appendChild(row)
+          row.pane = tr1.firstPane
+          row.paneButton = tr1.paneButton
         }
-        table.appendChild(row)
-        row.pane = tr1.firstPane
-        row.paneButton = tr1.paneButton
-      }
+      })
 
       return table
     } else { // New display of existing table, keeping expanded bits

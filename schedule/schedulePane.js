@@ -16,6 +16,8 @@ module.exports = {
 
   name: 'schedule',
 
+  audience: [ns.solid('PowerUser')],
+
   // Does the subject deserve an Scheduler pane?
   label: function (subject) {
     var kb = UI.store

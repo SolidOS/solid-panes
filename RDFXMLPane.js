@@ -5,12 +5,15 @@
 ** in generated N3 syntax.
 */
 
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + '22-text-xml4.png',
 
   name: 'RDFXML',
+
+  audience: [ns.solid('Developer')],
 
   label: function (subject) {
     if ('http://www.w3.org/2007/ont/link#ProtocolEvent' in UI.store.findTypeURIs(subject)) return null

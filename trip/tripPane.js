@@ -8,13 +8,16 @@
 **  trips, etc
 */
 
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const ns = UI.ns
 
 module.exports = {
 
   icon: UI.icons.iconBase + 'noun_62007.svg',
 
   name: 'travel expenses',
+
+  audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
   label: function (subject) {

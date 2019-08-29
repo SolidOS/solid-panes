@@ -13,6 +13,8 @@ module.exports = {
 
   name: 'tabbed',
 
+  audience: [ns.solid('PowerUser')],
+
   // Does the subject deserve this pane?
   label: function (subject) {
     var kb = UI.store

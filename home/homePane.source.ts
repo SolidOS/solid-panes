@@ -28,7 +28,7 @@ const HomePaneSource: PaneDefinition = {
   },
 
   render: function (subject, dom) {
-    var showContent = function () {
+    var showContent = async function () {
       var context = { div: div, dom: dom, statusArea: div, me: me }
       /*
             div.appendChild(dom.createElement('h4')).textContent = 'Login status'
@@ -42,7 +42,8 @@ const HomePaneSource: PaneDefinition = {
       div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere'
       var creationDiv = div.appendChild(dom.createElement('div'))
       var creationContext = { div: creationDiv, dom: dom, statusArea: div, me: me }
-      UI.create.newThingUI(creationContext, panes) // newUI Have to pass panes down
+      const relevantPanes = await UI.authn.filterAvailablePanes(panes.list)
+      UI.create.newThingUI(creationContext, relevantPanes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
       // TODO: Replace by a common, representative interface

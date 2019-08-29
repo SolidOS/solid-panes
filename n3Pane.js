@@ -4,12 +4,15 @@
 ** or at least the RDF semantics we attribute to that resource,
 ** in generated N3 syntax.
 */
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'w3c/n3_smaller.png',
 
   name: 'n3',
+
+  audience: [ns.solid('Developer')],
 
   label: function (subject) {
     if ('http://www.w3.org/2007/ont/link#ProtocolEvent' in UI.store.findTypeURIs(subject)) return null

@@ -1,7 +1,8 @@
 /*   slideshow Pane
 **
 */
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const ns = UI.ns
 
 // tabulator.loadScript("js/panes/slideshow/better-simple-slideshow/js/better-simple-slideshow.js")
 
@@ -12,6 +13,8 @@ module.exports = {
   icon: UI.icons.iconBase + 'noun_138712.svg',
 
   name: 'slideshow',
+
+  audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve an slideshow pane?
   label: function (subject) {
