@@ -386,14 +386,12 @@ module.exports = function (doc) {
     if (dashboardContainer.childNodes.length > 0 && options.pane) {
       outlineContainer.style.display = 'none'
       dashboardContainer.style.display = 'inherit'
-      const tab = dashboardContainer.querySelector(`[data-global-pane-name="${options.pane}"]`) ||
-        dashboardContainer.querySelector('[data-global-pane-name]')
+      const tab = dashboardContainer.querySelector(`[data-global-pane-name="${options.pane}"]`)
       if (tab) {
         tab.click()
         return
       }
-      console.warn('Found no tabs in global dashboard to open')
-      dashboardContainer.innerHTML = ''
+      console.warn('Did not find the referred tab in global dashboard, will open first one')
     }
 
     // create a new dashboard if not already present
