@@ -3,12 +3,15 @@
 **
 */
 
-var UI = require('solid-ui')
-module.exports = {
+const UI = require('solid-ui')
+const ns = UI.ns
 
+module.exports = {
   icon: UI.icons.iconBase + 'noun_122196.svg',
 
   name: 'form',
+
+  audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
   label: function (subject) {

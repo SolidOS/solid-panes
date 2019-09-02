@@ -5,13 +5,16 @@
 ** This pane hides the ones considered too low-level for the normal user.
 */
 
-var UI = require('solid-ui')
-var panes = require('pane-registry')
+const UI = require('solid-ui')
+const panes = require('pane-registry')
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'about.png',
 
   name: 'default',
+
+  audience: [ns.solid('Developer')],
 
   label: function (subject) { return 'about ' },
 

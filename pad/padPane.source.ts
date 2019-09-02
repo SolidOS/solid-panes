@@ -15,6 +15,8 @@ const paneDef: PaneDefinition = {
 
   name: 'pad',
 
+  audience: [ns.solid('PowerUser')],
+
   // Does the subject deserve an pad pane?
   label: function (subject) {
     var kb = UI.store

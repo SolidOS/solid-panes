@@ -3,12 +3,15 @@
 **  This pane allows playlists and playlists slots to be viewed
 **  seeAlso: http://smiy.sourceforge.net/pbo/spec/playbackontology.html
 */
-var UI = require('solid-ui')
+const UI = require('solid-ui')
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_1619.svg',
 
   name: 'playlistSlot',
+
+  audience: [ns.solid('PowerUser')],
 
   label: function (subject) {
     var kb = UI.store

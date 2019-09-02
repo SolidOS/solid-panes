@@ -15,6 +15,8 @@ module.exports = {
 
   // Create a new folder in a Solid system,
 
+  audience: [ns.solid('PowerUser')],
+
   label: function (subject) {
     var kb = UI.store
     var n = kb.each(

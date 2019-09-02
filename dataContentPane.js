@@ -9,13 +9,16 @@
 //         - Expand automatically all the way down
 //         - original source view?  Use ffox view source
 
-var UI = require('solid-ui')
-var panes = require('pane-registry')
+const UI = require('solid-ui')
+const panes = require('pane-registry')
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
 
   name: 'dataContents',
+
+  audience: [ns.solid('Developer')],
 
   label: function (subject) {
     if ('http://www.w3.org/2007/ont/link#ProtocolEvent' in UI.store.findTypeURIs(subject)) return null

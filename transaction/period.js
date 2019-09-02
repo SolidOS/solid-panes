@@ -5,14 +5,17 @@
 ** trips, etc
 */
 
-var UI = require('solid-ui')
-var panes = require('pane-registry')
+const UI = require('solid-ui')
+const panes = require('pane-registry')
+const ns = UI.ns
 
 module.exports = {
 
   icon: UI.icons.iconBase + 'noun_142708.svg',
 
   name: 'period',
+
+  audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
   label: function (subject) {

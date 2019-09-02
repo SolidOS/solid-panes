@@ -378,52 +378,51 @@ module.exports = function (doc) {
   }
   this.showDashboard = showDashboard
 
-  function expandedHeaderTR (subject, requiredPane, options) {
-    function renderPaneIconTray (td, options = {}) {
+  async function getRelevantPanes (panes, subject, dom) {
+    const relevantPanes = panes.list.filter(pane => pane.label(subject, dom) && !pane.global)
+    if (relevantPanes.length === 0) {
+      // there are no relevant panes, simply return default pane (which ironically is internalPane)
+      return [panes.internal]
+    }
+    const filteredPanes = await UI.authn.filterAvailablePanes(relevantPanes)
+    if (filteredPanes.length === 0) {
+      // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
+      return [relevantPanes[0]]
+    }
+    const firstRelevantPaneIndex = panes.list.indexOf(relevantPanes[0])
+    const firstFilteredPaneIndex = panes.list.indexOf(filteredPanes[0])
+    // if the first relevant pane is loaded before the panes available wrt role, we still want to offer the most relevant pane
+    return firstRelevantPaneIndex < firstFilteredPaneIndex
+      ? [relevantPanes[0]].concat(filteredPanes)
+      : filteredPanes
+  }
+
+  function getPane (relevantPanes, subject) {
+    return relevantPanes.find(pane => pane.shouldGetFocus && pane.shouldGetFocus(subject)) || relevantPanes[0]
+  }
+
+  async function expandedHeaderTR (subject, requiredPane, options) {
+    async function renderPaneIconTray (td, options = {}) {
       const paneShownStyle = 'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
       const paneHiddenStyle = 'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
       paneIconTray.style = 'display:flex; justify-content: flex-start; align-items: center;'
 
-      tr.firstPane = null
-      var paneNumber = 0
-      var relevantPanes = []
-      var labels = []
-
-      if (requiredPane) {
-        tr.firstPane = requiredPane
-      }
-      for (var i = 0; i < panes.list.length; i++) {
-        let pane = panes.list[i]
-        var lab = pane.label(subject, dom)
-        if (!lab || pane.global || options.hideList) continue
-
-        relevantPanes.push(pane)
-        if (pane === requiredPane) {
-          paneNumber = relevantPanes.length - 1 // point to this one
-        }
-        labels.push(lab)
-          // steal the focus
-        if (!tr.firstPane && pane.shouldGetFocus && pane.shouldGetFocus(subject)) {
-          tr.firstPane = pane
-          paneNumber = relevantPanes.length - 1
-          UI.log.info('the ' + i + 'th pane steals the focus')
-        }
-      }
-      if (!relevantPanes.length) relevantPanes.push(panes.internalPane)
-      tr.firstPane = tr.firstPane || relevantPanes[0]
+      const relevantPanes = options.hideList ? [] : await getRelevantPanes(panes, subject, dom)
+      tr.firstPane = requiredPane || getPane(relevantPanes, subject)
+      const paneNumber = relevantPanes.indexOf(tr.firstPane)
 
       if (relevantPanes.length !== 1) { // if only one, simplify interface
-        for (let i = 0; i < relevantPanes.length; i++) {
-          let pane = relevantPanes[i]
-          var ico = UI.utils.AJARImage(pane.icon, labels[i], labels[i], dom)
+        relevantPanes.forEach((pane, index) => {
+          const label = pane.label(subject, dom)
+          const ico = UI.utils.AJARImage(pane.icon, label, label, dom)
           ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
-            // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
+          // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
           // ico.style.width = iconHeight
           // ico.style.height = iconHeight
           var listen = function (ico, pane) { // Freeze scope for event time
             ico.addEventListener('click', function (event) {
-                // Find the containing table for this subject
+              // Find the containing table for this subject
               for (var t = td; t.parentNode; t = t.parentNode) {
                 if (t.nodeName === 'TABLE') break
               }
@@ -437,8 +436,8 @@ module.exports = function (doc) {
                         d.paneButton.style = paneHiddenStyle
                       }
                       removeAndRefresh(d)
-                          // If we just delete the node d, ffox doesn't refresh the display properly.
-                          // state = 'paneHidden';
+                      // If we just delete the node d, ffox doesn't refresh the display properly.
+                      // state = 'paneHidden';
                       if (d.pane.requireQueryButton && t.parentNode.className /* outer table */ &&
                         numberOfPanesRequiringQueryButton === 1 && dom.getElementById('queryButton')) {
                         dom.getElementById('queryButton').setAttribute('style', 'display:none;')
@@ -475,8 +474,7 @@ module.exports = function (doc) {
                 row.pane = pane
                 row.paneButton = ico
               }
-              var state
-              state = ico.getAttribute('class')
+              var state = ico.getAttribute('class')
               if (state === 'paneHidden') {
                 if (!event.shiftKey) { // shift means multiple select
                   removePanes()
@@ -490,8 +488,6 @@ module.exports = function (doc) {
                 ico.style = paneHiddenStyle
               }
 
-                // If the view already exists, remove it
-              state = 'paneShown'
               var numberOfPanesRequiringQueryButton = 0
               for (var d = t.firstChild; d; d = d.nextSibling) {
                 if (d.pane && d.pane.requireQueryButton) numberOfPanesRequiringQueryButton++
@@ -500,10 +496,10 @@ module.exports = function (doc) {
           } // listen
 
           listen(ico, pane)
-          ico.setAttribute('class', (i !== paneNumber) ? 'paneHidden' : 'paneShown')
-          if (i === paneNumber) tr.paneButton = ico
+          ico.setAttribute('class', (index !== paneNumber) ? 'paneHidden' : 'paneShown')
+          if (index === paneNumber) tr.paneButton = ico
           paneIconTray.appendChild(ico)
-        }
+        })
       }
       return paneIconTray
     } // renderPaneIconTray
@@ -538,7 +534,7 @@ module.exports = function (doc) {
       UI.widgets.makeDraggable(strong, subject)
     }
 
-    header.appendChild(renderPaneIconTray(td, {
+    header.appendChild(await renderPaneIconTray(td, {
       hideList: showHeader
     }))
 
@@ -595,32 +591,33 @@ module.exports = function (doc) {
     if (!table) { // Create a new property table
       table = dom.createElement('table')
       table.setAttribute('style', 'width: 100%;')
-      var tr1 = expandedHeaderTR(subject, pane, options)
-      table.appendChild(tr1)
+      expandedHeaderTR(subject, pane, options).then(tr1 => {
+        table.appendChild(tr1)
 
-      if (tr1.firstPane) {
-        var paneDiv
-        try {
-          UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
-          paneDiv = tr1.firstPane.render(subject, dom, options)
-        } catch (e) { // Easier debugging for pane developers
-          paneDiv = dom.createElement('div')
-          paneDiv.setAttribute('class', 'exceptionPane')
-          var pre = dom.createElement('pre')
-          paneDiv.appendChild(pre)
-          pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
-        }
+        if (tr1.firstPane) {
+          var paneDiv
+          try {
+            UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
+            paneDiv = tr1.firstPane.render(subject, dom, options)
+          } catch (e) { // Easier debugging for pane developers
+            paneDiv = dom.createElement('div')
+            paneDiv.setAttribute('class', 'exceptionPane')
+            var pre = dom.createElement('pre')
+            paneDiv.appendChild(pre)
+            pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
+          }
 
-        var row = dom.createElement('tr')
-        var cell = row.appendChild(dom.createElement('td'))
-        cell.appendChild(paneDiv)
-        if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
-          dom.getElementById('queryButton').removeAttribute('style')
+          var row = dom.createElement('tr')
+          var cell = row.appendChild(dom.createElement('td'))
+          cell.appendChild(paneDiv)
+          if (tr1.firstPane.requireQueryButton && dom.getElementById('queryButton')) {
+            dom.getElementById('queryButton').removeAttribute('style')
+          }
+          table.appendChild(row)
+          row.pane = tr1.firstPane
+          row.paneButton = tr1.paneButton
         }
-        table.appendChild(row)
-        row.pane = tr1.firstPane
-        row.paneButton = tr1.paneButton
-      }
+      })
 
       return table
     } else { // New display of existing table, keeping expanded bits

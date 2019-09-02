@@ -4,6 +4,7 @@
 
 const UI = require('solid-ui')
 const panes = require('pane-registry')
+const ns = UI.ns
 
 module.exports = {
 
@@ -11,6 +12,8 @@ module.exports = {
   icon: UI.icons.iconBase + 'noun_170702.svg',
 
   name: 'ui',
+
+  audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
   label: function (subject) {
