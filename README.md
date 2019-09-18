@@ -31,7 +31,7 @@ Currently the panes available include:
 
 The solid-app-set panes are built using a set of widgets and utilities in [https://github.com/linkeddata/solid-ui](https://github.com/linkeddata/solid-ui)
 
-To help onboarding for new users we're using [user types](./Documentation/user-types.md) to limit the number of panes that is presented
+To help onboarding, we're using [user types](./Documentation/user-types.md) to limit the number of panes presented
 to new users.
 
 ## Goals
