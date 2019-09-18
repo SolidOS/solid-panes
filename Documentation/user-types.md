@@ -13,7 +13,7 @@ the data browser will avoid serving you that view unless you've self-assigned De
 An exception to this is if the view is the most relevant for a given resource, which makes sharing resources easier.
 
 For now we've introduced the user types "Developer" and "Power User". 
-The former are assigned to views that deal with various data views (e.g. N3, RDF/XML, etc),
+The former are assigned to views that deal with various data views (e.g., N3, RDF/XML, etc.),
 while the latter are a catch-all for views that are either difficult to use or needs a bit of 
 attention before they are reintroduced to non-technical users.  
 
