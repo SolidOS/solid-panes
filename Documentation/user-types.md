@@ -17,7 +17,7 @@ The former are assigned to views that deal with various data views (e.g. N3, RDF
 while the latter are a catch-all for views that are either difficult to use or needs a bit of 
 attention before they are reintroduced to non-technical users.  
 
-Below is a table that documents the existing views and which user types that are listed to them.
+Below is a table that documents the existing views and the user types that are associated with them.
 If you want access to some of these views, make sure to self-assign the proper user-type.
 
 | Name                 | User types |
