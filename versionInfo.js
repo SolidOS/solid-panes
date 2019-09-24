@@ -1,9 +1,9 @@
 module.exports = {
-buildTime: "2019-09-23T11:04:38Z",
-commit: "92dddaa5476a309fa6008fd9fcaada6e211413d1",
+buildTime: "2019-09-24T15:02:42Z",
+commit: "e97a3c894e971d01c5194ac0ad10948f6da3069e",
 npmInfo:
 {
-  'solid-panes': '2.0.1',
+  'solid-panes': '2.0.2',
   npm: '6.10.0',
   ares: '1.15.0',
   brotli: '1.0.7',
