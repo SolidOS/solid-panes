@@ -164,7 +164,6 @@ function createApplicationEntry (
       .filter(checkbox => checkbox.checked)
       .map(checkbox => checkbox.value)
 
-    console.log(trustedApplicationState.origin, trustedApplicationState.formElements.origin)
     const deletions = getStatementsToDelete(trustedApplicationState.origin || origin, subject, kb, ns)
     const additions = getStatementsToAdd(origin, generateRandomString(), modes, subject, ns);
     (kb as any).updater.update(deletions, additions, handleUpdateResponse)
