@@ -17,7 +17,9 @@ var UserInputFormula // Formula to store references of user's work
 var TempFormula // Formula to store incomplete triples (Requests),
                  // temporarily disjoint with kb to avoid bugs
 
-module.exports = function UserInput (outline) {
+export default UserInput
+
+function UserInput (outline) {
   var kb = UI.store
 
   var myDocument = outline.document // is this ok?

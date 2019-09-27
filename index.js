@@ -25,12 +25,14 @@ panes.versionInfo = require('./versionInfo.js')
 
 panes.UI = require('solid-ui') // Pass on directly to any who needs it
 
+require('./solid-element/solid-element')
+
 // This has common outline mode functionality for the default and other other panes
 // A separate outline manager is required per DOM in cases like a browser extension
 // where there are many occurrences of window and of window.document
 // But each DOM should have just one outline manager.
 
-panes.OutlineManager = require('./outline/manager.js')
+panes.OutlineManager = require('./outline/manager.js').default
 panes.getOutliner = function (dom) {
   if (!dom.outlineManager) {
     dom.outlineManager = panes.OutlineManager(dom)

@@ -6,7 +6,7 @@ const $rdf = require('rdflib')
 
 var YAHOO = require('./dragDrop.js')
 var outlineIcons = require('./outlineIcons.js')
-var UserInput = require('./userInput.js')
+var UserInput = require('./userInput.js').default
 var UI = require('solid-ui')
 var queryByExample = require('./queryByExample.js')
 
@@ -15,7 +15,9 @@ var queryByExample = require('./queryByExample.js')
 
 // const iconHeight = '24px'
 
-module.exports = function (doc) {
+export default manager
+
+function manager (doc) {
   const dom = doc
 
   this.document = doc

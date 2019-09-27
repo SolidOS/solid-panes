@@ -12,6 +12,14 @@ export async function generateHomepage (subject: NamedNode, store: IndexedFormul
   wrapper.appendChild(createTitle(ownersProfile.uri, name))
   wrapper.appendChild(createDataSection(name))
 
+  const loading = document.createElement('div')
+  loading.innerText = 'Loading...'
+
+  const extension = document.createElement('solid-element')
+  extension.setAttribute('origin', 'https://megoth.localhost:8443/extensions/test.ttl#view')
+  extension.appendChild(loading)
+  wrapper.appendChild(extension)
+
   return wrapper
 }
 
