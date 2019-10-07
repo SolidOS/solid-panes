@@ -17,24 +17,24 @@ interface FormElements {
   // These typings were created post-hoc, so I'm not sure if that was intentional.
   // Thus, this union type should be considered as descriptive rather than prescriptive.
   origin: (undefined | NamedNode | HTMLInputElement);
-};
+}
 
 export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
-  var div = dom.createElement('div')
+  const div = dom.createElement('div')
   div.classList.add('trusted-applications-pane')
   div.setAttribute('style', 'border: 0.3em solid ' + thisColor + '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;')
-  var table = div.appendChild(dom.createElement('table'))
-  var main = table.appendChild(dom.createElement('tr'))
-  var bottom = table.appendChild(dom.createElement('tr'))
-  var statusArea = bottom.appendChild(dom.createElement('div'))
+  const table = div.appendChild(dom.createElement('table'))
+  const main = table.appendChild(dom.createElement('tr'))
+  const bottom = table.appendChild(dom.createElement('tr'))
+  const statusArea = bottom.appendChild(dom.createElement('div'))
   statusArea.setAttribute('style', 'padding: 0.7em;')
 
-  var context = { dom: dom, div: main, statusArea: statusArea, me: null }
+  const context = { dom: dom, div: main, statusArea: statusArea, me: null }
   UI.authn.logInLoadProfile(context).then((context: any) => {
     let subject: NamedNode = context.me
 
-    var profile = subject.doc()
-    var editable = UI.store.updater.editable(profile.uri, kb)
+    const profile = subject.doc()
+    const editable = UI.store.updater.editable(profile.uri, kb)
 
     main.appendChild(createText('h3', 'Manage your trusted applications'))
 
@@ -62,12 +62,12 @@ export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
 }
 
 function createApplicationTable (subject: NamedNode) {
-  var applicationsTable = createElement('table', {
+  const applicationsTable = createElement('table', {
     'class': 'results'
   })
 
   // creating headers
-  var header = createContainer('tr', [
+  const header = createContainer('tr', [
     createText('th', 'Application URL'),
     createText('th', 'Access modes'),
     createText('th', 'Actions')
@@ -99,7 +99,7 @@ function createApplicationEntry (
   appModes: NamedNode[],
   updateTable: () => void
 ): HTMLTableRowElement {
-  var trustedApplicationState = {
+  const trustedApplicationState = {
     origin,
     appModes,
     formElements: {
@@ -109,65 +109,77 @@ function createApplicationEntry (
   }
   return createContainer('tr', [
     createContainer('td', [
-      createElement('input', {
-        'class': 'textinput',
-        placeholder: 'Write new URL here',
-        value: origin ? origin.value : ''
-      }, {}, (element) => { trustedApplicationState.formElements.origin = element })
+      createContainer('form', [
+        createElement('input', {
+          'class': 'textinput',
+          placeholder: 'Write new URL here',
+          value: origin ? origin.value : ''
+        }, {}, (element) => {
+          trustedApplicationState.formElements.origin = element
+        })
+      ], {}, {
+        submit: addOrEditApplication
+      })
     ]),
-    createContainer('td', createModesInput(trustedApplicationState)),
-    createContainer('td', origin
-      ? [
-        createText('button', 'Update', {
-          'class': 'controlButton',
-          style: 'background: LightGreen;'
-        }, {
-          click: () => addOrEditApplication()
-        }),
-        createText('button', 'Delete', {
-          'class': 'controlButton',
-          style: 'background: LightCoral;'
-        }, {
-          click: () => removeApplication()
-        })
-      ]
-      : [
-        createText('button', 'Add', {
-          'class': 'controlButton',
-          style: 'background: LightGreen;'
-        }, {
-          click: () => addOrEditApplication()
-        })
-      ])
+    createContainer('td', [
+      createContainer('form', createModesInput(trustedApplicationState), {}, {
+        submit: addOrEditApplication
+      })
+    ]),
+    createContainer('td', [
+      createContainer('form', origin
+        ? [
+          createText('button', 'Update', {
+            'class': 'controlButton',
+            style: 'background: LightGreen;'
+          }),
+          createText('button', 'Delete', {
+            'class': 'controlButton',
+            style: 'background: LightCoral;'
+          }, {
+            click: removeApplication
+          })
+        ]
+        : [
+          createText('button', 'Add', {
+            'class': 'controlButton',
+            style: 'background: LightGreen;'
+          })
+        ], {}, {
+        submit: addOrEditApplication
+      })
+    ])
   ])
 
-  function addOrEditApplication () {
-    var origin
+  function addOrEditApplication (event: Event) {
+    event.preventDefault()
+    let origin
     try {
       origin = sym(trustedApplicationState.formElements.origin!.value)
     } catch (err) {
       return alert('Please provide an application URL you want to trust')
     }
 
-    var modes = trustedApplicationState.formElements.modes
+    const modes = trustedApplicationState.formElements.modes
       .filter(checkbox => checkbox.checked)
       .map(checkbox => checkbox.value)
 
-    var deletions = getStatementsToDelete(origin, subject, kb, ns)
-    var additions = getStatementsToAdd(origin, generateRandomString(), modes, subject, ns);
+    const deletions = getStatementsToDelete(trustedApplicationState.origin || origin, subject, kb, ns)
+    const additions = getStatementsToAdd(origin, generateRandomString(), modes, subject, ns);
     (kb as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
-  function removeApplication () {
-    var origin
+  function removeApplication (event: Event) {
+    event.preventDefault()
+    let origin
     try {
       origin = sym(trustedApplicationState.formElements.origin!.value)
     } catch (err) {
       return alert('Please provide an application URL you want to remove trust from')
     }
 
-    var deletions = getStatementsToDelete(origin, subject, kb, ns);
-    (kb as any).updater.update(deletions, null, handleUpdateResponse)
+    const deletions = getStatementsToDelete(origin, subject, kb, ns);
+    (kb as any).updater.update(deletions, [], handleUpdateResponse)
   }
 
   function handleUpdateResponse (uri: any, success: boolean, errorBody: any) {
@@ -184,7 +196,7 @@ function createElement<K extends keyof HTMLElementTagNameMap> (
   eventListeners: {[eventName: string]: EventListener} = {},
   onCreated: (null | ((createdElement: HTMLElementTagNameMap[K]) => void)) = null
 ) {
-  var element = document.createElement(elementName)
+  const element = document.createElement(elementName)
   if (onCreated) {
     onCreated(element)
   }
@@ -204,7 +216,7 @@ function createContainer<K extends keyof HTMLElementTagNameMap> (
   eventListeners = {},
   onCreated = null
 ) {
-  var element = createElement(elementName, attributes, eventListeners, onCreated)
+  const element = createElement(elementName, attributes, eventListeners, onCreated)
   children.forEach(child => element.appendChild(child))
   return element
 }
@@ -216,14 +228,14 @@ function createText<K extends keyof HTMLElementTagNameMap> (
   eventListeners = {},
   onCreated = null
 ) {
-  var element = createElement(elementName, attributes, eventListeners, onCreated)
+  const element = createElement(elementName, attributes, eventListeners, onCreated)
   element.textContent = textContent
   return element
 }
 
 function createModesInput ({ appModes, formElements }: { appModes: NamedNode[], formElements: FormElements}) {
   return ['Read', 'Write', 'Append', 'Control'].map(mode => {
-    var isChecked = appModes.some(appMode => appMode.value === ns.acl(mode).value)
+    const isChecked = appModes.some(appMode => appMode.value === ns.acl(mode).value)
     return createContainer('label', [
       createElement('input', {
         type: 'checkbox',
