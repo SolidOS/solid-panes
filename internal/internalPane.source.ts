@@ -17,8 +17,6 @@ const pane: PaneDefinition = {
 
   name: 'internal',
 
-  audience: [ns.solid('Developer')],
-
   label: function () {
     return 'under the hood' // There is often a URI even of no statements
   },
