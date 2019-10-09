@@ -1,18 +1,17 @@
 /*   Sharing Pane
-**
-**  This outline pane allows a user to view and adjust the sharing -- accesss control lists
-** for anything which has that capability.
-**
-** I am using in places single quotes strings like 'this'
-** where internationalization ("i18n") is not a problem, and double quoted
-** like "this" where the string is seen by the user and so I18n is an issue.
-*/
+ **
+ **  This outline pane allows a user to view and adjust the sharing -- accesss control lists
+ ** for anything which has that capability.
+ **
+ ** I am using in places single quotes strings like 'this'
+ ** where internationalization ("i18n") is not a problem, and double quoted
+ ** like "this" where the string is seen by the user and so I18n is an issue.
+ */
 
 // These used to be in js/init/icons.js but are better in the pane.
 const UI = require('solid-ui')
 
 module.exports = {
-
   icon: UI.icons.iconBase + 'padlock-timbl.svg', // noun_locked_2160665_000000.svg padlock
   // noun_123691.svg was rainbow
 
@@ -38,11 +37,16 @@ module.exports = {
 
     var t = kb.findTypeURIs(subject)
     var noun = 'file'
-    if (t[ns.ldp('BasicContainer').uri] || t[ns.ldp('Container').uri]) noun = 'folder'
+    if (t[ns.ldp('BasicContainer').uri] || t[ns.ldp('Container').uri]) {
+      noun = 'folder'
+    }
 
     var pane = dom.createElement('div')
     var table = pane.appendChild(dom.createElement('table'))
-    table.setAttribute('style', 'font-size:120%; margin: 1em; border: 0.1em #ccc ;')
+    table.setAttribute(
+      'style',
+      'font-size:120%; margin: 1em; border: 0.1em #ccc ;'
+    )
 
     var statusRow = table.appendChild(dom.createElement('tr'))
     var statusBlock = statusRow.appendChild(dom.createElement('div'))
@@ -51,16 +55,25 @@ module.exports = {
     var box = MainRow.appendChild(dom.createElement('table'))
     // var bottomRow = table.appendChild(dom.createElement('tr'));
 
-    var context = { target: subject, me: null, noun: noun, div: pane, dom: dom, statusRegion: statusBlock }
+    var context = {
+      target: subject,
+      me: null,
+      noun: noun,
+      div: pane,
+      dom: dom,
+      statusRegion: statusBlock
+    }
     var uri = UI.authn.currentUser()
     context.me = uri
     UI.aclControl.preventBrowserDropEvents(dom)
 
-    box.appendChild(UI.aclControl.ACLControlBox5(subject, dom, noun, kb, function (ok, body) {
-      if (!ok) {
-        box.innerHTML = 'ACL control box Failed: ' + body
-      }
-    }))
+    box.appendChild(
+      UI.aclControl.ACLControlBox5(subject, dom, noun, kb, function (ok, body) {
+        if (!ok) {
+          box.innerHTML = 'ACL control box Failed: ' + body
+        }
+      })
+    )
 
     div.appendChild(pane)
     return div

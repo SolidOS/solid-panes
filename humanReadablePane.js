@@ -1,25 +1,31 @@
 /*   Human-readable Pane
-**
-**  This outline pane contains the document contents for an HTML document
-**  This is for peeking at a page, because the user might not want to leave the data browser.
-*/
+ **
+ **  This outline pane contains the document contents for an HTML document
+ **  This is for peeking at a page, because the user might not want to leave the data browser.
+ */
 var UI = require('solid-ui')
+const $rdf = require('rdflib')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-text-x-generic.png',
 
   name: 'humanReadable',
 
-  label: function (subject, myDocument) {
+  label: function (subject, _myDocument) {
     var kb = UI.store
     var ns = UI.ns
 
     //   See also the source pane, which has lower precedence.
 
-    var allowed = ['text/plain',
-      'text/html', 'application/xhtml+xml',
-      'image/png', 'image/jpeg', 'application/pdf',
-      'video/mp4']
+    var allowed = [
+      'text/plain',
+      'text/html',
+      'application/xhtml+xml',
+      'image/png',
+      'image/jpeg',
+      'application/pdf',
+      'video/mp4'
+    ]
 
     var hasContentTypeIn = function (kb, x, displayables) {
       var cts = kb.fetcher.getHeader(x, 'content-type')
@@ -51,8 +57,12 @@ module.exports = {
     var t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 
-    if (hasContentTypeIn(kb, subject, allowed) ||
-      hasContentTypeIn2(kb, subject, allowed)) return 'View'
+    if (
+      hasContentTypeIn(kb, subject, allowed) ||
+      hasContentTypeIn2(kb, subject, allowed)
+    ) {
+      return 'View'
+    }
 
     return null
   },

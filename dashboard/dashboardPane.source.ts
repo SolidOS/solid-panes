@@ -7,7 +7,7 @@ import { generateHomepage } from './homepage'
 export const dashboardPaneSource: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
-  label: (subject) => {
+  label: subject => {
     if (subject.uri === subject.site().uri) {
       return 'Dashboard'
     }
@@ -24,7 +24,12 @@ export const dashboardPaneSource: PaneDefinition = {
   }
 }
 
-function buildPage (container: HTMLElement, webId: NamedNode | null, dom: HTMLDocument, subject: NamedNode) {
+function buildPage (
+  container: HTMLElement,
+  webId: NamedNode | null,
+  dom: HTMLDocument,
+  subject: NamedNode
+) {
   if (webId && webId.site().uri === subject.site().uri) {
     return buildDashboard(container, dom)
   }
@@ -33,7 +38,9 @@ function buildPage (container: HTMLElement, webId: NamedNode | null, dom: HTMLDo
 
 function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
   const outliner = panes.getOutliner(dom)
-  outliner.getDashboard().then((dashboard: HTMLElement) => container.appendChild(dashboard))
+  outliner
+    .getDashboard()
+    .then((dashboard: HTMLElement) => container.appendChild(dashboard))
 }
 
 function buildHomePage (container: HTMLElement, subject: NamedNode) {
@@ -44,7 +51,9 @@ function buildHomePage (container: HTMLElement, subject: NamedNode) {
   link.rel = 'stylesheet'
   link.href = '/common/css/bootstrap.min.css'
   shadow.appendChild(link)
-  generateHomepage(subject, UI.store, UI.store.fetcher).then(homepage => shadow.appendChild(homepage))
+  generateHomepage(subject, UI.store, UI.store.fetcher).then(homepage =>
+    shadow.appendChild(homepage)
+  )
 }
 
 export default dashboardPaneSource

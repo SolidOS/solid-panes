@@ -1,14 +1,15 @@
 /*   Attachment Pane
-**
-** - Attach a document to a thing
-**  - View attachments
-** - Look at all unattached Supporting Documents.
-** - Drag a document onto the pane to attach it @@
-**
-**
-*/
+ **
+ ** - Attach a document to a thing
+ **  - View attachments
+ ** - Look at all unattached Supporting Documents.
+ ** - Drag a document onto the pane to attach it @@
+ **
+ **
+ */
 
 var UI = require('solid-ui')
+const $rdf = require('rdflib')
 var panes = require('pane-registry')
 
 module.exports = {
@@ -28,13 +29,17 @@ module.exports = {
     var t = kb.findTypeURIs(subject)
     var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
-    if (t['http://www.w3.org/ns/pim/trip#Trip'] || // If in any subclass
+    if (
+      t['http://www.w3.org/ns/pim/trip#Trip'] || // If in any subclass
       subject.uri === 'http://www.w3.org/ns/pim/trip#Trip' ||
       t['http://www.w3.org/2005/01/wf/flow#Task'] ||
       t['http://www.w3.org/2000/10/swap/pim/qif#Transaction'] ||
       // subject.uri == 'http://www.w3.org/2000/10/swap/pim/qif#Transaction' ||
       QU('Transaction') in kb.findSuperClassesNT(subject) ||
-      kb.holds(subject, WF('attachment'))) return 'attachments'
+      kb.holds(subject, WF('attachment'))
+    ) {
+      return 'attachments'
+    }
     return null
   },
 
@@ -64,8 +69,8 @@ module.exports = {
     var div = dom.createElement('div')
     var esc = UI.utils.escapeForXML
     div.setAttribute('class', 'attachPane')
-    div.innerHTML = '<h1>' + esc(UI.utils.label(subject, true)) +
-      ' attachments</h1>' //
+    div.innerHTML =
+      '<h1>' + esc(UI.utils.label(subject, true)) + ' attachments</h1>' //
 
     var predicate = WF('attachment')
     var range = QU('SupportingDocument')
@@ -81,13 +86,20 @@ module.exports = {
     // and sort them by an appropriate property.   @@ Move to library
     //
 
-    var getSortKeySimple = function (c) {
-      var sortBy = kb.sym({
-        'http://www.w3.org/2005/01/wf/flow#Task': 'http://purl.org/dc/elements/1.1/created',
-        'http://www.w3.org/ns/pim/trip#Trip': // @@ put this into the ontologies
-        'http://www.w3.org/2002/12/cal/ical#dtstart',
-        'http://www.w3.org/2000/10/swap/pim/qif#Transaction': 'http://www.w3.org/2000/10/swap/pim/qif#date',
-        'http://www.w3.org/2000/10/swap/pim/qif#SupportingDocument': 'http://purl.org/dc/elements/1.1/date'}[subject.uri])
+    var getSortKeySimple = function (_c) {
+      var sortBy = kb.sym(
+        {
+          'http://www.w3.org/2005/01/wf/flow#Task':
+            'http://purl.org/dc/elements/1.1/created',
+          // @@ put this into the ontologies
+          'http://www.w3.org/ns/pim/trip#Trip':
+            'http://www.w3.org/2002/12/cal/ical#dtstart',
+          'http://www.w3.org/2000/10/swap/pim/qif#Transaction':
+            'http://www.w3.org/2000/10/swap/pim/qif#date',
+          'http://www.w3.org/2000/10/swap/pim/qif#SupportingDocument':
+            'http://purl.org/dc/elements/1.1/date'
+        }[subject.uri]
+      )
 
       if (!sortBy) {
         sortBy = kb.any(subject, UI.ns.ui('sortBy'))
@@ -99,7 +111,8 @@ module.exports = {
       var k = getSortKeySimple(c.uri)
       if (k) return k
       var sup = kb.findSuperClassesNT(c)
-      for (var cl in sup) { // note unordered -- could be closest first
+      for (var cl in sup) {
+        // note unordered -- could be closest first
         k = getSortKeySimple(kb.fromNT(cl).uri)
         if (k) return k
       }
@@ -113,6 +126,8 @@ module.exports = {
       var pairs = []
       var subjects = []
       for (u in uriHash) {
+        // @@ TODO: Write away the need for exception on next line
+        // eslint-disable-next-line no-prototype-builtins
         if (uriHash.hasOwnProperty(u)) {
           x = kb.sym(u)
           if (sortBy) {
@@ -141,16 +156,17 @@ module.exports = {
     }
 
     // Set up a triage of many class members against documents or just one
-    if (subject.uri === 'http://www.w3.org/ns/pim/trip#Trip' ||
+    if (
+      subject.uri === 'http://www.w3.org/ns/pim/trip#Trip' ||
       QU('Transaction') in kb.findSuperClassesNT(subject)
-    // subject.uri == 'http://www.w3.org/2000/10/swap/pim/qif#Transaction'
+      // subject.uri == 'http://www.w3.org/2000/10/swap/pim/qif#Transaction'
     ) {
       multi = true
       subjects = getMembersAndSort(subject)
     } else {
       currentSubject = subject
       currentMode = 1 // Show attached only.
-      subjects = [ subject ]
+      subjects = [subject]
       multi = false
     }
 
@@ -167,18 +183,33 @@ module.exports = {
     }
 
     var showFiltered = function (mode) {
-      var filtered = (mode === 0) ? objects
-        : (mode === 1) ? (currentSubject === null
-          ? objects.filter(function (y) { return !!kb.holds(undefined, predicate, y) })
-          : objects.filter(function (y) { return !!kb.holds(currentSubject, predicate, y) }))
-          : objects.filter(function (y) { return kb.each(undefined, predicate, y).length === 0 })
-      UI.widgets.selectorPanelRefresh(objectList,
-        dom, kb, objectType, predicate, true, filtered, options, showObject, linkClicked)
+      var filtered = mode === 0 ? objects : getFiltered()
+      // eslint-enable
+      UI.widgets.selectorPanelRefresh(
+        objectList,
+        dom,
+        kb,
+        objectType,
+        predicate,
+        true,
+        filtered,
+        options,
+        showObject,
+        linkClicked
+      )
       if (filtered.length === 1) {
         currentObject = filtered[0]
         showObject(currentObject, null, true) // @@ (Sure?) if only one select it.
       } else {
         deselectObject()
+      }
+
+      function getFiltered () {
+        return mode === 1
+          ? currentSubject === null
+            ? objects.filter(y => !!kb.holds(undefined, predicate, y))
+            : objects.filter(y => !!kb.holds(currentSubject, predicate, y))
+          : objects.filter(y => kb.each(undefined, predicate, y).length === 0)
       }
     }
 
@@ -191,7 +222,16 @@ module.exports = {
           // complain("Success "+verb+" "+y.uri+" to "+x.uri+ ":\n"+ body)
           refresh()
         } else {
-          complain('Error: Unable to ' + verb + ' ' + y.uri + ' to ' + x.uri + ':\n' + body)
+          complain(
+            'Error: Unable to ' +
+              verb +
+              ' ' +
+              y.uri +
+              ' to ' +
+              x.uri +
+              ':\n' +
+              body
+          )
         }
       }
 
@@ -210,7 +250,8 @@ module.exports = {
 
     var linkClicked = function (x, event, inverse, refresh) {
       var s, o
-      if (inverse) { // Objectlist
+      if (inverse) {
+        // Objectlist
         if (!currentSubject) {
           complain('No subject for the link has been selected')
           return
@@ -218,7 +259,8 @@ module.exports = {
           s = currentSubject
           o = x
         }
-      } else { // Subjectlist
+      } else {
+        // Subjectlist
         if (!currentObject) {
           complain('No object for the link has been selected')
           return
@@ -242,10 +284,21 @@ module.exports = {
     }
 
     if (multi) {
-      var subjectList = UI.widgets.selectorPanel(dom, kb, subject,
-        predicate, false, subjects, options, showSubject, linkClicked)
-      subjectList.setAttribute('style',
-        'background-color: white;  width: 25em; height: 100%; padding: 0 em; overflow:scroll; float:left')
+      var subjectList = UI.widgets.selectorPanel(
+        dom,
+        kb,
+        subject,
+        predicate,
+        false,
+        subjects,
+        options,
+        showSubject,
+        linkClicked
+      )
+      subjectList.setAttribute(
+        'style',
+        'background-color: white;  width: 25em; height: 100%; padding: 0 em; overflow:scroll; float:left'
+      )
       div.appendChild(subjectList)
     }
 
@@ -276,7 +329,8 @@ module.exports = {
         */
         preview.innerHTML = 'Loading ....'
         if (x.uri) {
-          kb.fetcher.load(x.uri)
+          kb.fetcher
+            .load(x.uri)
             .then(() => {
               var outliner = panes.getOutliner(dom)
               var display = outliner.propertyTable(x) //  ,table, pane
@@ -287,7 +341,7 @@ module.exports = {
               preview.textContent = 'Error loading ' + x.uri + ': ' + err
             })
         }
-          /*
+        /*
               if (dispalyable(kb, x) || x.uri.slice(-4) == ".pdf" || x.uri.slice(-4) == ".png" || x.uri.slice(-5) == ".html" ||
                       x.uri.slice(-5) == ".jpeg") { // @@@@@@ MAJOR KLUDGE! use metadata after HEAD
                   preview.innerHTML = '<iframe height="100%" width="100%"src="'
@@ -296,16 +350,23 @@ module.exports = {
               }
           */
       } catch (e) {
-        preview.innerHTML = '<span style="background-color: pink;">' + 'Error:' + e + '</span>' // @@ enc
+        preview.innerHTML =
+          '<span style="background-color: pink;">' + 'Error:' + e + '</span>' // @@ enc
       }
     }
 
-    div.setAttribute('style', 'background-color: white; width:40cm; height:20cm;')
+    div.setAttribute(
+      'style',
+      'background-color: white; width:40cm; height:20cm;'
+    )
 
     var headerButtons = function (dom, labels, intial, callback) {
       var head = dom.createElement('table')
       var current = intial
-      head.setAttribute('style', 'float: left; width: 30em; padding: 0.5em; height: 1.5em; background-color: #ddd; color: #444; font-weight: bold')
+      head.setAttribute(
+        'style',
+        'float: left; width: 30em; padding: 0.5em; height: 1.5em; background-color: #ddd; color: #444; font-weight: bold'
+      )
       var tr = dom.createElement('tr')
       var style0 = 'border-radius: 0.6em; text-align: center;'
       var style1 = style0 + 'background-color: #ccc; color: black;'
@@ -322,7 +383,7 @@ module.exports = {
         b.textContent = labels[i]
         tr.appendChild(buttons[i])
         var listen = function (b, i) {
-          b.addEventListener('click', function (e) {
+          b.addEventListener('click', function (_e) {
             current = i
             setStyles()
             callback(i)
@@ -343,20 +404,45 @@ module.exports = {
     }
 
     var wrapper = dom.createElement('div')
-    wrapper.setAttribute('style', ' width: 30em; height: 100%;  padding: 0em; float:left;')
+    wrapper.setAttribute(
+      'style',
+      ' width: 30em; height: 100%;  padding: 0em; float:left;'
+    )
     // wrapper.appendChild(head)
     div.appendChild(wrapper)
-    wrapper.appendChild(headerButtons(dom, ['all', 'attached', 'not attached'], currentMode, setMode))
+    wrapper.appendChild(
+      headerButtons(
+        dom,
+        ['all', 'attached', 'not attached'],
+        currentMode,
+        setMode
+      )
+    )
 
-    var objectList = UI.widgets.selectorPanel(dom, kb, objectType, predicate, true, objects, options, showObject, linkClicked)
-    objectList.setAttribute('style',
-      'background-color: #ffe;  width: 30em; height: 100%; padding: 0em; overflow:scroll;') // float:left
+    var objectList = UI.widgets.selectorPanel(
+      dom,
+      kb,
+      objectType,
+      predicate,
+      true,
+      objects,
+      options,
+      showObject,
+      linkClicked
+    )
+    objectList.setAttribute(
+      'style',
+      'background-color: #ffe;  width: 30em; height: 100%; padding: 0em; overflow:scroll;'
+    ) // float:left
     wrapper.appendChild(objectList)
 
     // objectList.insertBefore(head, objectList.firstChild)
 
     var preview = dom.createElement('div')
-    preview.setAttribute('style', /* background-color: black; */ 'padding: 0em; margin: 0;  height: 100%; overflow:scroll;')
+    preview.setAttribute(
+      'style',
+      /* background-color: black; */ 'padding: 0em; margin: 0;  height: 100%; overflow:scroll;'
+    )
     div.appendChild(preview)
     showFiltered(currentMode)
 
@@ -365,18 +451,24 @@ module.exports = {
       for (var k = 0; k < subjects.length; k++) {
         var store = findStore(kb, subjects[k])
         if (store) stores[store.uri] = subjects[k]
-      // if (!store) complain("No store for "+subjects[k].uri)
+        // if (!store) complain("No store for "+subjects[k].uri)
       }
       for (var storeURI in stores) {
         // var store = findStore(kb,subjects[subjectList.length-1])
-        let store = kb.sym(storeURI)
+        const store = kb.sym(storeURI)
         var mintBox = dom.createElement('div')
-        mintBox.setAttribute('style', 'clear: left; width: 20em; margin-top:2em; background-color:#ccc; border-radius: 1em; padding: 1em; font-weight: bold;')
+        mintBox.setAttribute(
+          'style',
+          'clear: left; width: 20em; margin-top:2em; background-color:#ccc; border-radius: 1em; padding: 1em; font-weight: bold;'
+        )
         mintBox.textContent = '+ New ' + UI.utils.label(subject)
 
         mintBox.textContent += ' in ' + UI.utils.label(store)
         var storeLab = dom.createElement('span')
-        storeLab.setAttribute('style', 'font-weight: normal; font-size: 80%; color: #777;')
+        storeLab.setAttribute(
+          'style',
+          'font-weight: normal; font-size: 80%; color: #777;'
+        )
         storeLab.textContent = storeURI
         mintBox.appendChild(dom.createElement('br'))
         mintBox.appendChild(storeLab)
@@ -385,23 +477,34 @@ module.exports = {
         mintBox.appendChild(mintButton)
         mintButton.setAttribute('src', ...); @@ Invokes master handler
         */
-        mintBox.addEventListener('click', function (event) {
-          var thisForm = UI.widgets.promptForNew(
-            dom, kb, subject, predicate, subject, null, store,
-            function (ok, body) {
-              if (!ok) {
-                // callback(ok, body); // @@ if ok, need some form of refresh of the select for the new thing
-              } else {
-                // Refresh @@
+        mintBox.addEventListener(
+          'click',
+          function (_event) {
+            var thisForm = UI.widgets.promptForNew(
+              dom,
+              kb,
+              subject,
+              predicate,
+              subject,
+              null,
+              store,
+              function (ok, _body) {
+                if (!ok) {
+                  // callback(ok, body); // @@ if ok, need some form of refresh of the select for the new thing
+                } else {
+                  // Refresh @@
+                }
               }
-            })
-          try {
-            div.insertBefore(thisForm, mintBox.nextSibling) // Sigh no insertAfter
-          } catch (e) {
-            div.appendChild(thisForm)
-          }
-          // var newObject = thisForm.AJAR_subject
-        }, false)
+            )
+            try {
+              div.insertBefore(thisForm, mintBox.nextSibling) // Sigh no insertAfter
+            } catch (e) {
+              div.appendChild(thisForm)
+            }
+            // var newObject = thisForm.AJAR_subject
+          },
+          false
+        )
         div.appendChild(mintBox)
       }
     }

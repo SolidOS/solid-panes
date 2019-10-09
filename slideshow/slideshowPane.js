@@ -1,6 +1,6 @@
 /*   slideshow Pane
-**
-*/
+ **
+ */
 const UI = require('solid-ui')
 const ns = UI.ns
 
@@ -35,7 +35,8 @@ module.exports = {
   // See https://github.com/leemark/better-simple-slideshow
   // and follow instructions there
   render: function (subject, dom) {
-    var styleSheet = 'https://leemark.github.io/better-simple-slideshow/css/simple-slideshow-styles.css'
+    var styleSheet =
+      'https://leemark.github.io/better-simple-slideshow/css/simple-slideshow-styles.css'
     UI.widgets.addStyleSheet(dom, styleSheet)
 
     var kb = UI.store
@@ -59,7 +60,7 @@ module.exports = {
       img.setAttribute('width', '100%')
       figure.appendChild(dom.createElement('figcaption'))
     }
-    var options = {dom: dom}
+    var options = { dom: dom }
 
     setTimeout(function () {
       makeBSS('.bss-slides', options)

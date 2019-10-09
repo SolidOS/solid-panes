@@ -2,16 +2,15 @@
 
 [![NPM Package](https://img.shields.io/npm/v/solid-panes.svg)](https://www.npmjs.com/package/solid-panes)
 
-
 A set of core solid-compatible applets based on solid-ui
 
-These are a set of interlinked applications, or parts of applications, 
+These are a set of interlinked applications, or parts of applications,
 which called 'panes' -- as in parts of a window. A pane displays a data object of certain class using part of the window.
 They don't tile like window panes necessarily, but one pane can involve other panes to display
-objects related to the main object, in all kinds of creative ways. You can give the sub-pane a bit of 
-HTML DOM element to work in, and the data object, and it does the rest. 
+objects related to the main object, in all kinds of creative ways. You can give the sub-pane a bit of
+HTML DOM element to work in, and the data object, and it does the rest.
 
-You can explicitly invoke a specific sub-pane, or you can just provide a DOM element to contain it, 
+You can explicitly invoke a specific sub-pane, or you can just provide a DOM element to contain it,
 and ask the pane system to pick the appropriate pane. It does this by calling each potential pane in order
 with the object, and asking whether it wants to render that object. Typically the pane chosen is the most specific pane,
 so typically a hand-written user interface will be chosen over a generic machine-generated one.
@@ -22,7 +21,7 @@ Currently the panes available include:
 
 - A default pane which lists the properties of any object
 - An internals pane which allows the URI and the HTTP fetch history to be checked
-- A pane for Address Books, Groups as well as individual Contacts 
+- A pane for Address Books, Groups as well as individual Contacts
 - A pane for seeing pictures in a slideshow
 - A pane for a playlist of YouTube videos
 - A pane for a range of issue trackers, to-do-lists, agendas, etc
@@ -50,7 +49,4 @@ Here, just to show how it works, are how some RDF Classes map onto panes. Anythi
 contacts (A VCARD Address Book, Group, Individual, Organization) can be handled by the one contact
 pane. Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
-
 ![Mapping many classes on the L to panes on the R](https://solid.github.io/solid-panes/doc/images/panes-for-classes.svg)
-
-

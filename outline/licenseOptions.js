@@ -4,7 +4,8 @@
 // tabulator.options becaome UI.licenseOptions
 // Possible future alternative directoons: Store licence preferences in a solid preferences file
 
-const licenseURI = ['http://creativecommons.org/licenses/by-nc-nd/3.0/',
+const licenseURI = [
+  'http://creativecommons.org/licenses/by-nc-nd/3.0/',
   'http://creativecommons.org/licenses/by-nc-sa/3.0/',
   'http://creativecommons.org/licenses/by-nc/3.0/',
   'http://creativecommons.org/licenses/by-nd/3.0/',
@@ -23,18 +24,27 @@ module.exports = function licenseOptions () {
   this.checkedLicenses = []
 
   this.openCheckBoxWindow = function () {
-    this.this.display = window.open(' ', 'NewWin',
-      'menubar=0,location=no,status=no,directories=no,toolbar=no,scrollbars=yes,height=200,width=200')
+    this.this.display = window.open(
+      ' ',
+      'NewWin',
+      'menubar=0,location=no,status=no,directories=no,toolbar=no,scrollbars=yes,height=200,width=200'
+    )
   }
   var message = "<font face='arial' size='2'><form name ='checkboxes'>"
   var lics = this.checkedLicenses
   for (var kk = 0; kk < lics.length; kk++) {
-    message += "<input type='checkbox' name = 'n" + kk +
-          "' onClick = 'tabulator.options.submit()'" +    // @@ FIXME
-          (lics[kk] ? 'CHECKED' : '') + ' />CC: ' + names[kk] + '<br />'
+    message +=
+      "<input type='checkbox' name = 'n" +
+      kk +
+      "' onClick = 'tabulator.options.submit()'" + // @@ FIXME
+      (lics[kk] ? 'CHECKED' : '') +
+      ' />CC: ' +
+      names[kk] +
+      '<br />'
   }
 
-  message += "<br /> <a onclick='tabulator.options.selectAll()'>[Select All] </a>" // @@ FIXME
+  message +=
+    "<br /> <a onclick='tabulator.options.selectAll()'>[Select All] </a>" // @@ FIXME
   message += "<a onclick='tabulator.options.deselectAll()'> [Deselect All]</a>" // @@ FIXME
   message += '</form></font>'
 
@@ -73,11 +83,14 @@ module.exports = function licenseOptions () {
   }
 
   this.checkLicence = function checkLicense (statement) {
-    var licenses = kb.each(statement.why, kb.sym('http://creativecommons.org/ns#license'))
+    var licenses = kb.each(
+      statement.why,
+      kb.sym('http://creativecommons.org/ns#license')
+    )
     UI.log.info('licenses:' + statement.why + ': ' + licenses)
     for (let i = 0; i < licenses.length; i++) {
       for (let j = 0; j < this.checkedLicenses.length; j++) {
-        if (this.checkedLicenses[j] && (licenses[i].uri === licenseURI[j])) {
+        if (this.checkedLicenses[j] && licenses[i].uri === licenseURI[j]) {
           return true
           // theClass += ' licOkay' // icon_expand
           // break

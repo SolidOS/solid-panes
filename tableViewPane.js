@@ -25,17 +25,17 @@ module.exports = {
   label: function (subject) {
     // if (!UI.store.holds(subject, UI.ns.rdf('type'),UI.ns.rdfs('Class'))) return null
     if (!UI.store.any(undefined, UI.ns.rdf('type'), subject)) return null
-    var n = UI.store.statementsMatching(
-      undefined, UI.ns.rdf('type'), subject).length
+    var n = UI.store.statementsMatching(undefined, UI.ns.rdf('type'), subject)
+      .length
     if (n === 0) return null // None, suppress pane
     if (n > 15) return null // @@ At the moment this pane can be slow with too many @@ fixme by using limits
-    return (UI.utils.label(subject) + ' table')
+    return UI.utils.label(subject) + ' table'
   },
 
   render: function (subject, myDocument) {
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'tablePane')
-    div.appendChild(UI.table(myDocument, {'tableClass': subject}))
+    div.appendChild(UI.table(myDocument, { tableClass: subject }))
     return div
   }
 }

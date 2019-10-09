@@ -6,8 +6,13 @@
  * The actual release version can eventually be published without the suffix.
  */
 
-if (!process.env.TRAVIS_BUILD_NUMBER || process.env.TRAVIS_BUILD_NUMBER.length === 0) {
-  console.error('Could not read the build number to bump the package version - aborting publish.')
+if (
+  !process.env.TRAVIS_BUILD_NUMBER ||
+  process.env.TRAVIS_BUILD_NUMBER.length === 0
+) {
+  console.error(
+    'Could not read the build number to bump the package version - aborting publish.'
+  )
   process.exit(1)
 }
 
@@ -15,5 +20,10 @@ const fs = require('fs')
 const path = require('path')
 
 const packageJson = require('../package.json')
-packageJson.version = `${packageJson.version}build${process.env.TRAVIS_BUILD_NUMBER}`
-fs.writeFileSync(path.resolve(__dirname, '../package.json'), JSON.stringify(packageJson))
+packageJson.version = `${packageJson.version}build${
+  process.env.TRAVIS_BUILD_NUMBER
+}`
+fs.writeFileSync(
+  path.resolve(__dirname, '../package.json'),
+  JSON.stringify(packageJson)
+)

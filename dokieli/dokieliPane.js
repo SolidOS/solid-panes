@@ -1,12 +1,12 @@
 /*   Human-readable editable "Dokieli" Pane
-**
-**  This outline pane contains the document contents for a Dokieli document
-** The dokeili system allows the user to edit a document including anotations
-** review.   It does not use turtle, but RDF/a
-*/
-/* global alert */
+ **
+ **  This outline pane contains the document contents for a Dokieli document
+ ** The dokeili system allows the user to edit a document including anotations
+ ** review.   It does not use turtle, but RDF/a
+ */
 
 const UI = require('solid-ui')
+const $rdf = require('rdflib')
 const mime = require('mime-types')
 
 // const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
@@ -20,13 +20,15 @@ module.exports = {
 
   mintClass: UI.ns.solid('DokieliDocument'), // @@ A better class?
 
-  label: function (subject, myDocument) {
+  label: function (subject, _myDocument) {
     var kb = UI.store
     var ns = UI.ns
-    var allowed = [ // 'text/plain',
-      'text/html', 'application/xhtml+xml'
-    // 'image/png', 'image/jpeg', 'application/pdf',
-    // 'video/mp4'
+    var allowed = [
+      // 'text/plain',
+      'text/html',
+      'application/xhtml+xml'
+      // 'image/png', 'image/jpeg', 'application/pdf',
+      // 'video/mp4'
     ]
 
     var hasContentTypeIn = function (kb, x, displayables) {
@@ -59,8 +61,12 @@ module.exports = {
     var t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 
-    if (hasContentTypeIn(kb, subject, allowed) ||
-      hasContentTypeIn2(kb, subject, allowed)) return 'Dok'
+    if (
+      hasContentTypeIn(kb, subject, allowed) ||
+      hasContentTypeIn2(kb, subject, allowed)
+    ) {
+      return 'Dok'
+    }
 
     return null
   },
@@ -89,18 +95,35 @@ module.exports = {
     var htmlContents = DOKIELI_TEMPLATE
     var filename = newInstance.uri.split('/').slice(-1)[0]
     filename = decodeURIComponent(filename.split('.')[0])
-    const encodedTitle = filename.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const encodedTitle = filename
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
     htmlContents = htmlContents.replace('<title>', '<title>' + encodedTitle)
-    htmlContents = htmlContents.replace('</article>', '<h1>' + encodedTitle + '</h1></article>')
+    htmlContents = htmlContents.replace(
+      '</article>',
+      '<h1>' + encodedTitle + '</h1></article>'
+    )
     console.log('@@ New HTML for Dok:' + htmlContents)
-    return new Promise(function (resolve, reject) {
-      kb.fetcher.webOperation('PUT', newInstance.uri, { data: htmlContents, contentType: 'text/html' })
+    return new Promise(function (resolve) {
+      kb.fetcher
+        .webOperation('PUT', newInstance.uri, {
+          data: htmlContents,
+          contentType: 'text/html'
+        })
         .then(function () {
-          console.log('new Dokieli document created at ' + newPaneOptions.newInstance)
+          console.log(
+            'new Dokieli document created at ' + newPaneOptions.newInstance
+          )
           resolve(newPaneOptions)
-        }).catch(function (err) {
-          console.log('Error creating dokelili dok at ' +
-            newPaneOptions.newInstance + ': ' + err)
+        })
+        .catch(function (err) {
+          console.log(
+            'Error creating dokelili dok at ' +
+              newPaneOptions.newInstance +
+              ': ' +
+              err
+          )
         })
     })
   },

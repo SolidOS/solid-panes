@@ -1,9 +1,10 @@
 /*   Playlist Pane
-**
-**  This pane allows playlists and playlists slots to be viewed
-**  seeAlso: http://smiy.sourceforge.net/pbo/spec/playbackontology.html
-*/
+ **
+ **  This pane allows playlists and playlists slots to be viewed
+ **  seeAlso: http://smiy.sourceforge.net/pbo/spec/playbackontology.html
+ */
 const UI = require('solid-ui')
+const $rdf = require('rdflib')
 const ns = UI.ns
 
 module.exports = {
@@ -16,9 +17,13 @@ module.exports = {
   label: function (subject) {
     var kb = UI.store
 
-    if (!kb.anyStatementMatching(
-        subject, UI.ns.rdf('type'),
-        kb.sym('http://purl.org/ontology/pbo/core#PlaylistSlot'))) {
+    if (
+      !kb.anyStatementMatching(
+        subject,
+        UI.ns.rdf('type'),
+        kb.sym('http://purl.org/ontology/pbo/core#PlaylistSlot')
+      )
+    ) {
       return null
     }
 
@@ -26,17 +31,21 @@ module.exports = {
   },
 
   render: function (subject, myDocument) {
-    function isVideo (src, index) {
+    function isVideo (src, _index) {
       if (!src) {
         return {
           html5: true
         }
       }
 
-      var youtube = src.match(/\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:watch\?v=|embed\/)?([a-z0-9\-_%]+)/i)
+      var youtube = src.match(
+        /\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:watch\?v=|embed\/)?([a-z0-9\-_%]+)/i
+      )
       var vimeo = src.match(/\/\/(?:www\.)?vimeo.com\/([0-9a-z\-_]+)/i)
       var dailymotion = src.match(/\/\/(?:www\.)?dai.ly\/([0-9a-z\-_]+)/i)
-      var vk = src.match(/\/\/(?:www\.)?(?:vk\.com|vkontakte\.ru)\/(?:video_ext\.php\?)(.*)/i)
+      var vk = src.match(
+        /\/\/(?:www\.)?(?:vk\.com|vkontakte\.ru)\/(?:video_ext\.php\?)(.*)/i
+      )
 
       if (youtube) {
         return {
@@ -71,8 +80,14 @@ module.exports = {
     }
 
     var kb = UI.store
-    var obj = kb.any(subject, $rdf.sym('http://purl.org/ontology/pbo/core#playlist_item'))
-    var index = kb.any(subject, $rdf.sym('http://purl.org/ontology/olo/core#index'))
+    var obj = kb.any(
+      subject,
+      $rdf.sym('http://purl.org/ontology/pbo/core#playlist_item')
+    )
+    var index = kb.any(
+      subject,
+      $rdf.sym('http://purl.org/ontology/olo/core#index')
+    )
 
     var uri = obj.uri
     var video = isVideo(uri)
@@ -99,7 +114,10 @@ module.exports = {
     }
 
     if (index) {
-      var sl = kb.statementsMatching(null, $rdf.sym('http://purl.org/ontology/olo/core#index'))
+      var sl = kb.statementsMatching(
+        null,
+        $rdf.sym('http://purl.org/ontology/olo/core#index')
+      )
       var slots = []
       for (var i = 0; i < sl.length; i++) {
         if (sl[i]) {
@@ -110,8 +128,10 @@ module.exports = {
       index = parseInt(index.value, 10)
       var descDiv = myDocument.createElement('div')
 
-      var pIndex = slots[(slots.indexOf(index) - 1 + slots.length) % slots.length]
-      var nIndex = slots[(slots.indexOf(index) + 1 + slots.length) % slots.length]
+      var pIndex =
+        slots[(slots.indexOf(index) - 1 + slots.length) % slots.length]
+      var nIndex =
+        slots[(slots.indexOf(index) + 1 + slots.length) % slots.length]
 
       var prev = link(text('<<'), subject.uri.split('#')[0] + '#' + pIndex)
 

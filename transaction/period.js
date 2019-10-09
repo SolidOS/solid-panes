@@ -1,16 +1,15 @@
 /*   Financial Period Pane
-**
-**  This outline pane allows a user to interact with a period
-**  downloaded from a bank statement, annotting it with classes and comments,
-** trips, etc
-*/
+ **
+ **  This outline pane allows a user to interact with a period
+ **  downloaded from a bank statement, annotting it with classes and comments,
+ ** trips, etc
+ */
 
 const UI = require('solid-ui')
 const panes = require('pane-registry')
 const ns = UI.ns
 
 module.exports = {
-
   icon: UI.icons.iconBase + 'noun_142708.svg',
 
   name: 'period',
@@ -45,7 +44,7 @@ module.exports = {
     var complain = function complain (message) {
       return mention(message, 'color: #100; background-color: #fee')
     }
-/*
+    /*
     var rerender = function (div) {
       var parent = div.parentNode
       var div2 = thisPane.render(subject, dom)
@@ -55,20 +54,28 @@ module.exports = {
     var renderPeriod = function () {
       var dtstart = kb.any(subject, ns.cal('dtstart'))
       if (dtstart === undefined) {
-        complain('(Error: There is no start date known for this period <' +
-          subject.uri + '>,\n -- every period needs one.)')
-      };
+        complain(
+          '(Error: There is no start date known for this period <' +
+            subject.uri +
+            '>,\n -- every period needs one.)'
+        )
+      }
 
       var dtend = kb.any(subject, ns.cal('dtend'))
       if (dtend === undefined) {
-        complain('(Error: There is no end date known for this period <' +
-          subject.uri + '>,\n -- every period needs one.)')
-      };
+        complain(
+          '(Error: There is no end date known for this period <' +
+            subject.uri +
+            '>,\n -- every period needs one.)'
+        )
+      }
 
       // var store = kb.any(subject, UI.ns.qu('annotationStore')) || null
 
       var predicateURIsDone = {}
-      var donePredicate = function (pred) { predicateURIsDone[pred.uri] = true }
+      var donePredicate = function (pred) {
+        predicateURIsDone[pred.uri] = true
+      }
       donePredicate(ns.rdf('type'))
 
       var inPeriod = function (date) {
@@ -88,8 +95,8 @@ module.exports = {
       }
 
       var oderByDate = function (x, y) {
-        let dx = UI.store.any(x, ns.qu('date'))
-        let dy = UI.store.any(y, ns.qu('date'))
+        const dx = UI.store.any(x, ns.qu('date'))
+        const dy = UI.store.any(y, ns.qu('date'))
         if (dx !== undefined && dy !== undefined) {
           if (dx.value < dy.value) return -1
           if (dx.value > dy.value) return 1
@@ -98,7 +105,7 @@ module.exports = {
         if (x.uri > y.uri) return 1
         return 0
       }
-/*
+      /*
       var setPaneStyle = function (account) {
         var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
         if (account) {
@@ -112,7 +119,11 @@ module.exports = {
       // setPaneStyle();
 */
       var h2 = div.appendChild(dom.createElement('h2'))
-      h2.textContent = 'Period ' + dtstart.value.slice(0, 10) + ' - ' + dtend.value.slice(0, 10)
+      h2.textContent =
+        'Period ' +
+        dtstart.value.slice(0, 10) +
+        ' - ' +
+        dtend.value.slice(0, 10)
 
       var insertedPane = function (dom, subject, paneName) {
         var p = panes.byName(paneName)
@@ -133,7 +144,10 @@ module.exports = {
         }
         var tr = dom.createElement('tr')
         var td = tr.appendChild(dom.createElement('td'))
-        td.setAttribute('style', 'width: 98%; padding: 1em; border: 0.1em solid grey;')
+        td.setAttribute(
+          'style',
+          'width: 98%; padding: 1em; border: 0.1em solid grey;'
+        )
         var cols = row.children.length
         if (row.nextSibling) {
           row.parentNode.insertBefore(tr, row.nextSibling)
@@ -145,7 +159,13 @@ module.exports = {
         td.appendChild(insertedPane(dom, subject, paneName))
       }
 
-      var expandAfterRowOrCollapse = function (dom, row, subject, paneName, solo) {
+      var expandAfterRowOrCollapse = function (
+        dom,
+        row,
+        subject,
+        paneName,
+        solo
+      ) {
         if (row.expanded) {
           row.parentNode.removeChild(row.expanded)
           row.expanded = false
@@ -156,7 +176,10 @@ module.exports = {
 
       var transactionTable = function (dom, list) {
         var table = dom.createElement('table')
-        table.setAttribute('style', 'margin-left: 100; font-size: 9pt; width: 85%;')
+        table.setAttribute(
+          'style',
+          'margin-left: 100; font-size: 9pt; width: 85%;'
+        )
         var transactionRow = function (dom, x) {
           var tr = dom.createElement('tr')
 
@@ -192,9 +215,14 @@ module.exports = {
           var amount = kb.any(x, ns.qu('in_USD'))
           c3.textContent = amount ? d2(amount.value) : '???'
           c3.setAttribute('style', 'width: 6em; text-align: right; ') // @@ decimal alignment?
-          tr.addEventListener('click', function (e) { // solo unless shift key
-            expandAfterRowOrCollapse(dom, tr, x, 'transaction', !e.shiftKey)
-          }, false)
+          tr.addEventListener(
+            'click',
+            function (e) {
+              // solo unless shift key
+              expandAfterRowOrCollapse(dom, tr, x, 'transaction', !e.shiftKey)
+            },
+            false
+          )
 
           return tr
         }
@@ -220,17 +248,20 @@ module.exports = {
       var unclassifiedIn = []
       var unclassifiedOut = []
       var usd, z
-      for (var y in xURIs) { // For each thing which can be inferred to be a transaction
+      for (var y in xURIs) {
+        // For each thing which can be inferred to be a transaction
+        // @@ TODO: Write away the need for exception on next line
+        // eslint-disable-next-line no-prototype-builtins
         if (xURIs.hasOwnProperty(y)) {
           z = kb.sym(y)
-          let tt = kb.each(z, ns.rdf('type')) // What EXPLICIT definitions
+          const tt = kb.each(z, ns.rdf('type')) // What EXPLICIT definitions
           var classified = false
           for (let j = 0; j < tt.length; j++) {
-            let t = tt[j]
+            const t = tt[j]
             if (dummies[t.uri] === undefined) {
               classified = true
             }
-          };
+          }
           if (!classified) {
             usd = kb.any(z, ns.qu('in_USD'))
             if (usd === undefined) {
@@ -248,8 +279,8 @@ module.exports = {
       if (unclassifiedIn.length) {
         tab = transactionTable(dom, unclassifiedIn)
         count = tab.children.length
-        div.appendChild(dom.createElement('h3')).textContent = 'Unclassified Income' +
-          (count < 4 ? '' : ' (' + count + ')')
+        div.appendChild(dom.createElement('h3')).textContent =
+          'Unclassified Income' + (count < 4 ? '' : ' (' + count + ')')
         div.appendChild(tab)
       } else {
         happy('No unclassified income')
@@ -257,8 +288,8 @@ module.exports = {
       if (unclassifiedOut.length) {
         tab = transactionTable(dom, unclassifiedOut)
         count = tab.children.length
-        div.appendChild(dom.createElement('h3')).textContent = 'Unclassified Outgoings' +
-          (count < 4 ? '' : ' (' + count + ')')
+        div.appendChild(dom.createElement('h3')).textContent =
+          'Unclassified Outgoings' + (count < 4 ? '' : ' (' + count + ')')
         div.appendChild(tab)
       } else {
         happy('No unclassified outgoings ')
@@ -269,12 +300,14 @@ module.exports = {
       var catSymbol = function (catTail) {
         var cats = kb.findSubClassesNT(ns.qu('Transaction'))
         for (var cat in cats) {
+          // @@ TODO: Write away the need for exception on next line
+          // eslint-disable-next-line no-prototype-builtins
           if (cats.hasOwnProperty(cat)) {
             if (cat.slice(1, -1).split('#')[1] === catTail) {
               return kb.sym(cat.slice(1, -1))
             }
-          };
-        };
+          }
+        }
         return null
       }
 
@@ -296,8 +329,10 @@ module.exports = {
         if (guilty.length) {
           tab = transactionTable(dom, guilty)
           count = tab.children.length
-          div.appendChild(dom.createElement('h3')).textContent = UI.utils.label(cat) +
-            ' with no ' + UI.utils.label(pred) +
+          div.appendChild(dom.createElement('h3')).textContent =
+            UI.utils.label(cat) +
+            ' with no ' +
+            UI.utils.label(pred) +
             (count < 4 ? '' : ' (' + count + ')')
           div.appendChild(tab)
         }
@@ -324,9 +359,9 @@ module.exports = {
     // (or actual type statements whichtypically are NOT there on)
     var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) {
-      let needed = kb.each(subject, ns.rdfs('seeAlso'))
+      const needed = kb.each(subject, ns.rdfs('seeAlso'))
       console.log('Loading before render: ' + needed.length)
-      kb.fetcher.load(needed).then(function (responses) {
+      kb.fetcher.load(needed).then(function () {
         renderPeriod()
       })
     }

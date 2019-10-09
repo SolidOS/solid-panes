@@ -1,8 +1,8 @@
 /*   Tabbed view of anything
-**
-** data-driven
-**
-*/
+ **
+ ** data-driven
+ **
+ */
 const UI = require('solid-ui')
 const panes = require('pane-registry')
 const ns = UI.ns
@@ -28,7 +28,7 @@ module.exports = {
 
   render: function (subject, dom) {
     var div = dom.createElement('div')
-    kb.fetcher.load(subject).then(function (xhr) {
+    kb.fetcher.load(subject).then(function (_xhr) {
       var renderTab = function (div, item) {
         div.appendChild(UI.widgets.personTR(dom, predicate, item, {}))
       }
@@ -37,19 +37,23 @@ module.exports = {
         var pane = null
         containerDiv.innerHTML = ''
         var table = containerDiv.appendChild(dom.createElement('table'))
-        panes.getOutliner(dom).GotoSubject(item, true, pane, false, undefined, table)
+        panes
+          .getOutliner(dom)
+          .GotoSubject(item, true, pane, false, undefined, table)
       }
 
       var predicate = kb.the(subject, ns.meeting('predicate'))
 
-      var options = {dom: dom, subject: subject}
-      options.predicate = kb.any(subject, ns.meeting('predicate')) || ns.meeting('toolList')
+      var options = { dom: dom, subject: subject }
+      options.predicate =
+        kb.any(subject, ns.meeting('predicate')) || ns.meeting('toolList')
       options.ordered = true
       options.orientation = kb.anyValue(subject, ns.meeting('orientation')) || 0
       options.renderMain = renderMain
       options.renderTab = renderTab
       // options.renderTabSettings = renderTabSettings  No tab-specific settings
-      options.backgroundColor = kb.anyValue(subject, ns.ui('backgroundColor')) || '#ddddcc'
+      options.backgroundColor =
+        kb.anyValue(subject, ns.ui('backgroundColor')) || '#ddddcc'
       div.appendChild(UI.tabs.tabWidget(options)) // var tabs =
     }) // then
     return div
