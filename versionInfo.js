@@ -1,6 +1,6 @@
 module.exports = {
-buildTime: "2019-08-20T14:34:34Z",
-commit: "856c7d6d6b33468410d0ae904bf780167b8f34be",
+buildTime: "2019-10-22T19:29:47Z",
+commit: "94f201398a9ba14e97b96d0998cf5e4ef270d7e0",
 npmInfo:
 { 'solid-panes': '1.4.0',
   npm: '6.7.0',
