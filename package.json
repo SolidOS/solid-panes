@@ -40,6 +40,9 @@
   "homepage": "https://github.com/solid/solid-panes",
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
+    "@fluent/bundle": "^0.14.0",
+    "@fluent/dom": "^0.6.0",
+    "@fluent/langneg": "^0.3.0",
     "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",

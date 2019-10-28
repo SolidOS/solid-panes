@@ -11,11 +11,18 @@ import UI from 'solid-ui'
 import panes from 'pane-registry'
 
 import { NamedNode } from 'rdflib'
+import { FluentBundle, FluentResource } from '@fluent/bundle'
 
 import { PaneDefinition } from '../types'
 import { getLabel } from './profilePaneUtils'
 
 import preferencesFormText from './preferencesFormText.ttl'
+
+import enUsFtl from './editProfileTrans.en-US.ftl'
+import nlNLFtl from './editProfileTrans.-US.ftl'
+const enUsTranslations = new FluentResource(enUsFtl)
+const enUs = new FluentBundle('en-US')
+const _errors = enUs.addResource(enUsTranslations)
 
 const nodeMode = (typeof module !== 'undefined')
 
@@ -92,6 +99,13 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       return p
     }
 
+    function localisedMessage (messageId: string, elementConstructor: any) {
+      const message = enUs.getMessage(messageId)
+      if (message.value) {
+        return elementConstructor(enUs.formatPattern(message.value))
+      }
+    }
+
     function heading (str: string) {
       var h = main.appendChild(dom.createElement('h3'))
       h.setAttribute('style', 'color:' + highlightColor + ';')
@@ -123,7 +137,7 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
 
       main.appendChild(paneDiv(dom, me, 'contact'))
 
-      heading('People you know who have webids')
+      localisedMessage('friendsHeading', heading)
 
       comment(`This is your public social network.
         Just put people here you are happy to be connected with publicly

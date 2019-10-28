@@ -22,7 +22,8 @@ module.exports = {
         }
       },
       {
-        test: /\.ttl$/i,
+        // Turtle files or Project Fluent translation files
+        test: /\.(ttl|ftl)$/i,
         use: {
           loader: 'raw-loader'
         }
