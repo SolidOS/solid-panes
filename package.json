@@ -4,7 +4,7 @@
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/main.js",
   "scripts": {
-    "build": "npm run clean && npm run build-dist",
+    "build": "npm run clean && npm run build-dist && npm run build-dev",
     "build-browserified": "npm run build",
     "build-dist": "npm run pre && webpack --progress --colors --mode=production",
     "build-dev": "npm run pre && webpack --progress --colors --mode=development",

@@ -2,10 +2,10 @@ const path = require('path');
 const webpack = require('webpack');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
-module.exports = {
+module.exports = (env, args) => ({
   entry: './index.js',
   output: {
-    filename: 'main.js',
+    filename: (args.mode === 'production') ? 'main.min.js' : 'main.js',
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'commonjs2',
   },
@@ -45,4 +45,4 @@ module.exports = {
     fs: 'empty'
   },
   devtool: 'source-map'
-}
+})
