@@ -91,7 +91,7 @@ solid:User a rdfs:Class;
 # solid:NewUser a rdfs:Class;
 #  rdfs:label "new user"@en;
 #  rdfs:comment """A person who might use a Solid-based system who has low
-#  level of familarity with technical details.""";
+#  level of familiarity with technical details.""";
 #  rdfs:subClassOf solid:User.
 
 solid:PowerUser a rdfs:Class;
