@@ -5,7 +5,7 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 module.exports = (env, args) => ({
   entry: './index.js',
   output: {
-    filename: (args.mode === 'production') ? 'main.min.js' : 'main.js',
+    filename: args.mode === 'production' ? 'main.min.js' : 'main.js',
     path: path.resolve(__dirname, 'dist'),
     libraryTarget: 'commonjs2'
   },
