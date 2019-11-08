@@ -10,7 +10,7 @@
     "build-dev": "npm run pre && webpack --progress --colors --mode=development",
     "watch": "npm run clean && webpack --progress --colors --watch --mode=development",
     "clean": "rm -rf dist/",
-    "lint": "prettier-standard --lint '**/*'",
+    "lint": "prettier-standard --lint '**/*.js' '**/*.ts'",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "test": "npm run lint && jest",
     "pre": "./timestamp.sh > versionInfo.js"

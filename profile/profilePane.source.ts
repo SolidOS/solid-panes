@@ -104,7 +104,10 @@ const thisPane: PaneDefinition = {
 
       function heading (str: string) {
         var h = main.appendChild(dom.createElement('h3'))
-        h.setAttribute('style', 'font-size: 120%; color:' + highlightColor + ';')
+        h.setAttribute(
+          'style',
+          'font-size: 120%; color:' + highlightColor + ';'
+        )
         h.textContent = str
         return h
       }
