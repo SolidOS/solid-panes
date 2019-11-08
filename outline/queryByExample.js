@@ -36,7 +36,7 @@ function makeQueryRow (q, tr, constraint) {
   // var n = tr.childNodes.length
   var inverse = tr.AJAR_inverse
   // var hasVar = 0
-  let pattern, v, parentVar, level, pat
+  let parentVar, level, pat
 
   function makeRDFStatement (freeVar, parent) {
     if (inverse) {
@@ -49,7 +49,8 @@ function makeQueryRow (q, tr, constraint) {
   var optionalSubqueryIndex = null
 
   for (level = tr.parentNode; level; level = level.parentNode) {
-    if (typeof level.AJAR_statement !== 'undefined') { // level.AJAR_statement
+    if (typeof level.AJAR_statement !== 'undefined') {
+      // level.AJAR_statement
       level.setAttribute('bla', level.AJAR_statement) // @@? -timbl
       // UI.log.debug("Parent TR statement="+level.AJAR_statement + ", var=" + level.AJAR_variable)
       /* for(let c=0;c<level.parentNode.childNodes.length;c++) //This makes sure the same variable is used for a subject
@@ -61,18 +62,22 @@ function makeQueryRow (q, tr, constraint) {
       parentVar = level.AJAR_variable
       var predLevel = predParentOf(level)
       if (predLevel.getAttribute('optionalSubqueriesIndex')) {
-        optionalSubqueryIndex = predLevel.getAttribute('optionalSubqueriesIndex')
+        optionalSubqueryIndex = predLevel.getAttribute(
+          'optionalSubqueriesIndex'
+        )
         pat = optionalSubqueriesIndex[optionalSubqueryIndex]
       }
       break
     }
   }
 
-  if (!pat) { pat = q.pat }
+  if (!pat) {
+    pat = q.pat
+  }
 
   var predtr = predParentOf(tr)
   // /////OPTIONAL KLUDGE///////////
-  var opt = (predtr.getAttribute('optional'))
+  var opt = predtr.getAttribute('optional')
   if (!opt) {
     if (optionalSubqueryIndex) {
       predtr.setAttribute('optionalSubqueriesIndex', optionalSubqueryIndex)
@@ -83,7 +88,10 @@ function makeQueryRow (q, tr, constraint) {
   if (opt) {
     var optForm = kb.formula()
     optionalSubqueriesIndex.push(optForm)
-    predtr.setAttribute('optionalSubqueriesIndex', optionalSubqueriesIndex.length - 1)
+    predtr.setAttribute(
+      'optionalSubqueriesIndex',
+      optionalSubqueriesIndex.length - 1
+    )
     pat.optional.push(optForm)
     pat = optForm
   }
@@ -94,31 +102,40 @@ function makeQueryRow (q, tr, constraint) {
 
   var constraintVar = tr.AJAR_inverse ? st.subject : st.object // this is only used for constraints
   var hasParent = true
-  if (constraintVar.isBlank && constraint) { window.alert('You cannot constrain a query with a blank node. No constraint will be added.') }
+  if (constraintVar.isBlank && constraint) {
+    window.alert(
+      'You cannot constrain a query with a blank node. No constraint will be added.'
+    )
+  }
   if (!parentVar) {
     hasParent = false
     parentVar = inverse ? st.object : st.subject // if there is no parents, uses the sub/obj
   }
   // UI.log.debug('Initial variable: '+tr.AJAR_variable)
-  v = tr.AJAR_variable ? tr.AJAR_variable : kb.variable(UI.utils.newVariableName())
+  const v = tr.AJAR_variable
+    ? tr.AJAR_variable
+    : kb.variable(UI.utils.newVariableName())
   q.vars.push(v)
   v.label = hasParent ? parentVar.label : UI.utils.label(parentVar)
   v.label += ' ' + UI.utils.predicateLabelForXML(st.predicate, inverse)
-  pattern = makeRDFStatement(v, parentVar)
+  const pattern = makeRDFStatement(v, parentVar)
   // alert(pattern)
   v.label = v.label.slice(0, 1).toUpperCase() + v.label.slice(1) // init cap
 
   // See ../rdf/sparql.js
   // This should only work on literals but doesn't.
   function ConstraintEqualTo (value) {
-    this.describe = function (varstr) { return varstr + ' = ' + value.toNT() }
+    this.describe = function (varstr) {
+      return varstr + ' = ' + value.toNT()
+    }
     this.test = function (term) {
       return value.sameTerm(term)
     }
     return this
   }
 
-  if (constraint) { // binds the constrained variable to its selected value
+  if (constraint) {
+    // binds the constrained variable to its selected value
     pat.constraints[v] = new ConstraintEqualTo(constraintVar)
   }
   UI.log.info('Pattern: ' + pattern)
@@ -158,16 +175,18 @@ function saveQuery (selection, qs) {
     for (let i = 0; i < n; i++) {
       pattern = pat.statements[i]
       tr = pattern.tr
-        // UI.log.debug('tr: ' + tr.AJAR_statement);
+      // UI.log.debug('tr: ' + tr.AJAR_statement);
       if (typeof tr !== 'undefined') {
         tr.AJAR_pattern = null // TODO: is this == to whats in current version?
         tr.AJAR_variable = null
       }
     }
-    for (let x in pat.optional) { resetOutliner(pat.optional[x]) }
+    for (const x in pat.optional) {
+      resetOutliner(pat.optional[x])
+    }
   }
   resetOutliner(q.pat)
-    // NextVariable=0;
+  // NextVariable=0;
   return q
 } // saveQuery
 

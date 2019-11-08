@@ -5,8 +5,8 @@ import { PaneDefinition } from '../types'
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
 import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
 /*   pad Pane
-**
-*/
+ **
+ */
 var ns = UI.ns
 
 const paneDef: PaneDefinition = {
@@ -33,9 +33,12 @@ const paneDef: PaneDefinition = {
     var kb = UI.store
     var ns = UI.ns
     var updater = kb.updater
-    if (newPaneOptions.me && !newPaneOptions.me.uri) throw new Error('notepad mintNew:  Invalid userid')
+    if (newPaneOptions.me && !newPaneOptions.me.uri)
+      throw new Error('notepad mintNew:  Invalid userid')
 
-    var newInstance = newPaneOptions.newInstance = newPaneOptions.newInstance || kb.sym(newPaneOptions.newBase + 'index.ttl#this')
+    var newInstance = (newPaneOptions.newInstance =
+      newPaneOptions.newInstance ||
+      kb.sym(newPaneOptions.newBase + 'index.ttl#this'))
     // var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
     var newPadDoc = newInstance.doc()
 
@@ -62,10 +65,12 @@ const paneDef: PaneDefinition = {
           if (ok) {
             resolve(newPaneOptions)
           } else {
-            reject(new Error('FAILED to save new tool at: ' + uri2 + ' : ' +
-              message))
-          };
-        })
+            reject(
+              new Error('FAILED to save new tool at: ' + uri2 + ' : ' + message)
+            )
+          }
+        }
+      )
     })
   },
   // and follow instructions there
@@ -88,7 +93,11 @@ const paneDef: PaneDefinition = {
 
     // Two variations of ACL for this app, public read and public read/write
     // In all cases owner has read write control
-    var genACLtext = function (docURI: string, aclURI: string, allWrite: boolean) {
+    var genACLtext = function (
+      docURI: string,
+      aclURI: string,
+      allWrite: boolean
+    ) {
       var g = graph()
       var auth = Namespace('http://www.w3.org/ns/auth/acl#')
       var a = g.sym(aclURI + '#a1')
@@ -120,26 +129,40 @@ const paneDef: PaneDefinition = {
      *
      * @returns {Promise<Response>}
      */
-    var setACL = function setACL (docURI: string, allWrite: boolean, callbackFunction: Function) {
-      var aclDoc = kb.any(kb.sym(docURI),
-        kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+    var setACL = function setACL (
+      docURI: string,
+      allWrite: boolean,
+      callbackFunction: Function
+    ) {
+      var aclDoc = kb.any(
+        kb.sym(docURI),
+        kb.sym('http://www.iana.org/assignments/link-relations/acl')
+      ) // @@ check that this get set by web.js
 
-      if (aclDoc) { // Great we already know where it is
+      if (aclDoc) {
+        // Great we already know where it is
         var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-        return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+        return fetcher
+          .webOperation('PUT', aclDoc.uri, {
+            data: aclText,
+            contentType: 'text/turtle'
+          })
           .then((_result: any) => callbackFunction(true))
           .catch((err: Error) => {
             callbackFunction(false, err.message)
           })
       } else {
-        return fetcher.load(docURI)
+        return fetcher
+          .load(docURI)
           .catch((err: Error) => {
             callbackFunction(false, 'Getting headers for ACL: ' + err)
           })
           .then(() => {
-            var aclDoc = kb.any(kb.sym(docURI),
-              kb.sym('http://www.iana.org/assignments/link-relations/acl'))
+            var aclDoc = kb.any(
+              kb.sym(docURI),
+              kb.sym('http://www.iana.org/assignments/link-relations/acl')
+            )
 
             if (!aclDoc) {
               // complainIfBad(false, "No Link rel=ACL header for " + docURI);
@@ -148,7 +171,10 @@ const paneDef: PaneDefinition = {
 
             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-            return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+            return fetcher.webOperation('PUT', aclDoc.uri, {
+              data: aclText,
+              contentType: 'text/turtle'
+            })
           })
           .then((_result: any) => callbackFunction(true))
           .catch((err: Error) => {
@@ -170,21 +196,33 @@ const paneDef: PaneDefinition = {
     }
 
     // Option of either using the workspace system or just typing in a URI
-    var showBootstrap = function showBootstrap (thisInstance: any, container: HTMLElement, noun: string) {
+    var showBootstrap = function showBootstrap (
+      thisInstance: any,
+      container: HTMLElement,
+      noun: string
+    ) {
       var div = clearElement(container)
-      var appDetails = { 'noun': 'notepad' }
-      div.appendChild(UI.authn.newAppInstance(
-        dom, appDetails, initializeNewInstanceInWorkspace))
+      var appDetails = { noun: 'notepad' }
+      div.appendChild(
+        UI.authn.newAppInstance(
+          dom,
+          appDetails,
+          initializeNewInstanceInWorkspace
+        )
+      )
 
       div.appendChild(dom.createElement('hr')) // @@
 
       var p = div.appendChild(dom.createElement('p'))
-      p.textContent = 'Where would you like to store the data for the ' + noun + '?  ' +
+      p.textContent =
+        'Where would you like to store the data for the ' +
+        noun +
+        '?  ' +
         'Give the URL of the directory where you would like the data stored.'
       var baseField = div.appendChild(dom.createElement('input'))
       baseField.setAttribute('type', 'text')
-      baseField.size = 80; // really a string
-      (baseField as any).label = 'base URL'
+      baseField.size = 80 // really a string
+      ;(baseField as any).label = 'base URL'
       baseField.autocomplete = 'on'
 
       div.appendChild(dom.createElement('br')) // @@
@@ -218,7 +256,10 @@ const paneDef: PaneDefinition = {
       initializeNewInstanceAtBase(thisInstance, newBase)
     }
 
-    var initializeNewInstanceAtBase = function (thisInstance: any, newBase: string) {
+    var initializeNewInstanceAtBase = function (
+      thisInstance: any,
+      newBase: string
+    ) {
       var here = sym(thisInstance.uri.split('#')[0])
       var base = here // @@ ???
 
@@ -227,9 +268,7 @@ const paneDef: PaneDefinition = {
       var newPadDoc = kb.sym(newBase + 'pad.ttl')
       var newIndexDoc = kb.sym(newBase + 'index.html')
 
-      var toBeCopied = [
-        { local: 'index.html', contentType: 'text/html' }
-      ]
+      var toBeCopied = [{ local: 'index.html', contentType: 'text/html' }]
 
       let newInstance = kb.sym(newPadDoc.uri + '#thisPad')
 
@@ -248,7 +287,10 @@ const paneDef: PaneDefinition = {
             var setThatACL = function () {
               setACL(newURI, false, function (ok: boolean, message: string) {
                 if (!ok) {
-                  complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
+                  complainIfBad(
+                    ok,
+                    'FAILED to set ACL ' + newURI + ' : ' + message
+                  )
                   console.log('FAILED to set ACL ' + newURI + ' : ' + message)
                 } else {
                   agenda.shift()!() // beware too much nesting
@@ -256,7 +298,12 @@ const paneDef: PaneDefinition = {
               })
             }
 
-            kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
+            kb.fetcher
+              .webCopy(
+                base + item.local,
+                newBase + item.local,
+                item.contentType
+              )
               .then(() => UI.authn.checkUser())
               .then((webId: string) => {
                 me = webId
@@ -264,8 +311,13 @@ const paneDef: PaneDefinition = {
                 setThatACL()
               })
               .catch((err: Error) => {
-                console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
-                complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + err.message)
+                console.log(
+                  'FAILED to copy ' + base + item.local + ' : ' + err.message
+                )
+                complainIfBad(
+                  false,
+                  'FAILED to copy ' + base + item.local + ' : ' + err.message
+                )
               })
           })
         }
@@ -293,8 +345,19 @@ const paneDef: PaneDefinition = {
             if (ok) {
               agenda.shift()!()
             } else {
-              complainIfBad(ok, 'FAILED to save new notepad at: ' + newPadDoc.uri + ' : ' + message)
-              console.log('FAILED to save new notepad at: ' + newPadDoc.uri + ' : ' + message)
+              complainIfBad(
+                ok,
+                'FAILED to save new notepad at: ' +
+                  newPadDoc.uri +
+                  ' : ' +
+                  message
+              )
+              console.log(
+                'FAILED to save new notepad at: ' +
+                  newPadDoc.uri +
+                  ' : ' +
+                  message
+              )
             }
           }
         )
@@ -302,7 +365,10 @@ const paneDef: PaneDefinition = {
 
       agenda.push(function () {
         setACL(newPadDoc.uri, true, function (ok: boolean, body: string) {
-          complainIfBad(ok, 'Failed to set Read-Write ACL on pad data file: ' + body)
+          complainIfBad(
+            ok,
+            'Failed to set Read-Write ACL on pad data file: ' + body
+          )
           if (ok) agenda.shift()!()
         })
       })
@@ -313,8 +379,12 @@ const paneDef: PaneDefinition = {
         var p = div.appendChild(dom.createElement('p'))
         p.setAttribute('style', 'font-size: 140%;')
         p.innerHTML =
-          "Your <a href='" + newIndexDoc.uri + "'><b>new notepad</b></a> is ready. " +
-          "<br/><br/><a href='" + newIndexDoc.uri + "'>Go to new pad</a>"
+          "Your <a href='" +
+          newIndexDoc.uri +
+          "'><b>new notepad</b></a> is ready. " +
+          "<br/><br/><a href='" +
+          newIndexDoc.uri +
+          "'>Go to new pad</a>"
       })
 
       agenda.shift()!()
@@ -327,44 +397,74 @@ const paneDef: PaneDefinition = {
 
       me = UI.authn.currentUser()
 
-      UI.authn.checkUser()
-        .then((webId: string) => {
-          me = webId
-        })
+      UI.authn.checkUser().then((webId: string) => {
+        me = webId
+      })
 
-      var title = kb.any(subject, ns.dc('title')) || kb.any(subject, ns.vcard('fn'))
+      var title =
+        kb.any(subject, ns.dc('title')) || kb.any(subject, ns.vcard('fn'))
       if (paneOptions.solo && typeof window !== 'undefined' && title) {
         window.document.title = title.value
       }
       options.exists = exists
-      padEle = (UI.pad.notepad(dom, padDoc, subject, me, options))
+      padEle = UI.pad.notepad(dom, padDoc, subject, me, options)
       naviMain.appendChild(padEle)
 
-      var partipationTarget = kb.any(subject, ns.meeting('parentMeeting')) || subject
-      UI.pad.manageParticipation(dom, naviMiddle2, padDoc, partipationTarget, me, options)
+      var partipationTarget =
+        kb.any(subject, ns.meeting('parentMeeting')) || subject
+      UI.pad.manageParticipation(
+        dom,
+        naviMiddle2,
+        padDoc,
+        partipationTarget,
+        me,
+        options
+      )
 
       UI.store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
     }
 
     // Read or create empty data file
     var loadPadData = function () {
-      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (ok: boolean, body: string, response: any) {
+      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (
+        ok: boolean,
+        body: string,
+        response: any
+      ) {
         if (!ok) {
-          if (response.status === 404) { // /  Check explicitly for 404 error
+          if (response.status === 404) {
+            // /  Check explicitly for 404 error
             console.log('Initializing results file ' + padDoc)
-            updater.put(padDoc, [], 'text/turtle', function (_uri2: string, ok: boolean, message: string) {
+            updater.put(padDoc, [], 'text/turtle', function (
+              _uri2: string,
+              ok: boolean,
+              message: string
+            ) {
               if (ok) {
                 clearElement(naviMain)
                 showResults(false)
               } else {
-                complainIfBad(ok, 'FAILED to create results file at: ' + padDoc.uri + ' : ' + message)
-                console.log('FAILED to craete results file at: ' + padDoc.uri + ' : ' + message)
+                complainIfBad(
+                  ok,
+                  'FAILED to create results file at: ' +
+                    padDoc.uri +
+                    ' : ' +
+                    message
+                )
+                console.log(
+                  'FAILED to craete results file at: ' +
+                    padDoc.uri +
+                    ' : ' +
+                    message
+                )
               }
             })
-          } else { // Other error, not 404 -- do not try to overwite the file
+          } else {
+            // Other error, not 404 -- do not try to overwite the file
             complainIfBad(ok, 'FAILED to read results file: ' + body)
           }
-        } else { // Happy read
+        } else {
+          // Happy read
           clearElement(naviMain)
           if (kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
             showBootstrap(subject, naviMain, 'pad')
@@ -395,7 +495,10 @@ const paneDef: PaneDefinition = {
 
     //  Build the DOM
     var structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
-    structure.setAttribute('style', 'background-color: white; min-width: 94%; margin-right:3% margin-left: 3%; min-height: 13em;')
+    structure.setAttribute(
+      'style',
+      'background-color: white; min-width: 94%; margin-right:3% margin-left: 3%; min-height: 13em;'
+    )
 
     var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
     naviLoginoutTR.appendChild(dom.createElement('td')) // naviLoginout1

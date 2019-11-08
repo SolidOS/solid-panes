@@ -1,15 +1,16 @@
 /*   Social Pane
-**
-**  This outline pane provides social network functions
-**  Using for example the FOAF ontology.
-**  Goal:  A *distributed* version of facebook, advogato, etc etc
-**  - Similarly easy user interface, but data storage distributed
-**  - Read and write both user-private (address book) and public data clearly
-**  -- todo: use common code to get username and load profile and set 'me'
-*/
+ **
+ **  This outline pane provides social network functions
+ **  Using for example the FOAF ontology.
+ **  Goal:  A *distributed* version of facebook, advogato, etc etc
+ **  - Similarly easy user interface, but data storage distributed
+ **  - Read and write both user-private (address book) and public data clearly
+ **  -- todo: use common code to get username and load profile and set 'me'
+ */
 
 var UI = require('solid-ui')
 var panes = require('pane-registry')
+const $rdf = require('rdflib')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -19,15 +20,18 @@ module.exports = {
   label: function (subject) {
     var kb = UI.store
     var types = kb.findTypeURIs(subject)
-    if (types[UI.ns.foaf('Person').uri] ||
-    types[UI.ns.vcard('Individual').uri]) {
+    if (
+      types[UI.ns.foaf('Person').uri] ||
+      types[UI.ns.vcard('Individual').uri]
+    ) {
       return 'Friends'
     }
     return null
   },
 
   render: function (s, dom) {
-    var common = function (x, y) { // Find common members of two lists
+    var common = function (x, y) {
+      // Find common members of two lists
       var both = []
       for (var i = 0; i < x.length; i++) {
         for (var j = 0; j < y.length; j++) {
@@ -73,19 +77,36 @@ module.exports = {
       tx.className = 'question'
       f.appendChild(tx)
       input.setAttribute('type', 'checkbox')
-      var boxHandler = function (e) {
+      var boxHandler = function (_e) {
         tx.className = 'pendingedit'
         // alert('Should be greyed out')
-        if (this.checked) { // Add link
+        if (this.checked) {
+          // Add link
           try {
-            outliner.UserInput.sparqler.insert_statement(statement, function (uri, success, errorBody) {
+            outliner.UserInput.sparqler.insert_statement(statement, function (
+              uri,
+              success,
+              errorBody
+            ) {
               tx.className = 'question'
               if (!success) {
-                UI.log.alert(null, 'Message', 'Error occurs while inserting ' + statement + '\n\n' + errorBody)
+                UI.log.alert(
+                  null,
+                  'Message',
+                  'Error occurs while inserting ' +
+                    statement +
+                    '\n\n' +
+                    errorBody
+                )
                 input.checked = false // rollback UI
                 return
               }
-              kb.add(statement.subject, statement.predicate, statement.object, statement.why)
+              kb.add(
+                statement.subject,
+                statement.predicate,
+                statement.object,
+                statement.why
+              )
             })
           } catch (e) {
             UI.log.error('Data write fails:' + e)
@@ -93,15 +114,30 @@ module.exports = {
             input.checked = false // rollback UI
             tx.className = 'question'
           }
-        } else { // Remove link
+        } else {
+          // Remove link
           try {
-            outliner.UserInput.sparqler.delete_statement(statement, function (uri, success, errorBody) {
+            outliner.UserInput.sparqler.delete_statement(statement, function (
+              uri,
+              success,
+              errorBody
+            ) {
               tx.className = 'question'
               if (!success) {
-                UI.log.alert('Error occurs while deleting ' + statement + '\n\n' + errorBody)
+                UI.log.alert(
+                  'Error occurs while deleting ' +
+                    statement +
+                    '\n\n' +
+                    errorBody
+                )
                 this.checked = true // Rollback UI
               } else {
-                kb.removeMany(statement.subject, statement.predicate, statement.object, statement.why)
+                kb.removeMany(
+                  statement.subject,
+                  statement.predicate,
+                  statement.object,
+                  statement.why
+                )
               }
             })
           } catch (e) {
@@ -116,7 +152,7 @@ module.exports = {
       return f
     }
 
-    var oneFriend = function (friend, confirmed) {
+    var oneFriend = function (friend, _confirmed) {
       return UI.widgets.personTR(dom, UI.ns.foaf('knows'), friend, {})
     }
 
@@ -130,8 +166,10 @@ module.exports = {
     const vcard = UI.ns.vcard
 
     // extracted from tabbedtab.css 2017-03-21
-    const navBlockStyle = 'background-color: #eee; width: 25%; border: 0; padding: 0.5em; margin: 0;'
-    const mainBlockStyle = 'background-color: #fff; color: #000; width: 46%; margin: 0; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 0;'
+    const navBlockStyle =
+      'background-color: #eee; width: 25%; border: 0; padding: 0.5em; margin: 0;'
+    const mainBlockStyle =
+      'background-color: #fff; color: #000; width: 46%; margin: 0; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 0;'
     const foafPicStyle = ' width: 100% ; border: none; margin: 0; padding: 0;'
 
     var structure = div.appendChild(dom.createElement('table'))
@@ -164,7 +202,7 @@ module.exports = {
     var meUri = me ? me.uri : null
 
     // @@ Add: event handler to redraw the stuff below when me changes.
-    let loginOutButton = UI.authn.loginStatusBox(dom, (webIdUri) => {
+    const loginOutButton = UI.authn.loginStatusBox(dom, webIdUri => {
       me = kb.sym(webIdUri)
       // @@ To be written:   redraw as a function the new me
       // @@ refresh the sidebars
@@ -173,26 +211,39 @@ module.exports = {
 
     tips.appendChild(loginOutButton)
 
-    var thisIsYou = (me && kb.sameThings(me, s))
+    var thisIsYou = me && kb.sameThings(me, s)
 
     var knows = foaf('knows')
     //        var givenName = kb.sym('http://www.w3.org/2000/10/swap/pim/contact#givenName')
-    var familiar = kb.anyValue(s, foaf('givenname')) || kb.anyValue(s, foaf('firstName')) ||
-      kb.anyValue(s, foaf('nick')) || kb.anyValue(s, foaf('name')) || kb.anyValue(s, vcard('fn'))
+    var familiar =
+      kb.anyValue(s, foaf('givenname')) ||
+      kb.anyValue(s, foaf('firstName')) ||
+      kb.anyValue(s, foaf('nick')) ||
+      kb.anyValue(s, foaf('name')) ||
+      kb.anyValue(s, vcard('fn'))
     var friends = kb.each(s, knows)
 
     // Do I have a public profile document?
-    var profile = null   // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
+    var profile = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
     var editable = false
-    if (me) { // The definition of FAF personal profile document is ..
+    if (me) {
+      // The definition of FAF personal profile document is ..
       var works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
       var message = ''
       for (var i = 0; i < works.length; i++) {
-        if (kb.whether(works[i], UI.ns.rdf('type'),
-            foaf('PersonalProfileDocument'))) {
+        if (
+          kb.whether(
+            works[i],
+            UI.ns.rdf('type'),
+            foaf('PersonalProfileDocument')
+          )
+        ) {
           editable = outliner.UserInput.sparqler.editable(works[i].uri, kb)
           if (!editable) {
-            message += ('Your profile <' + UI.utils.escapeForXML(works[i].uri) + '> is not remotely editable.')
+            message +=
+              'Your profile <' +
+              UI.utils.escapeForXML(works[i].uri) +
+              '> is not remotely editable.'
           } else {
             profile = works[i]
             break
@@ -201,18 +252,20 @@ module.exports = {
       }
 
       if (!profile) {
-        say(message + "\nI couldn't find your editable personal profile document.")
+        say(
+          message + "\nI couldn't find your editable personal profile document."
+        )
       } else {
         say('Editing your profile ' + profile + '.')
         // Do I have an EDITABLE profile?
         editable = outliner.UserInput.sparqler.editable(profile.uri, kb)
       }
 
-      if (thisIsYou) { // This is about me
-
+      if (thisIsYou) {
+        // This is about me
         // pass... @@
-
-      } else { // This is about someone else
+      } else {
+        // This is about someone else
         // My relationship with this person
 
         h3 = dom.createElement('h3')
@@ -228,7 +281,7 @@ module.exports = {
           if (!profile) profile = outgoingSt[0].why
         }
 
-        let tr = dom.createElement('tr')
+        const tr = dom.createElement('tr')
         tools.appendChild(tr)
 
         var youAndThem = function () {
@@ -263,8 +316,11 @@ module.exports = {
         }
 
         if (editable) {
-          var f = buildCheckboxForm('You know ' + familiar,
-            new UI.rdf.Statement(me, knows, s, profile), outgoing)
+          var f = buildCheckboxForm(
+            'You know ' + familiar,
+            new UI.rdf.Statement(me, knows, s, profile),
+            outgoing
+          )
           tools.appendChild(f)
         } // editable
 
@@ -273,19 +329,26 @@ module.exports = {
           var myFriends = kb.each(me, foaf('knows'))
           if (myFriends.length) {
             var mutualFriends = common(friends, myFriends)
-            let tr = dom.createElement('tr')
+            const tr = dom.createElement('tr')
             tools.appendChild(tr)
-            tr.appendChild(dom.createTextNode(
-              'You' + (familiar ? ' and ' + familiar : '') + ' know' +
-              people(mutualFriends.length) + ' found in common'))
+            tr.appendChild(
+              dom.createTextNode(
+                'You' +
+                  (familiar ? ' and ' + familiar : '') +
+                  ' know' +
+                  people(mutualFriends.length) +
+                  ' found in common'
+              )
+            )
             if (mutualFriends) {
               for (let i = 0; i < mutualFriends.length; i++) {
-                tr.appendChild(dom.createTextNode(
-                  ',  ' + UI.utils.label(mutualFriends[i])))
+                tr.appendChild(
+                  dom.createTextNode(',  ' + UI.utils.label(mutualFriends[i]))
+                )
               }
             }
           }
-          let tr = dom.createElement('tr')
+          const tr = dom.createElement('tr')
           tools.appendChild(tr)
         } // friends
       } // About someone else
@@ -318,7 +381,7 @@ module.exports = {
       var requests = []
 
       for (let i = 0; i < outgoing.length; i++) {
-        let friend = outgoing[i]
+        const friend = outgoing[i]
         let found = false
         for (let j = 0; j < incoming.length; j++) {
           if (incoming[j].sameTerm(friend)) {
@@ -331,7 +394,7 @@ module.exports = {
       } // outgoing
 
       for (let i = 0; i < incoming.length; i++) {
-        let friend = incoming[i]
+        const friend = incoming[i]
         // var lab = UI.utils.label(friend)
         let found = false
         for (let j = 0; j < outgoing.length; j++) {
@@ -343,15 +406,18 @@ module.exports = {
         if (!found) requests.push(friend)
       } // incoming
 
-      var cases = [['Acquaintances', outgoing], ['Mentioned as acquaintances by: ', requests]]
+      var cases = [
+        ['Acquaintances', outgoing],
+        ['Mentioned as acquaintances by: ', requests]
+      ]
       for (let i = 0; i < cases.length; i++) {
-        let thisCase = cases[i]
-        let friends = thisCase[1]
+        const thisCase = cases[i]
+        const friends = thisCase[1]
         if (friends.length === 0) continue // Skip empty sections (sure?)
 
-        let h3 = dom.createElement('h3')
+        const h3 = dom.createElement('h3')
         h3.textContent = thisCase[0]
-        let htr = dom.createElement('tr')
+        const htr = dom.createElement('tr')
         htr.appendChild(h3)
         mainTable.appendChild(htr)
 
@@ -366,7 +432,8 @@ module.exports = {
           fr = items[j7][1]
           if (fr.sameTerm(last)) continue // unique
           last = fr
-          if (UI.utils.label(fr) !== '...') { // This check is to avoid bnodes with no labels attached
+          if (UI.utils.label(fr) !== '...') {
+            // This check is to avoid bnodes with no labels attached
             // appearing in the friends list with "..." - Oshani
             mainTable.appendChild(oneFriend(fr))
           }
@@ -385,9 +452,12 @@ module.exports = {
     // For each home page like thing make a label which will
     // make sense and add the domain (like "w3.org blog") if there are more than one of the same type
     //
-    var preds = [ UI.ns.foaf('homepage'),
+    var preds = [
+      UI.ns.foaf('homepage'),
       UI.ns.foaf('weblog'),
-      UI.ns.foaf('workplaceHomepage'), UI.ns.foaf('schoolHomepage')]
+      UI.ns.foaf('workplaceHomepage'),
+      UI.ns.foaf('schoolHomepage')
+    ]
     for (var i6 = 0; i6 < preds.length; i6++) {
       var pred = preds[i6]
       var sts = kb.statementsMatching(s, pred)
@@ -403,7 +473,7 @@ module.exports = {
         var last2 = ''
         var lab2
         for (var k = 0; k < uris.length; k++) {
-          let uri = uris[k]
+          const uri = uris[k]
           if (uri === last2) continue // uniques only
           last2 = uri
           var hostlabel = ''
@@ -424,26 +494,28 @@ module.exports = {
           a.setAttribute('href', uri)
           var d = dom.createElement('div')
           // d.className = 'social_linkButton'
-          d.style.cssText = 'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
+          d.style.cssText =
+            'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
           d.appendChild(a)
           tools.appendChild(d)
         }
       }
     }
 
-    var preds2 = [ UI.ns.foaf('openid'), UI.ns.foaf('nick') ]
+    var preds2 = [UI.ns.foaf('openid'), UI.ns.foaf('nick')]
     for (var i2 = 0; i2 < preds2.length; i2++) {
-      let pred = preds2[i2]
+      const pred = preds2[i2]
       var sts2 = kb.statementsMatching(s, pred)
       if (sts2.length === 0) {
         // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
       } else {
-        outliner.appendPropertyTRs(tools, sts2, false, function (pred) { return true })
+        outliner.appendPropertyTRs(tools, sts2, false, function (_pred) {
+          return true
+        })
       }
     }
 
     return div
   } // render()
-
 } //
 // ends

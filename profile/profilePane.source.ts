@@ -1,14 +1,14 @@
 /*   Display A Public Profile Pane
-**
-** This is the subject's primary representation in the world.
-** When anyone scans the QR code of their webid on theor card, it takes gthem
-** to here and here alone.  Thiks has better be good.  This has better be
-** worth the subjectjoing solid for
-** - informative
-**
-** Usage: paneRegistry.register('profile/profilePane')
-** or standalone script adding onto existing mashlib.
-*/
+ **
+ ** This is the subject's primary representation in the world.
+ ** When anyone scans the QR code of their webid on theor card, it takes gthem
+ ** to here and here alone.  Thiks has better be good.  This has better be
+ ** worth the subjectjoing solid for
+ ** - informative
+ **
+ ** Usage: paneRegistry.register('profile/profilePane')
+ ** or standalone script adding onto existing mashlib.
+ */
 
 import UI from 'solid-ui'
 import { NamedNode } from 'rdflib'
@@ -32,7 +32,8 @@ if (nodeMode) {
 const kb = UI.store
 const ns = UI.ns
 
-const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
+const thisPane: PaneDefinition = {
+  // 'noun_638141.svg' not editing
 
   global: false,
 
@@ -42,10 +43,13 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
 
   label: function (subject) {
     var t = kb.findTypeURIs(subject)
-    if (t[ns.vcard('Individual').uri] ||
-       t[ns.vcard('Organization').uri] ||
-       t[ns.foaf('Person').uri] ||
-       t[ns.schema('Person').uri]) return 'Profile'
+    if (
+      t[ns.vcard('Individual').uri] ||
+      t[ns.vcard('Organization').uri] ||
+      t[ns.foaf('Person').uri] ||
+      t[ns.schema('Person').uri]
+    )
+      return 'Profile'
     return null
   },
 
@@ -57,7 +61,11 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
       return d
     }
 
-    async function doRender (container: HTMLElement, subject: NamedNode | null, dom: HTMLDocument) {
+    async function doRender (
+      container: HTMLElement,
+      subject: NamedNode | null,
+      dom: HTMLDocument
+    ) {
       if (!subject) throw new Error('subject missing')
       const profile = subject.doc()
       let otherProfiles = kb.each(subject, ns.rdfs('seeAlso'), null, profile)
@@ -69,10 +77,20 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
         }
       }
 
-      var backgroundColor = kb.anyValue(subject, ns.solid('profileBackgroundColor'), null, subject.doc()) || '#ffffff'
+      var backgroundColor =
+        kb.anyValue(
+          subject,
+          ns.solid('profileBackgroundColor'),
+          null,
+          subject.doc()
+        ) || '#ffffff'
       // Todo: check format of color matches regexp and not too dark
       container.style.backgroundColor = backgroundColor // @@ Limit to pale?
-      var highlightColor = kb.anyValue(subject, ns.solid('profileHighlightColor', null, subject.doc())) || '#090' // @@ beware injection attack
+      var highlightColor =
+        kb.anyValue(
+          subject,
+          ns.solid('profileHighlightColor', null, subject.doc())
+        ) || '#090' // @@ beware injection attack
       container.style.border = `0.3em solid ${highlightColor}`
       container.style.borderRadius = '0.5em'
       container.style.padding = '0.7em'
@@ -86,7 +104,10 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
 
       function heading (str: string) {
         var h = main.appendChild(dom.createElement('h3'))
-        h.setAttribute('style', 'font-size: 120%; color:' + highlightColor + ';')
+        h.setAttribute(
+          'style',
+          'font-size: 120%; color:' + highlightColor + ';'
+        )
         h.textContent = str
         return h
       }
@@ -111,7 +132,6 @@ const thisPane: PaneDefinition = { // 'noun_638141.svg' not editing
     doRender(container, subject, dom) // async
     return container // initially unpopulated
   } // render()
-
 } //
 
 export default thisPane

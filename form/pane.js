@@ -1,9 +1,10 @@
 /*
-**                 Pane for running existing forms for any object
-**
-*/
+ **                 Pane for running existing forms for any object
+ **
+ */
 
 const UI = require('solid-ui')
+const $rdf = require('rdflib')
 const ns = UI.ns
 
 module.exports = {
@@ -55,15 +56,19 @@ module.exports = {
     box.setAttribute('class', 'formPane')
 
     if (!me) {
-      mention('You are not logged in. If you log in and have ' +
-        'workspaces then you would be able to select workspace in which ' +
-        'to put this new information')
+      mention(
+        'You are not logged in. If you log in and have ' +
+          'workspaces then you would be able to select workspace in which ' +
+          'to put this new information'
+      )
     } else {
       var ws = kb.each(me, ns.ui('workspace'))
       if (ws.length === 0) {
-        mention('You don\'t seem to have any workspaces defined.  ' +
-      'A workspace is a place on the web (http://..) or in ' +
-      'the file system (file:///) to store application data.\n')
+        mention(
+          "You don't seem to have any workspaces defined.  " +
+            'A workspace is a place on the web (http://..) or in ' +
+            'the file system (file:///) to store application data.\n'
+        )
       } else {
         // @@
       }
@@ -86,9 +91,17 @@ module.exports = {
           box.appendChild(heading)
           if (form.uri) {
             var formStore = $rdf.Util.uri.document(form)
-            if (formStore.uri !== form.uri) { // The form is a hash-type URI
-              var e = box.appendChild(UI.widgets.editFormButton(
-                dom, box, form, formStore, complainIfBad))
+            if (formStore.uri !== form.uri) {
+              // The form is a hash-type URI
+              var e = box.appendChild(
+                UI.widgets.editFormButton(
+                  dom,
+                  box,
+                  form,
+                  formStore,
+                  complainIfBad
+                )
+              )
               e.setAttribute('style', 'float: right;')
             }
           }
@@ -108,7 +121,15 @@ module.exports = {
           ele.value = store.uri
           */
 
-          UI.widgets.appendForm(dom, box, {}, subject, form, store, complainIfBad)
+          UI.widgets.appendForm(
+            dom,
+            box,
+            {},
+            subject,
+            form,
+            store,
+            complainIfBad
+          )
         }
       }) // end: when store loded
     } // renderFormsFor
@@ -131,8 +152,12 @@ module.exports = {
     if (!store) {
       var docs = {}
       var docList = []
-      kb.statementsMatching(subject).map(function (st) { docs[st.why.uri] = 1 })
-      kb.statementsMatching(undefined, undefined, subject).map(function (st) { docs[st.why.uri] = 2 })
+      kb.statementsMatching(subject).map(function (st) {
+        docs[st.why.uri] = 1
+      })
+      kb.statementsMatching(undefined, undefined, subject).map(function (st) {
+        docs[st.why.uri] = 2
+      })
       for (var d in docs) docList.push(docs[d], d)
       docList.sort()
       for (var i = 0; i < docList.length; i++) {
@@ -145,13 +170,13 @@ module.exports = {
     }
 
     // 3. In a workspace store
-
-    var followeach = function (kb, subject, path) {
-      if (path.length === 0) return [ subject ]
+    // @@ TODO: Can probably remove _followeach (not done this time because the commit is a very safe refactor)
+    var _followeach = function (kb, subject, path) {
+      if (path.length === 0) return [subject]
       var oo = kb.each(subject, path[0])
       var res = []
       for (var i = 0; i < oo.length; i++) {
-        res = res.concat(followeach(kb, oo[i], path.slice(1)))
+        res = res.concat(_followeach(kb, oo[i], path.slice(1)))
       }
       return res
     }
@@ -163,25 +188,24 @@ module.exports = {
       renderFormsFor(store, subject)
     } else {
       complain('No suitable store is known, to edit <' + subject.uri + '>.')
-      var foobarbaz = UI.authn.selectWorkspace(dom,
-        function (ws) {
-          mention('Workspace selected OK: ' + ws)
+      var foobarbaz = UI.authn.selectWorkspace(dom, function (ws) {
+        mention('Workspace selected OK: ' + ws)
 
-          var activities = kb.each(undefined, ns.space('workspace'), ws)
-          for (var j = 0; j < activities.length; i++) {
-            var act = activities[j]
+        var activities = kb.each(undefined, ns.space('workspace'), ws)
+        for (var j = 0; j < activities.length; i++) {
+          var act = activities[j]
 
-            var s = kb.any(ws, ns.space('store'))
-            var start = kb.any(ws, ns.cal('dtstart')).value()
-            var end = kb.any(ws, ns.cal('dtend')).value()
-            if (s && start && end && start <= date && end > date) {
-              renderFormsFor(s, subject)
-              break
-            } else {
-              complain('Note no suitable annotation store in activity: ' + act)
-            }
+          var s = kb.any(ws, ns.space('store'))
+          var start = kb.any(ws, ns.cal('dtstart')).value()
+          var end = kb.any(ws, ns.cal('dtend')).value()
+          if (s && start && end && start <= date && end > date) {
+            renderFormsFor(s, subject)
+            break
+          } else {
+            complain('Note no suitable annotation store in activity: ' + act)
           }
-        })
+        }
+      })
       box.appendChild(foobarbaz)
     }
 

@@ -1,14 +1,14 @@
 /*                            SOLID PANES
-**
-**     Panes are regions of the outline view in which a particular subject is
-** displayed in a particular way.
-** Different panes about the same subject are typically stacked vertically.
-** Panes may be used naked or with a pane selection header.
-**
-** The label() method has two functions: it determines whether the pane is
-** relevant to a given subject, returning null if not.
-** If it is relevant, then it returns a suitable tooltip for a control which selects the pane
-*/
+ **
+ **     Panes are regions of the outline view in which a particular subject is
+ ** displayed in a particular way.
+ ** Different panes about the same subject are typically stacked vertically.
+ ** Panes may be used naked or with a pane selection header.
+ **
+ ** The label() method has two functions: it determines whether the pane is
+ ** relevant to a given subject, returning null if not.
+ ** If it is relevant, then it returns a suitable tooltip for a control which selects the pane
+ */
 
 // create the unique UI module on which to attach panes (no, don't attach as UI dot panes any more)
 // var UI = require('solid-ui') // Note we will add the panes register to this.
@@ -43,11 +43,11 @@ if (typeof window !== 'undefined') {
 }
 
 /*  Note that the earliest panes have priority. So the most specific ones are first.
-**
-*/
+ **
+ */
 // Developer designed:
 
-let register = panes.register
+const register = panes.register
 
 register(require('./profile/profilePane')) // View someone's public profile - dominates all other panes.
 register(require('./profile/editProfilePane')) // Edit my profile. App. 201900802

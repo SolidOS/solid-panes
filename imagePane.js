@@ -1,7 +1,7 @@
 /*   Image Pane
-**
-**  This outline pane contains the document contents for an Image document
-*/
+ **
+ **  This outline pane contains the document contents for an Image document
+ */
 var UI = require('solid-ui')
 
 module.exports = {
@@ -11,9 +11,14 @@ module.exports = {
 
   label: function (subject) {
     var kb = UI.store
-    if (!kb.anyStatementMatching(
-        subject, UI.ns.rdf('type'),
-        kb.sym('http://purl.org/dc/terms/Image'))) { // NB: Not dc: namespace!
+    if (
+      !kb.anyStatementMatching(
+        subject,
+        UI.ns.rdf('type'),
+        kb.sym('http://purl.org/dc/terms/Image')
+      )
+    ) {
+      // NB: Not dc: namespace!
       return null
     }
 

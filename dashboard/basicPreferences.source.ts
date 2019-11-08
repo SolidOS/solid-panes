@@ -13,7 +13,7 @@ const ns = namespace({ namedNode } as any)
 export const basicPreferencesPane: PaneDefinition = {
   icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
   name: 'basicPreferences',
-  label: (_subject) => {
+  label: _subject => {
     return null
   },
 
@@ -31,24 +31,44 @@ export const basicPreferencesPane: PaneDefinition = {
 
     function loadData (doc: NamedNode, turtle: String) {
       doc = doc.doc() // remove # from URI if nec
-      if (!kb.holds(undefined, undefined, undefined, doc)) { // If not loaded already
-        (parse as any)(turtle, kb, doc.uri, 'text/turtle', null) // Load form directly
+      if (!kb.holds(undefined, undefined, undefined, doc)) {
+        // If not loaded already
+        ;(parse as any)(turtle, kb, doc.uri, 'text/turtle', null) // Load form directly
       }
     }
-    const preferencesForm = kb.sym('urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this')
+    const preferencesForm = kb.sym(
+      'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this'
+    )
     loadData(preferencesForm, preferencesFormText)
 
-    const ontologyExtra = kb.sym('urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597-ONT')
+    const ontologyExtra = kb.sym(
+      'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597-ONT'
+    )
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const context = await UI.authn.logInLoadPreferences({ dom, div: container })
-      if (!context.preferencesFile) { // Could be CORS
-        console.log('Not doing private class preferences as no access to preferences file. ' + context.preferencesFileError)
+      const context = await UI.authn.logInLoadPreferences({
+        dom,
+        div: container
+      })
+      if (!context.preferencesFile) {
+        // Could be CORS
+        console.log(
+          'Not doing private class preferences as no access to preferences file. ' +
+            context.preferencesFileError
+        )
         return
       }
       addDeletionLinks(container, kb, context.me)
-      const appendedForm = UI.widgets.appendForm(dom, formArea, {}, context.me, preferencesForm, context.preferencesFile, complainIfBad)
+      const appendedForm = UI.widgets.appendForm(
+        dom,
+        formArea,
+        {},
+        context.me,
+        preferencesForm,
+        context.preferencesFile,
+        complainIfBad
+      )
       appendedForm.style.borderStyle = 'none'
 
       const trustedApplicationSettings = renderTrustedApplicationsOptions(dom)
@@ -63,10 +83,19 @@ export const basicPreferencesPane: PaneDefinition = {
 export default basicPreferencesPane
 // ends
 
-function addDeletionLinks (container: HTMLElement, kb: IndexedFormula, profile: NamedNode): void {
-  const podServerNodes = kb.each(profile, ns.space('storage'), null, profile.doc())
+function addDeletionLinks (
+  container: HTMLElement,
+  kb: IndexedFormula,
+  profile: NamedNode
+): void {
+  const podServerNodes = kb.each(
+    profile,
+    ns.space('storage'),
+    null,
+    profile.doc()
+  )
   const podServers = podServerNodes.map(node => node.value)
-  podServers.forEach(async (server) => {
+  podServers.forEach(async server => {
     const deletionLink = await generateDeletionLink(server)
     if (deletionLink) {
       container.appendChild(deletionLink)
@@ -74,7 +103,9 @@ function addDeletionLinks (container: HTMLElement, kb: IndexedFormula, profile: 
   })
 }
 
-async function generateDeletionLink (podServer: string): Promise<HTMLElement | null> {
+async function generateDeletionLink (
+  podServer: string
+): Promise<HTMLElement | null> {
   const link = document.createElement('a')
   link.textContent = `Delete your account at ${podServer}`
   const deletionUrl = await getDeletionUrlForServer(podServer)
@@ -100,7 +131,9 @@ async function generateDeletionLink (podServer: string): Promise<HTMLElement | n
  * @returns URL of the page that Node Solid Server would offer to delete the account, or null if
  *          the URLs we tried give invalid responses.
  */
-async function getDeletionUrlForServer (server: string): Promise<string | null> {
+async function getDeletionUrlForServer (
+  server: string
+): Promise<string | null> {
   const singleUserUrl = new URL(server)
   const multiUserUrl = new URL(server)
   multiUserUrl.pathname = singleUserUrl.pathname = '/account/delete'
@@ -109,12 +142,16 @@ async function getDeletionUrlForServer (server: string): Promise<string | null> 
   // Remove `vincent.` from `vincent.dev.inrupt.net`, for example:
   multiUserUrl.hostname = hostnameParts.slice(1).join('.')
 
-  const multiUserNssResponse = await fetch(multiUserUrl.href, { method: 'HEAD' })
+  const multiUserNssResponse = await fetch(multiUserUrl.href, {
+    method: 'HEAD'
+  })
   if (multiUserNssResponse.ok) {
     return multiUserUrl.href
   }
 
-  const singleUserNssResponse = await fetch(singleUserUrl.href, { method: 'HEAD' })
+  const singleUserNssResponse = await fetch(singleUserUrl.href, {
+    method: 'HEAD'
+  })
   if (singleUserNssResponse.ok) {
     return singleUserUrl.href
   }

@@ -1,12 +1,12 @@
 /*   Home Pane
-**
-** The home pane is avaiable everywhere and allows a user
-** to
-**  - keep track of their stuff
-**  - make new things, and possibly
-**  - keep track of accounts and workspaces etc
-**
-*/
+ **
+ ** The home pane is avaiable everywhere and allows a user
+ ** to
+ **  - keep track of their stuff
+ **  - make new things, and possibly
+ **  - keep track of accounts and workspaces etc
+ **
+ */
 
 import { PaneDefinition } from '../types'
 import * as UI from 'solid-ui'
@@ -39,22 +39,33 @@ const HomePaneSource: PaneDefinition = {
               // Here we know new log in status
             }))
       */
-      div.appendChild(dom.createElement('h4')).textContent = 'Create new thing somewhere'
+      div.appendChild(dom.createElement('h4')).textContent =
+        'Create new thing somewhere'
       var creationDiv = div.appendChild(dom.createElement('div'))
-      var creationContext = { div: creationDiv, dom: dom, statusArea: div, me: me }
+      var creationContext = {
+        div: creationDiv,
+        dom: dom,
+        statusArea: div,
+        me: me
+      }
       const relevantPanes = await UI.authn.filterAvailablePanes(panes.list)
       UI.create.newThingUI(creationContext, relevantPanes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
       // TODO: Replace by a common, representative interface
-      type AuthContext = unknown;
-      UI.authn.registrationList(context, { private: true }).then(function (context: AuthContext) {
-        div.appendChild(dom.createElement('h4')).textContent = 'Public things'
-        div.appendChild(dom.createElement('p')).textContent = 'Things in this list are visible to others.'
-        UI.authn.registrationList(context, { public: true }).then(function () {
-          // done
+      type AuthContext = unknown
+      UI.authn
+        .registrationList(context, { private: true })
+        .then(function (context: AuthContext) {
+          div.appendChild(dom.createElement('h4')).textContent = 'Public things'
+          div.appendChild(dom.createElement('p')).textContent =
+            'Things in this list are visible to others.'
+          UI.authn
+            .registrationList(context, { public: true })
+            .then(function () {
+              // done
+            })
         })
-      })
     }
 
     var div = dom.createElement('div')

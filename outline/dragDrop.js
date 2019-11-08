@@ -21,19 +21,23 @@ if (!tabulator_gBrowser) {
 /* 2007: adapted from dragAndDrop UI Library */
 
 var UI = require('solid-ui')
-var dragAndDrop = module.exports = {}
+const $rdf = require('rdflib')
+var dragAndDrop = (module.exports = {})
 
 dragAndDrop.util = {}
 dragAndDrop.util.Event = (function () {
   var listeners = []
   return {
     on: function (el, sType, fn, obj, fnId /* ,override */) {
-      var wrappedFn = function (e) { return fn.call(obj, e, obj) }
+      var wrappedFn = function (e) {
+        return fn.call(obj, e, obj)
+      }
       el.addEventListener(sType, wrappedFn, false)
       var li = [el, sType, fnId, wrappedFn]
       listeners.push(li)
     },
-    off: function (el, sType, fnId) { // removeListener, fnId to identify a function
+    off: function (el, sType, fnId) {
+      // removeListener, fnId to identify a function
       var index = this._getCacheIndex(el, sType, fnId)
       if (index === -1) return false
       var cacheItem = listeners[index]
@@ -51,10 +55,12 @@ dragAndDrop.util.Event = (function () {
     _getCacheIndex: function (el, sType, fnId) {
       for (var i = 0, len = listeners.length; i < len; ++i) {
         var li = listeners[i]
-        if (li &&
+        if (
+          li &&
           li[this.FNID] === fnId &&
           li[this.EL] === el &&
-          li[this.TYPE] === sType) {
+          li[this.TYPE] === sType
+        ) {
           return i
         }
       }
@@ -63,12 +69,11 @@ dragAndDrop.util.Event = (function () {
     }
   }
 })()
-dragAndDrop.util.DDExternalProxy =
-  function DDExternalProxy (el) {
-    this.initTarget(el)
+dragAndDrop.util.DDExternalProxy = function DDExternalProxy (el) {
+  this.initTarget(el)
   // dragAndDrop.util.Event.on(this.el, "mousedown", this.handleMouseDown, this, 'dragMouseDown'/*, true*/)
-  }
-  // dragAndDrop.util.DDExternalProxy extends dragAndDrop.utilDDProxy
+}
+// dragAndDrop.util.DDExternalProxy extends dragAndDrop.utilDDProxy
 dragAndDrop.util.DDExternalProxy.prototype = {
   initTarget: function (el) {
     // create a local reference to the drag and drop manager
@@ -94,20 +99,20 @@ dragAndDrop.util.DDExternalProxy.prototype = {
     // this.invalidHandleIds = {}
     // this.invalidHandleClasses = []
 
-  // this.applyConfig()
+    // this.applyConfig()
   },
   b4StartDrag: function (x, y) {
     // show the drag frame
     // this.logger.log("start drag show frame, x: " + x + ", y: " + y)
     // alert("test startDrag")
     TabulatorOutlinerObserver.onDragStart(x, y, this.el)
-  // this.showFrame(x, y)
+    // this.showFrame(x, y)
   },
-  b4Drag: function (e) {
+  b4Drag: function (_e) {
     // this.setDragElPos(dragAndDrop.util.Event.getPageX(e),
     //                    dragAndDrop.util.Event.getPageY(e))
   },
-  handleMouseDown: function (e, oDD) {
+  handleMouseDown: function (e, _oDD) {
     var button = e.which || e.button
     if (button > 1) return
 
@@ -144,8 +149,8 @@ dragAndDrop.util.DDExternalProxy.prototype = {
 
     // this.logger.log("clickValidator returned false, drag not initiated")
 
-  //    }
-  // }
+    //    }
+    // }
   }
 }
 
@@ -167,14 +172,14 @@ dragAndDrop.util.DDM = (function DDM () {
 
       this.dragThreshMet = false
 
-    // this.clickTimeout = setTimeout(
-    //        function() {
-    //            var DDM = dragAndDrop.util.DDM
-    //            DDM.startDrag(DDM.startX, DDM.startY)
-    //        },
-    //        this.clickTimeThresh )
-    // dragAndDrop.util.Event.on(el,'mousemove',this.handleMouseMove,this,'dragMouseMove')
-    // dragAndDrop.util.Event.on(el,'mouseup'  ,this.handleMouseUp  ,this,'dragMouseUp')
+      // this.clickTimeout = setTimeout(
+      //        function() {
+      //            var DDM = dragAndDrop.util.DDM
+      //            DDM.startDrag(DDM.startX, DDM.startY)
+      //        },
+      //        this.clickTimeThresh )
+      // dragAndDrop.util.Event.on(el,'mousemove',this.handleMouseMove,this,'dragMouseMove')
+      // dragAndDrop.util.Event.on(el,'mouseup'  ,this.handleMouseUp  ,this,'dragMouseUp')
     },
 
     handleMouseMove: function (e) {
@@ -197,8 +202,7 @@ dragAndDrop.util.DDM = (function DDM () {
         var diffX = Math.abs(this.startX - e.pageX)
         var diffY = Math.abs(this.startY - e.pageY)
         // dragAndDrop.log("diffX: " + diffX + "diffY: " + diffY)
-        if (diffX > this.clickPixelThresh ||
-          diffY > this.clickPixelThresh) {
+        if (diffX > this.clickPixelThresh || diffY > this.clickPixelThresh) {
           // dragAndDrop.log("pixel threshold met", "info", "DragDropMgr")
           this.startDrag(this.startX, this.startY)
         }
@@ -217,7 +221,11 @@ dragAndDrop.util.DDM = (function DDM () {
     },
     handleMouseUp: function (e) {
       if (!this.dragCurrent) return // Error...
-      dragAndDrop.util.Event.off(this.dragCurrent.el, 'mousemove', 'dragMouseMove')
+      dragAndDrop.util.Event.off(
+        this.dragCurrent.el,
+        'mousemove',
+        'dragMouseMove'
+      )
       // there are two mouseup for unknown reason...
       dragAndDrop.util.Event.off(this.dragCurrent.el, 'mouseup', 'dragMouseUp')
       dragAndDrop.util.Event.off(this.dragCurrent.el, 'mouseup', 'dragMouseUp')
@@ -234,7 +242,7 @@ dragAndDrop.util.DDM = (function DDM () {
       // clearTimeout(this.clickTimeout)
       if (this.dragCurrent) {
         this.dragCurrent.b4StartDrag(x, y)
-      // this.dragCurrent.startDrag(x, y)
+        // this.dragCurrent.startDrag(x, y)
       }
       this.dragThreshMet = true
     },
@@ -248,16 +256,21 @@ dragAndDrop.util.DDM = (function DDM () {
 // 3.Cross Tag Drag And Drop
 // 4.Firefox native rdf store
 var TabulatorOutlinerObserver = {
-  onDrop: function (e, aXferData, dragSession) {
-    var selection = UI.utils.ancestor(UI.utils.ancestor(e.originalTarget, 'TABLE').parentNode, 'TABLE').outline.selection
+  onDrop: function (e, aXferData, _dragSession) {
+    var selection = UI.utils.ancestor(
+      UI.utils.ancestor(e.originalTarget, 'TABLE').parentNode,
+      'TABLE'
+    ).outline.selection
     var contentType = aXferData.flavour.contentType
     var url = transferUtils.retrieveURLFromData(aXferData.data, contentType)
     if (!url) return
     if (contentType === 'application/x-moz-file') {
       if (aXferData.data.fileSize === 0) {
-        var templateDoc = $rdf.sym('chrome://tabulator/content/internalKnowledge.n3#defaultNew')
+        var templateDoc = $rdf.sym(
+          'chrome://tabulator/content/internalKnowledge.n3#defaultNew'
+        )
         UI.store.copyTo(templateDoc, $rdf.sym(url))
-      /*
+        /*
       function WriteToFileRepresentedBy (subject){
           var outputFormulaTerm=kb.any(subject,OWL('unionOf'))
           var theClass =  kb.constructor.SuperClass
@@ -267,21 +280,34 @@ var TabulatorOutlinerObserver = {
       }
     }
     var targetTd = selection[0]
-    var table = UI.utils.ancestor(UI.utils.ancestor(targetTd, 'TABLE').parentNode, 'TABLE')
+    var table = UI.utils.ancestor(
+      UI.utils.ancestor(targetTd, 'TABLE').parentNode,
+      'TABLE'
+    )
     var thisOutline = table.outline
     thisOutline.UserInput.insertTermTo(targetTd, $rdf.sym(url))
   },
 
-  onDragEnter: function (e, dragSession) { // enter or exit something
+  onDragEnter: function (e, _dragSession) {
+    // enter or exit something
     try {
       var selection = UI.utils.ancestor(
-          UI.utils.ancestor(e.originalTarget, 'TABLE').parentNode, 'TABLE')
-          .outline.selection
-    } catch (e) { /* because e.orginalTarget is not defined */ return }
-    for (var targetTd = e.originalTarget; targetTd; targetTd = targetTd.parentNode) {
+        UI.utils.ancestor(e.originalTarget, 'TABLE').parentNode,
+        'TABLE'
+      ).outline.selection
+    } catch (e) {
+      /* because e.orginalTarget is not defined */ return
+    }
+    for (
+      var targetTd = e.originalTarget;
+      targetTd;
+      targetTd = targetTd.parentNode
+    ) {
       if (targetTd.tabulatorSelect) {
         if (selection[0]) {
-          try { selection[0].tabulatorDeselect() } catch (e) {
+          try {
+            selection[0].tabulatorDeselect()
+          } catch (e) {
             throw new Error(selection[0] + ' causes ' + e)
           }
           dragAndDrop.util.Event.off(targetTd, 'mouseup', 'dragMouseUp')
@@ -293,16 +319,20 @@ var TabulatorOutlinerObserver = {
     }
   },
 
-  onDragExit: function (e, dragSession) {
+  onDragExit: function (_e, _dragSession) {
     // if (e.originalTarget.tabulatorDeselect) e.originalTarget.tabulatorDeselect()
   },
-  onDropInside: function (targetTd) { // a special case that you draganddrop totally inside a <tabbrowser>
+  onDropInside: function (targetTd) {
+    // a special case that you draganddrop totally inside a <tabbrowser>
     // var selection = ancestor(ancestor(targetTd,'TABLE').parentNode,'TABLE').outline.selection
     // var targetTd=selection[0]
     var table = targetTd.ownerDocument.getElementById('outline')
     // var table=ancestor(ancestor(targetTd,'TABLE').parentNode,'TABLE')
     var thisOutline = table.outline
-    thisOutline.UserInput.insertTermTo(targetTd, UI.utils.getAbout(UI.store, this.dragTarget))
+    thisOutline.UserInput.insertTermTo(
+      targetTd,
+      UI.utils.getAbout(UI.store, this.dragTarget)
+    )
   },
   onDragStart: function (x, y, td) {
     /* seeAlso nsDragAndDrop.js::nsDragAndDrop.startDrag */
@@ -310,16 +340,22 @@ var TabulatorOutlinerObserver = {
 
     this.dragTarget = td
     var kDSIID = Components.interfaces.nsIDragService
-    var dragAction = { action: kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_MOVE + kDSIID.DRAGDROP_ACTION_LINK }
+    var dragAction = {
+      action:
+        kDSIID.DRAGDROP_ACTION_COPY +
+        kDSIID.DRAGDROP_ACTION_MOVE +
+        kDSIID.DRAGDROP_ACTION_LINK
+    }
 
     // alert(td.ownerDocument.getBoxObjectFor(td))
     // alert(td.ownerDocument.getBoxObjectFor(td).screenX)
     var tdBox = td.ownerDocument.getBoxObjectFor(td) // nsIBoxObject
-    var region = Components.classes['@mozilla.org/gfx/region;1']
-      .createInstance(Components.interfaces.nsIScriptableRegion)
+    var region = Components.classes['@mozilla.org/gfx/region;1'].createInstance(
+      Components.interfaces.nsIScriptableRegion
+    )
     region.init() // this is important
     region.unionRect(tdBox.screenX, tdBox.screenY, tdBox.width, tdBox.height)
-    var transferDataSet = {data: null}
+    var transferDataSet = { data: null }
     var term = UI.Util.getTerm(td)
     switch (term.termType) {
       case 'NamedNode':
@@ -334,11 +370,19 @@ var TabulatorOutlinerObserver = {
     }
 
     transferDataSet = transferDataSet.data // quite confusing, anyway...
-    var transArray = Components.classes['@mozilla.org/supports-array;1']
-      .createInstance(Components.interfaces.nsISupportsArray)
+    var transArray = Components.classes[
+      '@mozilla.org/supports-array;1'
+    ].createInstance(Components.interfaces.nsISupportsArray)
     var trans = nsTransferable.set(transferDataSet.dataList[0])
-    transArray.AppendElement(trans.QueryInterface(Components.interfaces.nsISupports))
-    this.mDragService.invokeDragSession(td, transArray, region, dragAction.action)
+    transArray.AppendElement(
+      trans.QueryInterface(Components.interfaces.nsISupports)
+    )
+    this.mDragService.invokeDragSession(
+      td,
+      transArray,
+      region,
+      dragAction.action
+    )
   },
   /*
   onDragStart: function(aEvent,aXferData,aDragAction){
@@ -370,7 +414,8 @@ var TabulatorOutlinerObserver = {
     return dataSet
   },
   _mDS: null,
-  get_mDragService: function () { // some syntax I don't understand -- was get mDragService()
+  get_mDragService: function () {
+    // some syntax I don't understand -- was get mDragService()
     if (!this._mDS) {
       var kDSContractID = '@mozilla.org/widget/dragservice;1'
       var kDSIID = Components.interfaces.nsIDragService

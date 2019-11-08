@@ -1,9 +1,9 @@
 /*      RDF/XML content Pane
-**
-**  This pane shows the content of a particular RDF resource
-** or at least the RDF semantics we attribute to that resource,
-** in generated N3 syntax.
-*/
+ **
+ **  This pane shows the content of a particular RDF resource
+ ** or at least the RDF semantics we attribute to that resource,
+ ** in generated N3 syntax.
+ */
 
 const UI = require('solid-ui')
 const ns = UI.ns
@@ -16,10 +16,19 @@ module.exports = {
   audience: [ns.solid('Developer')],
 
   label: function (subject) {
-    if ('http://www.w3.org/2007/ont/link#ProtocolEvent' in UI.store.findTypeURIs(subject)) return null
+    if (
+      'http://www.w3.org/2007/ont/link#ProtocolEvent' in
+      UI.store.findTypeURIs(subject)
+    ) {
+      return null
+    }
 
     var n = UI.store.statementsMatching(
-      undefined, undefined, undefined, subject).length
+      undefined,
+      undefined,
+      undefined,
+      subject
+    ).length
     if (n === 0) return null
     return 'As RDF/XML (' + n + ')'
   },

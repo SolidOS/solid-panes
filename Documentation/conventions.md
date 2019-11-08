@@ -1,10 +1,12 @@
 # Data Conventions used by the databrowser
+
 This document describes how the databrowser stores your data as triples in RDF documents on your pod.
 As most Solid pods will have at least some data on them that was edited through the databrowser,
 these conventions are a good place to start when you develop third-party apps. In the future, we'll
 see how this document can grow into a bigger participatory wiki of data shape conventions for Solid.
 
 For short-hand, we will use the following namespace prefixes here:
+
 ```turtle
 @prefix     ab: <http://www.w3.org/ns/pim/ab#> .
 @prefix    acl: <http://www.w3.org/ns/auth/acl#> .
@@ -12,7 +14,7 @@ For short-hand, we will use the following namespace prefixes here:
 @prefix    dct: <http://purl.org/dc/terms/> .
 @prefix   flow: <http://www.w3.org/2005/01/wf/flow#> .
 @prefix   foaf: <http://xmlns.com/foaf/0.1/> .
-@prefix   ical: <http://www.w3.org/2002/12/cal/ical#> . 
+@prefix   ical: <http://www.w3.org/2002/12/cal/ical#> .
 @prefix    ldp: <http://www.w3.org/ns/ldp#> .
 @prefix    mee: <http://www.w3.org/ns/pim/meeting#> .
 @prefix    pim: <http://www.w3.org/ns/pim/space#> .
@@ -25,11 +27,15 @@ For short-hand, we will use the following namespace prefixes here:
 @prefix  vcard: <http://www.w3.org/2006/vcard/ns#> .
 @prefix    xsd: <http://www.w3.org/2001/XMLSchema#> .
 ```
+
 One of the most important RDF documents on your pod is your profile, which is the document that people get when they dereference your webid. We'll look at that first. After that, we'll look at each of the tools that can be created with the databrowser's + button: Addressbook, Notepad, Chat, LongChat, Meeting, Event, Link, Document, Folder, and Source.
 
 ## Profile
+
 ### Profile document
+
 To add information to your webid profile, you can use the following triples. Suppose your webid is `/profile/card#me`, then your profile document is `/profile/card` (without the `#me`). Add the following triples to it:
+
 ```turtle
 </profile/card> a                 foaf:PersonalProfileDocument .
 </profile/card> foaf:maker        </profile/card#me> .
@@ -37,7 +43,9 @@ To add information to your webid profile, you can use the following triples. Sup
 ```
 
 ### You as a person
+
 Now say your name is "John Doe", then add these triples to your profile document to publish your identity as a person:
+
 ```turtle
 </profile/card#me> a         foaf:Person .
 </profile/card#me> a         schema:Person .
@@ -45,7 +53,9 @@ Now say your name is "John Doe", then add these triples to your profile document
 ```
 
 ### Linking to your pod
+
 Say your pod is at `/pod`, with the LDN inbox at `/pod/inbox/`, to link from your identity to your pod:
+
 ```turtle
 </profile/card#me> solid:account </pod> .
 </profile/card#me> pim:storage   </pod> .
@@ -53,7 +63,9 @@ Say your pod is at `/pod`, with the LDN inbox at `/pod/inbox/`, to link from you
 ```
 
 ### Preferences
+
 To publish some of your generic preferences to apps, use:
+
 ```turtle
 </profile/card#me> pim:preferencesFile    </settings/prefs.ttl> .
 </profile/card#me> solid:publicTypeIndex  </settings/publicTypeIndex.ttl> .
@@ -61,8 +73,10 @@ To publish some of your generic preferences to apps, use:
 ```
 
 ## Address Book
+
 You can create an addressbook containing persons and groups, by adding triples to RDF documents on your pod.
 To create an addressbook, create a document for it, e.g., `/address-book/index.ttl`, and add the following triples to that document:
+
 ```turtle
 </address-book/index.ttl#this> a         vcard:AddressBook .
 </address-book/index.ttl#this> dc:title  "New address Book" .
@@ -70,12 +84,14 @@ To create an addressbook, create a document for it, e.g., `/address-book/index.t
 ```
 
 You can create separate documents for the people index and for the groups index, as long as you link to those from the main `/address-book/index.ttl` document in the following ways:
+
 ```turtle
 </address-book/index.ttl#this> vcard:nameEmailIndex </address-book/peopleIndex.ttl> .
 </address-book/index.ttl#this> vcard:groupIndex     </address-book/groupIndex.ttl> .
 ```
 
 To indicate that a person `/johnDoe.ttl` with full name "John Doe" is in addressbook `/address-book/index.ttl`, add the following triples:
+
 ```turtle
 </johnDoe.ttl#this> vcard:inAddressBook </address-book/index.ttl#this> . # (NB: needs to be in /address-book/peopleIndex.ttl)
 </johnDoe.ttl#this> a                   vcard:Individual .
@@ -83,6 +99,7 @@ To indicate that a person `/johnDoe.ttl` with full name "John Doe" is in address
 ```
 
 To indicate that addressbook `/address-book/index.ttl` has a group called "Colleagues", add the following triples:
+
 ```turtle
 </address-book/index.ttl#this>      vcard:includesGroup </address-book/colleagues.ttl#this> . # (NB: needs to be in /address-book/groupIndex.ttl)
 </address-book/colleagues.ttl#this> a                   vcard:Group .
@@ -90,7 +107,9 @@ To indicate that addressbook `/address-book/index.ttl` has a group called "Colle
 ```
 
 ## Notepad
+
 To create a new notepad at `/notepad.ttl`, add the following triples into it:
+
 ```turtle
 </notepad.ttl#this> a          pim:Notepad .
 </notepad.ttl#this> dc:author  </profile/card#me> .
@@ -99,6 +118,7 @@ To create a new notepad at `/notepad.ttl`, add the following triples into it:
 ```
 
 Now to indicate that his notepad is empty, add an empty first line to it:
+
 ```turtle
 </notepad.ttl#this>  pim:next   </notepad.ttl#this_line0> .
 </notepad.ttl#line0> dc:author  </profile/card#me> .
@@ -106,20 +126,25 @@ Now to indicate that his notepad is empty, add an empty first line to it:
 ```
 
 Now indicate that this is the last line, set this line's `pim:next` to the notepad itself:
+
 ```turtle
 </notepad.ttl#line0> pim:next </notepad.ttl#this> .
 ```
 
 To add a line to the notepad, for instance 'first line', first update the content of the first line, by replacing
+
 ```turtle
 </notepad.ttl#line0> dc:content "" .
 ```
+
 with
+
 ```turtle
 </notepad.ttl#line0> dc:content "first line" .
 ```
 
 and then add a new participation-line below it, where the user can type their next line; pick a timestamp, for instance `1555488949899`, and add the following triples:
+
 ```turtle
 </notepad.ttl#this>            flow:participation </notepad.ttl#id1555488949899> .
 </notepad.ttl#id1555488949899> flow:participant   </profile/card#me> .
@@ -130,6 +155,7 @@ and then add a new participation-line below it, where the user can type their ne
 Note that the first line still is the only line in the document, apart from the participation line. To add a second line, start making proper use of the `pim:next` attribute, by linking the first line to the second line, and then linking the second line back up to the notepad as a whole. The participation line stays as it is. The result will then look like this:
 
 ### Main notepad
+
 ```turtle
 </notepad.ttl#this> a                  pim:Notepad .
 </notepad.ttl#this> dc:author          </profile/card#me> .
@@ -140,13 +166,15 @@ Note that the first line still is the only line in the document, apart from the 
 ```
 
 ### Participation
+
 ```turtle
 </notepad.ttl#id1555488949899> flow:participant   </profile/card#me> .
 </notepad.ttl#id1555488949899> ical:dtstart       "2019-04-17T08:05:22Z"^^XML:dateTime .
 </notepad.ttl#id1555488949899> ui:backgroundColor "#c0d2fe" .
-``` 
+```
 
 ### First line
+
 ```turtle
 </notepad.ttl#line0> dc:author  </profile/card#me> .
 </notepad.ttl#line0> dc:content "first line" .
@@ -154,6 +182,7 @@ Note that the first line still is the only line in the document, apart from the 
 ```
 
 ### Second line
+
 ```turtle
 </notepad.ttl#id1555489499814> dc:author  </profile/card#me> .
 </notepad.ttl#id1555489499814> dc:content "second line" .
@@ -161,6 +190,7 @@ Note that the first line still is the only line in the document, apart from the 
 ```
 
 ## Chat
+
 To create a chat conversation, create a document, e.g., `/chat.ttl`, and add the following triples to it:
 
 ```turtle
@@ -181,6 +211,7 @@ To add a message in the chat conversation, for instance where you say "hi", gene
 Note that for historical reasons, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
 
 ## Long Chat
+
 LongChat is similar to Chat, except that it uses LDP containers to discover the triples that describe the chat conversation,
 instead of having all the triples in one `chat.ttl` doc.
 To create a chat conversation, pick a timestamp, e.g., `1555491215455`, create an LDP container, for instance `/long-chat/`, and in there, create an index document, e.g., `/long-chat/index.ttl`. To the index document, add the following triples:
@@ -211,6 +242,7 @@ Note that there is no need to make `/long-chat/2019/04/17/chat.ttl` discoverable
 Also note that here too, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
 
 ## Meeting
+
 To create a meeting, create a document, e.g., `/meeting.ttl` and add the following triples to it:
 
 ```turtle
@@ -239,7 +271,7 @@ To add material to the meeting (let's say `https://example.com/agenda-meeting.ht
 
 ```turtle
 </meeting.ttl#this>            mee:toolList    </meeting.ttl#this> ,
-                                               </meeting.ttl#id1555492030413> . # updated from earlier 
+                                               </meeting.ttl#id1555492030413> . # updated from earlier
 </meeting.ttl#id1555492506279> a               mee:Tool .
 </meeting.ttl#this>            flow:attachment <https://example.com/agenda-meeting.html> .
 </meeting.ttl#id1555492506279> mee:target      <https://example.com/agenda-meeting.html> .
@@ -248,16 +280,21 @@ To add material to the meeting (let's say `https://example.com/agenda-meeting.ht
 ```
 
 ## Schedulable Event
+
 // TODO
 
 ## Link
+
 // TODO
 
 ## Dokieli Document
+
 A 'Dokieli Document' is an HTML document with some linked-data annotations, but otherwise just HTML. So the 'Dokieli Document' tool does not store data in triples in RDF sources like most other tools do, but instead allows you to run an online HTML editor right on your pod. When you click 'Save' in the Dokieli editor, the HTML document is written to your pod using a http PUT request, and in that sense this editor makes use of the LDP (read-write web) functionalities of your pod. You can also use Dokieli as a third-party app, on https://dokie.li.
 
 ## Folder
+
 When you add a 'Folder' tool, the databrowser creates a new LDP container. As an example, here are the triples that describe an LDP container `/foo/` with subcontainer `/foo/sub/` and member document `/foo/bar.ttl`:
+
 ```turtle
 </foo/> a            ldp:BasicContainer .
 </foo/> a            ldp:Container .
@@ -270,4 +307,5 @@ When you add a 'Folder' tool, the databrowser creates a new LDP container. As an
 ```
 
 ## Source
+
 When you add a 'Source' tool to a container, it creates an empty document as an LDP resource. The content type will be guessed from the extension; for instance, `source.ttl` will be a Turtle document, `source.txt` will be `text/plain`, etc.

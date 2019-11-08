@@ -1,10 +1,10 @@
 /*   Single video play Pane
-**
-*/
+ **
+ */
 var UI = require('solid-ui')
+const $rdf = require('rdflib')
 
 module.exports = {
-
   icon: UI.icons.iconBase + 'noun_1619.svg',
 
   name: 'video',

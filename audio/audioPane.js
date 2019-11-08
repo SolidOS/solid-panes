@@ -1,7 +1,8 @@
 /*   Single audio play Pane
-**
-*/
+ **
+ */
 const UI = require('solid-ui')
+const $rdf = require('rdflib')
 const ns = UI.ns
 const kb = UI.store
 
@@ -23,7 +24,12 @@ module.exports = {
   },
 
   render: function (subject, dom) {
-    var options = {autoplay: false, chain: true, chainAlbums: true, loop: false}
+    var options = {
+      autoplay: false,
+      chain: true,
+      chainAlbums: true,
+      loop: false
+    }
 
     var removeExtension = function (str) {
       var dot = str.lastIndexOf('.')
@@ -44,11 +50,17 @@ module.exports = {
       var thisName = x.uri
       for (var k = 0; k < contents.length; k++) {
         var otherName = contents[k].uri
-        if (thisName.length > otherName.length && thisName.startsWith(removeExtension(otherName))) {
+        if (
+          thisName.length > otherName.length &&
+          thisName.startsWith(removeExtension(otherName))
+        ) {
           return true
         }
-        if (thisName.endsWith('.m4a') && otherName.endsWith('.mp3') &&
-          removeExtension(thisName) === removeExtension(otherName)) {
+        if (
+          thisName.endsWith('.m4a') &&
+          otherName.endsWith('.mp3') &&
+          removeExtension(thisName) === removeExtension(otherName)
+        ) {
           return true
         }
       }
@@ -72,13 +84,14 @@ module.exports = {
     }
 
     var moveOn = function (current, level) {
-      return new Promise(function (resolve, reject) {
+      return new Promise(function (resolve) {
         level = level || 0
         if (!options.chain) return resolve(null)
         // Ideally navigate graph else cheat with URI munging:
-        var folder = kb.any(undefined, ns.ldp('contains'), current) || current.dir()
+        var folder =
+          kb.any(undefined, ns.ldp('contains'), current) || current.dir()
         if (!folder) return resolve(null)
-        kb.fetcher.load(folder).then(function (xhr) {
+        kb.fetcher.load(folder).then(function (_xhr) {
           var contents = kb.each(folder, ns.ldp('contains')) // @@ load if not loaded
           // if (contents.length < 2) return resolve(null)   NO might move on from 1-track album
           var j
@@ -92,11 +105,12 @@ module.exports = {
                     return resolve(contents[j])
                   }
                   return resolve(null) // No more music needed
-                } else { // chain albums
+                } else {
+                  // chain albums
                   if (level === 1 || !options.chainAlbums) return resolve(null) // limit of navigating treee
                   moveOn(folder, level + 1).then(function (folder2) {
                     if (folder2) {
-                      kb.fetcher.load(folder2).then(function (xhr) {
+                      kb.fetcher.load(folder2).then(function (_xhr) {
                         var contents = kb.each(folder2, ns.ldp('contains'))
                         if (contents.length === 0) return resolve(null)
                         contents.sort()

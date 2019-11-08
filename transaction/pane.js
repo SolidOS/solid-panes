@@ -1,12 +1,13 @@
 /*   Financial Transaction Pane
-**
-**  This outline pane allows a user to interact with a transaction
-**  downloaded from a bank statement, annotting it with classes and comments,
-** trips, etc
-*/
+ **
+ **  This outline pane allows a user to interact with a transaction
+ **  downloaded from a bank statement, annotting it with classes and comments,
+ ** trips, etc
+ */
 
 const UI = require('solid-ui')
 const panes = require('pane-registry')
+const $rdf = require('rdflib')
 const ns = UI.ns
 
 module.exports = {
@@ -68,7 +69,9 @@ module.exports = {
 
     // var me = UI.authn.currentUser()
     var predicateURIsDone = {}
-    var donePredicate = function (pred) { predicateURIsDone[pred.uri] = true }
+    var donePredicate = function (pred) {
+      predicateURIsDone[pred.uri] = true
+    }
 
     var setPaneStyle = function (account) {
       var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
@@ -112,8 +115,8 @@ module.exports = {
     }
 
     var oderByDate = function (x, y) {
-      let dx = UI.store.any(x, ns.qu('date'))
-      let dy = UI.store.any(y, ns.qu('date'))
+      const dx = UI.store.any(x, ns.qu('date'))
+      const dy = UI.store.any(y, ns.qu('date'))
       if (dx !== undefined && dy !== undefined) {
         if (dx.value < dy.value) return -1
         if (dx.value > dy.value) return 1
@@ -142,7 +145,10 @@ module.exports = {
       }
       var tr = dom.createElement('tr')
       var td = tr.appendChild(dom.createElement('td'))
-      td.setAttribute('style', 'width: 98%; padding: 1em; border: 0.1em solid grey;')
+      td.setAttribute(
+        'style',
+        'width: 98%; padding: 1em; border: 0.1em solid grey;'
+      )
       var cols = row.children.length
       if (row.nextSibling) {
         row.parentNode.insertBefore(tr, row.nextSibling)
@@ -154,7 +160,13 @@ module.exports = {
       td.appendChild(insertedPane(dom, subject, paneName))
     }
 
-    var expandAfterRowOrCollapse = function (dom, row, subject, paneName, solo) {
+    var expandAfterRowOrCollapse = function (
+      dom,
+      row,
+      subject,
+      paneName,
+      solo
+    ) {
       if (row.expanded) {
         row.parentNode.removeChild(row.expanded)
         row.expanded = false
@@ -165,13 +177,17 @@ module.exports = {
 
     var transactionTable = function (dom, list, filter) {
       var table = dom.createElement('table')
-      table.setAttribute('style', 'padding-left: 0.5em; padding-right: 0.5em; font-size: 9pt; width: 85%;')
+      table.setAttribute(
+        'style',
+        'padding-left: 0.5em; padding-right: 0.5em; font-size: 9pt; width: 85%;'
+      )
       var transactionRow = function (dom, x) {
         var tr = dom.createElement('tr')
 
         var setTRStyle = function (tr, account) {
           // var mystyle = "padding: 0.5em 1.5em 1em 1.5em; "
-          var mystyle = "'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;"
+          var mystyle =
+            "'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;"
           if (account) {
             var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
             if (backgroundColor) {
@@ -201,9 +217,14 @@ module.exports = {
         var amount = kb.any(x, ns.qu('in_USD'))
         c3.textContent = amount ? d2(amount.value) : '???'
         c3.setAttribute('style', 'width: 6em; text-align: right; ') // @@ decimal alignment?
-        tr.addEventListener('click', function (e) { // solo unless shift key
-          expandAfterRowOrCollapse(dom, tr, x, 'transaction', !e.shiftKey)
-        }, false)
+        tr.addEventListener(
+          'click',
+          function (e) {
+            // solo unless shift key
+            expandAfterRowOrCollapse(dom, tr, x, 'transaction', !e.shiftKey)
+          },
+          false
+        )
 
         return tr
       }
@@ -221,27 +242,42 @@ module.exports = {
 
     // This works only if enough metadata about the properties can drive the RDFS
     // (or actual type statements whichtypically are NOT there on)
-    if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction'] || kb.any(subject, ns.qu('toAccount'))) {
+    if (
+      t['http://www.w3.org/2000/10/swap/pim/qif#Transaction'] ||
+      kb.any(subject, ns.qu('toAccount'))
+    ) {
       // var trip = kb.any(subject, WF('trip'))
       donePredicate(ns.rdf('type'))
 
       var account = kb.any(subject, UI.ns.qu('toAccount'))
       setPaneStyle(account)
       if (!account) {
-        complain('(Error: There is no bank account known for this transaction <' +
-          subject.uri + '>,\n -- every transaction needs one.)')
+        complain(
+          '(Error: There is no bank account known for this transaction <' +
+            subject.uri +
+            '>,\n -- every transaction needs one.)'
+        )
       }
 
       var store = null
       var statement = kb.any(subject, UI.ns.qu('accordingTo'))
       if (statement === undefined) {
-        complain('(Error: There is no back link to the original data source foir this transaction <' +
-          subject.uri + ">,\nso I can't tell how to annotate it.)")
+        complain(
+          '(Error: There is no back link to the original data source foir this transaction <' +
+            subject.uri +
+            ">,\nso I can't tell how to annotate it.)"
+        )
       } else {
-        store = statement !== undefined ? kb.any(statement, UI.ns.qu('annotationStore')) : null
+        store =
+          statement !== undefined
+            ? kb.any(statement, UI.ns.qu('annotationStore'))
+            : null
         if (store === undefined) {
-          complain('(There is no annotation document for this statement\n<' +
-            statement.uri + '>,\nso you cannot classify this transaction.)')
+          complain(
+            '(There is no annotation document for this statement\n<' +
+              statement.uri +
+              '>,\nso you cannot classify this transaction.)'
+          )
         }
       }
 
@@ -268,13 +304,20 @@ module.exports = {
       var table = dom.createElement('table')
       div.appendChild(table)
       var preds = ['date', 'payee', 'amount', 'in_USD', 'currency'].map(Q)
-      var inner = preds.map(function (p) {
-        donePredicate(p)
-        var value = kb.any(subject, p)
-        var s = value ? UI.utils.labelForXML(value) : ''
-        return '<tr><td style="text-align: right; padding-right: 0.6em">' + UI.utils.labelForXML(p) +
-        '</td><td style="font-weight: bold;">' + s + '</td></tr>'
-      }).join('\n')
+      var inner = preds
+        .map(function (p) {
+          donePredicate(p)
+          var value = kb.any(subject, p)
+          var s = value ? UI.utils.labelForXML(value) : ''
+          return (
+            '<tr><td style="text-align: right; padding-right: 0.6em">' +
+            UI.utils.labelForXML(p) +
+            '</td><td style="font-weight: bold;">' +
+            s +
+            '</td></tr>'
+          )
+        })
+        .join('\n')
       table.innerHTML = inner
 
       var complainIfBad = function (ok, body) {
@@ -295,61 +338,98 @@ module.exports = {
 
           var renderCatgorySelectors = function () {
             div.insertBefore(
-              UI.widgets.makeSelectForNestedCategory(dom, kb,
-                subject, UI.ns.qu('Classified'), store, complainIfBad),
-              table.nextSibling)
+              UI.widgets.makeSelectForNestedCategory(
+                dom,
+                kb,
+                subject,
+                UI.ns.qu('Classified'),
+                store,
+                complainIfBad
+              ),
+              table.nextSibling
+            )
           }
 
           if (kb.any(undefined, ns.rdfs('subClassOf'), ns.qu.Classified)) {
             renderCatgorySelectors()
           } else if (calendarYear) {
-            fetcher.load(calendarYear).then(function (xhrs) {
-              fetcher.load(kb.each(calendarYear, ns.rdfs('seeAlso'))).then(function () {
-                renderCatgorySelectors()
-              }).catch(function (e) {
-                console.log('Error loading background data: ' + e)
+            fetcher
+              .load(calendarYear)
+              .then(function (_xhrs) {
+                fetcher
+                  .load(kb.each(calendarYear, ns.rdfs('seeAlso')))
+                  .then(function () {
+                    renderCatgorySelectors()
+                  })
+                  .catch(function (e) {
+                    console.log('Error loading background data: ' + e)
+                  })
               })
-            }).catch(function (e) {
-              console.log('Error loading calendarYear: ' + e)
-            })
+              .catch(function (e) {
+                console.log('Error loading calendarYear: ' + e)
+              })
           } else {
             console.log("Can't get categories, because no calendarYear")
           }
-          div.appendChild(UI.widgets.makeDescription(dom, kb, subject,
-            UI.ns.rdfs('comment'), store, complainIfBad))
+          div.appendChild(
+            UI.widgets.makeDescription(
+              dom,
+              kb,
+              subject,
+              UI.ns.rdfs('comment'),
+              store,
+              complainIfBad
+            )
+          )
 
-          var trips = kb.statementsMatching(undefined, TRIP('trip'), undefined, store)
-            .map(function (st) { return st.object }) // @@ Use rdfs
+          var trips = kb
+            .statementsMatching(undefined, TRIP('trip'), undefined, store)
+            .map(function (st) {
+              return st.object
+            }) // @@ Use rdfs
           var trips2 = kb.each(undefined, UI.ns.rdf('type'), TRIP('Trip'))
           trips = trips.concat(trips2).sort() // @@ Unique
 
           var sortedBy = function (kb, list, pred, reverse) {
-            let l2 = list.map(function (x) {
+            const l2 = list.map(function (x) {
               var key = kb.any(x, pred)
               key = key ? key.value : '9999-12-31'
-              return [ key, x ]
+              return [key, x]
             })
             l2.sort()
             if (reverse) l2.reverse()
-            return l2.map(function (pair) { return pair[1] })
+            return l2.map(function (pair) {
+              return pair[1]
+            })
           }
 
           trips = sortedBy(kb, trips, UI.ns.cal('dtstart'), true) // Reverse chron
 
           if (trips.length > 1) {
-            div.appendChild(UI.widgets.makeSelectForOptions(
-              dom, kb, subject, TRIP('trip'), trips,
-              { 'multiple': false,
-                'nullLabel': '-- what trip? --',
-                'mint': 'New Trip *',
-                'mintClass': TRIP('Trip'),
-                'mintStatementsFun': function (trip) {
-                  var is = []
-                  is.push($rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc()))
-                  return is
-                }
-              },
-            store, complainIfBad))
+            div.appendChild(
+              UI.widgets.makeSelectForOptions(
+                dom,
+                kb,
+                subject,
+                TRIP('trip'),
+                trips,
+                {
+                  multiple: false,
+                  nullLabel: '-- what trip? --',
+                  mint: 'New Trip *',
+                  mintClass: TRIP('Trip'),
+                  mintStatementsFun: function (trip) {
+                    var is = []
+                    is.push(
+                      $rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc())
+                    )
+                    return is
+                  }
+                },
+                store,
+                complainIfBad
+              )
+            )
           }
 
           div.appendChild(dom.createElement('br'))
@@ -363,26 +443,31 @@ module.exports = {
           UI.widgets.attachmentList(dom, subject, div)
           donePredicate(ns.wf('attachment'))
 
-          div.appendChild(dom.createElement('tr'))
+          div
+            .appendChild(dom.createElement('tr'))
             .setAttribute('style', 'height: 1em') // spacer
 
           // Remaining properties
-          outliner.appendPropertyTRs(div, plist, false,
-            function (pred, inverse) {
-              return !(pred.uri in predicateURIsDone)
-            })
-          outliner.appendPropertyTRs(div, qlist, true,
-            function (pred, inverse) {
-              return !(pred.uri in predicateURIsDone)
-            })
+          outliner.appendPropertyTRs(div, plist, false, function (
+            pred,
+            _inverse
+          ) {
+            return !(pred.uri in predicateURIsDone)
+          })
+          outliner.appendPropertyTRs(div, qlist, true, function (
+            pred,
+            _inverse
+          ) {
+            return !(pred.uri in predicateURIsDone)
+          })
         }) // fetch
       }
       // end of render tranasaction instance
 
-    // ////////////////////////////////////////////////////////////////////
-    //
-    //      Render the transactions in a Trip
-    //
+      // ////////////////////////////////////////////////////////////////////
+      //
+      //      Render the transactions in a Trip
+      //
     } else if (t['http://www.w3.org/ns/pim/trip#Trip']) {
       /*
           var query = new $rdf.Query(UI.utils.label(subject))
@@ -415,102 +500,124 @@ module.exports = {
         var yearTotal = {}
         var yearCategoryTotal = {}
         var trans = kb.each(undefined, TRIP('trip'), subject)
-        var bankStatements = trans.map(function (t) { return t.doc() })
-        kb.fetcher.load(bankStatements).then(function () {
-          trans.map(function (t) {
-            var date = kb.the(t, ns.qu('date'))
-            var year = date ? ('' + date.value).slice(0, 4) : '????'
-            var ty = kb.the(t, ns.rdf('type')) // @@ find most specific type
-            // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')))
-            if (!ty) ty = UI.ns.qu('ErrorNoType')
-            if (ty && ty.uri) {
-              var tyuri = ty.uri
-              if (!yearTotal[year]) yearTotal[year] = 0.0
-              if (!yearCategoryTotal[year]) yearCategoryTotal[year] = {}
-              if (!total[tyuri]) total[tyuri] = 0.0
-              if (!yearCategoryTotal[year][tyuri]) yearCategoryTotal[year][tyuri] = 0.0
+        var bankStatements = trans.map(function (t) {
+          return t.doc()
+        })
+        kb.fetcher
+          .load(bankStatements)
+          .then(function () {
+            trans.map(function (t) {
+              var date = kb.the(t, ns.qu('date'))
+              var year = date ? ('' + date.value).slice(0, 4) : '????'
+              var ty = kb.the(t, ns.rdf('type')) // @@ find most specific type
+              // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')))
+              if (!ty) ty = UI.ns.qu('ErrorNoType')
+              if (ty && ty.uri) {
+                var tyuri = ty.uri
+                if (!yearTotal[year]) yearTotal[year] = 0.0
+                if (!yearCategoryTotal[year]) yearCategoryTotal[year] = {}
+                if (!total[tyuri]) total[tyuri] = 0.0
+                if (!yearCategoryTotal[year][tyuri]) {
+                  yearCategoryTotal[year][tyuri] = 0.0
+                }
 
-              var lit = kb.any(t, UI.ns.qu('in_USD'))
-              if (!lit) {
-                complain('@@ No amount in USD: ' + lit + ' for ' + t)
+                var lit = kb.any(t, UI.ns.qu('in_USD'))
+                if (!lit) {
+                  complain('@@ No amount in USD: ' + lit + ' for ' + t)
+                }
+                if (lit) {
+                  var amount = parseFloat(lit.value)
+                  total[tyuri] += amount
+                  yearCategoryTotal[year][tyuri] += amount
+                  yearTotal[year] += amount
+                }
               }
-              if (lit) {
-                var amount = parseFloat(lit.value)
-                total[tyuri] += amount
-                yearCategoryTotal[year][tyuri] += amount
-                yearTotal[year] += amount
+            })
+
+            var types = []
+            var grandTotal = 0.0
+            var years = []
+            var i
+
+            for (var y in yearCategoryTotal) {
+              // @@ TODO: Write away the need for exception on next line
+              // eslint-disable-next-line no-prototype-builtins
+              if (yearCategoryTotal.hasOwnProperty(y)) {
+                years.push(y)
               }
             }
+            years.sort()
+            var ny = years.length
+            var cell
+
+            var table = div.appendChild(dom.createElement('table'))
+            table.setAttribute(
+              'style',
+              'font-size: 120%; margin-left:auto; margin-right:1em; margin-top: 1em; border: 0.05em solid gray; padding: 1em;'
+            )
+
+            if (ny > 1) {
+              var header = table.appendChild(dom.createElement('tr'))
+              header.appendChild(headerCell(''))
+              for (i = 0; i < ny; i++) {
+                header.appendChild(headerCell(years[i]))
+              }
+              header.appendChild(headerCell('total'))
+            }
+
+            for (var uri in total) {
+              // @@ TODO: Write away the need for exception on next line
+              // eslint-disable-next-line no-prototype-builtins
+              if (total.hasOwnProperty(uri)) {
+                types.push(uri)
+                grandTotal += total[uri]
+              }
+            }
+            types.sort()
+            var row, label, z
+            for (var j = 0; j < types.length; j++) {
+              var cat = kb.sym(types[j])
+              row = table.appendChild(dom.createElement('tr'))
+              label = row.appendChild(dom.createElement('td'))
+              label.textContent = UI.utils.label(cat)
+              if (ny > 1) {
+                for (i = 0; i < ny; i++) {
+                  z = yearCategoryTotal[years[i]][types[j]]
+                  cell = row.appendChild(numericCell(z, true))
+                }
+              }
+              row.appendChild(numericCell(total[types[j]], true))
+            }
+
+            // Trailing totals
+            if (types.length > 1) {
+              row = table.appendChild(dom.createElement('tr'))
+              row.appendChild(headerCell('total'))
+              if (ny > 1) {
+                for (i = 0; i < ny; i++) {
+                  z = yearTotal[years[i]]
+                  cell = row.appendChild(numericCell(z ? d2(z) : ''))
+                }
+              }
+              cell = row.appendChild(numericCell(grandTotal))
+              cell.setAttribute(
+                'style',
+                'font-weight: bold; text-align: right;'
+              )
+            }
+
+            var tab = transactionTable(dom, trans)
+            tab.setAttribute(
+              'style',
+              'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;'
+            )
+            div.appendChild(tab)
+
+            UI.widgets.attachmentList(dom, subject, div)
           })
-
-          var types = []
-          var grandTotal = 0.0
-          var years = []
-          var i
-
-          for (var y in yearCategoryTotal) {
-            if (yearCategoryTotal.hasOwnProperty(y)) {
-              years.push(y)
-            }
-          }
-          years.sort()
-          var ny = years.length
-          var cell
-
-          var table = div.appendChild(dom.createElement('table'))
-          table.setAttribute('style', 'font-size: 120%; margin-left:auto; margin-right:1em; margin-top: 1em; border: 0.05em solid gray; padding: 1em;')
-
-          if (ny > 1) {
-            var header = table.appendChild(dom.createElement('tr'))
-            header.appendChild(headerCell(''))
-            for (i = 0; i < ny; i++) {
-              header.appendChild(headerCell(years[i]))
-            }
-            header.appendChild(headerCell('total'))
-          }
-
-          for (var uri in total) {
-            if (total.hasOwnProperty(uri)) {
-              types.push(uri)
-              grandTotal += total[uri]
-            }
-          }
-          types.sort()
-          var row, label, z
-          for (var j = 0; j < types.length; j++) {
-            var cat = kb.sym(types[j])
-            row = table.appendChild(dom.createElement('tr'))
-            label = row.appendChild(dom.createElement('td'))
-            label.textContent = UI.utils.label(cat)
-            if (ny > 1) {
-              for (i = 0; i < ny; i++) {
-                z = yearCategoryTotal[years[i]][types[j]]
-                cell = row.appendChild(numericCell(z, true))
-              }
-            }
-            row.appendChild(numericCell(total[types[j]], true))
-          }
-
-          // Trailing totals
-          if (types.length > 1) {
-            row = table.appendChild(dom.createElement('tr'))
-            row.appendChild(headerCell('total'))
-            if (ny > 1) {
-              for (i = 0; i < ny; i++) {
-                z = yearTotal[years[i]]
-                cell = row.appendChild(numericCell(z ? d2(z) : ''))
-              }
-            }
-            cell = row.appendChild(numericCell(grandTotal))
-            cell.setAttribute('style', 'font-weight: bold; text-align: right;')
-          }
-
-          var tab = transactionTable(dom, trans)
-          tab.setAttribute('style', 'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;')
-          div.appendChild(tab)
-
-          UI.widgets.attachmentList(dom, subject, div)
-        }).catch(function (e) { complain('Error loading transactions: ' + e) })
+          .catch(function (e) {
+            complain('Error loading transactions: ' + e)
+          })
       }
       calculations()
     } // if

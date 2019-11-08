@@ -1,7 +1,7 @@
 /*   Scheduler Pane
-**
-**
-*/
+ **
+ **
+ */
 /* global alert */
 
 const UI = require('solid-ui')
@@ -9,7 +9,11 @@ const $rdf = UI.rdf
 const ns = UI.ns
 
 // @@ Give other combos too-- see schedule ontology
-const possibleAvailabilities = [ ns.sched('No'), ns.sched('Maybe'), ns.sched('Yes') ]
+const possibleAvailabilities = [
+  ns.sched('No'),
+  ns.sched('Maybe'),
+  ns.sched('Yes')
+]
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
@@ -22,7 +26,9 @@ module.exports = {
   label: function (subject) {
     var kb = UI.store
     var t = kb.findTypeURIs(subject)
-    if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) return 'Scheduling poll'
+    if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) {
+      return 'Scheduling poll'
+    }
     return null // No under other circumstances
   },
 
@@ -34,11 +40,14 @@ module.exports = {
       var ns = UI.ns
       var kb = UI.store
       var newBase = options.newBase
-      var thisInstance = options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
+      var thisInstance =
+        options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
       var complainIfBad = function (ok, body) {
         if (ok) return
-        console.log('Error in Schedule Pane: Error constructing new scheduler: ' + body)
+        console.log(
+          'Error in Schedule Pane: Error constructing new scheduler: ' + body
+        )
         reject(new Error(body))
       }
 
@@ -79,25 +88,35 @@ module.exports = {
           */
 
       var setACL2 = function setACL2 (docURI, allWrite, callbackFunction) {
-        var aclDoc = kb.any(kb.sym(docURI),
-          kb.sym('http://www.iana.org/assignments/link-relations/acl')) // @@ check that this get set by web.js
+        var aclDoc = kb.any(
+          kb.sym(docURI),
+          kb.sym('http://www.iana.org/assignments/link-relations/acl')
+        ) // @@ check that this get set by web.js
 
-        if (aclDoc) { // Great we already know where it is
+        if (aclDoc) {
+          // Great we already know where it is
           var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-          return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
-            .then(result => callbackFunction(true))
+          return fetcher
+            .webOperation('PUT', aclDoc.uri, {
+              data: aclText,
+              contentType: 'text/turtle'
+            })
+            .then(_result => callbackFunction(true))
             .catch(err => {
               callbackFunction(false, err.message)
             })
         } else {
-          return fetcher.load(docURI)
+          return fetcher
+            .load(docURI)
             .catch(err => {
               callbackFunction(false, 'Getting headers for ACL: ' + err)
             })
             .then(() => {
-              var aclDoc = kb.any(kb.sym(docURI),
-                kb.sym('http://www.iana.org/assignments/link-relations/acl'))
+              var aclDoc = kb.any(
+                kb.sym(docURI),
+                kb.sym('http://www.iana.org/assignments/link-relations/acl')
+              )
 
               if (!aclDoc) {
                 // complainIfBad(false, "No Link rel=ACL header for " + docURI)
@@ -106,9 +125,12 @@ module.exports = {
 
               var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-              return fetcher.webOperation('PUT', aclDoc.uri, { data: aclText, contentType: 'text/turtle' })
+              return fetcher.webOperation('PUT', aclDoc.uri, {
+                data: aclText,
+                contentType: 'text/turtle'
+              })
             })
-            .then(result => callbackFunction(true))
+            .then(_result => callbackFunction(true))
             .catch(err => {
               callbackFunction(false, err.message)
             })
@@ -135,7 +157,9 @@ module.exports = {
         newDetailsDoc = newInstance.doc()
         // newIndexDoc = null
         if (options.newBase) {
-          throw new Error('mint new scheduler: Illegal - have both new base and existing event')
+          throw new Error(
+            'mint new scheduler: Illegal - have both new base and existing event'
+          )
         }
       } else {
         newDetailsDoc = kb.sym(newBase + 'details.ttl')
@@ -145,12 +169,9 @@ module.exports = {
 
       var newResultsDoc = kb.sym(newBase + 'results.ttl')
 
-      var toBeCopied = options.noIndexHTML ? {} : [ { local: 'index.html', contentType: 'text/html' }
-
-      //   { local: 'forms.ttl', contentType: 'text/turtle'}
-      //            { local: 'schedule.js', contentType: 'application/javascript'} ,
-      //            { local: 'mashlib.js', contentType: 'application/javascript'} , //  @@ centrialize after testing?
-      ]
+      var toBeCopied = options.noIndexHTML
+        ? {}
+        : [{ local: 'index.html', contentType: 'text/html' }]
 
       var agenda = []
 
@@ -165,7 +186,10 @@ module.exports = {
             var setThatACL = function () {
               setACL2(newURI, false, function (ok, message) {
                 if (!ok) {
-                  complainIfBad(ok, 'FAILED to set ACL ' + newURI + ' : ' + message)
+                  complainIfBad(
+                    ok,
+                    'FAILED to set ACL ' + newURI + ' : ' + message
+                  )
                   console.log('FAILED to set ACL ' + newURI + ' : ' + message)
                 } else {
                   agenda.shift()() // beware too much nesting
@@ -173,7 +197,12 @@ module.exports = {
               })
             }
 
-            kb.fetcher.webCopy(base + item.local, newBase + item.local, item.contentType)
+            kb.fetcher
+              .webCopy(
+                base + item.local,
+                newBase + item.local,
+                item.contentType
+              )
               .then(() => UI.authn.checkUser())
               .then(webId => {
                 me = webId
@@ -181,8 +210,13 @@ module.exports = {
                 setThatACL()
               })
               .catch(err => {
-                console.log('FAILED to copy ' + base + item.local + ' : ' + err.message)
-                complainIfBad(false, 'FAILED to copy ' + base + item.local + ' : ' + err.message)
+                console.log(
+                  'FAILED to copy ' + base + item.local + ' : ' + err.message
+                )
+                complainIfBad(
+                  false,
+                  'FAILED to copy ' + base + item.local + ' : ' + err.message
+                )
               })
           })
         }
@@ -190,7 +224,12 @@ module.exports = {
       }
 
       agenda.push(function createDetailsFile () {
-        kb.add(newInstance, ns.rdf('type'), ns.sched('SchedulableEvent'), newDetailsDoc)
+        kb.add(
+          newInstance,
+          ns.rdf('type'),
+          ns.sched('SchedulableEvent'),
+          newDetailsDoc
+        )
         if (me) {
           kb.add(newInstance, ns.dc('author'), me, newDetailsDoc) // Who is sending the invitation?
           kb.add(newInstance, ns.foaf('maker'), me, newDetailsDoc) // Uneditable - wh is allowed to edit this?
@@ -207,45 +246,70 @@ module.exports = {
             if (ok) {
               agenda.shift()()
             } else {
-              complainIfBad(ok, 'FAILED to save new scheduler at: ' + newDetailsDoc + ' : ' + message)
-              console.log('FAILED to save new scheduler at: ' + newDetailsDoc + ' : ' + message)
+              complainIfBad(
+                ok,
+                'FAILED to save new scheduler at: ' +
+                  newDetailsDoc +
+                  ' : ' +
+                  message
+              )
+              console.log(
+                'FAILED to save new scheduler at: ' +
+                  newDetailsDoc +
+                  ' : ' +
+                  message
+              )
             }
           }
         )
       })
 
       agenda.push(function () {
-        kb.fetcher.webOperation('PUT', newResultsDoc.uri, { data: '', contentType: 'text/turtle' })
+        kb.fetcher
+          .webOperation('PUT', newResultsDoc.uri, {
+            data: '',
+            contentType: 'text/turtle'
+          })
           .then(() => {
             agenda.shift()()
           })
           .catch(err => {
-            complainIfBad(false, 'Failed to initialize empty results file: ' + err.message)
+            complainIfBad(
+              false,
+              'Failed to initialize empty results file: ' + err.message
+            )
           })
       })
 
       agenda.push(function () {
         setACL2(newResultsDoc.uri, true, function (ok, body) {
-          complainIfBad(ok, 'Failed to set Read-Write ACL on results file: ' + body)
+          complainIfBad(
+            ok,
+            'Failed to set Read-Write ACL on results file: ' + body
+          )
           if (ok) agenda.shift()()
         })
       })
 
       agenda.push(function () {
         setACL2(newDetailsDoc.uri, false, function (ok, body) {
-          complainIfBad(ok, 'Failed to set read ACL on configuration file: ' + body)
+          complainIfBad(
+            ok,
+            'Failed to set read ACL on configuration file: ' + body
+          )
           if (ok) agenda.shift()()
         })
       })
 
-      agenda.push(function () { // give the user links to the new app
+      agenda.push(function () {
+        // give the user links to the new app
         console.log('Finished minting new scheduler')
         options.newInstance = newInstance
         resolve(options)
       })
 
       agenda.shift()()
-    // Created new data files.
+      // Created new data files.
     }) // promise
   }, // mintNew
 
@@ -270,7 +334,8 @@ module.exports = {
     var resultsDoc = $rdf.sym(base + 'results.ttl')
     // var formsURI = base + 'forms.ttl'
     // We can't in fact host stuff from there because of CORS
-    var formsURI = 'https://solid.github.io/solid-panes/schedule/formsForSchedule.ttl'
+    var formsURI =
+      'https://solid.github.io/solid-panes/schedule/formsForSchedule.ttl'
 
     var form1 = kb.sym(formsURI + '#form1')
     var form2 = kb.sym(formsURI + '#form2')
@@ -279,7 +344,8 @@ module.exports = {
     var formText = require('./formsForSchedule.js')
     $rdf.parse(formText, kb, formsURI, 'text/turtle') // Load forms directly
 
-    var inputStyle = 'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 100%' //  font-size: 120%
+    var inputStyle =
+      'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 100%' //  font-size: 120%
     var buttonIconStyle = 'width: 1.8em; height: 1.8em;'
 
     // Utility functions
@@ -299,13 +365,17 @@ module.exports = {
 
     var refreshCellColor = function (cell, value) {
       var bg = kb.any(value, UI.ns.ui('backgroundColor'))
-      if (bg) cell.setAttribute('style', 'padding: 0.3em; text-align: center; background-color: ' + bg + ';')
+      if (bg) {
+        cell.setAttribute(
+          'style',
+          'padding: 0.3em; text-align: center; background-color: ' + bg + ';'
+        )
+      }
     }
 
     var me
 
-    UI.authn.checkUser()
-    .then(webId => {
+    UI.authn.checkUser().then(webId => {
       me = webId
 
       if (logInOutButton) {
@@ -324,8 +394,11 @@ module.exports = {
     //
 
     var newInstanceButton = function () {
-      var b = UI.authn.newAppInstance(dom, { noun: 'scheduler' },
-        initializeNewInstanceInWorkspace)
+      var b = UI.authn.newAppInstance(
+        dom,
+        { noun: 'scheduler' },
+        initializeNewInstanceInWorkspace
+      )
       b.firstChild.setAttribute('style', inputStyle)
       return b
     } // newInstanceButton
@@ -350,16 +423,28 @@ module.exports = {
     }
 
     var initializeNewInstanceAtBase = function (thisInstance, newBase) {
-      var options = {thisInstance: thisInstance, newBase: newBase}
-      this.mintNew(options).then(function (options) {
-        var p = div.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'font-size: 140%;')
-        p.innerHTML =
-          "Your <a href='" + options.newInstance.uri + "'><b>new scheduler</b></a> is ready to be set up. " +
-          "<br/><br/><a href='" + options.newInstance.uri + "'>Say when you what days work for you.</a>"
-      }).catch(function (error) {
-        complainIfBad(false, 'Error createing new scheduler at ' + options.newInstance + ': ' + error)
-      })
+      var options = { thisInstance: thisInstance, newBase: newBase }
+      this.mintNew(options)
+        .then(function (options) {
+          var p = div.appendChild(dom.createElement('p'))
+          p.setAttribute('style', 'font-size: 140%;')
+          p.innerHTML =
+            "Your <a href='" +
+            options.newInstance.uri +
+            "'><b>new scheduler</b></a> is ready to be set up. " +
+            "<br/><br/><a href='" +
+            options.newInstance.uri +
+            "'>Say when you what days work for you.</a>"
+        })
+        .catch(function (error) {
+          complainIfBad(
+            false,
+            'Error createing new scheduler at ' +
+              options.newInstance +
+              ': ' +
+              error
+          )
+        })
     }
 
     // ///////////////////////
@@ -388,33 +473,37 @@ module.exports = {
     var showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
 
-      UI.authn.checkUser()
-        .then(webId => {
-          if (!webId) { return showSignon() }
+      UI.authn.checkUser().then(webId => {
+        if (!webId) {
+          return showSignon()
+        }
 
-          // On gh-pages, the turtle will not load properly (bad mime type)
-          // but we can trap it as being a non-editable server.
+        // On gh-pages, the turtle will not load properly (bad mime type)
+        // but we can trap it as being a non-editable server.
 
-          if (!UI.store.updater.editable(detailsDoc.uri, kb) ||
-            kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
-            // This is read-only example e.g. on github pages, etc
-            showBootstrap(div)
-            return
-          }
+        if (
+          !UI.store.updater.editable(detailsDoc.uri, kb) ||
+          kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))
+        ) {
+          // This is read-only example e.g. on github pages, etc
+          showBootstrap(div)
+          return
+        }
 
-          var ready = kb.any(subject, ns.sched('ready'))
+        var ready = kb.any(subject, ns.sched('ready'))
 
-          if (!ready) {
-            showForms()
-          } else { // no editing not author
-            getResults()
-          }
-        })
+        if (!ready) {
+          showForms()
+        } else {
+          // no editing not author
+          getResults()
+        }
+      })
     }
 
     var showSignon = function showSignon () {
       clearElement(naviMain)
-      let context = {div: div, dom: dom}
+      const context = { div: div, dom: dom }
       UI.authn.logIn(context).then(context => {
         me = context.me
         waitingForLogin = false // untested
@@ -424,13 +513,19 @@ module.exports = {
 
     var showBootstrap = function showBootstrap () {
       var div = clearElement(naviMain)
-      div.appendChild(UI.authn.newAppInstance(
-        dom, {noun: 'poll'}, initializeNewInstanceInWorkspace))
+      div.appendChild(
+        UI.authn.newAppInstance(
+          dom,
+          { noun: 'poll' },
+          initializeNewInstanceInWorkspace
+        )
+      )
 
       div.appendChild(dom.createElement('hr')) // @@
 
       var p = div.appendChild(dom.createElement('p'))
-      p.textContent = 'Where would you like to store the data for the poll?  ' +
+      p.textContent =
+        'Where would you like to store the data for the poll?  ' +
         'Give the URL of the directory where you would like the data stored.'
       var baseField = div.appendChild(dom.createElement('input'))
       baseField.setAttribute('type', 'text')
@@ -443,7 +538,7 @@ module.exports = {
       var button = div.appendChild(dom.createElement('button'))
       button.setAttribute('style', inputStyle)
       button.textContent = 'Start new poll at this URI'
-      button.addEventListener('click', function (e) {
+      button.addEventListener('click', function (_e) {
         var newBase = baseField.value
         if (newBase.slice(-1) !== '/') {
           newBase += '/'
@@ -463,12 +558,20 @@ module.exports = {
       var currentSlide = 0
       var gotDoneButton = false
       if (wizard) {
-        let forms = [ form1, form2, form3 ]
-        let slides = []
+        const forms = [form1, form2, form3]
+        const slides = []
         currentSlide = 0
         for (var f = 0; f < forms.length; f++) {
-          let slide = dom.createElement('div')
-          UI.widgets.appendForm(document, slide, {}, subject, forms[f], detailsDoc, complainIfBad)
+          const slide = dom.createElement('div')
+          UI.widgets.appendForm(
+            document,
+            slide,
+            {},
+            subject,
+            forms[f],
+            detailsDoc,
+            complainIfBad
+          )
           slides.push(slide)
         }
 
@@ -482,7 +585,8 @@ module.exports = {
           }
           if (currentSlide === slides.length - 1) {
             b2.setAttribute('disabled', '')
-            if (!gotDoneButton) { // Only expose at last slide seen
+            if (!gotDoneButton) {
+              // Only expose at last slide seen
               naviCenter.appendChild(emailButton) // could also check data shape
               naviCenter.appendChild(doneButton) // could also check data shape
               gotDoneButton = true
@@ -494,79 +598,148 @@ module.exports = {
         var b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
         b1.setAttribute('style', inputStyle)
         b1.textContent = '<- go back'
-        b1.addEventListener('click', function (e) {
-          if (currentSlide > 0) {
-            currentSlide -= 1
-            refresh()
-          }
-        }, false)
+        b1.addEventListener(
+          'click',
+          function (_e) {
+            if (currentSlide > 0) {
+              currentSlide -= 1
+              refresh()
+            }
+          },
+          false
+        )
 
-        var b2 = clearElement(naviRight).appendChild(dom.createElement('button'))
+        var b2 = clearElement(naviRight).appendChild(
+          dom.createElement('button')
+        )
         b2.setAttribute('style', inputStyle)
         b2.textContent = 'continue ->'
-        b2.addEventListener('click', function (e) {
-          if (currentSlide < slides.length - 1) {
-            currentSlide += 1
-            refresh()
-          }
-        }, false)
+        b2.addEventListener(
+          'click',
+          function (_e) {
+            if (currentSlide < slides.length - 1) {
+              currentSlide += 1
+              refresh()
+            }
+          },
+          false
+        )
 
         refresh()
-      } else { // not wizard one big form
+      } else {
+        // not wizard one big form
         // @@@ create the initial config doc if not exist
         var table = div.appendChild(dom.createElement('table'))
-        UI.widgets.appendForm(document, table, {}, subject, form1, detailsDoc, complainIfBad)
-        UI.widgets.appendForm(document, table, {}, subject, form2, detailsDoc, complainIfBad)
-        UI.widgets.appendForm(document, table, {}, subject, form3, detailsDoc, complainIfBad)
+        UI.widgets.appendForm(
+          document,
+          table,
+          {},
+          subject,
+          form1,
+          detailsDoc,
+          complainIfBad
+        )
+        UI.widgets.appendForm(
+          document,
+          table,
+          {},
+          subject,
+          form2,
+          detailsDoc,
+          complainIfBad
+        )
+        UI.widgets.appendForm(
+          document,
+          table,
+          {},
+          subject,
+          form3,
+          detailsDoc,
+          complainIfBad
+        )
         naviCenter.appendChild(doneButton) // could also check data shape
       }
       // @@@  link config to results
 
       var insertables = []
-      insertables.push($rdf.st(subject, ns.sched('availabilityOptions'), ns.sched('YesNoMaybe'), detailsDoc))
-      insertables.push($rdf.st(subject, ns.sched('ready'), new Date(), detailsDoc))
-      insertables.push($rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)) // @@ also link in results
+      insertables.push(
+        $rdf.st(
+          subject,
+          ns.sched('availabilityOptions'),
+          ns.sched('YesNoMaybe'),
+          detailsDoc
+        )
+      )
+      insertables.push(
+        $rdf.st(subject, ns.sched('ready'), new Date(), detailsDoc)
+      )
+      insertables.push(
+        $rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)
+      ) // @@ also link in results
 
       doneButton.setAttribute('style', inputStyle)
       doneButton.textContent = 'Go to poll'
-      doneButton.addEventListener('click', function (e) {
-        if (kb.any(subject, ns.sched('ready'))) { // already done
-          getResults()
-          naviRight.appendChild(emailButton)
-        } else {
-          naviRight.appendChild(emailButton)
-          UI.store.updater.update([], insertables, function (uri, success, errorBody) {
-            if (!success) {
-              complainIfBad(success, errorBody)
-            } else {
-              // naviRight.appendChild(emailButton)
-              getResults()
-            }
-          })
-        }
-      }, false)
+      doneButton.addEventListener(
+        'click',
+        function (_e) {
+          if (kb.any(subject, ns.sched('ready'))) {
+            // already done
+            getResults()
+            naviRight.appendChild(emailButton)
+          } else {
+            naviRight.appendChild(emailButton)
+            UI.store.updater.update([], insertables, function (
+              uri,
+              success,
+              errorBody
+            ) {
+              if (!success) {
+                complainIfBad(success, errorBody)
+              } else {
+                // naviRight.appendChild(emailButton)
+                getResults()
+              }
+            })
+          }
+        },
+        false
+      )
 
       var emailButton = dom.createElement('button')
       emailButton.setAttribute('style', inputStyle)
-      let emailIcon = emailButton.appendChild(dom.createElement('img'))
+      const emailIcon = emailButton.appendChild(dom.createElement('img'))
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
       emailIcon.setAttribute('style', buttonIconStyle)
       // emailButton.textContent = 'email invitations'
-      emailButton.addEventListener('click', function (e) {
-        var title = kb.anyValue(subject, ns.cal('summary')) ||
-          kb.anyValue(subject, ns.dc('title')) || ''
-        var mailto = 'mailto:' +
-          kb.each(subject, ns.sched('invitee')).map(function (who) {
-            var mbox = kb.any(who, ns.foaf('mbox'))
-            return mbox ? mbox.uri.replace('mailto:', '') : ''
-          }).join(',') +
-          '?subject=' + encodeURIComponent(title + '-- When can we meet?') +
-          '&body=' + encodeURIComponent(title + '\n\nWhen can you?\n\nSee ' + subject + '\n')
+      emailButton.addEventListener(
+        'click',
+        function (_e) {
+          var title =
+            kb.anyValue(subject, ns.cal('summary')) ||
+            kb.anyValue(subject, ns.dc('title')) ||
+            ''
+          var mailto =
+            'mailto:' +
+            kb
+              .each(subject, ns.sched('invitee'))
+              .map(function (who) {
+                var mbox = kb.any(who, ns.foaf('mbox'))
+                return mbox ? mbox.uri.replace('mailto:', '') : ''
+              })
+              .join(',') +
+            '?subject=' +
+            encodeURIComponent(title + '-- When can we meet?') +
+            '&body=' +
+            encodeURIComponent(
+              title + '\n\nWhen can you?\n\nSee ' + subject + '\n'
+            )
           // @@ assumed there is a data browser
 
-        console.log('Mail: ' + mailto)
-        window.location.href = mailto
-      }, false)
+          console.log('Mail: ' + mailto)
+          window.location.href = mailto
+        },
+        false
+      )
     } // showForms
 
     // Ask for each day, what times .. @@ to be added some time
@@ -708,21 +881,39 @@ module.exports = {
     var getResults = function () {
       fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
         if (!ok) {
-          if (response.status === 404) { // /  Check explicitly for 404 error
+          if (response.status === 404) {
+            // /  Check explicitly for 404 error
             console.log('Initializing details file ' + resultsDoc)
-            updater.put(resultsDoc, [], 'text/turtle', function (uri2, ok, message) {
+            updater.put(resultsDoc, [], 'text/turtle', function (
+              uri2,
+              ok,
+              message
+            ) {
               if (ok) {
                 clearElement(naviMain)
                 showResults()
               } else {
-                complainIfBad(ok, 'FAILED to create results file at: ' + resultsDoc.uri + ' : ' + message)
-                console.log('FAILED to craete results file at: ' + resultsDoc.uri + ' : ' + message)
+                complainIfBad(
+                  ok,
+                  'FAILED to create results file at: ' +
+                    resultsDoc.uri +
+                    ' : ' +
+                    message
+                )
+                console.log(
+                  'FAILED to craete results file at: ' +
+                    resultsDoc.uri +
+                    ' : ' +
+                    message
+                )
               }
             })
-          } else { // Other error, not 404 -- do not try to overwite the file
+          } else {
+            // Other error, not 404 -- do not try to overwite the file
             complainIfBad(ok, 'FAILED to read results file: ' + body)
           }
-        } else { // Happy read
+        } else {
+          // Happy read
           clearElement(naviMain)
           showResults()
         }
@@ -741,8 +932,13 @@ module.exports = {
       var location = kb.any(invitation, ns.cal('location'))
       var div = naviMain
       if (title) div.appendChild(dom.createElement('h3')).textContent = title
-      if (location) div.appendChild(dom.createElement('address')).textContent = location.value
-      if (comment) div.appendChild(dom.createElement('p')).textContent = comment.value
+      if (location) {
+        div.appendChild(dom.createElement('address')).textContent =
+          location.value
+      }
+      if (comment) {
+        div.appendChild(dom.createElement('p')).textContent = comment.value
+      }
       var author = kb.any(invitation, ns.dc('author'))
       if (author) {
         var authorName = kb.any(author, ns.foaf('name'))
@@ -755,7 +951,7 @@ module.exports = {
       var v = {}
       var vs = ['time', 'author', 'value', 'resp', 'cell']
       vs.map(function (x) {
-        query.vars.push(v[x] = $rdf.variable(x))
+        query.vars.push((v[x] = $rdf.variable(x)))
       })
       query.pat.add(invitation, ns.sched('response'), v.resp)
       query.pat.add(v.resp, ns.dc('author'), v.author)
@@ -767,38 +963,58 @@ module.exports = {
 
       var options = {}
       options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
-      options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
+      options.set_x = options.set_x.map(function (opt) {
+        return kb.any(opt, ns.cal('dtstart'))
+      })
 
       options.set_y = kb.each(subject, ns.sched('response'))
-      options.set_y = options.set_y.map(function (resp) { return kb.any(resp, ns.dc('author')) })
+      options.set_y = options.set_y.map(function (resp) {
+        return kb.any(resp, ns.dc('author'))
+      })
 
-      var possibleTimes = kb.each(invitation, ns.sched('option'))
-        .map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
+      var possibleTimes = kb
+        .each(invitation, ns.sched('option'))
+        .map(function (opt) {
+          return kb.any(opt, ns.cal('dtstart'))
+        })
 
       var displayTheMatrix = function () {
-        var matrix = div.appendChild(UI.matrix.matrixForQuery(
-          dom, query, v.time, v.author, v.value, options, function () {}))
+        var matrix = div.appendChild(
+          UI.matrix.matrixForQuery(
+            dom,
+            query,
+            v.time,
+            v.author,
+            v.value,
+            options,
+            function () {}
+          )
+        )
 
         matrix.setAttribute('class', 'matrix')
 
         var refreshButton = dom.createElement('button')
         refreshButton.setAttribute('style', inputStyle)
         // refreshButton.textContent = 'refresh' // noun_479395.svg
-        let refreshIcon = dom.createElement('img')
+        const refreshIcon = dom.createElement('img')
         refreshIcon.setAttribute('src', UI.icons.iconBase + 'noun_479395.svg')
         refreshIcon.setAttribute('style', buttonIconStyle)
         refreshButton.appendChild(refreshIcon)
-        refreshButton.addEventListener('click', function (e) {
-          refreshButton.disabled = true
-          UI.store.fetcher.refresh(resultsDoc, function (ok, body) {
-            if (!ok) {
-              console.log('Cant refresh matrix' + body)
-            } else {
-              matrix.refresh()
-              refreshButton.disabled = false
-            }
-          })
-        }, false)
+        refreshButton.addEventListener(
+          'click',
+          function (_e) {
+            refreshButton.disabled = true
+            UI.store.fetcher.refresh(resultsDoc, function (ok, body) {
+              if (!ok) {
+                console.log('Cant refresh matrix' + body)
+              } else {
+                matrix.refresh()
+                refreshButton.disabled = false
+              }
+            })
+          },
+          false
+        )
 
         clearElement(naviCenter)
         naviCenter.appendChild(refreshButton)
@@ -815,14 +1031,20 @@ module.exports = {
       UI.authn.logIn(context).then(context => {
         const me = context.me
         var doc = resultsDoc
-        options.set_y = options.set_y.filter(function (z) { return (!z.sameTerm(me)) })
+        options.set_y = options.set_y.filter(function (z) {
+          return !z.sameTerm(me)
+        })
         options.set_y.push(me) // Put me on the end
 
         options.cellFunction = function (cell, x, y, value) {
           if (value !== null) {
-            kb.fetcher.nowOrWhenFetched(value.uri.split('#')[0], undefined, function (ok, error) {
-              if (ok) refreshCellColor(cell, value)
-            })
+            kb.fetcher.nowOrWhenFetched(
+              value.uri.split('#')[0],
+              undefined,
+              function (ok, _error) {
+                if (ok) refreshCellColor(cell, value)
+              }
+            )
           }
           if (y.sameTerm(me)) {
             var callbackFunction = function () {
@@ -831,8 +1053,16 @@ module.exports = {
             var selectOptions = {}
             var predicate = ns.sched('availabilty')
             var cellSubject = dataPointForNT[x.toNT()]
-            var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
-              possibleAvailabilities, selectOptions, resultsDoc, callbackFunction)
+            var selector = UI.widgets.makeSelectForOptions(
+              dom,
+              kb,
+              cellSubject,
+              predicate,
+              possibleAvailabilities,
+              selectOptions,
+              resultsDoc,
+              callbackFunction
+            )
             cell.appendChild(selector)
           } else if (value !== null) {
             cell.textContent = UI.utils.label(value)
@@ -852,7 +1082,9 @@ module.exports = {
         var id = UI.widgets.newThing(doc).uri
         if (myResponse === null) {
           myResponse = $rdf.sym(id + '_response')
-          insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
+          insertables.push(
+            $rdf.st(invitation, ns.sched('response'), myResponse, doc)
+          )
           insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
         } else {
           var dps = kb.each(myResponse, ns.sched('cell'))
@@ -864,19 +1096,28 @@ module.exports = {
         for (var j = 0; j < possibleTimes.length; j++) {
           if (dataPointForNT[possibleTimes[j].toNT()]) continue
           var dataPoint = $rdf.sym(id + '_' + j)
-          insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
-          insertables.push($rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)) // @@
+          insertables.push(
+            $rdf.st(myResponse, ns.sched('cell'), dataPoint, doc)
+          )
+          insertables.push(
+            $rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)
+          ) // @@
           dataPointForNT[possibleTimes[j].toNT()] = dataPoint
         }
         if (insertables.length) {
-          UI.store.updater.update([], insertables, function (uri, success, errorBody) {
+          UI.store.updater.update([], insertables, function (
+            uri,
+            success,
+            errorBody
+          ) {
             if (!success) {
               complainIfBad(success, errorBody)
             } else {
               displayTheMatrix()
             }
           })
-        } else { // no insertables
+        } else {
+          // no insertables
           displayTheMatrix()
         }
       })
@@ -888,14 +1129,18 @@ module.exports = {
         var editButton = dom.createElement('button')
         editButton.setAttribute('style', inputStyle)
         // editButton.textContent = '(Modify the poll)' // noun_344563.svg
-        let editIcon = dom.createElement('img')
+        const editIcon = dom.createElement('img')
         editIcon.setAttribute('src', UI.icons.iconBase + 'noun_344563.svg')
         editIcon.setAttribute('style', buttonIconStyle)
         editButton.appendChild(editIcon)
-        editButton.addEventListener('click', function (e) {
-          clearElement(div)
-          showForms()
-        }, false)
+        editButton.addEventListener(
+          'click',
+          function (_e) {
+            clearElement(div)
+            showForms()
+          },
+          false
+        )
         clearElement(naviLeft)
         naviLeft.appendChild(editButton)
       }
@@ -908,7 +1153,10 @@ module.exports = {
 
     var div = dom.createElement('div')
     var structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
-    structure.setAttribute('style', 'background-color: white; min-width: 40em; min-height: 13em;')
+    structure.setAttribute(
+      'style',
+      'background-color: white; min-width: 40em; min-height: 13em;'
+    )
 
     var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
@@ -930,7 +1178,10 @@ module.exports = {
 
     var naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.setAttribute('class', 'naviMenu')
-    naviMenu.setAttribute('style', ' text-align: middle; vertical-align: middle; padding-top: 4em; ')
+    naviMenu.setAttribute(
+      'style',
+      ' text-align: middle; vertical-align: middle; padding-top: 4em; '
+    )
     //    naviMenu.setAttribute('style', 'margin-top: 3em;')
     var naviLeft = naviMenu.appendChild(dom.createElement('td'))
     var naviCenter = naviMenu.appendChild(dom.createElement('td'))

@@ -3,7 +3,7 @@ declare module 'solid-namespace' {
 
   type RDFLibSubset = { namedNode: (value: string) => NamedNode }
   type toNamedNode = (label: string) => NamedNode
-  export type Namespaces = {[alias: string]: toNamedNode}
+  export type Namespaces = { [alias: string]: toNamedNode }
 
-  export default function vocab(rdf: RDFLibSubset): Namespaces
+  export default function vocab (rdf: RDFLibSubset): Namespaces
 }

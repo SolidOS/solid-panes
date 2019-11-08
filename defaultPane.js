@@ -1,12 +1,13 @@
 /*   Default Pane
-**
-**  This outline pane contains the properties which are
-**  normally displayed to the user. See also: internalPane
-** This pane hides the ones considered too low-level for the normal user.
-*/
+ **
+ **  This outline pane contains the properties which are
+ **  normally displayed to the user. See also: internalPane
+ ** This pane hides the ones considered too low-level for the normal user.
+ */
 
 const UI = require('solid-ui')
 const panes = require('pane-registry')
+const $rdf = require('rdflib')
 const ns = UI.ns
 
 module.exports = {
@@ -16,15 +17,21 @@ module.exports = {
 
   audience: [ns.solid('Developer')],
 
-  label: function (subject) { return 'about ' },
+  label: function (_subject) {
+    return 'about '
+  },
 
   render: function (subject, dom) {
     var filter = function (pred, inverse) {
       if (typeof panes.internal.predicates[pred.uri] !== 'undefined') {
         return false
       }
-      if (inverse && (pred.uri ===
-        'http://www.w3.org/1999/02/22-rdf-syntax-ns#type')) return false
+      if (
+        inverse &&
+        pred.uri === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type'
+      ) {
+        return false
+      }
       return true
     }
 
@@ -41,34 +48,47 @@ module.exports = {
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = kb.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)
-    if ((subject.termType === 'Literal') && (subject.value.slice(0, 7) === 'http://')) {
-      outliner.appendPropertyTRs(div,
+    if (
+      subject.termType === 'Literal' &&
+      subject.value.slice(0, 7) === 'http://'
+    ) {
+      outliner.appendPropertyTRs(
+        div,
         [$rdf.st(kb.sym(subject.value), UI.ns.link('uri'), subject)],
-        true, filter)
+        true,
+        filter
+      )
     }
-    if ((subject.termType === 'NamedNode' &&
-      kb.updater.editable(UI.rdf.Util.uri.docpart(subject.uri), kb)) ||
-        (subject.termType === 'BlankNode' &&
+    if (
+      (subject.termType === 'NamedNode' &&
+        kb.updater.editable(UI.rdf.Util.uri.docpart(subject.uri), kb)) ||
+      (subject.termType === 'BlankNode' &&
         kb.anyStatementMatching(subject) &&
         kb.anyStatementMatching(subject).why &&
         kb.anyStatementMatching(subject).why.uri &&
-        kb.updater.editable(kb.anyStatementMatching(subject).why.uri)
+        kb.updater.editable(kb.anyStatementMatching(subject).why.uri))
       // check the document containing something about of the bnode @@ what about as object?
-      /*  ! && HCIoptions["bottom insert highlights"].enabled  */)) {
+      /*  ! && HCIoptions["bottom insert highlights"].enabled  */
+    ) {
       var holdingTr = dom.createElement('tr') // these are to minimize required changes
       var holdingTd = dom.createElement('td') // in userinput.js
       holdingTd.setAttribute('colspan', '2')
       holdingTd.setAttribute('notSelectable', 'true')
       var img = dom.createElement('img')
       img.src = UI.icons.originalIconBase + 'tango/22-list-add-new.png'
-      img.addEventListener('click', function addNewTripleIconMouseDownListener (e) {
+      img.addEventListener('click', function addNewTripleIconMouseDownListener (
+        e
+      ) {
         outliner.UserInput.addNewPredicateObject(e)
         e.stopPropagation()
         e.preventDefault()
       })
       img.className = 'bottom-border-active'
       // img.addEventListener('click', thisOutline.UserInput.addNewPredicateObject,false)
-      div.appendChild(holdingTr).appendChild(holdingTd).appendChild(img)
+      div
+        .appendChild(holdingTr)
+        .appendChild(holdingTd)
+        .appendChild(img)
     }
     return div
   }
