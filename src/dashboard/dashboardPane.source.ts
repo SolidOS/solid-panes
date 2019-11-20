@@ -1,11 +1,11 @@
 import { PaneDefinition, SolidSession } from '../types'
-import UI from 'solid-ui'
+import { authn, icons, store } from 'solid-ui'
 import panes from 'pane-registry'
 import { NamedNode, sym } from 'rdflib'
 import { generateHomepage } from './homepage'
 
 export const dashboardPaneSource: PaneDefinition = {
-  icon: UI.icons.iconBase + 'noun_547570.svg',
+  icon: icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
   label: subject => {
     if (subject.uri === subject.site().uri) {
@@ -15,7 +15,7 @@ export const dashboardPaneSource: PaneDefinition = {
   },
   render: (subject, dom) => {
     const container = dom.createElement('div')
-    UI.authn.solidAuthClient.trackSession(async (session: SolidSession) => {
+    authn.solidAuthClient.trackSession(async (session: SolidSession) => {
       container.innerHTML = ''
       buildPage(container, session ? sym(session.webId) : null, dom, subject)
     })
@@ -51,7 +51,7 @@ function buildHomePage (container: HTMLElement, subject: NamedNode) {
   link.rel = 'stylesheet'
   link.href = '/common/css/bootstrap.min.css'
   shadow.appendChild(link)
-  generateHomepage(subject, UI.store, UI.store.fetcher).then(homepage =>
+  generateHomepage(subject, store, store.fetcher).then(homepage =>
     shadow.appendChild(homepage)
   )
 }

@@ -1,4 +1,4 @@
-import UI from 'solid-ui'
+import { authn, icons, ns, pad, store, widgets } from 'solid-ui'
 import { PaneDefinition } from '../types'
 // @ts-ignore
 // @@ TODO: serialize is not part rdflib type definitions
@@ -7,11 +7,10 @@ import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
 /*   pad Pane
  **
  */
-var ns = UI.ns
 
 const paneDef: PaneDefinition = {
   // icon:  (module.__dirname || __dirname) + 'images/ColourOn.png',
-  icon: UI.icons.iconBase + 'noun_79217.svg',
+  icon: icons.iconBase + 'noun_79217.svg',
 
   name: 'pad',
 
@@ -19,8 +18,7 @@ const paneDef: PaneDefinition = {
 
   // Does the subject deserve an pad pane?
   label: function (subject) {
-    var kb = UI.store
-    var t = kb.findTypeURIs(subject)
+    var t = store.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
       return 'pad'
     }
@@ -30,36 +28,34 @@ const paneDef: PaneDefinition = {
   mintClass: ns.pad('Notepad'),
 
   mintNew: function (newPaneOptions: any) {
-    var kb = UI.store
-    var ns = UI.ns
-    var updater = kb.updater
+    var updater = store.updater
     if (newPaneOptions.me && !newPaneOptions.me.uri)
       throw new Error('notepad mintNew:  Invalid userid')
 
     var newInstance = (newPaneOptions.newInstance =
       newPaneOptions.newInstance ||
-      kb.sym(newPaneOptions.newBase + 'index.ttl#this'))
+      store.sym(newPaneOptions.newBase + 'index.ttl#this'))
     // var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
     var newPadDoc = newInstance.doc()
 
-    kb.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc)
-    kb.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
-    kb.add(newInstance, ns.dc('created'), new Date(), newPadDoc)
+    store.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc)
+    store.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
+    store.add(newInstance, ns.dc('created'), new Date(), newPadDoc)
     if (newPaneOptions.me) {
-      kb.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc)
+      store.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc)
     }
     // kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc);
     // linked list empty @@
-    var chunk = kb.sym(newInstance.uri + '_line0')
-    kb.add(newInstance, ns.pad('next'), chunk, newPadDoc) // Linked list has one entry
-    kb.add(chunk, ns.pad('next'), newInstance, newPadDoc)
-    kb.add(chunk, ns.dc('author'), newPaneOptions.me, newPadDoc)
-    kb.add(chunk, ns.sioc('content'), '', newPadDoc)
+    var chunk = store.sym(newInstance.uri + '_line0')
+    store.add(newInstance, ns.pad('next'), chunk, newPadDoc) // Linked list has one entry
+    store.add(chunk, ns.pad('next'), newInstance, newPadDoc)
+    store.add(chunk, ns.dc('author'), newPaneOptions.me, newPadDoc)
+    store.add(chunk, ns.sioc('content'), '', newPadDoc)
 
     return new Promise(function (resolve, reject) {
       updater.put(
         newPadDoc,
-        kb.statementsMatching(undefined, undefined, undefined, newPadDoc),
+        store.statementsMatching(undefined, undefined, undefined, newPadDoc),
         'text/turtle',
         function (uri2: string, ok: boolean, message: string) {
           if (ok) {
@@ -78,7 +74,7 @@ const paneDef: PaneDefinition = {
     // Utility functions
     var complainIfBad = function (ok: boolean, message: string) {
       if (!ok) {
-        div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
+        div.appendChild(widgets.errorMessageBlock(dom, message, 'pink'))
       }
     }
 
@@ -103,7 +99,7 @@ const paneDef: PaneDefinition = {
       var a = g.sym(aclURI + '#a1')
       var acl = g.sym(aclURI)
       var doc = g.sym(docURI)
-      g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
+      g.add(a, ns.rdf('type'), auth('Authorization'), acl)
       g.add(a, auth('accessTo'), doc, acl)
       g.add(a, auth('agent'), me, acl)
       g.add(a, auth('mode'), auth('Read'), acl)
@@ -111,7 +107,7 @@ const paneDef: PaneDefinition = {
       g.add(a, auth('mode'), auth('Control'), acl)
 
       a = g.sym(aclURI + '#a2')
-      g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
+      g.add(a, ns.rdf('type'), auth('Authorization'), acl)
       g.add(a, auth('accessTo'), doc, acl)
       g.add(a, auth('agentClass'), ns.foaf('Agent'), acl)
       g.add(a, auth('mode'), auth('Read'), acl)
@@ -134,9 +130,9 @@ const paneDef: PaneDefinition = {
       allWrite: boolean,
       callbackFunction: Function
     ) {
-      var aclDoc = kb.any(
-        kb.sym(docURI),
-        kb.sym('http://www.iana.org/assignments/link-relations/acl')
+      var aclDoc = store.any(
+        store.sym(docURI),
+        store.sym('http://www.iana.org/assignments/link-relations/acl')
       ) // @@ check that this get set by web.js
 
       if (aclDoc) {
@@ -159,9 +155,9 @@ const paneDef: PaneDefinition = {
             callbackFunction(false, 'Getting headers for ACL: ' + err)
           })
           .then(() => {
-            var aclDoc = kb.any(
-              kb.sym(docURI),
-              kb.sym('http://www.iana.org/assignments/link-relations/acl')
+            var aclDoc = store.any(
+              store.sym(docURI),
+              store.sym('http://www.iana.org/assignments/link-relations/acl')
             )
 
             if (!aclDoc) {
@@ -204,11 +200,7 @@ const paneDef: PaneDefinition = {
       var div = clearElement(container)
       var appDetails = { noun: 'notepad' }
       div.appendChild(
-        UI.authn.newAppInstance(
-          dom,
-          appDetails,
-          initializeNewInstanceInWorkspace
-        )
+        authn.newAppInstance(dom, appDetails, initializeNewInstanceInWorkspace)
       )
 
       div.appendChild(dom.createElement('hr')) // @@
@@ -240,7 +232,7 @@ const paneDef: PaneDefinition = {
 
     //  Create new document files for new instance of app
     var initializeNewInstanceInWorkspace = function (ws: NamedNode) {
-      var newBase = kb.any(ws, ns.space('uriPrefix'))
+      var newBase = store.any(ws, ns.space('uriPrefix'))
       if (!newBase) {
         newBase = ws.uri.split('#')[0]
       } else {
@@ -263,14 +255,12 @@ const paneDef: PaneDefinition = {
       var here = sym(thisInstance.uri.split('#')[0])
       var base = here // @@ ???
 
-      var kb = UI.store
-
-      var newPadDoc = kb.sym(newBase + 'pad.ttl')
-      var newIndexDoc = kb.sym(newBase + 'index.html')
+      var newPadDoc = store.sym(newBase + 'pad.ttl')
+      var newIndexDoc = store.sym(newBase + 'index.html')
 
       var toBeCopied = [{ local: 'index.html', contentType: 'text/html' }]
 
-      let newInstance = kb.sym(newPadDoc.uri + '#thisPad')
+      let newInstance = store.sym(newPadDoc.uri + '#thisPad')
 
       // log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
 
@@ -298,13 +288,13 @@ const paneDef: PaneDefinition = {
               })
             }
 
-            kb.fetcher
+            store.fetcher
               .webCopy(
                 base + item.local,
                 newBase + item.local,
                 item.contentType
               )
-              .then(() => UI.authn.checkUser())
+              .then(() => authn.checkUser())
               .then((webId: string) => {
                 me = webId
 
@@ -325,21 +315,21 @@ const paneDef: PaneDefinition = {
       }
 
       agenda.push(function createNewPadDataFile () {
-        kb.add(newInstance, ns.rdf('type'), PAD('Notepad'), newPadDoc)
+        store.add(newInstance, ns.rdf('type'), PAD('Notepad'), newPadDoc)
 
-        kb.add(newInstance, ns.dc('created'), new Date(), newPadDoc)
+        store.add(newInstance, ns.dc('created'), new Date(), newPadDoc)
         if (me) {
-          kb.add(newInstance, ns.dc('author'), me, newPadDoc)
+          store.add(newInstance, ns.dc('author'), me, newPadDoc)
         }
-        kb.add(newInstance, PAD('next'), newInstance, newPadDoc) // linked list empty
+        store.add(newInstance, PAD('next'), newInstance, newPadDoc) // linked list empty
 
         // Keep a paper trail   @@ Revisit when we have non-public ones @@ Privacy
-        kb.add(newInstance, UI.ns.space('inspiration'), thisInstance, padDoc)
-        kb.add(newInstance, UI.ns.space('inspiration'), thisInstance, newPadDoc)
+        store.add(newInstance, ns.space('inspiration'), thisInstance, padDoc)
+        store.add(newInstance, ns.space('inspiration'), thisInstance, newPadDoc)
 
         updater.put(
           newPadDoc,
-          kb.statementsMatching(undefined, undefined, undefined, newPadDoc),
+          store.statementsMatching(undefined, undefined, undefined, newPadDoc),
           'text/turtle',
           function (_uri2: string, ok: boolean, message: string) {
             if (ok) {
@@ -395,24 +385,24 @@ const paneDef: PaneDefinition = {
     var showResults = function (exists: boolean) {
       console.log('showResults()')
 
-      me = UI.authn.currentUser()
+      me = authn.currentUser()
 
-      UI.authn.checkUser().then((webId: string) => {
+      authn.checkUser().then((webId: string) => {
         me = webId
       })
 
       var title =
-        kb.any(subject, ns.dc('title')) || kb.any(subject, ns.vcard('fn'))
+        store.any(subject, ns.dc('title')) || store.any(subject, ns.vcard('fn'))
       if (paneOptions.solo && typeof window !== 'undefined' && title) {
         window.document.title = title.value
       }
       options.exists = exists
-      padEle = UI.pad.notepad(dom, padDoc, subject, me, options)
+      padEle = pad.notepad(dom, padDoc, subject, me, options)
       naviMain.appendChild(padEle)
 
       var partipationTarget =
-        kb.any(subject, ns.meeting('parentMeeting')) || subject
-      UI.pad.manageParticipation(
+        store.any(subject, ns.meeting('parentMeeting')) || subject
+      pad.manageParticipation(
         dom,
         naviMiddle2,
         padDoc,
@@ -421,7 +411,7 @@ const paneDef: PaneDefinition = {
         options
       )
 
-      UI.store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
+      store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
     }
 
     // Read or create empty data file
@@ -466,7 +456,7 @@ const paneDef: PaneDefinition = {
         } else {
           // Happy read
           clearElement(naviMain)
-          if (kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
+          if (store.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))) {
             showBootstrap(subject, naviMain, 'pad')
           }
           showResults(true)
@@ -478,10 +468,8 @@ const paneDef: PaneDefinition = {
     //  Body of Pane
     var appPathSegment = 'app-pad.timbl.com' // how to allocate this string and connect to
 
-    var kb = UI.store
-    var fetcher = UI.store.fetcher
-    var updater = UI.store.updater
-    var ns = UI.ns
+    var fetcher = store.fetcher
+    var updater = store.updater
     var me: any
 
     var PAD = Namespace('http://www.w3.org/ns/pim/pad#')

@@ -1,17 +1,13 @@
 import { PaneDefinition } from '../types'
-import UI from 'solid-ui'
-import namespace from 'solid-namespace'
-import { NamedNode, parse, namedNode, IndexedFormula } from 'rdflib'
+import { authn, icons, ns, store, widgets } from 'solid-ui'
+import { NamedNode, parse, IndexedFormula } from 'rdflib'
 import { renderTrustedApplicationsOptions } from './trustedApplications/trustedApplicationsPane'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
 
-const kb = UI.store
-const ns = namespace({ namedNode } as any)
-
 export const basicPreferencesPane: PaneDefinition = {
-  icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg',
+  icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
   name: 'basicPreferences',
   label: _subject => {
     return null
@@ -22,7 +18,7 @@ export const basicPreferencesPane: PaneDefinition = {
   render: (subject: NamedNode, dom: HTMLDocument) => {
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
-      container.appendChild(UI.widgets.errorMessageBlock(dom, mess, '#fee'))
+      container.appendChild(widgets.errorMessageBlock(dom, mess, '#fee'))
     }
 
     const container = dom.createElement('div')
@@ -31,23 +27,23 @@ export const basicPreferencesPane: PaneDefinition = {
 
     function loadData (doc: NamedNode, turtle: String) {
       doc = doc.doc() // remove # from URI if nec
-      if (!kb.holds(undefined, undefined, undefined, doc)) {
+      if (!store.holds(undefined, undefined, undefined, doc)) {
         // If not loaded already
-        ;(parse as any)(turtle, kb, doc.uri, 'text/turtle', null) // Load form directly
+        ;(parse as any)(turtle, store, doc.uri, 'text/turtle', null) // Load form directly
       }
     }
-    const preferencesForm = kb.sym(
+    const preferencesForm = store.sym(
       'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this'
     )
     loadData(preferencesForm, preferencesFormText)
 
-    const ontologyExtra = kb.sym(
+    const ontologyExtra = store.sym(
       'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597-ONT'
     )
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const context = await UI.authn.logInLoadPreferences({
+      const context = await authn.logInLoadPreferences({
         dom,
         div: container
       })
@@ -59,8 +55,8 @@ export const basicPreferencesPane: PaneDefinition = {
         )
         return
       }
-      addDeletionLinks(container, kb, context.me)
-      const appendedForm = UI.widgets.appendForm(
+      addDeletionLinks(container, store, context.me)
+      const appendedForm = widgets.appendForm(
         dom,
         formArea,
         {},

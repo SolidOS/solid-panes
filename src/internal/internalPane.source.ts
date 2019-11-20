@@ -6,14 +6,12 @@
 /* global alert confirm */
 
 import { PaneDefinition } from '../types'
-import UI from 'solid-ui'
+import { icons, ns, store, widgets } from 'solid-ui'
 import panes from 'pane-registry'
 import { IndexedFormula, NamedNode } from 'rdflib'
 
-const ns = UI.ns
-
 const pane: PaneDefinition = {
-  icon: UI.icons.originalIconBase + 'tango/22-emblem-system.png',
+  icon: icons.originalIconBase + 'tango/22-emblem-system.png',
 
   name: 'internal',
 
@@ -24,10 +22,8 @@ const pane: PaneDefinition = {
   },
 
   render: function (subject, dom) {
-    var $r = UI.rdf
-    var kb = UI.store
-    subject = kb.canon(subject)
-    var types = kb.findTypeURIs(subject)
+    subject = store.canon(subject)
+    var types = store.findTypeURIs(subject)
 
     function filter (pred: NamedNode) {
       if (types['http://www.w3.org/2007/ont/link#ProtocolEvent']) return true // display everything for them
@@ -94,11 +90,11 @@ const pane: PaneDefinition = {
       const deleteCell = controlRow.appendChild(dom.createElement('td'))
       const isFolder =
         (subject.uri && subject.uri.endsWith('/')) ||
-        kb.holds(subject, ns.rdf('type'), ns.ldp('Container'))
+        store.holds(subject, ns.rdf('type'), ns.ldp('Container'))
       const noun = isFolder ? 'folder' : 'file'
       if (!isProtectedUri(subject)) {
         console.log(subject)
-        var deleteButton = UI.widgets.deleteButtonWithCheck(
+        var deleteButton = widgets.deleteButtonWithCheck(
           dom,
           deleteCell,
           noun,
@@ -112,8 +108,8 @@ const pane: PaneDefinition = {
             )
               return
             var promise = isFolder
-              ? deleteRecursive(kb, subject)
-              : kb.fetcher.webOperation('DELETE', subject.uri)
+              ? deleteRecursive(store, subject)
+              : store.fetcher.webOperation('DELETE', subject.uri)
             promise
               .then(() => {
                 var str = 'Deleted: ' + subject
@@ -132,14 +128,14 @@ const pane: PaneDefinition = {
       }
 
       const refreshCell = controlRow.appendChild(dom.createElement('td'))
-      const refreshButton = UI.widgets.button(
+      const refreshButton = widgets.button(
         dom,
-        UI.icons.iconBase + 'noun_479395.svg',
+        icons.iconBase + 'noun_479395.svg',
         'refresh'
       )
       refreshCell.appendChild(refreshButton)
       refreshButton.addEventListener('click', () => {
-        kb.fetcher.refresh(subject, function (ok: boolean, errm: string) {
+        store.fetcher.refresh(subject, function (ok: boolean, errm: string) {
           let str
           if (ok) {
             str = 'Refreshed OK: ' + subject
@@ -152,33 +148,33 @@ const pane: PaneDefinition = {
       })
     }
 
-    var plist = kb.statementsMatching(subject)
+    var plist = store.statementsMatching(subject)
     var docURI = ''
     if (subject.uri) {
       plist.push(
-        $r.st(
+        store.st(
           subject,
-          kb.sym('http://www.w3.org/2007/ont/link#uri'),
+          store.sym('http://www.w3.org/2007/ont/link#uri'),
           subject.uri,
-          UI.store.fetcher.appNode
+          store.fetcher.appNode
         )
       )
       if (subject.uri.indexOf('#') >= 0) {
         docURI = subject.uri.split('#')[0]
         plist.push(
-          $r.st(
+          store.st(
             subject,
-            kb.sym('http://www.w3.org/2007/ont/link#documentURI'),
+            store.sym('http://www.w3.org/2007/ont/link#documentURI'),
             subject.uri.split('#')[0],
-            UI.store.fetcher.appNode
+            store.fetcher.appNode
           )
         )
         plist.push(
-          $r.st(
+          store.st(
             subject,
-            kb.sym('http://www.w3.org/2007/ont/link#document'),
-            kb.sym(subject.uri.split('#')[0]),
-            UI.store.fetcher.appNode
+            store.sym('http://www.w3.org/2007/ont/link#document'),
+            store.sym(subject.uri.split('#')[0]),
+            store.fetcher.appNode
           )
         )
       } else {
@@ -186,21 +182,21 @@ const pane: PaneDefinition = {
       }
     }
     if (docURI) {
-      var ed = UI.store.updater.editable(docURI)
+      var ed = store.updater.editable(docURI)
       if (ed) {
         plist.push(
-          $r.st(
+          store.st(
             subject,
-            kb.sym('http://www.w3.org/ns/rww#editable'),
-            kb.literal(ed),
-            UI.store.fetcher.appNode
+            store.sym('http://www.w3.org/ns/rww#editable'),
+            store.literal(ed),
+            store.fetcher.appNode
           )
         )
       }
     }
     var outliner = panes.getOutliner(dom)
     outliner.appendPropertyTRs(div, plist, false, filter)
-    plist = kb.statementsMatching(undefined, undefined, subject)
+    plist = store.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)
     return div
   },

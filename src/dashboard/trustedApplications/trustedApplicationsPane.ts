@@ -1,15 +1,10 @@
-import UI from 'solid-ui'
-import { NamedNode, IndexedFormula, sym } from 'rdflib'
-
-import { Namespaces } from 'solid-namespace'
+import { authn, ns, store, widgets } from 'solid-ui'
+import { NamedNode, sym } from 'rdflib'
 
 import {
   getStatementsToAdd,
   getStatementsToDelete
 } from './trustedApplicationsUtils'
-
-const kb: IndexedFormula = UI.store
-const ns: Namespaces = UI.ns
 
 const thisColor = '#418d99'
 
@@ -38,18 +33,18 @@ export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
   statusArea.setAttribute('style', 'padding: 0.7em;')
 
   const context = { dom: dom, div: main, statusArea: statusArea, me: null }
-  UI.authn.logInLoadProfile(context).then(
+  authn.logInLoadProfile(context).then(
     (context: any) => {
       let subject: NamedNode = context.me
 
       const profile = subject.doc()
-      const editable = UI.store.updater.editable(profile.uri, kb)
+      const editable = store.updater.editable(profile.uri, store)
 
       main.appendChild(createText('h3', 'Manage your trusted applications'))
 
       if (!editable) {
         main.appendChild(
-          UI.widgets.errorMessageBlock(
+          widgets.errorMessageBlock(
             dom,
             `Your profile ${
               subject.doc().uri
@@ -91,7 +86,7 @@ export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
       )
     },
     (err: any) => {
-      statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err))
+      statusArea.appendChild(widgets.errorMessageBlock(dom, err))
     }
   )
   return div
@@ -111,12 +106,12 @@ function createApplicationTable (subject: NamedNode) {
   applicationsTable.appendChild(header)
 
   // creating rows
-  ;(kb.each(subject, ns.acl('trustedApp'), undefined, undefined) as any)
+  ;(store.each(subject, ns.acl('trustedApp'), undefined, undefined) as any)
     .flatMap((app: any) => {
-      return kb
+      return store
         .each(app, ns.acl('origin'), undefined, undefined)
         .map(origin => ({
-          appModes: kb.each(app, ns.acl('mode'), undefined, undefined),
+          appModes: store.each(app, ns.acl('mode'), undefined, undefined),
           origin
         }))
     })
@@ -242,7 +237,7 @@ function createApplicationEntry (
     const deletions = getStatementsToDelete(
       trustedApplicationState.origin || origin,
       subject,
-      kb,
+      store,
       ns
     )
     const additions = getStatementsToAdd(
@@ -252,7 +247,7 @@ function createApplicationEntry (
       subject,
       ns
     )
-    ;(kb as any).updater.update(deletions, additions, handleUpdateResponse)
+    ;(store as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication (event: Event) {
@@ -266,8 +261,8 @@ function createApplicationEntry (
       )
     }
 
-    const deletions = getStatementsToDelete(origin, subject, kb, ns)
-    ;(kb as any).updater.update(deletions, [], handleUpdateResponse)
+    const deletions = getStatementsToDelete(origin, subject, store, ns)
+    ;(store as any).updater.update(deletions, [], handleUpdateResponse)
   }
 
   function handleUpdateResponse (uri: any, success: boolean, errorBody: any) {
