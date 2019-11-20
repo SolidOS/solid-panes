@@ -3,7 +3,7 @@ const webpack = require('webpack')
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 module.exports = (env, args) => ({
-  entry: './src/index.js',
+  entry: './src/index.ts',
   output: {
     filename: args.mode === 'production' ? 'main.min.js' : 'main.js',
     path: path.resolve(__dirname, 'dist'),
