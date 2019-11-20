@@ -9,11 +9,11 @@
  */
 
 import { PaneDefinition } from '../types'
-import * as UI from 'solid-ui'
+import { authn, create, icons } from 'solid-ui'
 import * as panes from 'pane-registry'
 
 const HomePaneSource: PaneDefinition = {
-  icon: UI.icons.iconBase + 'noun_547570.svg', // noun_25830
+  icon: icons.iconBase + 'noun_547570.svg', // noun_25830
 
   global: true,
 
@@ -48,28 +48,26 @@ const HomePaneSource: PaneDefinition = {
         statusArea: div,
         me: me
       }
-      const relevantPanes = await UI.authn.filterAvailablePanes(panes.list)
-      UI.create.newThingUI(creationContext, relevantPanes) // newUI Have to pass panes down
+      const relevantPanes = await authn.filterAvailablePanes(panes.list)
+      create.newThingUI(creationContext, relevantPanes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
       // TODO: Replace by a common, representative interface
       type AuthContext = unknown
-      UI.authn
+      authn
         .registrationList(context, { private: true })
         .then(function (context: AuthContext) {
           div.appendChild(dom.createElement('h4')).textContent = 'Public things'
           div.appendChild(dom.createElement('p')).textContent =
             'Things in this list are visible to others.'
-          UI.authn
-            .registrationList(context, { public: true })
-            .then(function () {
-              // done
-            })
+          authn.registrationList(context, { public: true }).then(function () {
+            // done
+          })
         })
     }
 
     var div = dom.createElement('div')
-    var me = UI.authn.currentUser()
+    var me = authn.currentUser()
 
     showContent()
 

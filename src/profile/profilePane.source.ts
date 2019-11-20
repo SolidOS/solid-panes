@@ -10,7 +10,7 @@
  ** or standalone script adding onto existing mashlib.
  */
 
-import UI from 'solid-ui'
+import { icons, ns, store, widgets } from 'solid-ui'
 import { NamedNode } from 'rdflib'
 import panes from 'pane-registry'
 import { PaneDefinition } from '../types'
@@ -29,20 +29,18 @@ if (nodeMode) {
   UI = panes.UI
 }
 */
-const kb = UI.store
-const ns = UI.ns
 
 const thisPane: PaneDefinition = {
   // 'noun_638141.svg' not editing
 
   global: false,
 
-  icon: UI.icons.iconBase + 'noun_15059.svg', // head.  noun_492246.svg for editing
+  icon: icons.iconBase + 'noun_15059.svg', // head.  noun_492246.svg for editing
 
   name: 'profile',
 
   label: function (subject) {
-    var t = kb.findTypeURIs(subject)
+    var t = store.findTypeURIs(subject)
     if (
       t[ns.vcard('Individual').uri] ||
       t[ns.vcard('Organization').uri] ||
@@ -68,17 +66,17 @@ const thisPane: PaneDefinition = {
     ) {
       if (!subject) throw new Error('subject missing')
       const profile = subject.doc()
-      let otherProfiles = kb.each(subject, ns.rdfs('seeAlso'), null, profile)
+      let otherProfiles = store.each(subject, ns.rdfs('seeAlso'), null, profile)
       if (otherProfiles.length > 0) {
         try {
-          await kb.fetcher.load(otherProfiles)
+          await store.fetcher.load(otherProfiles)
         } catch (err) {
-          container.appendChild(UI.widgets.errorMessageBlock(err))
+          container.appendChild(widgets.errorMessageBlock(err))
         }
       }
 
       var backgroundColor =
-        kb.anyValue(
+        store.anyValue(
           subject,
           ns.solid('profileBackgroundColor'),
           null,
@@ -87,7 +85,7 @@ const thisPane: PaneDefinition = {
       // Todo: check format of color matches regexp and not too dark
       container.style.backgroundColor = backgroundColor // @@ Limit to pale?
       var highlightColor =
-        kb.anyValue(
+        store.anyValue(
           subject,
           ns.solid('profileHighlightColor', null, subject.doc())
         ) || '#090' // @@ beware injection attack
@@ -118,9 +116,9 @@ const thisPane: PaneDefinition = {
       contactDisplay.border = '0em' // override form
       main.appendChild(contactDisplay)
 
-      if (kb.holds(subject, ns.foaf('knows'))) {
+      if (store.holds(subject, ns.foaf('knows'))) {
         heading('Solid Friends')
-        UI.widgets.attachmentList(dom, subject, container, {
+        widgets.attachmentList(dom, subject, container, {
           doc: profile,
           modify: false,
           predicate: ns.foaf('knows'),

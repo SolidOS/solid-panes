@@ -7,7 +7,7 @@
  ** or standalone script adding onto existing mashlib.
  */
 
-import UI from 'solid-ui'
+import { authn, icons, ns, rdf, store, style, widgets } from 'solid-ui'
 import panes from 'pane-registry'
 
 import { NamedNode } from 'rdflib'
@@ -17,40 +17,19 @@ import { getLabel } from './profilePaneUtils'
 
 import preferencesFormText from './preferencesFormText.ttl'
 
-const nodeMode = typeof module !== 'undefined'
-
-// let panes: any
-// let UI
-
-// const UI = require('solid-ui')
-// const panes = require('pane-registry')
-
-if (nodeMode) {
-  // UI = solidUi
-  // panes = paneRegistry
-} else {
-  // Add to existing mashlib
-  // panes = (window as any).panes
-  // UI = panes.UI
-}
-
-const kb = UI.store
-const ns = UI.ns
-const $rdf = UI.rdf
-
-const highlightColor = UI.style.highlightColor || '#7C4DFF'
+const highlightColor = style.highlightColor || '#7C4DFF'
 
 const thisPane: PaneDefinition = {
   // 'noun_638141.svg' not editing
 
   global: true,
 
-  icon: UI.icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
+  icon: icons.iconBase + 'noun_492246.svg', // noun_492246.svg for editing
 
   name: 'editProfile', // not confuse with 'profile'
 
   label: function (subject) {
-    return getLabel(subject, kb, UI.ns)
+    return getLabel(subject, store, ns)
   },
   render: function (subject, dom) {
     function paneDiv (dom: HTMLDocument, subject: NamedNode, paneName: string) {
@@ -62,25 +41,25 @@ const thisPane: PaneDefinition = {
 
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
-      div.appendChild(UI.widgets.errorMessageBlock(dom, mess, '#fee'))
+      div.appendChild(widgets.errorMessageBlock(dom, mess, '#fee'))
     }
 
     function renderProfileForm (div: HTMLElement, subject: NamedNode) {
-      const preferencesForm = kb.sym(
+      const preferencesForm = store.sym(
         'https://solid.github.io/solid-panes/dashboard/profileStyle.ttl#this'
       )
       const preferencesFormDoc = preferencesForm.doc()
-      if (!kb.holds(undefined, undefined, undefined, preferencesFormDoc)) {
+      if (!store.holds(undefined, undefined, undefined, preferencesFormDoc)) {
         // If not loaded already
-        $rdf.parse(
+        rdf.parse(
           preferencesFormText,
-          kb,
+          store,
           preferencesFormDoc.uri,
           'text/turtle'
         ) // Load form directly
       }
 
-      UI.widgets.appendForm(
+      widgets.appendForm(
         dom,
         div,
         {},
@@ -122,7 +101,7 @@ const thisPane: PaneDefinition = {
     }
 
     var context = { dom: dom, div: main, statusArea: statusArea, me: null }
-    UI.authn.logInLoadProfile(context).then(
+    authn.logInLoadProfile(context).then(
       (context: { me: NamedNode }) => {
         var me = context.me
         subject = me
@@ -130,13 +109,13 @@ const thisPane: PaneDefinition = {
         heading('Edit your public profile')
 
         var profile = me.doc()
-        if (kb.any(subject, ns.solid('editableProfile'))) {
-          editableProfile = kb.any(subject, ns.solid('editableProfile'))
-        } else if (UI.store.updater.editable(profile.uri, kb)) {
+        if (store.any(subject, ns.solid('editableProfile'))) {
+          editableProfile = store.any(subject, ns.solid('editableProfile'))
+        } else if (store.updater.editable(profile.uri, store)) {
           editableProfile = profile
         } else {
           statusArea.appendChild(
-            UI.widgets.errorMessageBlock(
+            widgets.errorMessageBlock(
               dom,
               `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`,
               'straw'
@@ -164,7 +143,7 @@ const thisPane: PaneDefinition = {
         if (editableProfile)
           comment(`Drag people onto the target below to add people.`)
 
-        UI.widgets.attachmentList(dom, subject, main, {
+        widgets.attachmentList(dom, subject, main, {
           doc: profile,
           modify: !!editableProfile,
           predicate: ns.foaf('knows'),
@@ -177,7 +156,7 @@ const thisPane: PaneDefinition = {
         heading('Thank you for filling your profile.')
       },
       (err: Error) => {
-        statusArea.appendChild(UI.widgets.errorMessageBlock(dom, err, '#fee'))
+        statusArea.appendChild(widgets.errorMessageBlock(dom, err, '#fee'))
       }
     )
     return div
