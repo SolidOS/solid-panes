@@ -153,7 +153,7 @@ const pane: PaneDefinition = {
     }
 
     var plist = kb.statementsMatching(subject)
-    var docURI = null
+    var docURI = ''
     if (subject.uri) {
       plist.push(
         $r.st(

@@ -29,11 +29,6 @@ module.exports = (env, args) => ({
       }
     ]
   },
-  externals: {
-    rdflib: 'rdflib',
-    'solid-namespace': 'solid-namespace',
-    'solid-ui': 'solid-ui'
-  },
   plugins: [
     new webpack.DefinePlugin({
       // Prevent solid-auth-tls (used by solid-ui) from running Node code:
