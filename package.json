@@ -3,6 +3,7 @@
   "version": "2.0.4",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "npm run clean && npm run build-dist && npm run build-dev && npm run build-lib && npm run build-types",
     "build-browserified": "npm run build",
@@ -15,7 +16,7 @@
     "lint": "prettier-standard --lint '**/*'",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "test": "npm run lint && jest",
-    "pre": "./timestamp.sh > src/versionInfo.js"
+    "pre": "./timestamp.sh > src/versionInfo.ts"
   },
   "repository": {
     "type": "git",
