@@ -13,7 +13,7 @@
     "lint": "prettier-standard --lint '**/*'",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "test": "npm run lint && jest",
-    "pre": "./timestamp.sh > versionInfo.js"
+    "pre": "./timestamp.sh > src/versionInfo.js"
   },
   "repository": {
     "type": "git",
