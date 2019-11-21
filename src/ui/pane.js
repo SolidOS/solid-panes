@@ -3,7 +3,6 @@
  */
 
 const UI = require('solid-ui')
-const panes = require('pane-registry')
 const $rdf = require('rdflib')
 const ns = UI.ns
 
@@ -16,9 +15,9 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
-  label: function (subject) {
+  label: function (subject, context) {
     var ns = UI.ns
-    var kb = UI.store
+    var kb = context.session.store
     var t = kb.findTypeURIs(subject)
     if (t[ns.rdfs('Class').uri]) return 'creation forms'
     // if (t[ns.rdf('Property').uri]) return "user interface";
@@ -27,8 +26,9 @@ module.exports = {
     return null // No under other circumstances (while testing at least!)
   },
 
-  render: function (subject, dom) {
-    var kb = UI.store
+  render: function (subject, context) {
+    var dom = context.dom
+    var kb = context.session.store
     var ns = UI.ns
 
     var box = dom.createElement('div')
@@ -60,7 +60,7 @@ module.exports = {
     var store = null
     if (subject.uri) {
       var docuri = $rdf.Util.uri.docpart(subject.uri)
-      if (subject.uri !== docuri && UI.store.updater.editable(docuri)) {
+      if (subject.uri !== docuri && kb.updater.editable(docuri)) {
         store = kb.sym($rdf.Util.uri.docpart(subject.uri))
       } // an editable ontology with hash
     }
@@ -99,7 +99,7 @@ module.exports = {
           allowCreation
         ) {
           var sts = kb.statementsMatching(subject, pred)
-          const outliner = panes.getOutliner(dom)
+          const outliner = context.getOutliner(dom)
           if (sts.length) {
             for (var i = 0; i < sts.length; i++) {
               outliner.appendPropertyTRs(box, [sts[i]])

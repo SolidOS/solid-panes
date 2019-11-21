@@ -17,8 +17,8 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve an slideshow pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var ns = UI.ns
     var t = kb.findTypeURIs(subject)
     if (t[ns.ldp('Container').uri] || t[ns.ldp('BasicContainer').uri]) {
@@ -34,12 +34,13 @@ module.exports = {
 
   // See https://github.com/leemark/better-simple-slideshow
   // and follow instructions there
-  render: function (subject, dom) {
+  render: function (subject, context) {
+    var dom = context.dom
     var styleSheet =
       'https://leemark.github.io/better-simple-slideshow/css/simple-slideshow-styles.css'
     UI.widgets.addStyleSheet(dom, styleSheet)
 
-    var kb = UI.store
+    var kb = context.session.store
     var ns = UI.ns
     var div = dom.createElement('div')
     div.setAttribute('class', 'bss-slides')

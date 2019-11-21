@@ -7,15 +7,14 @@
  ** or standalone script adding onto existing mashlib.
  */
 
-import { authn, icons, ns, rdf, store, style, widgets } from 'solid-ui'
-import panes from 'pane-registry'
+import { authn, icons, ns, rdf, style, widgets } from 'solid-ui'
 
 import { NamedNode } from 'rdflib'
 
-import { PaneDefinition } from '../types'
-import { getLabel } from './profilePaneUtils'
+import { getLabel, paneDiv } from './profilePaneUtils'
 
 import preferencesFormText from './preferencesFormText.ttl'
+import { PaneDefinition } from 'pane-registry'
 
 const highlightColor = style.highlightColor || '#7C4DFF'
 
@@ -28,17 +27,12 @@ const thisPane: PaneDefinition = {
 
   name: 'editProfile', // not confuse with 'profile'
 
-  label: function (subject) {
-    return getLabel(subject, store, ns)
+  label: function (subject, context) {
+    return getLabel(subject, context.session.store, ns)
   },
-  render: function (subject, dom) {
-    function paneDiv (dom: HTMLDocument, subject: NamedNode, paneName: string) {
-      var p = panes.byName(paneName)
-      var d = p.render(subject, dom)
-      d.setAttribute('style', 'border: 0.3em solid #444; border-radius: 0.5em')
-      return d
-    }
-
+  render: function (subject, context) {
+    const dom = context.dom
+    const store = context.session.store
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
       div.appendChild(widgets.errorMessageBlock(dom, mess, '#fee'))
@@ -51,7 +45,8 @@ const thisPane: PaneDefinition = {
       const preferencesFormDoc = preferencesForm.doc()
       if (!store.holds(undefined, undefined, undefined, preferencesFormDoc)) {
         // If not loaded already
-        rdf.parse(
+        // @@ TODO Remove casting
+        ;(rdf.parse as any)(
           preferencesFormText,
           store,
           preferencesFormDoc.uri,
@@ -100,18 +95,28 @@ const thisPane: PaneDefinition = {
       return h
     }
 
-    var context = { dom: dom, div: main, statusArea: statusArea, me: null }
-    authn.logInLoadProfile(context).then(
-      (context: { me: NamedNode }) => {
-        var me = context.me
+    var profileContext = {
+      dom: dom,
+      div: main,
+      statusArea: statusArea,
+      me: null
+    }
+    authn.logInLoadProfile(profileContext).then(
+      (loggedInContext: { me: NamedNode }) => {
+        var me = loggedInContext.me
         subject = me
 
         heading('Edit your public profile')
 
         var profile = me.doc()
         if (store.any(subject, ns.solid('editableProfile'))) {
-          editableProfile = store.any(subject, ns.solid('editableProfile'))
-        } else if (store.updater.editable(profile.uri, store)) {
+          // @@ TODO Remove the casting on next line
+          editableProfile = store.any(
+            subject,
+            ns.solid('editableProfile')
+          ) as NamedNode
+          // @@ TODO Remove casting of store.updater
+        } else if ((store.updater as any).editable(profile.uri, store)) {
           editableProfile = profile
         } else {
           statusArea.appendChild(
@@ -129,7 +134,7 @@ const thisPane: PaneDefinition = {
 
         heading('Your contact information')
 
-        main.appendChild(paneDiv(dom, me, 'contact'))
+        main.appendChild(paneDiv(context, me, 'contact'))
 
         heading('People you know who have webids')
 
@@ -140,8 +145,9 @@ const thisPane: PaneDefinition = {
         // TODO: would be useful to explain what it means to "drag people"
         //       what is it that is being dragged?
         //       is there a way to search for people (or things to drag) on this page?
-        if (editableProfile)
-          comment(`Drag people onto the target below to add people.`)
+        if (editableProfile) {
+          comment('Drag people onto the target below to add people.')
+        }
 
         widgets.attachmentList(dom, subject, main, {
           doc: profile,

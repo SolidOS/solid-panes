@@ -20,8 +20,8 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var t = kb.findTypeURIs(subject)
 
     // if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction']) return "$$";
@@ -35,8 +35,9 @@ module.exports = {
     return null // No under other circumstances (while testing at least!)
   },
 
-  render: function (subject, myDocument) {
-    var kb = UI.store
+  render: function (subject, context) {
+    const myDocument = context.dom
+    var kb = context.store
     var ns = UI.ns
     var CAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
     var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')

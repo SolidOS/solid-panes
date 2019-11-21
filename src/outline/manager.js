@@ -15,10 +15,10 @@ var queryByExample = require('./queryByExample.js')
 
 // const iconHeight = '24px'
 
-module.exports = function (doc) {
-  const dom = doc
+module.exports = function (context) {
+  const dom = context.dom
 
-  this.document = doc
+  this.document = context.dom
   this.outlineIcons = outlineIcons
   this.labeller = this.labeller || {}
   this.labeller.LanguagePreference = '' // for now
@@ -542,13 +542,14 @@ module.exports = function (doc) {
     )
   }
 
-  async function getRelevantPanes (panes, subject, dom) {
+  async function getRelevantPanes (subject, context) {
+    const panes = context.session.paneRegistry
     const relevantPanes = panes.list.filter(
-      pane => pane.label(subject, dom) && !pane.global
+      pane => pane.label(subject, context) && !pane.global
     )
     if (relevantPanes.length === 0) {
       // there are no relevant panes, simply return default pane (which ironically is internalPane)
-      return [panes.internal]
+      return [panes.byName('internal')]
     }
     const filteredPanes = await UI.authn.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
@@ -583,14 +584,14 @@ module.exports = function (doc) {
 
       const relevantPanes = options.hideList
         ? []
-        : await getRelevantPanes(panes, subject, dom)
+        : await getRelevantPanes(subject, context)
       tr.firstPane = requiredPane || getPane(relevantPanes, subject)
       const paneNumber = relevantPanes.indexOf(tr.firstPane)
 
       if (relevantPanes.length !== 1) {
         // if only one, simplify interface
         relevantPanes.forEach((pane, index) => {
-          const label = pane.label(subject, dom)
+          const label = pane.label(subject, context)
           const ico = UI.utils.AJARImage(pane.icon, label, label, dom)
           ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
@@ -638,10 +639,10 @@ module.exports = function (doc) {
                   UI.log.info('outline: Rendering pane (2): ' + pane.name)
                   if (UI.no_catch_pane_errors) {
                     // for debugging
-                    paneDiv = pane.render(subject, dom, options)
+                    paneDiv = pane.render(subject, context, options)
                   } else {
                     try {
-                      paneDiv = pane.render(subject, dom, options)
+                      paneDiv = pane.render(subject, context, options)
                     } catch (e) {
                       // Easier debugging for pane developers
                       paneDiv = dom.createElement('div')
@@ -819,7 +820,7 @@ module.exports = function (doc) {
           var paneDiv
           try {
             UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
-            paneDiv = tr1.firstPane.render(subject, dom, options)
+            paneDiv = tr1.firstPane.render(subject, context, options)
           } catch (e) {
             // Easier debugging for pane developers
             paneDiv = dom.createElement('div')
@@ -2381,7 +2382,9 @@ module.exports = function (doc) {
         row.appendChild(thisOutline.outlineObjectTD(elt))
       }
     } else if (obj.termType === 'Graph') {
-      rep = panes.dataContentPane.statementsAsTables(obj.statements, dom)
+      rep = panes
+        .byName('dataContentPane')
+        .statementsAsTables(obj.statements, context)
       rep.setAttribute('class', 'nestedFormula')
     } else {
       UI.log.error('Object ' + obj + ' has unknown term type: ' + obj.termType)

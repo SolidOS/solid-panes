@@ -22,9 +22,9 @@ module.exports = {
     return '' + n + ' forms'
   },
 
-  render: function (subject, dom) {
-    var kb = UI.store
-    var ns = UI.ns
+  render: function (subject, context) {
+    const kb = context.session.store
+    const dom = context.dom
 
     var mention = function complain (message, style) {
       var pre = dom.createElement('p')
@@ -152,18 +152,20 @@ module.exports = {
     if (!store) {
       var docs = {}
       var docList = []
-      kb.statementsMatching(subject).map(function (st) {
+      store.statementsMatching(subject).map(function (st) {
         docs[st.why.uri] = 1
       })
-      kb.statementsMatching(undefined, undefined, subject).map(function (st) {
-        docs[st.why.uri] = 2
-      })
+      store
+        .statementsMatching(undefined, undefined, subject)
+        .map(function (st) {
+          docs[st.why.uri] = 2
+        })
       for (var d in docs) docList.push(docs[d], d)
       docList.sort()
       for (var i = 0; i < docList.length; i++) {
         var uri = docList[i][1]
-        if (uri && kb.updater.editable(uri)) {
-          store = kb.sym(uri)
+        if (uri && store.updater.editable(uri)) {
+          store = store.sym(uri)
           break
         }
       }
@@ -191,15 +193,15 @@ module.exports = {
       var foobarbaz = UI.authn.selectWorkspace(dom, function (ws) {
         mention('Workspace selected OK: ' + ws)
 
-        var activities = kb.each(undefined, ns.space('workspace'), ws)
+        var activities = store.each(undefined, ns.space('workspace'), ws)
         for (var j = 0; j < activities.length; i++) {
           var act = activities[j]
 
-          var s = kb.any(ws, ns.space('store'))
-          var start = kb.any(ws, ns.cal('dtstart')).value()
-          var end = kb.any(ws, ns.cal('dtend')).value()
-          if (s && start && end && start <= date && end > date) {
-            renderFormsFor(s, subject)
+          var subjectDoc2 = store.any(ws, ns.space('store'))
+          var start = store.any(ws, ns.cal('dtstart')).value()
+          var end = store.any(ws, ns.cal('dtend')).value()
+          if (subjectDoc2 && start && end && start <= date && end > date) {
+            renderFormsFor(subjectDoc2, subject)
             break
           } else {
             complain('Note no suitable annotation store in activity: ' + act)

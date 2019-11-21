@@ -1,9 +1,9 @@
-import { authn, icons, ns, pad, store, widgets } from 'solid-ui'
-import { PaneDefinition } from '../types'
+import { authn, icons, ns, pad, widgets } from 'solid-ui'
 // @ts-ignore
 // @@ TODO: serialize is not part rdflib type definitions
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
 import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
+import { PaneDefinition } from 'pane-registry'
 /*   pad Pane
  **
  */
@@ -17,8 +17,8 @@ const paneDef: PaneDefinition = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve an pad pane?
-  label: function (subject) {
-    var t = store.findTypeURIs(subject)
+  label: function (subject, context) {
+    var t = context.session.store.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
       return 'pad'
     }
@@ -27,10 +27,12 @@ const paneDef: PaneDefinition = {
 
   mintClass: ns.pad('Notepad'),
 
-  mintNew: function (newPaneOptions: any) {
+  mintNew: function (context, newPaneOptions: any) {
+    const store = context.session.store
     var updater = store.updater
-    if (newPaneOptions.me && !newPaneOptions.me.uri)
+    if (newPaneOptions.me && !newPaneOptions.me.uri) {
       throw new Error('notepad mintNew:  Invalid userid')
+    }
 
     var newInstance = (newPaneOptions.newInstance =
       newPaneOptions.newInstance ||
@@ -39,8 +41,9 @@ const paneDef: PaneDefinition = {
     var newPadDoc = newInstance.doc()
 
     store.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc)
-    store.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
-    store.add(newInstance, ns.dc('created'), new Date(), newPadDoc)
+    // @@ TODO Remove casting
+    ;(store.add as any)(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
+    ;(store.add as any)(newInstance, ns.dc('created'), new Date(), newPadDoc)
     if (newPaneOptions.me) {
       store.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc)
     }
@@ -50,7 +53,8 @@ const paneDef: PaneDefinition = {
     store.add(newInstance, ns.pad('next'), chunk, newPadDoc) // Linked list has one entry
     store.add(chunk, ns.pad('next'), newInstance, newPadDoc)
     store.add(chunk, ns.dc('author'), newPaneOptions.me, newPadDoc)
-    store.add(chunk, ns.sioc('content'), '', newPadDoc)
+    // @@ TODO Remove casting
+    ;(store.add as any)(chunk, ns.sioc('content'), '', newPadDoc)
 
     return new Promise(function (resolve, reject) {
       updater.put(
@@ -70,7 +74,10 @@ const paneDef: PaneDefinition = {
     })
   },
   // and follow instructions there
-  render: function (subject, dom, paneOptions: any) {
+  // @@ TODO Set better type for paneOptions
+  render: function (subject, context, paneOptions: any) {
+    const dom = context.dom
+    const store = context.session.store
     // Utility functions
     var complainIfBad = function (ok: boolean, message: string) {
       if (!ok) {
@@ -130,17 +137,19 @@ const paneDef: PaneDefinition = {
       allWrite: boolean,
       callbackFunction: Function
     ) {
+      // @@ TODO Remove casting of aclDoc
       var aclDoc = store.any(
-        store.sym(docURI),
-        store.sym('http://www.iana.org/assignments/link-relations/acl')
-      ) // @@ check that this get set by web.js
+        sym(docURI),
+        sym('http://www.iana.org/assignments/link-relations/acl')
+      ) as NamedNode // @@ check that this get set by web.js
 
       if (aclDoc) {
         // Great we already know where it is
-        var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+        var aclText = genACLtext(docURI, (aclDoc as NamedNode).uri, allWrite)
 
-        return fetcher
-          .webOperation('PUT', aclDoc.uri, {
+        // @@ TODO Remove casting of fetcher
+        return (fetcher as any)
+          .webOperation('PUT', (aclDoc as NamedNode).uri, {
             data: aclText,
             contentType: 'text/turtle'
           })
@@ -155,10 +164,11 @@ const paneDef: PaneDefinition = {
             callbackFunction(false, 'Getting headers for ACL: ' + err)
           })
           .then(() => {
+            // @@ TODO Remove casting
             var aclDoc = store.any(
-              store.sym(docURI),
-              store.sym('http://www.iana.org/assignments/link-relations/acl')
-            )
+              sym(docURI),
+              sym('http://www.iana.org/assignments/link-relations/acl')
+            ) as NamedNode
 
             if (!aclDoc) {
               // complainIfBad(false, "No Link rel=ACL header for " + docURI);
@@ -167,7 +177,8 @@ const paneDef: PaneDefinition = {
 
             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-            return fetcher.webOperation('PUT', aclDoc.uri, {
+            // @@ TODO Remove casting of fetcher
+            return (fetcher as any).webOperation('PUT', aclDoc.uri, {
               data: aclText,
               contentType: 'text/turtle'
             })
@@ -232,7 +243,8 @@ const paneDef: PaneDefinition = {
 
     //  Create new document files for new instance of app
     var initializeNewInstanceInWorkspace = function (ws: NamedNode) {
-      var newBase = store.any(ws, ns.space('uriPrefix'))
+      // @@ TODO Clean up type for newBase
+      var newBase: any = store.any(ws, ns.space('uriPrefix'))
       if (!newBase) {
         newBase = ws.uri.split('#')[0]
       } else {
@@ -275,20 +287,21 @@ const paneDef: PaneDefinition = {
             console.log('Copying ' + base + item.local + ' to ' + newURI)
 
             var setThatACL = function () {
-              setACL(newURI, false, function (ok: boolean, message: string) {
-                if (!ok) {
-                  complainIfBad(
-                    ok,
-                    'FAILED to set ACL ' + newURI + ' : ' + message
-                  )
-                  console.log('FAILED to set ACL ' + newURI + ' : ' + message)
-                } else {
-                  agenda.shift()!() // beware too much nesting
-                }
-              })
-            }
+                setACL(newURI, false, function (ok: boolean, message: string) {
+                  if (!ok) {
+                    complainIfBad(
+                      ok,
+                      'FAILED to set ACL ' + newURI + ' : ' + message
+                    )
+                    console.log('FAILED to set ACL ' + newURI + ' : ' + message)
+                  } else {
+                    agenda.shift()!() // beware too much nesting
+                  }
+                })
+              }
 
-            store.fetcher
+              // @@ TODO Remove casting of fetcher
+            ;(store.fetcher as any)
               .webCopy(
                 base + item.local,
                 newBase + item.local,
@@ -317,7 +330,13 @@ const paneDef: PaneDefinition = {
       agenda.push(function createNewPadDataFile () {
         store.add(newInstance, ns.rdf('type'), PAD('Notepad'), newPadDoc)
 
-        store.add(newInstance, ns.dc('created'), new Date(), newPadDoc)
+        // TODO @@ Remove casting of add
+        ;(store.add as any)(
+          newInstance,
+          ns.dc('created'),
+          new Date(),
+          newPadDoc
+        )
         if (me) {
           store.add(newInstance, ns.dc('author'), me, newPadDoc)
         }
@@ -411,12 +430,14 @@ const paneDef: PaneDefinition = {
         options
       )
 
-      store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
+      // @@ TODO Remove casting of updater
+      ;(store.updater as any).setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
     }
 
     // Read or create empty data file
     var loadPadData = function () {
-      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (
+      // @@ TODO Remove casting of fetcher
+      ;(fetcher as any).nowOrWhenFetched(padDoc.uri, undefined, function (
         ok: boolean,
         body: string,
         response: any

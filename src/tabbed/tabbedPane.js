@@ -4,9 +4,7 @@
  **
  */
 const UI = require('solid-ui')
-const panes = require('pane-registry')
 const ns = UI.ns
-const kb = UI.store
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_688606.svg',
@@ -16,8 +14,8 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var ns = UI.ns
     var typeURIs = kb.findTypeURIs(subject)
     if (ns.meeting('Cluster').uri in typeURIs) {
@@ -26,7 +24,9 @@ module.exports = {
     return null
   },
 
-  render: function (subject, dom) {
+  render: function (subject, context) {
+    const dom = context.dom
+    var kb = context.session.store
     var div = dom.createElement('div')
     kb.fetcher.load(subject).then(function (_xhr) {
       var renderTab = function (div, item) {
@@ -37,7 +37,7 @@ module.exports = {
         var pane = null
         containerDiv.innerHTML = ''
         var table = containerDiv.appendChild(dom.createElement('table'))
-        panes
+        context
           .getOutliner(dom)
           .GotoSubject(item, true, pane, false, undefined, table)
       }

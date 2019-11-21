@@ -9,8 +9,8 @@ module.exports = {
 
   name: 'image',
 
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     if (
       !kb.anyStatementMatching(
         subject,
@@ -45,7 +45,8 @@ module.exports = {
     return 'view'
   },
 
-  render: function (subject, myDocument) {
+  render: function (subject, context) {
+    const myDocument = context.dom
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'imageView')
     var img = myDocument.createElement('IMG')

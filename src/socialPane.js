@@ -9,7 +9,6 @@
  */
 
 var UI = require('solid-ui')
-var panes = require('pane-registry')
 const $rdf = require('rdflib')
 
 module.exports = {
@@ -17,8 +16,8 @@ module.exports = {
 
   name: 'social',
 
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var types = kb.findTypeURIs(subject)
     if (
       types[UI.ns.foaf('Person').uri] ||
@@ -29,7 +28,8 @@ module.exports = {
     return null
   },
 
-  render: function (s, dom) {
+  render: function (s, context) {
+    var dom = context.dom
     var common = function (x, y) {
       // Find common members of two lists
       var both = []
@@ -158,8 +158,8 @@ module.exports = {
 
     // ////////// Body of render():
 
-    var outliner = panes.getOutliner(dom)
-    var kb = UI.store
+    var outliner = context.getOutliner(dom)
+    var kb = context.session.store
     var div = dom.createElement('div')
     div.setAttribute('class', 'socialPane')
     const foaf = UI.ns.foaf

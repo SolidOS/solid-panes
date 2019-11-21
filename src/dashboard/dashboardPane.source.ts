@@ -1,8 +1,8 @@
-import { PaneDefinition, SolidSession } from '../types'
+import { SolidSession } from '../types'
 import { authn, icons, store } from 'solid-ui'
-import panes from 'pane-registry'
 import { NamedNode, sym } from 'rdflib'
 import { generateHomepage } from './homepage'
+import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 
 export const dashboardPaneSource: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg',
@@ -13,11 +13,17 @@ export const dashboardPaneSource: PaneDefinition = {
     }
     return null
   },
-  render: (subject, dom) => {
+  render: (subject, context) => {
+    const dom = context.dom
     const container = dom.createElement('div')
     authn.solidAuthClient.trackSession(async (session: SolidSession) => {
       container.innerHTML = ''
-      buildPage(container, session ? sym(session.webId) : null, dom, subject)
+      buildPage(
+        container,
+        session ? sym(session.webId) : null,
+        context,
+        subject
+      )
     })
 
     return container
@@ -27,17 +33,17 @@ export const dashboardPaneSource: PaneDefinition = {
 function buildPage (
   container: HTMLElement,
   webId: NamedNode | null,
-  dom: HTMLDocument,
+  context: DataBrowserContext,
   subject: NamedNode
 ) {
   if (webId && webId.site().uri === subject.site().uri) {
-    return buildDashboard(container, dom)
+    return buildDashboard(container, context)
   }
   return buildHomePage(container, subject)
 }
 
-function buildDashboard (container: HTMLElement, dom: HTMLDocument) {
-  const outliner = panes.getOutliner(dom)
+function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
+  const outliner = context.getOutliner(context.dom)
   outliner
     .getDashboard()
     .then((dashboard: HTMLElement) => container.appendChild(dashboard))

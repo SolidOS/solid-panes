@@ -4,7 +4,6 @@
  */
 
 var UI = require('solid-ui')
-var panes = require('pane-registry')
 const $rdf = require('rdflib')
 
 var ns = UI.ns
@@ -18,16 +17,17 @@ module.exports = {
 
   audience: [ns.solid('PowerUser')],
 
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var n = kb.each(undefined, ns.rdf('type'), subject).length
     if (n > 0) return 'List (' + n + ')' // Show how many in hover text
     return null // Suppress pane otherwise
   },
 
-  render: function (subject, dom) {
-    var outliner = panes.getOutliner(dom)
-    var kb = UI.store
+  render: function (subject, context) {
+    var dom = context.dom
+    var outliner = context.getOutliner(dom)
+    var kb = context.session.store
     var complain = function complain (message, color) {
       var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')

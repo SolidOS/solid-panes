@@ -1,10 +1,10 @@
-import { PaneDefinition } from '../types'
-import { authn, icons, ns, store, widgets } from 'solid-ui'
+import { authn, icons, ns, widgets } from 'solid-ui'
 import { NamedNode, parse, IndexedFormula } from 'rdflib'
 import { renderTrustedApplicationsOptions } from './trustedApplications/trustedApplicationsPane'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
+import { PaneDefinition } from 'pane-registry'
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
@@ -15,7 +15,10 @@ export const basicPreferencesPane: PaneDefinition = {
 
   // Render the pane
   // The subject should be the logged in user.
-  render: (subject: NamedNode, dom: HTMLDocument) => {
+  render: (subject, context) => {
+    const dom = context.dom
+    const store = context.session.store
+
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
       container.appendChild(widgets.errorMessageBlock(dom, mess, '#fee'))
@@ -43,31 +46,33 @@ export const basicPreferencesPane: PaneDefinition = {
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const context = await authn.logInLoadPreferences({
+      const renderContext = await authn.logInLoadPreferences({
         dom,
         div: container
       })
-      if (!context.preferencesFile) {
+      if (!renderContext.preferencesFile) {
         // Could be CORS
         console.log(
           'Not doing private class preferences as no access to preferences file. ' +
-            context.preferencesFileError
+            renderContext.preferencesFileError
         )
         return
       }
-      addDeletionLinks(container, store, context.me)
+      addDeletionLinks(container, store, renderContext.me)
       const appendedForm = widgets.appendForm(
         dom,
         formArea,
         {},
-        context.me,
+        renderContext.me,
         preferencesForm,
-        context.preferencesFile,
+        renderContext.preferencesFile,
         complainIfBad
       )
       appendedForm.style.borderStyle = 'none'
 
-      const trustedApplicationSettings = renderTrustedApplicationsOptions(dom)
+      const trustedApplicationSettings = renderTrustedApplicationsOptions(
+        renderContext.dom
+      )
       container.appendChild(trustedApplicationSettings)
     }
     doRender()
