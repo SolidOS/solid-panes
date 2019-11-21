@@ -8,9 +8,8 @@
  **
  */
 
-import { PaneDefinition } from '../types'
 import { authn, create, icons } from 'solid-ui'
-import * as panes from 'pane-registry'
+import { PaneDefinition } from 'pane-registry'
 
 const HomePaneSource: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg', // noun_25830
@@ -27,15 +26,16 @@ const HomePaneSource: PaneDefinition = {
     return 'home'
   },
 
-  render: function (subject, dom) {
+  render: function (subject, context) {
+    const dom = context.dom
     var showContent = async function () {
-      var context = { div: div, dom: dom, statusArea: div, me: me }
+      var homePaneContext = { div: div, dom: dom, statusArea: div, me: me }
       /*
             div.appendChild(dom.createElement('h4')).textContent = 'Login status'
-            var loginStatusDiv = div.appendChild(dom.createElement('div'))
+            var loginStatusDiv = div.appendChild(context.dom.createElement('div'))
             // TODO: Find out what the actual type is:
             type UriType = unknown;
-            loginStatusDiv.appendChild(UI.authn.loginStatusBox(dom, () => {
+            loginStatusDiv.appendChild(UI.authn.loginStatusBox(context.dom, () => {
               // Here we know new log in status
             }))
       */
@@ -48,21 +48,25 @@ const HomePaneSource: PaneDefinition = {
         statusArea: div,
         me: me
       }
-      const relevantPanes = await authn.filterAvailablePanes(panes.list)
+      const relevantPanes = await authn.filterAvailablePanes(
+        context.session.paneRegistry.list
+      )
       create.newThingUI(creationContext, relevantPanes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
       // TODO: Replace by a common, representative interface
       type AuthContext = unknown
       authn
-        .registrationList(context, { private: true })
-        .then(function (context: AuthContext) {
+        .registrationList(homePaneContext, { private: true })
+        .then(function (authContext: AuthContext) {
           div.appendChild(dom.createElement('h4')).textContent = 'Public things'
           div.appendChild(dom.createElement('p')).textContent =
             'Things in this list are visible to others.'
-          authn.registrationList(context, { public: true }).then(function () {
-            // done
-          })
+          authn
+            .registrationList(authContext, { public: true })
+            .then(function () {
+              // done
+            })
         })
     }
 

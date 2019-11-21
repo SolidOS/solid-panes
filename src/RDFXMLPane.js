@@ -15,26 +15,24 @@ module.exports = {
 
   audience: [ns.solid('Developer')],
 
-  label: function (subject) {
+  label: function (subject, context) {
+    const store = context.session.store
     if (
       'http://www.w3.org/2007/ont/link#ProtocolEvent' in
-      UI.store.findTypeURIs(subject)
+      store.findTypeURIs(subject)
     ) {
       return null
     }
 
-    var n = UI.store.statementsMatching(
-      undefined,
-      undefined,
-      undefined,
-      subject
-    ).length
+    var n = store.statementsMatching(undefined, undefined, undefined, subject)
+      .length
     if (n === 0) return null
     return 'As RDF/XML (' + n + ')'
   },
 
-  render: function (subject, myDocument) {
-    var kb = UI.store
+  render: function (subject, context) {
+    const myDocument = context.dom
+    var kb = context.session.store
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'RDFXMLPane')
     // Because of smushing etc, this will not be a copy of the original source

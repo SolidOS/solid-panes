@@ -14,8 +14,8 @@ module.exports = {
 
   audience: [ns.solid('PowerUser')],
 
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
 
     if (
       !kb.anyStatementMatching(
@@ -30,7 +30,8 @@ module.exports = {
     return 'playlist slot'
   },
 
-  render: function (subject, myDocument) {
+  render: function (subject, context) {
+    const myDocument = context.dom
     function isVideo (src, _index) {
       if (!src) {
         return {
@@ -79,7 +80,7 @@ module.exports = {
       return myDocument.createTextNode(str)
     }
 
-    var kb = UI.store
+    var kb = context.session.store
     var obj = kb.any(
       subject,
       $rdf.sym('http://purl.org/ontology/pbo/core#playlist_item')

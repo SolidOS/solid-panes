@@ -10,7 +10,6 @@
 
 var UI = require('solid-ui')
 const $rdf = require('rdflib')
-var panes = require('pane-registry')
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_25830.svg', // noun_25830
@@ -24,8 +23,8 @@ module.exports = {
   //  triage tool for correlating many attachees with attachments.
   // We also offer the pane for anything of any class which just has an attachment already.
   //
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var t = kb.findTypeURIs(subject)
     var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
@@ -43,8 +42,9 @@ module.exports = {
     return null
   },
 
-  render: function (subject, dom) {
-    var kb = UI.store
+  render: function (subject, context) {
+    const dom = context.dom
+    var kb = context.session.store
     var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
     var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
 
@@ -332,7 +332,7 @@ module.exports = {
           kb.fetcher
             .load(x.uri)
             .then(() => {
-              var outliner = panes.getOutliner(dom)
+              var outliner = context.getOutliner(dom)
               var display = outliner.propertyTable(x) //  ,table, pane
               preview.innerHTML = ''
               preview.appendChild(display)

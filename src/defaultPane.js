@@ -6,7 +6,6 @@
  */
 
 const UI = require('solid-ui')
-const panes = require('pane-registry')
 const $rdf = require('rdflib')
 const ns = UI.ns
 
@@ -21,9 +20,15 @@ module.exports = {
     return 'about '
   },
 
-  render: function (subject, dom) {
+  render: function (subject, context) {
+    var dom = context.dom
+
     var filter = function (pred, inverse) {
-      if (typeof panes.internal.predicates[pred.uri] !== 'undefined') {
+      if (
+        typeof context.session.paneRegistry.byName('internal').predicates[
+          pred.uri
+        ] !== 'undefined'
+      ) {
         return false
       }
       if (
@@ -35,8 +40,8 @@ module.exports = {
       return true
     }
 
-    var outliner = panes.getOutliner(dom)
-    var kb = UI.store
+    var outliner = context.getOutliner(dom)
+    var kb = context.session.store
     // var outline = outliner; // @@
     UI.log.info('@defaultPane.render, dom is now ' + dom.location)
     subject = kb.canon(subject)

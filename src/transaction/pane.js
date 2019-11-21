@@ -6,7 +6,6 @@
  */
 
 const UI = require('solid-ui')
-const panes = require('pane-registry')
 const $rdf = require('rdflib')
 const ns = UI.ns
 
@@ -19,8 +18,8 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve this pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction']) return '$$'
     if (kb.any(subject, UI.ns.qu('amount'))) return '$$$' // In case schema not picked up
@@ -32,8 +31,9 @@ module.exports = {
     return null // No under other circumstances (while testing at least!)
   },
 
-  render: function (subject, dom) {
-    var kb = UI.store
+  render: function (subject, context) {
+    const dom = context.dom
+    var kb = context.session.store
     var fetcher = kb.fetcher
     var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
     var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
@@ -115,8 +115,8 @@ module.exports = {
     }
 
     var oderByDate = function (x, y) {
-      const dx = UI.store.any(x, ns.qu('date'))
-      const dy = UI.store.any(y, ns.qu('date'))
+      const dx = kb.any(x, ns.qu('date'))
+      const dy = kb.any(y, ns.qu('date'))
       if (dx !== undefined && dy !== undefined) {
         if (dx.value < dy.value) return -1
         if (dx.value > dy.value) return 1
@@ -126,9 +126,9 @@ module.exports = {
       return 0
     }
 
-    var insertedPane = function (dom, subject, paneName) {
-      var p = panes.byName(paneName)
-      var d = p.render(subject, dom)
+    var insertedPane = function (context, subject, paneName) {
+      var p = context.session.paneRegistry.byName(paneName)
+      var d = p.render(subject, context)
       d.setAttribute('style', 'border: 0.1em solid green;')
       return d
     }
@@ -157,7 +157,7 @@ module.exports = {
       }
       row.expanded = tr
       td.setAttribute('colspan', '' + cols)
-      td.appendChild(insertedPane(dom, subject, paneName))
+      td.appendChild(insertedPane(context, subject, paneName))
     }
 
     var expandAfterRowOrCollapse = function (
@@ -436,7 +436,7 @@ module.exports = {
 
           // Add in simple comments about the transaction
 
-          var outliner = panes.getOutliner(dom)
+          var outliner = context.getOutliner(dom)
 
           donePredicate(ns.rdfs('comment')) // Done above
 

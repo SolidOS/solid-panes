@@ -20,8 +20,8 @@ module.exports = {
 
   mintClass: UI.ns.solid('DokieliDocument'), // @@ A better class?
 
-  label: function (subject, _myDocument) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var ns = UI.ns
     var allowed = [
       // 'text/plain',
@@ -72,8 +72,8 @@ module.exports = {
   },
 
   // Create a new folder in a Solid system, with a dokieli editable document in it
-  mintNew: function (newPaneOptions) {
-    var kb = UI.store
+  mintNew: function (context, newPaneOptions) {
+    var kb = context.session.store
     var newInstance = newPaneOptions.newInstance
     if (!newInstance) {
       let uri = newPaneOptions.newBase
@@ -129,9 +129,10 @@ module.exports = {
   },
 
   // Derived from: humanReadablePane .. share code?
-  render: function (subject, myDocument) {
+  render: function (subject, context) {
+    const myDocument = context.dom
     var div = myDocument.createElement('div')
-    var kb = UI.store
+    var kb = context.session.store
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')

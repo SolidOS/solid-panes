@@ -16,11 +16,23 @@ import versionInfo from './versionInfo'
 import * as UI from 'solid-ui'
 import OutlineManager from './outline/manager.js'
 import registerPanes from './registerPanes.js'
-import { register } from 'pane-registry'
+import {
+  list,
+  paneForIcon,
+  paneForPredicate,
+  register,
+  byName
+} from 'pane-registry'
+import { createContext } from './outline/context'
 
-function getOutliner (dom) {
+export function getOutliner (dom) {
   if (!dom.outlineManager) {
-    dom.outlineManager = OutlineManager(dom)
+    const context = createContext(
+      dom,
+      { list, paneForIcon, paneForPredicate, register, byName },
+      UI.store
+    )
+    dom.outlineManager = new OutlineManager(context)
   }
   return dom.outlineManager
 }
@@ -47,4 +59,4 @@ export {
 // where there are many occurrences of window and of window.document
 // But each DOM should have just one outline manager.
 
-export { getOutliner, OutlineManager, UI, versionInfo }
+export { OutlineManager, UI, versionInfo }

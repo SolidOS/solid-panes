@@ -10,8 +10,8 @@ module.exports = {
   name: 'video',
 
   // Does the subject deserve an slideshow pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var typeURIs = kb.findTypeURIs(subject)
     var prefix = $rdf.Util.mediaTypeClass('video/*').uri.split('*')[0]
     for (var t in typeURIs) {
@@ -21,7 +21,8 @@ module.exports = {
     return null
   },
 
-  render: function (subject, dom) {
+  render: function (subject, context) {
+    const dom = context.dom
     var div = dom.createElement('div')
     var video = div.appendChild(dom.createElement('video'))
     video.setAttribute('controls', 'yes')

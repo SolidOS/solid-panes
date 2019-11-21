@@ -23,8 +23,8 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve an Scheduler pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) {
       return 'Scheduling poll'
@@ -35,10 +35,10 @@ module.exports = {
   //  Mint a new Schedule poll
   mintClass: ns.sched('SchedulableEvent'),
 
-  mintNew: function (options) {
+  mintNew: function (context, options) {
     return new Promise(function (resolve, reject) {
       var ns = UI.ns
-      var kb = UI.store
+      var kb = context.session.store
       var newBase = options.newBase
       var thisInstance =
         options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
@@ -314,15 +314,16 @@ module.exports = {
   }, // mintNew
 
   //  Render one meeting schedule poll
-  render: function (subject, dom) {
-    var kb = UI.store
+  render: function (subject, context) {
+    const dom = context.dom
+    var kb = context.session.store
     var ns = UI.ns
     var invitation = subject
     var appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     // ////////////////////////////////////////////
 
-    var fetcher = UI.store.fetcher
+    var fetcher = kb.fetcher
     var updater = kb.updater
     var waitingForLogin = false
 
@@ -424,7 +425,7 @@ module.exports = {
 
     var initializeNewInstanceAtBase = function (thisInstance, newBase) {
       var options = { thisInstance: thisInstance, newBase: newBase }
-      this.mintNew(options)
+      this.mintNew(context, options)
         .then(function (options) {
           var p = div.appendChild(dom.createElement('p'))
           p.setAttribute('style', 'font-size: 140%;')
@@ -482,7 +483,7 @@ module.exports = {
         // but we can trap it as being a non-editable server.
 
         if (
-          !UI.store.updater.editable(detailsDoc.uri, kb) ||
+          !kb.updater.editable(detailsDoc.uri, kb) ||
           kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))
         ) {
           // This is read-only example e.g. on github pages, etc
@@ -503,8 +504,8 @@ module.exports = {
 
     var showSignon = function showSignon () {
       clearElement(naviMain)
-      const context = { div: div, dom: dom }
-      UI.authn.logIn(context).then(context => {
+      const signonContext = { div: div, dom: dom }
+      UI.authn.logIn(signonContext).then(context => {
         me = context.me
         waitingForLogin = false // untested
         showAppropriateDisplay()
@@ -688,7 +689,7 @@ module.exports = {
             naviRight.appendChild(emailButton)
           } else {
             naviRight.appendChild(emailButton)
-            UI.store.updater.update([], insertables, function (
+            kb.updater.update([], insertables, function (
               uri,
               success,
               errorBody
@@ -1004,7 +1005,7 @@ module.exports = {
           'click',
           function (_e) {
             refreshButton.disabled = true
-            UI.store.fetcher.refresh(resultsDoc, function (ok, body) {
+            kb.fetcher.refresh(resultsDoc, function (ok, body) {
               if (!ok) {
                 console.log('Cant refresh matrix' + body)
               } else {
@@ -1027,8 +1028,8 @@ module.exports = {
 
       var dataPointForNT = []
 
-      var context = { div: naviCenter, dom: dom }
-      UI.authn.logIn(context).then(context => {
+      var loginContext = { div: naviCenter, dom: dom }
+      UI.authn.logIn(loginContext).then(context => {
         const me = context.me
         var doc = resultsDoc
         options.set_y = options.set_y.filter(function (z) {
@@ -1105,7 +1106,7 @@ module.exports = {
           dataPointForNT[possibleTimes[j].toNT()] = dataPoint
         }
         if (insertables.length) {
-          UI.store.updater.update([], insertables, function (
+          kb.updater.update([], insertables, function (
             uri,
             success,
             errorBody

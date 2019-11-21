@@ -10,7 +10,6 @@
 //         - original source view?  Use ffox view source
 
 const UI = require('solid-ui')
-const panes = require('pane-registry')
 const $rdf = require('rdflib')
 const ns = UI.ns
 
@@ -21,14 +20,14 @@ module.exports = {
 
   audience: [ns.solid('Developer')],
 
-  label: function (subject) {
+  label: function (subject, context) {
     if (
       'http://www.w3.org/2007/ont/link#ProtocolEvent' in
-      UI.store.findTypeURIs(subject)
+      context.session.store.findTypeURIs(subject)
     ) {
       return null
     }
-    var n = UI.store.statementsMatching(
+    var n = context.session.store.statementsMatching(
       undefined,
       undefined,
       undefined,
@@ -42,14 +41,11 @@ module.exports = {
       return UI.store.whether(subject, UI.ns.rdf('type'), UI.ns.link('RDFDocument'))
   },
 */
-  statementsAsTables: function statementsAsTables (
-    sts,
-    myDocument,
-    initialRoots
-  ) {
-    // var outliner = panes.getOutliner(myDocument)
+  statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
+    var myDocument = context.dom
+    // var outliner = context.getOutliner(myDocument)
     var rep = myDocument.createElement('table')
-    var sz = UI.rdf.Serializer(UI.store)
+    var sz = UI.rdf.Serializer(context.session.store)
     var res = sz.rootSubjects(sts)
     var roots = res.roots
     var subjects = res.subjects
@@ -176,10 +172,9 @@ module.exports = {
           }
           return res
         case 'Graph':
-          res = panes.dataContents.statementsAsTables(
-            obj.statements,
-            myDocument
-          )
+          res = context.session.paneRegistry
+            .byName('dataContents')
+            .statementsAsTables(obj.statements, context)
           res.setAttribute('class', 'nestedFormula')
           return res
         case 'Variable':
@@ -230,9 +225,11 @@ module.exports = {
     return rep
   }, // statementsAsTables
   // View the data in a file in user-friendly way
-  render: function (subject, myDocument) {
+  render: function (subject, context) {
+    var myDocument = context.dom
+
     function alternativeRendering () {
-      var sz = UI.rdf.Serializer(UI.store)
+      var sz = UI.rdf.Serializer(context.session.store)
       var res = sz.rootSubjects(sts)
       var roots = res.roots
       var p = {}
@@ -268,12 +265,14 @@ module.exports = {
       var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
       if (ps) initialRoots.push(ps)
       div.appendChild(
-        panes.dataContents.statementsAsTables(sts, myDocument, initialRoots)
+        context.session.paneRegistry
+          .byName('dataContents')
+          .statementsAsTables(sts, context, initialRoots)
       )
     }
 
-    var outliner = panes.getOutliner(myDocument)
-    var kb = UI.store
+    var outliner = context.getOutliner(myDocument)
+    var kb = context.session.store
     var div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')
     // Because of smushing etc, this will not be a copy of the original source

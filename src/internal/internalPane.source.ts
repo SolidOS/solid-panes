@@ -5,10 +5,9 @@
  */
 /* global alert confirm */
 
-import { PaneDefinition } from '../types'
-import { icons, ns, store, widgets } from 'solid-ui'
-import panes from 'pane-registry'
-import { IndexedFormula, NamedNode } from 'rdflib'
+import { icons, ns, widgets } from 'solid-ui'
+import { IndexedFormula, literal, NamedNode, st, sym } from 'rdflib'
+import { PaneDefinition } from 'pane-registry'
 
 const pane: PaneDefinition = {
   icon: icons.originalIconBase + 'tango/22-emblem-system.png',
@@ -21,14 +20,19 @@ const pane: PaneDefinition = {
     return 'under the hood' // There is often a URI even of no statements
   },
 
-  render: function (subject, dom) {
-    subject = store.canon(subject)
-    var types = store.findTypeURIs(subject)
+  render: function (subject, context) {
+    const dom = context.dom
+    const store = context.session.store
+    const canonizedSubject = store.canon(subject)
+    const types = store.findTypeURIs(canonizedSubject)
 
     function filter (pred: NamedNode) {
       if (types['http://www.w3.org/2007/ont/link#ProtocolEvent']) return true // display everything for them
-      return !!(
-        typeof (panes as any).internal.predicates[pred.uri] !== 'undefined'
+      const view = context.session.paneRegistry.byName('internal')
+      return (
+        view &&
+        view.predicates &&
+        !!(typeof view.predicates[pred.uri] !== 'undefined')
       )
     }
 
@@ -47,7 +51,7 @@ const pane: PaneDefinition = {
       }
       return new Promise(function (resolve, reject) {
         fetcher.load(folder).then(function () {
-          let promises = kb.each(folder, ns.ldp('contains')).map(file => {
+          const promises = kb.each(folder, ns.ldp('contains')).map(file => {
             if (kb.holds(file, ns.rdf('type'), ns.ldp('BasicContainer'))) {
               return deleteRecursive(kb, file as NamedNode)
             } else {
@@ -101,15 +105,15 @@ const pane: PaneDefinition = {
           function () {
             if (
               !confirm(
-                'Are you sure you want to delete ' +
-                  subject +
-                  '? This cannot be undone.'
+                `Are you sure you want to delete ${subject}? This cannot be undone.`
               )
-            )
+            ) {
               return
+            }
+            // @@ TODO Remove casing of store.fetcher
             var promise = isFolder
               ? deleteRecursive(store, subject)
-              : store.fetcher.webOperation('DELETE', subject.uri)
+              : (store.fetcher as any).webOperation('DELETE', subject.uri)
             promise
               .then(() => {
                 var str = 'Deleted: ' + subject
@@ -135,7 +139,11 @@ const pane: PaneDefinition = {
       )
       refreshCell.appendChild(refreshButton)
       refreshButton.addEventListener('click', () => {
-        store.fetcher.refresh(subject, function (ok: boolean, errm: string) {
+        // @@ TODO Remove casting of store.fetcher
+        ;(store.fetcher as any).refresh(subject, function (
+          ok: boolean,
+          errm: string
+        ) {
           let str
           if (ok) {
             str = 'Refreshed OK: ' + subject
@@ -152,9 +160,9 @@ const pane: PaneDefinition = {
     var docURI = ''
     if (subject.uri) {
       plist.push(
-        store.st(
+        st(
           subject,
-          store.sym('http://www.w3.org/2007/ont/link#uri'),
+          sym('http://www.w3.org/2007/ont/link#uri'),
           subject.uri,
           store.fetcher.appNode
         )
@@ -162,18 +170,18 @@ const pane: PaneDefinition = {
       if (subject.uri.indexOf('#') >= 0) {
         docURI = subject.uri.split('#')[0]
         plist.push(
-          store.st(
+          st(
             subject,
-            store.sym('http://www.w3.org/2007/ont/link#documentURI'),
+            sym('http://www.w3.org/2007/ont/link#documentURI'),
             subject.uri.split('#')[0],
             store.fetcher.appNode
           )
         )
         plist.push(
-          store.st(
+          st(
             subject,
-            store.sym('http://www.w3.org/2007/ont/link#document'),
-            store.sym(subject.uri.split('#')[0]),
+            sym('http://www.w3.org/2007/ont/link#document'),
+            sym(subject.uri.split('#')[0]),
             store.fetcher.appNode
           )
         )
@@ -182,19 +190,21 @@ const pane: PaneDefinition = {
       }
     }
     if (docURI) {
-      var ed = store.updater.editable(docURI)
+      // @@ TODO Remove casting of store.updater.editable
+      var ed = (store.updater as any).editable(docURI)
       if (ed) {
+        // @@ TODO Remove casting of literal when rdflib exports proper types
         plist.push(
-          store.st(
+          st(
             subject,
-            store.sym('http://www.w3.org/ns/rww#editable'),
-            store.literal(ed),
+            sym('http://www.w3.org/ns/rww#editable'),
+            (literal as any)(ed),
             store.fetcher.appNode
           )
         )
       }
     }
-    var outliner = panes.getOutliner(dom)
+    var outliner = context.getOutliner(dom)
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = store.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)

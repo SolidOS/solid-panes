@@ -10,10 +10,10 @@
  ** or standalone script adding onto existing mashlib.
  */
 
-import { icons, ns, store, widgets } from 'solid-ui'
+import { icons, ns, widgets } from 'solid-ui'
 import { NamedNode } from 'rdflib'
-import panes from 'pane-registry'
-import { PaneDefinition } from '../types'
+import { paneDiv } from './profilePaneUtils'
+import { PaneDefinition } from 'pane-registry'
 
 // const nodeMode = (typeof module !== 'undefined')
 
@@ -39,26 +39,21 @@ const thisPane: PaneDefinition = {
 
   name: 'profile',
 
-  label: function (subject) {
-    var t = store.findTypeURIs(subject)
+  label: function (subject, context) {
+    var t = context.session.store.findTypeURIs(subject)
     if (
       t[ns.vcard('Individual').uri] ||
       t[ns.vcard('Organization').uri] ||
       t[ns.foaf('Person').uri] ||
       t[ns.schema('Person').uri]
-    )
+    ) {
       return 'Profile'
+    }
     return null
   },
 
-  render: function (subject, dom) {
-    function paneDiv (dom: HTMLDocument, subject: NamedNode, paneName: string) {
-      var p = panes.byName(paneName)
-      var d = p.render(subject, dom)
-      d.setAttribute('style', 'border: 0.3em solid #444; border-radius: 0.5em')
-      return d
-    }
-
+  render: function (subject, context) {
+    const store = context.session.store
     async function doRender (
       container: HTMLElement,
       subject: NamedNode | null,
@@ -69,7 +64,8 @@ const thisPane: PaneDefinition = {
       let otherProfiles = store.each(subject, ns.rdfs('seeAlso'), null, profile)
       if (otherProfiles.length > 0) {
         try {
-          await store.fetcher.load(otherProfiles)
+          // @@ TODO Remove casting of store.fetcher.load
+          await (store.fetcher.load as any)(otherProfiles)
         } catch (err) {
           container.appendChild(widgets.errorMessageBlock(err))
         }
@@ -112,8 +108,8 @@ const thisPane: PaneDefinition = {
 
       // Todo: only show this if there is vcard info
       heading('Contact')
-      const contactDisplay = paneDiv(dom, subject, 'contact')
-      contactDisplay.border = '0em' // override form
+      const contactDisplay = paneDiv(context, subject, 'contact')
+      contactDisplay.style.border = '0em' // override form
       main.appendChild(contactDisplay)
 
       if (store.holds(subject, ns.foaf('knows'))) {
@@ -126,6 +122,7 @@ const thisPane: PaneDefinition = {
         })
       }
     }
+    const dom = context.dom
     var container = dom.createElement('div')
     doRender(container, subject, dom) // async
     return container // initially unpopulated

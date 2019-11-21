@@ -4,7 +4,6 @@
 const UI = require('solid-ui')
 const $rdf = require('rdflib')
 const ns = UI.ns
-const kb = UI.store
 
 module.exports = {
   icon: UI.icons.iconBase + 'noun_534313.svg',
@@ -12,8 +11,8 @@ module.exports = {
   name: 'audio',
 
   // Does the subject deserve an audio play pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var typeURIs = kb.findTypeURIs(subject)
 
     var prefix = $rdf.Util.mediaTypeClass('audio/*').uri.split('*')[0]
@@ -23,7 +22,9 @@ module.exports = {
     return null
   },
 
-  render: function (subject, dom) {
+  render: function (subject, context) {
+    const kb = context.session.store
+    const dom = context.dom
     var options = {
       autoplay: false,
       chain: true,

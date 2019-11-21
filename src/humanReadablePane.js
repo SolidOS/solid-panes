@@ -11,8 +11,8 @@ module.exports = {
 
   name: 'humanReadable',
 
-  label: function (subject, _myDocument) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var ns = UI.ns
 
     //   See also the source pane, which has lower precedence.
@@ -67,9 +67,10 @@ module.exports = {
     return null
   },
 
-  render: function (subject, myDocument) {
+  render: function (subject, context) {
+    var myDocument = context.dom
     var div = myDocument.createElement('div')
-    var kb = UI.store
+    var kb = context.session.store
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')

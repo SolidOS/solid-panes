@@ -18,8 +18,8 @@ module.exports = {
   name: 'sharing',
 
   // Does the subject deserve an contact pane?
-  label: function (subject) {
-    var kb = UI.store
+  label: function (subject, context) {
+    var kb = context.session.store
     var ns = UI.ns
     var t = kb.findTypeURIs(subject)
     if (t[ns.ldp('Resource').uri]) return 'Sharing' // @@ be more sophisticated?
@@ -29,8 +29,9 @@ module.exports = {
     return null // No under other circumstances
   },
 
-  render: function (subject, dom) {
-    var kb = UI.store
+  render: function (subject, context) {
+    var dom = context.dom
+    var kb = context.session.store
     var ns = UI.ns
     var div = dom.createElement('div')
     div.setAttribute('class', 'sharingPane')
@@ -55,7 +56,7 @@ module.exports = {
     var box = MainRow.appendChild(dom.createElement('table'))
     // var bottomRow = table.appendChild(dom.createElement('tr'));
 
-    var context = {
+    var sharingPaneContext = {
       target: subject,
       me: null,
       noun: noun,
@@ -64,11 +65,14 @@ module.exports = {
       statusRegion: statusBlock
     }
     var uri = UI.authn.currentUser()
-    context.me = uri
+    sharingPaneContext.me = uri
     UI.aclControl.preventBrowserDropEvents(dom)
 
     box.appendChild(
-      UI.aclControl.ACLControlBox5(subject, dom, noun, kb, function (ok, body) {
+      UI.aclControl.ACLControlBox5(subject, context, noun, kb, function (
+        ok,
+        body
+      ) {
         if (!ok) {
           box.innerHTML = 'ACL control box Failed: ' + body
         }
