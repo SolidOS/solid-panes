@@ -61,12 +61,7 @@ const thisPane: PaneDefinition = {
     ) {
       if (!subject) throw new Error('subject missing')
       const profile = subject.doc()
-      const otherProfiles = store.each(
-        subject,
-        ns.rdfs('seeAlso'),
-        null,
-        profile
-      )
+      const otherProfiles = store.each(subject, ns.rdfs('seeAlso'), null, profile)
       if (otherProfiles.length > 0) {
         try {
           // @@ TODO Remove casting of store and store.fetcher.load
