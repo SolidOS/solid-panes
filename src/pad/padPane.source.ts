@@ -2,7 +2,16 @@ import { authn, icons, ns, pad, widgets } from 'solid-ui'
 // @ts-ignore
 // @@ TODO: serialize is not part rdflib type definitions
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
-import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
+import {
+  graph,
+  log,
+  NamedNode,
+  Namespace,
+  sym,
+  serialize,
+  UpdateManager,
+  Fetcher
+} from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 /*   pad Pane
  **
@@ -29,7 +38,7 @@ const paneDef: PaneDefinition = {
 
   mintNew: function (context, newPaneOptions: any) {
     const store = context.session.store
-    var updater = store.updater
+    const updater = store.updater as UpdateManager
     if (newPaneOptions.me && !newPaneOptions.me.uri) {
       throw new Error('notepad mintNew:  Invalid userid')
     }
@@ -272,7 +281,7 @@ const paneDef: PaneDefinition = {
 
       var toBeCopied = [{ local: 'index.html', contentType: 'text/html' }]
 
-      let newInstance = store.sym(newPadDoc.uri + '#thisPad')
+      const newInstance = store.sym(newPadDoc.uri + '#thisPad')
 
       // log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
 
@@ -287,21 +296,19 @@ const paneDef: PaneDefinition = {
             console.log('Copying ' + base + item.local + ' to ' + newURI)
 
             var setThatACL = function () {
-                setACL(newURI, false, function (ok: boolean, message: string) {
-                  if (!ok) {
-                    complainIfBad(
-                      ok,
-                      'FAILED to set ACL ' + newURI + ' : ' + message
-                    )
-                    console.log('FAILED to set ACL ' + newURI + ' : ' + message)
-                  } else {
-                    agenda.shift()!() // beware too much nesting
-                  }
-                })
-              }
-
-              // @@ TODO Remove casting of fetcher
-            ;(store.fetcher as any)
+              setACL(newURI, false, function (ok: boolean, message: string) {
+                if (!ok) {
+                  complainIfBad(
+                    ok,
+                    'FAILED to set ACL ' + newURI + ' : ' + message
+                  )
+                  console.log('FAILED to set ACL ' + newURI + ' : ' + message)
+                } else {
+                  agenda.shift()!() // beware too much nesting
+                }
+              })
+            }
+            ;(store as any).fetcher // @@ TODO Remove casting
               .webCopy(
                 base + item.local,
                 newBase + item.local,
@@ -489,8 +496,9 @@ const paneDef: PaneDefinition = {
     //  Body of Pane
     var appPathSegment = 'app-pad.timbl.com' // how to allocate this string and connect to
 
-    var fetcher = store.fetcher
-    var updater = store.updater
+    // @@ TODO Remove castings
+    const fetcher = (store as any).fetcher as Fetcher
+    const updater = (store as any).updater as UpdateManager
     var me: any
 
     var PAD = Namespace('http://www.w3.org/ns/pim/pad#')

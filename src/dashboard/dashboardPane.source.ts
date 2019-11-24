@@ -43,7 +43,8 @@ function buildPage (
 }
 
 function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
-  const outliner = context.getOutliner(context.dom)
+  // @@ TODO get a proper type
+  const outliner: any = context.getOutliner(context.dom)
   outliner
     .getDashboard()
     .then((dashboard: HTMLElement) => container.appendChild(dashboard))

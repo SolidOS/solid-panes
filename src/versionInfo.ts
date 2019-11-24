@@ -1,6 +1,6 @@
 export default {
-  buildTime: '2019-11-21T14:13:06Z',
-  commit: '8601dd767b2705e7ece30b299ab5aea0a10dc81e',
+  buildTime: '2019-11-24T12:58:17Z',
+  commit: '30ba1daec3519100d272620ed385a542111b4644',
   npmInfo: {
     'solid-panes': '2.0.4',
     npm: '6.10.0',

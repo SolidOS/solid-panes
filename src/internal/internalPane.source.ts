@@ -113,7 +113,7 @@ const pane: PaneDefinition = {
             // @@ TODO Remove casing of store.fetcher
             var promise = isFolder
               ? deleteRecursive(store, subject)
-              : (store.fetcher as any).webOperation('DELETE', subject.uri)
+              : (store as any).fetcher.webOperation('DELETE', subject.uri) // @@ TODO remove casting
             promise
               .then(() => {
                 var str = 'Deleted: ' + subject
@@ -140,7 +140,8 @@ const pane: PaneDefinition = {
       refreshCell.appendChild(refreshButton)
       refreshButton.addEventListener('click', () => {
         // @@ TODO Remove casting of store.fetcher
-        ;(store.fetcher as any).refresh(subject, function (
+        ;(store as any).fetcher.refresh(subject, function (
+          // @@ TODO Remove casting
           ok: boolean,
           errm: string
         ) {
@@ -164,7 +165,7 @@ const pane: PaneDefinition = {
           subject,
           sym('http://www.w3.org/2007/ont/link#uri'),
           subject.uri,
-          store.fetcher.appNode
+          (store as any).fetcher.appNode // @@ TODO Remove casting
         )
       )
       if (subject.uri.indexOf('#') >= 0) {
@@ -174,7 +175,7 @@ const pane: PaneDefinition = {
             subject,
             sym('http://www.w3.org/2007/ont/link#documentURI'),
             subject.uri.split('#')[0],
-            store.fetcher.appNode
+            (store as any).fetcher.appNode // @@ TODO Remove casting
           )
         )
         plist.push(
@@ -182,7 +183,7 @@ const pane: PaneDefinition = {
             subject,
             sym('http://www.w3.org/2007/ont/link#document'),
             sym(subject.uri.split('#')[0]),
-            store.fetcher.appNode
+            (store as any).fetcher.appNode // @@ TODO Remove casting
           )
         )
       } else {
@@ -199,12 +200,13 @@ const pane: PaneDefinition = {
             subject,
             sym('http://www.w3.org/ns/rww#editable'),
             (literal as any)(ed),
-            store.fetcher.appNode
+            (store as any).fetcher.appNode // @@ TODO remove casting
           )
         )
       }
     }
-    var outliner = context.getOutliner(dom)
+    // @@ TODO get a proper type
+    const outliner: any = context.getOutliner(dom)
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = store.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)
