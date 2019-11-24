@@ -35,7 +35,7 @@ export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
   const context = { dom: dom, div: main, statusArea: statusArea, me: null }
   authn.logInLoadProfile(context).then(
     (context: any) => {
-      let subject: NamedNode = context.me
+      const subject: NamedNode = context.me
 
       const profile = subject.doc()
       const editable = store.updater.editable(profile.uri, store)
@@ -191,28 +191,28 @@ function createApplicationEntry (
         'form',
         origin
           ? [
-              createText('button', 'Update', {
+            createText('button', 'Update', {
+              class: 'controlButton',
+              style: 'background: LightGreen;'
+            }),
+            createText(
+              'button',
+              'Delete',
+              {
                 class: 'controlButton',
-                style: 'background: LightGreen;'
-              }),
-              createText(
-                'button',
-                'Delete',
-                {
-                  class: 'controlButton',
-                  style: 'background: LightCoral;'
-                },
-                {
-                  click: removeApplication
-                }
-              )
-            ]
+                style: 'background: LightCoral;'
+              },
+              {
+                click: removeApplication
+              }
+            )
+          ]
           : [
-              createText('button', 'Add', {
-                class: 'controlButton',
-                style: 'background: LightGreen;'
-              })
-            ],
+            createText('button', 'Add', {
+              class: 'controlButton',
+              style: 'background: LightGreen;'
+            })
+          ],
         {},
         {
           submit: addOrEditApplication

@@ -1,17 +1,8 @@
 import { authn, icons, ns, pad, widgets } from 'solid-ui'
-// @ts-ignore
 // @@ TODO: serialize is not part rdflib type definitions
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
-import {
-  graph,
-  log,
-  NamedNode,
-  Namespace,
-  sym,
-  serialize,
-  UpdateManager,
-  Fetcher
-} from 'rdflib'
+// @ts-ignore
+import { graph, log, NamedNode, Namespace, sym, serialize, UpdateManager, Fetcher } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 /*   pad Pane
  **

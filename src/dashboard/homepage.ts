@@ -43,7 +43,7 @@ function createTitle (uri: string, name: string): HTMLElement {
   profileLink.innerText = name
 
   const profileLinkPost = document.createElement('span')
-  profileLinkPost.innerText = `'s Pod`
+  profileLinkPost.innerText = '\'s Pod'
 
   const title = document.createElement('h1')
   title.appendChild(profileLink)
