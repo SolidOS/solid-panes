@@ -19,7 +19,7 @@
     "test": "npm run lint && jest",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "prepublishOnly": "npm test && npm run build",
-    "postpublish": "git push --tags"
+    "postpublish": "git push origin master --follow-tags"
   },
   "repository": {
     "type": "git",
