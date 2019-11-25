@@ -585,7 +585,7 @@ module.exports = function UserInput (outline) {
                   this.lastModified.parentNode.parentNode,
                   'TD'
                 )
-                const defaultPane = panes.default // @@ check
+                const defaultPane = panes.byName('default') // @@ check
                 outline.outlineExpand(enclosingTd, s.subject, {
                   pane: defaultPane,
                   already: true

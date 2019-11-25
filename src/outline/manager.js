@@ -1637,7 +1637,7 @@ module.exports = function (context) {
             sf.addCallback('done', setSelectedAfterward)
             sf.addCallback('fail', setSelectedAfterward)
             outlineExpand(selectedTd, obj, {
-              pane: panes.defaultPane
+              pane: panes.byName('defaultPane')
             })
           }
           setSelectedAfterward()
@@ -1740,7 +1740,7 @@ module.exports = function (context) {
     var target = thisOutline.targetOf(e)
     var p = target.parentNode
     var subject = UI.utils.getAbout(kb, target)
-    var pane = e.altKey ? panes.internalPane : undefined // set later: was panes.defaultPane
+    var pane = e.altKey ? panes.byName('internal') : undefined // set later: was panes.defaultPane
 
     if (e.shiftKey) {
       // Shift forces a refocus - bring this to the top
@@ -1749,7 +1749,7 @@ module.exports = function (context) {
       if (e.altKey) {
         // To investigate screw ups, dont wait show internals
         outlineExpand(p, subject, {
-          pane: panes.internalPane,
+          pane: panes.byName('internal'),
           immediate: true
         })
       } else {
@@ -1762,7 +1762,7 @@ module.exports = function (context) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     var target = thisOutline.targetOf(e)
     var subject = UI.utils.getAbout(kb, target)
-    var pane = e.altKey ? panes.internalPane : undefined
+    var pane = e.altKey ? panes.byName('internal') : undefined
     var p = target.parentNode.parentNode
     outlineCollapse(p, subject, pane)
   }
