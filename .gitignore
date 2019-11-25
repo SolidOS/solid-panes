@@ -1,6 +1,7 @@
 # Built code
 dist
 lib
+src/versionInfo.ts
 
 # Logs
 logs
