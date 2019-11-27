@@ -30,8 +30,8 @@ const TabbedPane: PaneDefinition = {
     const div = dom.createElement('div')
 
     ;(async () => {
-      // @@ TODO Remove casting of kb.fetcher.load
-      await (store.fetcher.load as any)(subject)
+      // @@ TODO Remove castings...
+      await ((store as any).fetcher.load as any)(subject)
 
       div.appendChild(tabs.tabWidget({
         dom,

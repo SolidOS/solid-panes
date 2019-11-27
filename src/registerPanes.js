@@ -23,7 +23,7 @@ module.exports = function registerPanes (register) {
   register(chatPanes.shortChatPane) // was './chat/chatPane.js'
   // register(require('./publication/publicationPane.js'))
   register(require('meeting-pane'))
-  register(require('./tabbed/tabbedPane.js'))
+  register(require('./tabbed/tabbedPane'))
   register(require('./schedule/schedulePane.js'))
 
   register(require('./trip/tripPane.js'))
