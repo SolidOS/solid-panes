@@ -5,19 +5,21 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "npm run clean && npm run build-dist && npm run build-dev && npm run build-lib && npm run build-types",
+    "build": "npm run clean && npm run build-version && npm run build-dist && npm run build-dev && npm run build-lib && npm run build-types",
     "build-browserified": "npm run build",
-    "build-dist": "npm run pre && webpack --progress --colors --mode=production",
-    "build-dev": "npm run pre && webpack --progress --colors --mode=development",
+    "build-dist": "webpack --progress --colors --mode=production",
+    "build-dev": "webpack --progress --colors --mode=development",
     "build-lib": "babel src -d lib --source-maps --extensions '.ts,.js'",
     "build-types": "tsc --emitDeclarationOnly",
-    "watch": "babel src -d lib --source-maps --extensions '.ts,.js' --watch",
+    "build-version": "./timestamp.sh > src/versionInfo.ts  && eslint 'src/versionInfo.ts' --fix",
+    "watch": "npm run build-version && babel src -d lib --source-maps --extensions '.ts,.js' --watch",
     "clean": "rm -rf dist lib",
     "lint": "eslint 'src/**/*.js' 'src/**/*.ts'",
     "lint-fix": "eslint 'src/**/*.js' 'src/**/*.ts' --fix",
-    "test-watch": "npm run lint && jest --onlyChanged --watch",
     "test": "npm run lint && jest",
-    "pre": "./timestamp.sh > src/versionInfo.ts"
+    "test-watch": "npm run lint && jest --onlyChanged --watch",
+    "prepublishOnly": "npm test && npm run build",
+    "postpublish": "git push origin master --follow-tags"
   },
   "repository": {
     "type": "git",
@@ -86,7 +88,8 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "lint-staged",
+      "pre-push": "npm test"
     }
   },
   "lint-staged": {
