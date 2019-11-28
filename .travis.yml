@@ -1,4 +1,13 @@
 language: node_js
+node_js:
+  - "8.12"
+  - "8"
+  - "10.3"
+  - "10"
+  - "12.0"
+  - "12"
+  - "lts/*"
+  - "node"
 install:
   - npm ci
 script:
