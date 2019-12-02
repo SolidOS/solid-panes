@@ -51,14 +51,14 @@
     "babel-preset-metalab": "^1.0.0",
     "chat-pane": "^2.0.0",
     "contacts-pane": "^2.0.0",
-    "folder-pane": "^2.0.0",
+    "folder-pane": "^2.0.1",
     "issue-pane": "^2.0.0",
     "meeting-pane": "^2.0.0",
     "mime-types": "^2.1.24",
     "pane-registry": "^2.0.0",
     "rdflib": "^1.0.6",
     "solid-namespace": "^0.2.0",
-    "solid-ui": "^2.0.0",
+    "solid-ui": "^2.0.1",
     "source-pane": "^2.0.0"
   },
   "devDependencies": {
