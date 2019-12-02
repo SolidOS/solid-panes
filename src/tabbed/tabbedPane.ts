@@ -39,27 +39,19 @@ const TabbedPane: PaneDefinition = {
         predicate: store.any(subject, ns.meeting('predicate')) || ns.meeting('toolList'),
         ordered: true,
         orientation: store.anyValue(subject, ns.meeting('orientation')) || 0,
-        renderMain: prepareRenderMainFn(context),
-        renderTab: prepareRenderTabFn(subject, context),
+        renderMain: (containerDiv, item) => {
+          containerDiv.innerHTML = ''
+          const table = containerDiv.appendChild(context.dom.createElement('table'))
+          ;(context.getOutliner(context.dom) as any).GotoSubject(item, true, null, false, undefined, table)
+        },
+        renderTab: (containerDiv, item) => {
+          const predicate = context.session.store.the(subject, ns.meeting('predicate'))
+          containerDiv.appendChild(widgets.personTR(context.dom, predicate, item, {}))
+        },
         backgroundColor: store.anyValue(subject, ns.ui('backgroundColor')) || '#ddddcc'
       }))
     })()
     return div
-  }
-}
-
-function prepareRenderTabFn (subject: NamedNode, context: DataBrowserContext): (div, item) => void {
-  const predicate = context.session.store.the(subject, ns.meeting('predicate'))
-  return (div, item) => {
-    div.appendChild(widgets.personTR(context.dom, predicate, item, {}))
-  }
-}
-
-function prepareRenderMainFn (context: DataBrowserContext): (containerDiv, item) => void {
-  return (containerDiv, item) => {
-    containerDiv.innerHTML = ''
-    const table = containerDiv.appendChild(context.dom.createElement('table'))
-    ;(context.getOutliner(context.dom) as any).GotoSubject(item, true, null, false, undefined, table)
   }
 }
 
