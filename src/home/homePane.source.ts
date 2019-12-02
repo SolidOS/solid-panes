@@ -51,14 +51,13 @@ const HomePaneSource: PaneDefinition = {
       const relevantPanes = await authn.filterAvailablePanes(
         context.session.paneRegistry.list
       )
-      create.newThingUI(creationContext, relevantPanes) // newUI Have to pass panes down
+      create.newThingUI(creationContext, context, relevantPanes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
       // TODO: Replace by a common, representative interface
-      type AuthContext = unknown
       authn
         .registrationList(homePaneContext, { private: true })
-        .then(function (authContext: AuthContext) {
+        .then(function (authContext) {
           div.appendChild(dom.createElement('h4')).textContent = 'Public things'
           div.appendChild(dom.createElement('p')).textContent =
             'Things in this list are visible to others.'
