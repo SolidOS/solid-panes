@@ -40,7 +40,7 @@ if (typeof window !== 'undefined') {
   getOutliner(window.document)
 }
 
-registerPanes(register)
+registerPanes((cjsOrEsModule: any) => register(cjsOrEsModule.default || cjsOrEsModule))
 
 export {
   list,
