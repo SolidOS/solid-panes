@@ -84,7 +84,7 @@ module.exports = function registerPanes (register) {
   // register(require("photoImportPane.js"))
 
   // The sharing pane is fairly generic and administrative  201
-  register(require('./sharing/sharingPane.js'))
+  register(require('./sharing/sharingPane'))
 
   // The internals pane is always (almost?) the last as it is the least user-friendly
   register(require('./internal/internalPane'))
