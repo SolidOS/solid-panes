@@ -87,18 +87,14 @@ module.exports = {
     //
 
     var getSortKeySimple = function (_c) {
-      switch (subject.uri) {
-        case 'http://www.w3.org/2005/01/wf/flow#Task':
-          return 'http://purl.org/dc/elements/1.1/created'
-        case 'http://www.w3.org/ns/pim/trip#Trip':
-          return 'http://www.w3.org/2002/12/cal/ical#dtstart'
-        case 'http://www.w3.org/2000/10/swap/pim/qif#Transaction':
-          return 'http://www.w3.org/2000/10/swap/pim/qif#date'
-        case 'http://www.w3.org/2000/10/swap/pim/qif#SupportingDocument':
-          return 'http://purl.org/dc/elements/1.1/date'
-        default:
-          return kb.any(subject, UI.ns.ui('sortBy'))
+      const uriMap = {
+        'http://www.w3.org/2005/01/wf/flow#Task': 'http://purl.org/dc/elements/1.1/created',
+        'http://www.w3.org/ns/pim/trip#Trip': 'http://www.w3.org/2002/12/cal/ical#dtstart',
+        'http://www.w3.org/2000/10/swap/pim/qif#Transaction': 'http://www.w3.org/2000/10/swap/pim/qif#date',
+        'http://www.w3.org/2000/10/swap/pim/qif#SupportingDocument': 'http://purl.org/dc/elements/1.1/date'
       }
+      const uri = uriMap[subject.uri]
+      return uri ? kb.sym(uri) : kb.any(subject, UI.ns.ui('sortBy'))
     }
 
     var getSortKey = function (c) {
