@@ -1,12 +1,65 @@
-import { authn, ns, store, widgets } from 'solid-ui'
-import { NamedNode, sym } from 'rdflib'
+import { BlankNode, IndexedFormula, NamedNode, st, Statement, sym } from 'rdflib'
+import { Namespaces } from 'solid-namespace'
+import { ns, store } from 'solid-ui'
 
-import {
-  getStatementsToAdd,
-  getStatementsToDelete
-} from './trustedApplicationsUtils'
+export function getStatementsToDelete (
+  origin: NamedNode,
+  person: NamedNode,
+  kb: IndexedFormula,
+  ns: Namespaces
+) {
+  // `as any` is used because the rdflib typings incorrectly require a Node to be passed,
+  // even though null is also valid:
+  const applicationStatements = kb.statementsMatching(
+    null as any,
+    ns.acl('origin'),
+    origin,
+    null as any,
+    null as any
+  )
+  const statementsToDelete = applicationStatements.reduce(
+    (memo, st) => {
+      return memo
+        .concat(
+          kb.statementsMatching(
+            person,
+            ns.acl('trustedApp'),
+            st.subject,
+            null as any,
+            false
+          )
+        )
+        .concat(
+          kb.statementsMatching(
+            st.subject,
+            null as any,
+            null as any,
+            null as any,
+            false
+          )
+        )
+    },
+    [] as Statement[]
+  )
+  return statementsToDelete
+}
 
-const thisColor = '#418d99'
+export function getStatementsToAdd (
+  origin: NamedNode,
+  nodeName: string,
+  modes: string[],
+  person: NamedNode,
+  ns: Namespaces
+) {
+  var application = new BlankNode(`bn_${nodeName}`)
+  return [
+    st(person, ns.acl('trustedApp'), application, person.doc()),
+    st(application, ns.acl('origin'), origin, person.doc()),
+    ...modes
+      .map(mode => sym(mode))
+      .map(mode => st(application, ns.acl('mode'), mode, person.doc()))
+  ]
+}
 
 interface FormElements {
   modes: HTMLInputElement[]
@@ -17,82 +70,7 @@ interface FormElements {
   origin: undefined | NamedNode | HTMLInputElement
 }
 
-export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
-  const div = dom.createElement('div')
-  div.classList.add('trusted-applications-pane')
-  div.setAttribute(
-    'style',
-    'border: 0.3em solid ' +
-      thisColor +
-      '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;'
-  )
-  const table = div.appendChild(dom.createElement('table'))
-  const main = table.appendChild(dom.createElement('tr'))
-  const bottom = table.appendChild(dom.createElement('tr'))
-  const statusArea = bottom.appendChild(dom.createElement('div'))
-  statusArea.setAttribute('style', 'padding: 0.7em;')
-
-  const context = { dom: dom, div: main, statusArea: statusArea, me: null }
-  authn.logInLoadProfile(context).then(
-    (context: any) => {
-      const subject: NamedNode = context.me
-
-      const profile = subject.doc()
-      const editable = store.updater.editable(profile.uri, store)
-
-      main.appendChild(createText('h3', 'Manage your trusted applications'))
-
-      if (!editable) {
-        main.appendChild(
-          widgets.errorMessageBlock(
-            dom,
-            `Your profile ${
-              subject.doc().uri
-            } is not editable, so we cannot do much here.`
-          )
-        )
-        return
-      }
-
-      main.appendChild(
-        createText('p', 'Here you can manage the applications you trust.')
-      )
-
-      const applicationsTable = createApplicationTable(subject)
-      main.appendChild(applicationsTable)
-
-      main.appendChild(createText('h4', 'Notes'))
-      main.appendChild(
-        createContainer('ol', [
-          main.appendChild(
-            createText(
-              'li',
-              'Trusted applications will get access to all resources that you have access to.'
-            )
-          ),
-          main.appendChild(
-            createText('li', 'You can limit which modes they have by default.')
-          ),
-          main.appendChild(
-            createText('li', 'They will not gain more access than you have.')
-          )
-        ])
-      )
-      main.appendChild(
-        createText(
-          'p',
-          'Application URLs must be valid URL. Examples are http://localhost:3000, https://trusted.app, and https://sub.trusted.app.'
-        )
-      )
-    },
-    (err: any) => {
-      statusArea.appendChild(widgets.errorMessageBlock(dom, err))
-    }
-  )
-  return div
-}
-
-function createApplicationTable (subject: NamedNode) {
+export function createApplicationTable (subject: NamedNode) {
   const applicationsTable = createElement('table', {
     class: 'results'
   })
@@ -106,8 +84,8 @@ function createApplicationTable (subject: NamedNode) {
   applicationsTable.appendChild(header)
 
   // creating rows
-  ;(store.each(subject, ns.acl('trustedApp'), undefined, undefined) as any)
-    .flatMap((app: any) => {
+  ;(store.each(subject, ns.acl('trustedApp'), undefined, undefined) as Statement[])
+    .flatMap(app => {
       return store
         .each(app, ns.acl('origin'), undefined, undefined)
         .map(origin => ({
@@ -292,7 +270,7 @@ function createElement<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-function createContainer<K extends keyof HTMLElementTagNameMap> (
+export function createContainer<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   children: HTMLElement[],
   attributes = {},
@@ -309,7 +287,7 @@ function createContainer<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-function createText<K extends keyof HTMLElementTagNameMap> (
+export function createText<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   textContent: string | null,
   attributes = {},
@@ -326,10 +304,7 @@ function createText<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-function createModesInput ({
-  appModes,
-  formElements
-}: {
+function createModesInput ({ appModes, formElements }: {
   appModes: NamedNode[]
   formElements: FormElements
 }) {
@@ -358,5 +333,3 @@ function generateRandomString () {
     .toString(36)
     .substring(7)
 }
-
-// ENDS

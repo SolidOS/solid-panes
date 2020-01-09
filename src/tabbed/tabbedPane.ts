@@ -3,8 +3,7 @@
  ** data-driven
  **
  */
-import { DataBrowserContext, PaneDefinition } from 'pane-registry'
-import { NamedNode } from 'rdflib'
+import { PaneDefinition } from 'pane-registry'
 import { icons, ns, tabs, widgets } from 'solid-ui'
 
 const TabbedPane: PaneDefinition = {
