@@ -1,65 +1,6 @@
-import { BlankNode, IndexedFormula, NamedNode, st, Statement, sym } from 'rdflib'
-import { Namespaces } from 'solid-namespace'
+import { NamedNode, Statement, sym } from 'rdflib'
 import { ns, store } from 'solid-ui'
-
-export function getStatementsToDelete (
-  origin: NamedNode,
-  person: NamedNode,
-  kb: IndexedFormula,
-  ns: Namespaces
-) {
-  // `as any` is used because the rdflib typings incorrectly require a Node to be passed,
-  // even though null is also valid:
-  const applicationStatements = kb.statementsMatching(
-    null as any,
-    ns.acl('origin'),
-    origin,
-    null as any,
-    null as any
-  )
-  const statementsToDelete = applicationStatements.reduce(
-    (memo, st) => {
-      return memo
-        .concat(
-          kb.statementsMatching(
-            person,
-            ns.acl('trustedApp'),
-            st.subject,
-            null as any,
-            false
-          )
-        )
-        .concat(
-          kb.statementsMatching(
-            st.subject,
-            null as any,
-            null as any,
-            null as any,
-            false
-          )
-        )
-    },
-    [] as Statement[]
-  )
-  return statementsToDelete
-}
-
-export function getStatementsToAdd (
-  origin: NamedNode,
-  nodeName: string,
-  modes: string[],
-  person: NamedNode,
-  ns: Namespaces
-) {
-  var application = new BlankNode(`bn_${nodeName}`)
-  return [
-    st(person, ns.acl('trustedApp'), application, person.doc()),
-    st(application, ns.acl('origin'), origin, person.doc()),
-    ...modes
-      .map(mode => sym(mode))
-      .map(mode => st(application, ns.acl('mode'), mode, person.doc()))
-  ]
-}
+import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
 
 interface FormElements {
   modes: HTMLInputElement[]
@@ -81,18 +22,16 @@ export function createApplicationTable (subject: NamedNode) {
     createText('th', 'Access modes'),
     createText('th', 'Actions')
   ])
-  applicationsTable.appendChild(header)
+  applicationsTable.appendChild(header);
 
   // creating rows
-  ;(store.each(subject, ns.acl('trustedApp'), undefined, undefined) as Statement[])
-    .flatMap(app => {
-      return store
-        .each(app, ns.acl('origin'), undefined, undefined)
-        .map(origin => ({
-          appModes: store.each(app, ns.acl('mode'), undefined, undefined),
-          origin
-        }))
-    })
+  (store.each(subject, ns.acl('trustedApp'), undefined, undefined) as Statement[])
+    .flatMap(app => store
+      .each(app, ns.acl('origin'), undefined, undefined)
+      .map(origin => ({
+        appModes: store.each(app, ns.acl('mode'), undefined, undefined),
+        origin
+      })))
     .sort((a: any, b: any) => (a.origin.value < b.origin.value ? -1 : 1))
     .forEach(
       ({ appModes, origin }: { appModes: NamedNode[]; origin: NamedNode }) =>
@@ -224,8 +163,8 @@ function createApplicationEntry (
       modes,
       subject,
       ns
-    )
-    ;(store as any).updater.update(deletions, additions, handleUpdateResponse)
+    );
+    (store as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication (event: Event) {
@@ -326,10 +265,4 @@ function createModesInput ({ appModes, formElements }: {
       createText('span', mode)
     ])
   })
-}
-
-function generateRandomString () {
-  return Math.random()
-    .toString(36)
-    .substring(7)
 }

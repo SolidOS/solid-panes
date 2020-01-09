@@ -1,8 +1,8 @@
 import { authn, icons, store, widgets } from 'solid-ui'
 import { NamedNode } from 'rdflib'
 
-import { createApplicationTable, createContainer, createText } from './trustedApplicationsUtils'
 import { PaneDefinition } from 'pane-registry'
+import { createApplicationTable, createContainer, createText } from './trustedApplications.dom'
 
 const thisColor = '#418d99'
 

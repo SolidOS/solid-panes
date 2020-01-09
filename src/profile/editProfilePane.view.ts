@@ -11,10 +11,11 @@ import { authn, icons, ns, rdf, style, widgets } from 'solid-ui'
 
 import { NamedNode } from 'rdflib'
 
-import { getLabel, paneDiv } from './profilePaneUtils'
+import { getLabel } from './profilePane.utils'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import { PaneDefinition } from 'pane-registry'
+import { paneDiv } from './profilePane.dom'
 
 const highlightColor = style.highlightColor || '#7C4DFF'
 
@@ -33,6 +34,7 @@ const thisPane: PaneDefinition = {
   render: function (subject, context) {
     const dom = context.dom
     const store = context.session.store
+
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
       div.appendChild(widgets.errorMessageBlock(dom, mess, '#fee'))
@@ -70,8 +72,8 @@ const thisPane: PaneDefinition = {
     div.setAttribute(
       'style',
       'border: 0.3em solid ' +
-        highlightColor +
-        '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;'
+      highlightColor +
+      '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;'
     )
 
     var table = div.appendChild(dom.createElement('table'))

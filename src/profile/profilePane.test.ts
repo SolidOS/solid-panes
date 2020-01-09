@@ -1,6 +1,6 @@
 /* eslint-env jest */
 import namespaces from 'solid-namespace'
-import { getLabel } from './profilePaneUtils'
+import { getLabel } from './profilePane.utils'
 import { graph, namedNode, sym } from 'rdflib'
 
 const ns = namespaces({ namedNode })

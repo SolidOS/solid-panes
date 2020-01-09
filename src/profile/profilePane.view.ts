@@ -12,7 +12,7 @@
 
 import { icons, ns, widgets } from 'solid-ui'
 import { NamedNode } from 'rdflib'
-import { paneDiv } from './profilePaneUtils'
+import { paneDiv } from './profilePane.dom'
 import { PaneDefinition } from 'pane-registry'
 
 // const nodeMode = (typeof module !== 'undefined')
@@ -54,6 +54,7 @@ const thisPane: PaneDefinition = {
 
   render: function (subject, context) {
     const store = context.session.store
+
     async function doRender (
       container: HTMLElement,
       subject: NamedNode | null,
@@ -122,6 +123,7 @@ const thisPane: PaneDefinition = {
         })
       }
     }
+
     const dom = context.dom
     var container = dom.createElement('div')
     doRender(container, subject, dom) // async
