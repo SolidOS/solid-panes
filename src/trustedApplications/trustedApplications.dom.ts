@@ -1,6 +1,6 @@
 import { NamedNode, Statement, sym } from 'rdflib'
 import { ns, store } from 'solid-ui'
-import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplicationsUtils'
+import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplications.utils'
 
 interface FormElements {
   modes: HTMLInputElement[]
