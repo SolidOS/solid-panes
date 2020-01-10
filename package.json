@@ -57,7 +57,7 @@
     "mime-types": "^2.1.24",
     "pane-registry": "^2.0.0",
     "rdflib": "^1.0.6",
-    "solid-namespace": "^0.2.0",
+    "solid-namespace": "^0.3.0",
     "solid-ui": "^2.0.1",
     "source-pane": "^2.0.0"
   },
