@@ -25,7 +25,7 @@ const editProfileView: PaneDefinition = {
 
   name: 'editProfile',
 
-  label: () => 'Edit Your Profile',
+  label: () => null,
 
   render: function (subject, context) {
     const dom = context.dom
