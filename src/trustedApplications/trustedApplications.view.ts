@@ -7,6 +7,7 @@ import { createApplicationTable, createContainer, createText } from './trustedAp
 const thisColor = '#418d99'
 
 const trustedApplicationView: PaneDefinition = {
+  global: true,
   icon: `${icons.iconBase}noun_15177.svg`,
   name: 'trustedApplications',
   label: () => null,
