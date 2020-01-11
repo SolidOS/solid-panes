@@ -106,16 +106,16 @@ const editProfileView: PaneDefinition = {
         }
 
         comment(`Everything you put here will be public.
-        There will be other places to record private things..`)
+        There will be other places to record private things.`)
 
         heading('Your contact information')
 
         main.appendChild(paneDiv(context, me, 'contact'))
 
-        heading('People you know who have webids')
+        heading('People you know who have WebIDs')
 
         comment(`This is your public social network.
-        Just put people here you are happy to be connected with publicly
+        Only put people here to whom you are happy to be publicly connected.
         (You can always keep private track of friends and family in your contacts.)`)
 
         // TODO: would be useful to explain what it means to "drag people"
