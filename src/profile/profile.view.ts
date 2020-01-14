@@ -3,7 +3,7 @@
  *
  * This is the subject's primary representation in the world.
  * When anyone scans the QR code of their WebID on their card, it takes them
- * to here and here alone.  This has better be good.  This has better be
+ * to here and here alone.  This had better be good.  This had better be
  * worth the subject joining solid for
  * - informative
  *
