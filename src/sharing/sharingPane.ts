@@ -28,26 +28,12 @@ const sharingPane = {
   render: (subject, context) => {
     const dom = context.dom
     const store = context.session.store
-    const div = dom.createElement('div')
-    div.setAttribute('class', 'sharingPane')
-
     const noun = getNoun()
 
-    const pane = dom.createElement('div')
-    const table = pane.appendChild(dom.createElement('table'))
-    table.setAttribute('style', 'font-size:120%; margin: 1em; border: 0.1em #ccc ;')
-
-    const statusRow = table.appendChild(dom.createElement('tr'))
-    const statusBlock = statusRow.appendChild(dom.createElement('div'))
-    statusBlock.setAttribute('style', 'padding: 2em;')
-    const MainRow = table.appendChild(dom.createElement('tr'))
-    const box = MainRow.appendChild(dom.createElement('table'))
-
+    const div = dom.createElement('div')
+    div.classList.add('sharingPane')
     aclControl.preventBrowserDropEvents(dom)
-
-    box.appendChild(aclControl.ACLControlBox5(subject, context, noun, store))
-
-    div.appendChild(pane)
+    div.appendChild(aclControl.ACLControlBox5(subject, context, noun, store))
     return div
 
     function getNoun () {

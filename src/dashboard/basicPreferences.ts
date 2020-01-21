@@ -1,6 +1,5 @@
 import { authn, icons, ns, widgets } from 'solid-ui'
 import { NamedNode, parse, IndexedFormula } from 'rdflib'
-import { renderTrustedApplicationsOptions } from './trustedApplications/trustedApplicationsPane'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
@@ -35,6 +34,7 @@ export const basicPreferencesPane: PaneDefinition = {
         ;(parse as any)(turtle, store, doc.uri, 'text/turtle', null) // Load form directly
       }
     }
+
     const preferencesForm = store.sym(
       'urn:uuid:93774ba1-d3b6-41f2-85b6-4ae27ffd2597#this'
     )
@@ -54,7 +54,7 @@ export const basicPreferencesPane: PaneDefinition = {
         // Could be CORS
         console.log(
           'Not doing private class preferences as no access to preferences file. ' +
-            renderContext.preferencesFileError
+          renderContext.preferencesFileError
         )
         return
       }
@@ -70,11 +70,12 @@ export const basicPreferencesPane: PaneDefinition = {
       )
       appendedForm.style.borderStyle = 'none'
 
-      const trustedApplicationSettings = renderTrustedApplicationsOptions(
-        renderContext.dom
-      )
-      container.appendChild(trustedApplicationSettings)
+      const trustedApplicationsView = context.session.paneRegistry.byName('trustedApplications')
+      if (trustedApplicationsView) {
+        container.appendChild(trustedApplicationsView.render(null, context))
+      }
     }
+
     doRender()
 
     return container
@@ -82,6 +83,7 @@ export const basicPreferencesPane: PaneDefinition = {
 }
 
 export default basicPreferencesPane
+
 // ends
 
 function addDeletionLinks (

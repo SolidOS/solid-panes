@@ -1,12 +1,6 @@
-import { authn, ns, store, widgets } from 'solid-ui'
-import { NamedNode, sym } from 'rdflib'
-
-import {
-  getStatementsToAdd,
-  getStatementsToDelete
-} from './trustedApplicationsUtils'
-
-const thisColor = '#418d99'
+import { NamedNode, Statement, sym } from 'rdflib'
+import { ns, store } from 'solid-ui'
+import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplications.utils'
 
 interface FormElements {
   modes: HTMLInputElement[]
@@ -17,82 +11,7 @@ interface FormElements {
   origin: undefined | NamedNode | HTMLInputElement
 }
 
-export function renderTrustedApplicationsOptions (dom: HTMLDocument) {
-  const div = dom.createElement('div')
-  div.classList.add('trusted-applications-pane')
-  div.setAttribute(
-    'style',
-    'border: 0.3em solid ' +
-      thisColor +
-      '; border-radius: 0.5em; padding: 0.7em; margin-top:0.7em;'
-  )
-  const table = div.appendChild(dom.createElement('table'))
-  const main = table.appendChild(dom.createElement('tr'))
-  const bottom = table.appendChild(dom.createElement('tr'))
-  const statusArea = bottom.appendChild(dom.createElement('div'))
-  statusArea.setAttribute('style', 'padding: 0.7em;')
-
-  const context = { dom: dom, div: main, statusArea: statusArea, me: null }
-  authn.logInLoadProfile(context).then(
-    (context: any) => {
-      const subject: NamedNode = context.me
-
-      const profile = subject.doc()
-      const editable = store.updater.editable(profile.uri, store)
-
-      main.appendChild(createText('h3', 'Manage your trusted applications'))
-
-      if (!editable) {
-        main.appendChild(
-          widgets.errorMessageBlock(
-            dom,
-            `Your profile ${
-              subject.doc().uri
-            } is not editable, so we cannot do much here.`
-          )
-        )
-        return
-      }
-
-      main.appendChild(
-        createText('p', 'Here you can manage the applications you trust.')
-      )
-
-      const applicationsTable = createApplicationTable(subject)
-      main.appendChild(applicationsTable)
-
-      main.appendChild(createText('h4', 'Notes'))
-      main.appendChild(
-        createContainer('ol', [
-          main.appendChild(
-            createText(
-              'li',
-              'Trusted applications will get access to all resources that you have access to.'
-            )
-          ),
-          main.appendChild(
-            createText('li', 'You can limit which modes they have by default.')
-          ),
-          main.appendChild(
-            createText('li', 'They will not gain more access than you have.')
-          )
-        ])
-      )
-      main.appendChild(
-        createText(
-          'p',
-          'Application URLs must be valid URL. Examples are http://localhost:3000, https://trusted.app, and https://sub.trusted.app.'
-        )
-      )
-    },
-    (err: any) => {
-      statusArea.appendChild(widgets.errorMessageBlock(dom, err))
-    }
-  )
-  return div
-}
-
-function createApplicationTable (subject: NamedNode) {
+export function createApplicationTable (subject: NamedNode) {
   const applicationsTable = createElement('table', {
     class: 'results'
   })
@@ -103,18 +22,16 @@ function createApplicationTable (subject: NamedNode) {
     createText('th', 'Access modes'),
     createText('th', 'Actions')
   ])
-  applicationsTable.appendChild(header)
+  applicationsTable.appendChild(header);
 
   // creating rows
-  ;(store.each(subject, ns.acl('trustedApp'), undefined, undefined) as any)
-    .flatMap((app: any) => {
-      return store
-        .each(app, ns.acl('origin'), undefined, undefined)
-        .map(origin => ({
-          appModes: store.each(app, ns.acl('mode'), undefined, undefined),
-          origin
-        }))
-    })
+  (store.each(subject, ns.acl('trustedApp'), undefined, undefined) as Statement[])
+    .flatMap(app => store
+      .each(app, ns.acl('origin'), undefined, undefined)
+      .map(origin => ({
+        appModes: store.each(app, ns.acl('mode'), undefined, undefined),
+        origin
+      })))
     .sort((a: any, b: any) => (a.origin.value < b.origin.value ? -1 : 1))
     .forEach(
       ({ appModes, origin }: { appModes: NamedNode[]; origin: NamedNode }) =>
@@ -246,8 +163,8 @@ function createApplicationEntry (
       modes,
       subject,
       ns
-    )
-    ;(store as any).updater.update(deletions, additions, handleUpdateResponse)
+    );
+    (store as any).updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication (event: Event) {
@@ -292,7 +209,7 @@ function createElement<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-function createContainer<K extends keyof HTMLElementTagNameMap> (
+export function createContainer<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   children: HTMLElement[],
   attributes = {},
@@ -309,7 +226,7 @@ function createContainer<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-function createText<K extends keyof HTMLElementTagNameMap> (
+export function createText<K extends keyof HTMLElementTagNameMap> (
   elementName: K,
   textContent: string | null,
   attributes = {},
@@ -326,10 +243,7 @@ function createText<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-function createModesInput ({
-  appModes,
-  formElements
-}: {
+function createModesInput ({ appModes, formElements }: {
   appModes: NamedNode[]
   formElements: FormElements
 }) {
@@ -352,11 +266,3 @@ function createModesInput ({
     ])
   })
 }
-
-function generateRandomString () {
-  return Math.random()
-    .toString(36)
-    .substring(7)
-}
-
-// ENDS

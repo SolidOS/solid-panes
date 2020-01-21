@@ -1,11 +1,4 @@
-import {
-  NamedNode,
-  IndexedFormula,
-  Statement,
-  BlankNode,
-  st,
-  sym
-} from 'rdflib'
+import { BlankNode, IndexedFormula, NamedNode, st, Statement, sym } from 'rdflib'
 import { Namespaces } from 'solid-namespace'
 
 export function getStatementsToDelete (
@@ -65,4 +58,8 @@ export function getStatementsToAdd (
       .map(mode => sym(mode))
       .map(mode => st(application, ns.acl('mode'), mode, person.doc()))
   ]
+}
+
+export function generateRandomString () {
+  return Math.random().toString(36).substr(2, 5)
 }
