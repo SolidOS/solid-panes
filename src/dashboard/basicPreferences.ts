@@ -1,9 +1,9 @@
 import { authn, icons, ns, widgets } from 'solid-ui'
-import { NamedNode, parse, IndexedFormula } from 'rdflib'
+import { NamedNode, parse } from 'rdflib'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
-import { PaneDefinition } from 'pane-registry'
+import { LiveStore, PaneDefinition } from 'pane-registry'
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
@@ -58,7 +58,6 @@ export const basicPreferencesPane: PaneDefinition = {
         )
         return
       }
-      addDeletionLinks(container, store, renderContext.me)
       const appendedForm = widgets.appendForm(
         dom,
         formArea,
@@ -74,8 +73,9 @@ export const basicPreferencesPane: PaneDefinition = {
       if (trustedApplicationsView) {
         container.appendChild(trustedApplicationsView.render(null, context))
       }
-      
-      addDeleteSection(container, store, renderContext.me, dom)
+
+      // @@ TODO Remove need for bang syntax
+      addDeleteSection(container, store, renderContext.me!, dom)
     }
 
     doRender()
@@ -110,18 +110,14 @@ export default basicPreferencesPane
 
 function addDeleteSection (
   container: HTMLElement,
-  kb: IndexedFormula,
+  store: LiveStore,
   profile: NamedNode,
   dom: HTMLDocument
 ): void {
   const section = createSection(container, dom, 'Delete account')
 
-  const podServerNodes = kb.each(
-    profile,
-    ns.space('storage'),
-    null,
-    profile.doc()
-  )
+  // @@ TODO remove need for casting
+  const podServerNodes = store.each(profile as any, ns.space('storage'), null, profile.doc() as any)
   const podServers = podServerNodes.map(node => node.value)
 
   const list = section.appendChild(dom.createElement('ul'))
