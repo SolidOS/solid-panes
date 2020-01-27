@@ -91,12 +91,10 @@ function setupUserTypesSection (
   const formContainer = createSection(container, dom, 'User types')
 
   const description = formContainer.appendChild(dom.createElement('p'))
-  description.innerText =
-    'Here you can self-assign user types to help the data browser know which views you would like to access.'
+  description.innerText = 'Here you can self-assign user types to help the data browser know which views you would like to access.'
 
   const userTypesLink = formContainer.appendChild(dom.createElement('a'))
-  userTypesLink.href =
-    'https://github.com/solid/solid-panes/blob/master/Documentation/user-types.md'
+  userTypesLink.href = 'https://github.com/solid/userguide/#role'
   userTypesLink.innerText = 'Read more'
 
   const formArea = formContainer.appendChild(dom.createElement('div'))
