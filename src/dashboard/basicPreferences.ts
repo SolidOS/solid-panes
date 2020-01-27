@@ -1,9 +1,9 @@
 import { authn, icons, ns, widgets } from 'solid-ui'
-import { NamedNode, parse } from 'rdflib'
+import { IndexedFormula, NamedNode, parse } from 'rdflib'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
-import { LiveStore, PaneDefinition } from 'pane-registry'
+import { PaneDefinition } from 'pane-registry'
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
@@ -74,8 +74,8 @@ export const basicPreferencesPane: PaneDefinition = {
         container.appendChild(trustedApplicationsView.render(null, context))
       }
 
-      // @@ TODO Remove need for bang syntax
-      addDeleteSection(container, store, renderContext.me!, dom)
+      // @@ TODO Remove need for casting as any and bang (!) syntax
+      addDeleteSection(container, store as any, renderContext.me!, dom)
     }
 
     doRender()
@@ -108,7 +108,7 @@ export default basicPreferencesPane
 
 function addDeleteSection (
   container: HTMLElement,
-  store: LiveStore,
+  store: IndexedFormula,
   profile: NamedNode,
   dom: HTMLDocument
 ): void {
