@@ -15,7 +15,8 @@ and ask the pane system to pick the appropriate pane. It does this by calling ea
 with the object, and asking whether it wants to render that object. Typically the pane chosen is the most specific pane,
 so typically a hand-written user interface will be chosen over a generic machine-generated one.
 
-These panes are used in the Data Browser - see mashlib [https://github.com/linkeddata/mashlib](https://github.com/linkeddata/mashlib)
+These panes are used in the Data Browser - see mashlib
+[https://github.com/linkeddata/mashlib](https://github.com/linkeddata/mashlib)
 
 Currently the panes available include:
 
@@ -29,7 +30,11 @@ Currently the panes available include:
 - A Sharing pane to control the Access Control Lists for any object or folder
 - and so on
 
-The solid-app-set panes are built using a set of widgets and utilities in [https://github.com/linkeddata/solid-ui](https://github.com/linkeddata/solid-ui)
+The solid-app-set panes are built using a set of widgets and utilities in
+[https://github.com/linkeddata/solid-ui](https://github.com/linkeddata/solid-ui)
+
+To help onboarding, we're using [roles](https://github.com/solid/userguide/#role) to limit the number of panes presented
+to new users.
 
 ## Goals
 

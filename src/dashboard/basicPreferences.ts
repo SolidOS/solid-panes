@@ -1,5 +1,5 @@
 import { authn, icons, ns, widgets } from 'solid-ui'
-import { NamedNode, parse, IndexedFormula } from 'rdflib'
+import { IndexedFormula, NamedNode, parse } from 'rdflib'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
@@ -25,7 +25,7 @@ export const basicPreferencesPane: PaneDefinition = {
 
     const container = dom.createElement('div')
 
-    const formArea = container.appendChild(dom.createElement('div'))
+    const formArea = setupUserTypesSection(container, dom)
 
     function loadData (doc: NamedNode, turtle: String) {
       doc = doc.doc() // remove # from URI if nec
@@ -58,7 +58,6 @@ export const basicPreferencesPane: PaneDefinition = {
         )
         return
       }
-      addDeletionLinks(container, store, renderContext.me)
       const appendedForm = widgets.appendForm(
         dom,
         formArea,
@@ -74,6 +73,9 @@ export const basicPreferencesPane: PaneDefinition = {
       if (trustedApplicationsView) {
         container.appendChild(trustedApplicationsView.render(null, context))
       }
+
+      // @@ TODO Remove need for casting as any and bang (!) syntax
+      addDeleteSection(container, store as any, renderContext.me!, dom)
     }
 
     doRender()
@@ -82,34 +84,56 @@ export const basicPreferencesPane: PaneDefinition = {
   }
 }
 
+function setupUserTypesSection (
+  container: Element,
+  dom: HTMLDocument
+): Element {
+  const formContainer = createSection(container, dom, 'User types')
+
+  const description = formContainer.appendChild(dom.createElement('p'))
+  description.innerText = 'Here you can self-assign user types to help the data browser know which views you would like to access.'
+
+  const userTypesLink = formContainer.appendChild(dom.createElement('a'))
+  userTypesLink.href = 'https://github.com/solid/userguide/#role'
+  userTypesLink.innerText = 'Read more'
+
+  const formArea = formContainer.appendChild(dom.createElement('div'))
+
+  return formArea
+}
+
 export default basicPreferencesPane
 
 // ends
 
-function addDeletionLinks (
+function addDeleteSection (
   container: HTMLElement,
-  kb: IndexedFormula,
-  profile: NamedNode
+  store: IndexedFormula,
+  profile: NamedNode,
+  dom: HTMLDocument
 ): void {
-  const podServerNodes = kb.each(
-    profile,
-    ns.space('storage'),
-    null,
-    profile.doc()
-  )
+  const section = createSection(container, dom, 'Delete account')
+
+  // @@ TODO remove need for casting
+  const podServerNodes = store.each(profile as any, ns.space('storage'), null, profile.doc() as any)
   const podServers = podServerNodes.map(node => node.value)
+
+  const list = section.appendChild(dom.createElement('ul'))
+
   podServers.forEach(async server => {
-    const deletionLink = await generateDeletionLink(server)
+    const deletionLink = await generateDeletionLink(server, dom)
     if (deletionLink) {
-      container.appendChild(deletionLink)
+      const listItem = list.appendChild(dom.createElement('li'))
+      listItem.appendChild(deletionLink)
     }
   })
 }
 
 async function generateDeletionLink (
-  podServer: string
+  podServer: string,
+  dom: HTMLDocument
 ): Promise<HTMLElement | null> {
-  const link = document.createElement('a')
+  const link = dom.createElement('a')
   link.textContent = `Delete your account at ${podServer}`
   const deletionUrl = await getDeletionUrlForServer(podServer)
   if (typeof deletionUrl !== 'string') {
@@ -159,4 +183,21 @@ async function getDeletionUrlForServer (
     return singleUserUrl.href
   }
   return null
+}
+
+function createSection (
+  container: Element,
+  dom: HTMLDocument,
+  title: string
+): Element {
+  const section = container.appendChild(dom.createElement('div'))
+  section.style.border = '0.3em solid #418d99'
+  section.style.borderRadius = '0.5em'
+  section.style.padding = '0.7em'
+  section.style.marginTop = '0.7em'
+
+  const titleElement = section.appendChild(dom.createElement('h3'))
+  titleElement.innerText = title
+
+  return section
 }
