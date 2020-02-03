@@ -1,14 +1,13 @@
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */
-var panes = require('pane-registry')
+const panes = require('pane-registry')
 const $rdf = require('rdflib')
 
-var YAHOO = require('./dragDrop.js')
-var outlineIcons = require('./outlineIcons.js')
-var UserInput = require('./userInput.js')
-var UI = require('solid-ui')
-var queryByExample = require('./queryByExample.js')
+const outlineIcons = require('./outlineIcons.js')
+const UserInput = require('./userInput.js')
+const UI = require('solid-ui')
+const queryByExample = require('./queryByExample.js')
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -157,14 +156,6 @@ module.exports = function (context) {
     return img
   } // appendAccessIcon
 
-  // Six different Creative Commons Licenses:
-  // 1. http://creativecommons.org/licenses/by-nc-nd/3.0/
-  // 2. http://creativecommons.org/licenses/by-nc-sa/3.0/
-  // 3. http://creativecommons.org/licenses/by-nc/3.0/
-  // 4. http://creativecommons.org/licenses/by-nd/3.0/
-  // 5. http://creativecommons.org/licenses/by-sa/3.0/
-  // 6. http://creativecommons.org/licenses/by/3.0/
-
   /** make the td for an object (grammatical object)
    *  @param obj - an RDF term
    *  @param view - a VIEW function (rather than a bool asImage)
@@ -226,12 +217,6 @@ module.exports = function (context) {
       appendRemoveIcon(td, obj, deleteNode)
     }
 
-    try {
-      // new YAHOO.util.DDExternalProxy(td)
-    } catch (e) {
-      UI.log.error('YAHOO Drag and drop not supported:\n' + e)
-    }
-
     // set DOM methods
     td.tabulatorSelect = function () {
       setSelected(this, true)
@@ -241,34 +226,6 @@ module.exports = function (context) {
     }
     // td.appendChild( iconBox.construct(document.createTextNode('bla')) );
 
-    // Create an inquiry icon if there is proof about this triple
-    if (statement) {
-      var oneStatementFormula = new UI.rdf.IndexedFormula()
-      oneStatementFormula.statements.push(statement) // st.asFormula()
-      // The following works because Formula.hashString works fine for
-      // one statement formula
-      var reasons = kb.each(
-        oneStatementFormula,
-        kb.sym('http://dig.csail.mit.edu/TAMI/2007/amord/tms#justification')
-      )
-      if (reasons.length) {
-        var inquirySpan = dom.createElement('span')
-        if (reasons.length > 1) {
-          inquirySpan.innerHTML = ' &times; ' + reasons.length
-        }
-        inquirySpan.setAttribute('class', 'inquiry')
-        inquirySpan.insertBefore(
-          UI.utils.AJARImage(
-            outlineIcons.src.icon_display_reasons,
-            'explain',
-            undefined,
-            dom
-          ),
-          inquirySpan.firstChild
-        )
-        td.appendChild(inquirySpan)
-      }
-    }
     td.addEventListener('click', selectableTDClickListener)
     return td
   } // outlineObjectTD
@@ -322,11 +279,6 @@ module.exports = function (context) {
       }
     }
 
-    try {
-      // new YAHOO.util.DDExternalProxy(predicateTD)
-    } catch (e) {
-      UI.log.error('drag and drop not supported')
-    }
     // set DOM methods
     predicateTD.tabulatorSelect = function () {
       setSelected(this, true)
@@ -1972,13 +1924,6 @@ module.exports = function (context) {
         newTable.style.backgroundColor = '#eee'
       } else {
         newTable.style.backgroundColor = 'white'
-      }
-      try {
-        if (YAHOO.util.Event.off) {
-          YAHOO.util.Event.off(p, 'mousedown', 'dragMouseDown')
-        }
-      } catch (e) {
-        console.log('YAHOO ' + e)
       }
       UI.utils.emptyNode(p).appendChild(newTable)
       thisOutline.focusTd = p // I don't know why I couldn't use 'this'...because not defined in callbacks
