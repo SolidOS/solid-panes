@@ -73,7 +73,6 @@
     "@typescript-eslint/parser": "^2.3.3",
     "babel-loader": "^8.0.5",
     "babel-plugin-inline-import": "^3.0.0",
-    "babel-preset-es2015": "^6.24.1",
     "eslint": "^6.6.0",
     "fork-ts-checker-webpack-plugin": "^1.5.0",
     "husky": "^3.0.8",
