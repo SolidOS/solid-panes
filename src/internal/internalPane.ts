@@ -7,9 +7,10 @@
 
 import { icons, ns, widgets } from 'solid-ui'
 // import { IndexedFormula, literal, NamedNode, st, sym } from 'rdflib'
-import { IndexedFormula, literal, NamedNode } from 'rdflib'
-// import * as rdf from 'rdflib'
+// import { IndexedFormula, literal, NamedNode } from 'rdflib' // import/no-duplicates
+import * as $rdf from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+const { IndexedFormula, NamedNode, literal } = $rdf
 
 const pane: PaneDefinition = {
   icon: icons.originalIconBase + 'tango/22-emblem-system.png',
@@ -25,7 +26,7 @@ const pane: PaneDefinition = {
   render: function (subject, context) {
     const dom = context.dom
     const store = context.session.store
-    const $rdf = store.rdfFactory // @@
+    // const $rdf = store.rdfFactory // @@
     const canonizedSubject = store.canon(subject)
     const types = store.findTypeURIs(canonizedSubject)
 
@@ -164,7 +165,7 @@ const pane: PaneDefinition = {
     var docURI = ''
     if (subject.uri) {
       plist.push(
-        $rdf.quad(
+        $rdf.st(
           subject,
           store.sym('http://www.w3.org/2007/ont/link#uri'),
           subject.uri,
@@ -174,7 +175,7 @@ const pane: PaneDefinition = {
       if (subject.uri.indexOf('#') >= 0) {
         docURI = subject.uri.split('#')[0]
         plist.push(
-          $rdf.quad(
+          $rdf.st(
             subject,
             store.sym('http://www.w3.org/2007/ont/link#documentURI'),
             subject.uri.split('#')[0],
@@ -182,7 +183,7 @@ const pane: PaneDefinition = {
           )
         )
         plist.push(
-          $rdf.quad(
+          $rdf.st(
             subject,
             store.sym('http://www.w3.org/2007/ont/link#document'),
             store.sym(subject.uri.split('#')[0]),
@@ -199,7 +200,7 @@ const pane: PaneDefinition = {
       if (ed) {
         // @@ TODO Remove casting of literal when rdflib exports proper types
         plist.push(
-          $rdf.quad(
+          $rdf.st(
             subject,
             store.sym('http://www.w3.org/ns/rww#editable'),
             (literal as any)(ed),
