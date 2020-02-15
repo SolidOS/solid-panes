@@ -1,8 +1,10 @@
-import { authn, icons, ns, pad, utils, widgets } from 'solid-ui'
+import { authn, icons, ns, participation, pad, utils, widgets } from 'solid-ui'
 // @@ TODO: serialize is not part rdflib type definitions
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
 // @ts-ignore
+// import { NamedNode } from 'rdflib'
 import { graph, log, NamedNode, Namespace, sym, serialize, UpdateManager, Fetcher } from 'rdflib'
+//
 import { PaneDefinition } from 'pane-registry'
 /*   pad Pane
  **
@@ -192,39 +194,37 @@ const paneDef: PaneDefinition = {
 
     /**   Button to Export the pad to HTML
     */
-    var exportHTMLButton = function (pad) {
-      var button = div.appendChild(dom.createElement('button'))
-      button.textContent = 'Copy'
-      button.addEventListener('click', async function () {
-        const htmlText = pad.notePadToHTML(pad, store)
-        console.log('HTML text:  ', htmlText)
-        /// @@ put in paste buffer - find out how
-        const htmlCopyURI = pad.uri + '_export.html'
-        console.log('  Writing HTML pad export to ', htmlCopyURI)
-        try {
-          store.fetcher.webOperation('PUT', htmlCopyURI,
-            { contentType: 'text/html', data: htmlText })
-        } catch (e) {
-          statusArea.appendChild(utils.errorMessageBlock(e))
-          return
-        }
-        const p = dom.createElement('p')
-        p.textContent = 'Saved to ' + htmlCopyURI
-        statusArea.appendChild(p)
-      })
-      return button
+    var exportHTMLButton = function (subject) {
+      const copyIcon = icons.iconBase + 'noun_681601.svg'
+      return widgets.button(dom, copyIcon, 'Copy as HTML',
+        async function (_event) {
+          const htmlText = pad.notePadToHTML(subject, store)
+          console.log('HTML text:  ', htmlText)
+          /// @@ put in paste buffer - find out how
+          const htmlCopyURI = subject.uri + '_export.html'
+          console.log('  Writing HTML pad export to ', htmlCopyURI)
+          try {
+            fetcher.webOperation('PUT', htmlCopyURI, // @@ LiveStore
+              { contentType: 'text/html', data: htmlText })
+          } catch (e) {
+            statusArea.appendChild(utils.errorMessageBlock(e))
+            return
+          }
+          const p = dom.createElement('p')
+          p.textContent = 'Saved to ' + htmlCopyURI
+          statusArea.appendChild(p)
+        })
     }
 
     //  Reproduction: spawn a new instance
     //
     // Viral growth path: user of app decides to make another instance
     var newInstanceButton = function () {
-      var button = div.appendChild(dom.createElement('button'))
-      button.textContent = 'Start another pad'
-      button.addEventListener('click', function () {
-        return showBootstrap(subject, spawnArea, 'pad')
-      })
-      return button
+      const rabbitIcon = icons.iconBase + 'noun_145978.svg'
+      return widgets.button(dom, rabbitIcon, 'Copy as HTML',
+        async function (_event) {
+          return showBootstrap(subject, spawnArea, 'pad')
+        })
     }
 
     // Option of either using the workspace system or just typing in a URI
@@ -442,9 +442,9 @@ const paneDef: PaneDefinition = {
       padEle = pad.notepad(dom, padDoc, subject, me, options)
       naviMain.appendChild(padEle)
 
-      var partipationTarget =
+      var partipationTarget = // 20120215
         store.any(subject, ns.meeting('parentMeeting')) || subject
-      pad.manageParticipation(
+      participation.manageParticipation(
         dom,
         naviMiddle2,
         padDoc,
