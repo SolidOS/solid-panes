@@ -1,4 +1,4 @@
-import { authn, icons, ns, pad, widgets } from 'solid-ui'
+import { authn, icons, ns, pad, utils, widgets } from 'solid-ui'
 // @@ TODO: serialize is not part rdflib type definitions
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
 // @ts-ignore
@@ -37,7 +37,7 @@ const paneDef: PaneDefinition = {
     var newInstance = (newPaneOptions.newInstance =
       newPaneOptions.newInstance ||
       store.sym(newPaneOptions.newBase + 'index.ttl#this'))
-    // var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
+    // var newInstance = store.sym(newBase + 'pad.ttl#thisPad');
     var newPadDoc = newInstance.doc()
 
     store.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc)
@@ -47,7 +47,7 @@ const paneDef: PaneDefinition = {
     if (newPaneOptions.me) {
       store.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc)
     }
-    // kb.add(newInstance, ns.pad('next'), newInstance, newPadDoc);
+    // store.add(newInstance, ns.pad('next'), newInstance, newPadDoc);
     // linked list empty @@
     var chunk = store.sym(newInstance.uri + '_line0')
     store.add(newInstance, ns.pad('next'), chunk, newPadDoc) // Linked list has one entry
@@ -190,6 +190,31 @@ const paneDef: PaneDefinition = {
       }
     }
 
+    /**   Button to Export the pad to HTML
+    */
+    var exportHTMLButton = function (pad) {
+      var button = div.appendChild(dom.createElement('button'))
+      button.textContent = 'Copy'
+      button.addEventListener('click', async function () {
+        const htmlText = pad.notePadToHTML(pad, store)
+        console.log('HTML text:  ', htmlText)
+        /// @@ put in paste buffer - find out how
+        const htmlCopyURI = pad.uri + '_export.html'
+        console.log('  Writing HTML pad export to ', htmlCopyURI)
+        try {
+          store.fetcher.webOperation('PUT', htmlCopyURI,
+            { contentType: 'text/html', data: htmlText })
+        } catch (e) {
+          statusArea.appendChild(utils.errorMessageBlock(e))
+          return
+        }
+        const p = dom.createElement('p')
+        p.textContent = 'Saved to ' + htmlCopyURI
+        statusArea.appendChild(p)
+      })
+      return button
+    }
+
     //  Reproduction: spawn a new instance
     //
     // Viral growth path: user of app decides to make another instance
@@ -274,7 +299,7 @@ const paneDef: PaneDefinition = {
 
       const newInstance = store.sym(newPadDoc.uri + '#thisPad')
 
-      // log.debug("\n Ready to put " + kb.statementsMatching(undefined, undefined, undefined, there)); //@@
+      // log.debug("\n Ready to put " + store.statementsMatching(undefined, undefined, undefined, there)); //@@
 
       var agenda: Function[] = []
 
@@ -480,6 +505,9 @@ const paneDef: PaneDefinition = {
           }
           showResults(true)
           naviMiddle3.appendChild(newInstanceButton())
+          if (pad.notePadToHTML) {
+            naviMiddle3.appendChild(exportHTMLButton(subject))
+          }
         }
       })
     }
