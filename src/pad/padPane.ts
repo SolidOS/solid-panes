@@ -201,7 +201,7 @@ const paneDef: PaneDefinition = {
           const htmlText = pad.notePadToHTML(subject, store)
           console.log('HTML text:  ', htmlText)
           /// @@ put in paste buffer - find out how
-          const htmlCopyURI = subject.uri + '_export.html'
+          const htmlCopyURI = subject.doc().uri + '_export.html'
           console.log('  Writing HTML pad export to ', htmlCopyURI)
           try {
             fetcher.webOperation('PUT', htmlCopyURI, // @@ LiveStore
@@ -210,9 +210,8 @@ const paneDef: PaneDefinition = {
             statusArea.appendChild(utils.errorMessageBlock(e))
             return
           }
-          const p = dom.createElement('p')
-          p.textContent = 'Saved to ' + htmlCopyURI
-          statusArea.appendChild(p)
+          const href = utils.escapeForXML(htmlCopyURI)
+          statusArea.innerHTML = (`<p>Saved HTML export to <a target="html_export" href="${href}">web page</a>.</p>`)
         })
     }
 
@@ -528,6 +527,7 @@ const paneDef: PaneDefinition = {
     var padEle
 
     var div = dom.createElement('div')
+    div.style = 'margin: 0.5em;'
 
     //  Build the DOM
     var structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
@@ -551,7 +551,9 @@ const paneDef: PaneDefinition = {
     var naviMiddle3 = naviMiddle.appendChild(dom.createElement('td'))
 
     var naviStatus = structure.appendChild(dom.createElement('tr')) // status etc
-    var statusArea = naviStatus.appendChild(dom.createElement('div'))
+    var statusArea = naviStatus.appendChild(dom.createElement('td'))
+    statusArea.setAttribute('colspan', '3')
+    statusArea.style = 'padding: 0.6em;'
 
     var naviSpawn = structure.appendChild(dom.createElement('tr')) // create new
     var spawnArea = naviSpawn.appendChild(dom.createElement('div'))
