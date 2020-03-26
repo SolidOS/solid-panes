@@ -1,4 +1,4 @@
-import { authn, icons, ns, participation, pad, utils, widgets } from 'solid-ui'
+import { authn, icons, ns, pad, utils, widgets } from 'solid-ui'
 // @@ TODO: serialize is not part rdflib type definitions
 // Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
 // @ts-ignore
@@ -443,7 +443,7 @@ const paneDef: PaneDefinition = {
 
       var partipationTarget = // 20120215
         store.any(subject, ns.meeting('parentMeeting')) || subject
-      participation.manageParticipation(
+      pad.manageParticipation(
         dom,
         naviMiddle2,
         padDoc,
