@@ -198,7 +198,7 @@ const paneDef: PaneDefinition = {
       const copyIcon = icons.iconBase + 'noun_681601.svg'
       return widgets.button(dom, copyIcon, 'Copy as HTML',
         async function (_event) {
-          const htmlText = pad.notePadToHTML(subject, store)
+          const htmlText = pad.notepadToHTML(subject, store)
           console.log('HTML text:  ', htmlText)
           /// @@ put in paste buffer - find out how
           const htmlCopyURI = subject.doc().uri + '_export.html'
@@ -504,7 +504,7 @@ const paneDef: PaneDefinition = {
           }
           showResults(true)
           naviMiddle3.appendChild(newInstanceButton())
-          if (pad.notePadToHTML) {
+          if (pad.notepadToHTML) {
             naviMiddle3.appendChild(exportHTMLButton(subject))
           }
         }
