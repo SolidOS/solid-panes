@@ -52,6 +52,7 @@
     "chat-pane": "^2.0.0",
     "contacts-pane": "^2.0.0",
     "folder-pane": "^2.0.1",
+    "folder-table": "^1.0.0",
     "issue-pane": "^2.0.0",
     "meeting-pane": "^2.0.7",
     "mime-types": "^2.1.24",

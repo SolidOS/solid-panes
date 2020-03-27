@@ -39,6 +39,7 @@ module.exports = function registerPanes (register) {
   register(require('./audio/audioPane.js')) // Audio clip player
 
   register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
+  register(require('folder-table')) // Should be above dataContentPane
   register(require('folder-pane')) // Should be above dataContentPane
   register(require('./classInstancePane.js')) // Should be above dataContentPane
   // register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
