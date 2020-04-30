@@ -46,11 +46,10 @@ const thisPane: PaneDefinition = {
     ) {
       if (!subject) throw new Error('subject missing')
       const profile = subject.doc()
-      const otherProfiles = store.each(subject, ns.rdfs('seeAlso'), null, profile)
+      const otherProfiles = store.each(subject, ns.rdfs('seeAlso'), null, profile) as Array<NamedNode>
       if (otherProfiles.length > 0) {
         try {
-          // @@ TODO Remove casting of store and store.fetcher.load
-          await ((store as any).fetcher.load as any)(otherProfiles)
+          await store.fetcher.load(otherProfiles)
         } catch (err) {
           container.appendChild(widgets.errorMessageBlock(err))
         }

@@ -6,7 +6,7 @@
 /* global alert confirm */
 
 import { icons, ns, widgets } from 'solid-ui'
-import { IndexedFormula, literal, NamedNode, st, sym } from 'rdflib'
+import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 
 const pane: PaneDefinition = {
@@ -23,7 +23,7 @@ const pane: PaneDefinition = {
   render: function (subject, context) {
     const dom = context.dom
     const store = context.session.store
-    const canonizedSubject = store.canon(subject)
+    const canonizedSubject = store.canon(subject) as BlankNode | NamedNode | Variable
     const types = store.findTypeURIs(canonizedSubject)
 
     function filter (pred: NamedNode) {
@@ -112,8 +112,8 @@ const pane: PaneDefinition = {
             }
             // @@ TODO Remove casing of store.fetcher
             var promise = isFolder
-              ? deleteRecursive(store, subject)
-              : (store as any).fetcher.webOperation('DELETE', subject.uri) // @@ TODO remove casting
+              ? (deleteRecursive(store, subject) || Promise.resolve())
+              : store.fetcher.webOperation('DELETE', subject.uri) || Promise.resolve()
             promise
               .then(() => {
                 var str = 'Deleted: ' + subject
@@ -139,11 +139,9 @@ const pane: PaneDefinition = {
       )
       refreshCell.appendChild(refreshButton)
       refreshButton.addEventListener('click', () => {
-        // @@ TODO Remove casting of store.fetcher
-        ;(store as any).fetcher.refresh(subject, function (
-          // @@ TODO Remove casting
-          ok: boolean,
-          errm: string
+        store.fetcher.refresh(subject, function (
+          ok,
+          errm
         ) {
           let str
           if (ok) {
@@ -164,8 +162,8 @@ const pane: PaneDefinition = {
         st(
           subject,
           sym('http://www.w3.org/2007/ont/link#uri'),
-          subject.uri,
-          (store as any).fetcher.appNode // @@ TODO Remove casting
+          subject.uri as any, // @@ TODO Remove casting
+          store.fetcher.appNode
         )
       )
       if (subject.uri.indexOf('#') >= 0) {
@@ -174,8 +172,8 @@ const pane: PaneDefinition = {
           st(
             subject,
             sym('http://www.w3.org/2007/ont/link#documentURI'),
-            subject.uri.split('#')[0],
-            (store as any).fetcher.appNode // @@ TODO Remove casting
+            subject.uri.split('#')[0] as any, // @@ TODO Remove casting
+            store.fetcher.appNode
           )
         )
         plist.push(
@@ -183,7 +181,7 @@ const pane: PaneDefinition = {
             subject,
             sym('http://www.w3.org/2007/ont/link#document'),
             sym(subject.uri.split('#')[0]),
-            (store as any).fetcher.appNode // @@ TODO Remove casting
+            store.fetcher.appNode
           )
         )
       } else {
@@ -191,16 +189,14 @@ const pane: PaneDefinition = {
       }
     }
     if (docURI) {
-      // @@ TODO Remove casting of store.updater.editable
-      var ed = (store.updater as any).editable(docURI)
+      var ed = store.updater.editable(docURI)
       if (ed) {
-        // @@ TODO Remove casting of literal when rdflib exports proper types
         plist.push(
           st(
             subject,
             sym('http://www.w3.org/ns/rww#editable'),
-            (literal as any)(ed),
-            (store as any).fetcher.appNode // @@ TODO remove casting
+            literal(ed.toString()),
+            store.fetcher.appNode
           )
         )
       }

@@ -56,7 +56,7 @@
     "meeting-pane": "^2.0.7",
     "mime-types": "^2.1.24",
     "pane-registry": "^2.0.0",
-    "rdflib": "^1.0.6",
+    "rdflib": "^1.2.1",
     "solid-namespace": "^0.3.0",
     "solid-ui": "^2.0.1",
     "source-pane": "^2.0.0"
@@ -67,7 +67,6 @@
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-typescript": "^7.3.3",
     "@types/jest": "^24.0.18",
-    "@types/rdflib": "^0.20.1",
     "@types/webpack-env": "^1.13.9",
     "@typescript-eslint/eslint-plugin": "^2.3.3",
     "@typescript-eslint/parser": "^2.3.3",

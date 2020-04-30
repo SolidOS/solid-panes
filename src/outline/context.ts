@@ -1,11 +1,10 @@
-import { DataBrowserContext, PaneRegistry } from 'pane-registry'
+import { DataBrowserContext, LiveStore, PaneRegistry } from 'pane-registry'
 import { getOutliner } from '../index'
-import { IndexedFormula } from 'rdflib'
 
 export function createContext (
   dom: HTMLDocument,
   paneRegistry: PaneRegistry,
-  store: IndexedFormula
+  store: LiveStore
 ): DataBrowserContext {
   return {
     dom,

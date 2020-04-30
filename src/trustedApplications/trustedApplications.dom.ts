@@ -163,8 +163,8 @@ function createApplicationEntry (
       modes,
       subject,
       ns
-    );
-    (store as any).updater.update(deletions, additions, handleUpdateResponse)
+    )
+    store.updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication (event: Event) {
@@ -179,7 +179,7 @@ function createApplicationEntry (
     }
 
     const deletions = getStatementsToDelete(origin, subject, store, ns)
-    ;(store as any).updater.update(deletions, [], handleUpdateResponse)
+    store.updater.update(deletions, [], handleUpdateResponse)
   }
 
   function handleUpdateResponse (uri: any, success: boolean, errorBody: any) {
