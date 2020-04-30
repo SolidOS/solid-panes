@@ -56,7 +56,7 @@
     "meeting-pane": "^2.0.7",
     "mime-types": "^2.1.24",
     "pane-registry": "^2.0.0",
-    "rdflib": "^1.0.6",
+    "rdflib": "^1.2.1",
     "solid-namespace": "^0.3.0",
     "solid-ui": "^2.0.1",
     "source-pane": "^2.0.0"
