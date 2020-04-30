@@ -75,7 +75,7 @@ export const basicPreferencesPane: PaneDefinition = {
       }
 
       // @@ TODO Remove need for casting as any and bang (!) syntax
-      addDeleteSection(container, store as any, renderContext.me!, dom)
+      addDeleteSection(container, store, renderContext.me!, dom)
     }
 
     doRender()
@@ -114,8 +114,7 @@ function addDeleteSection (
 ): void {
   const section = createSection(container, dom, 'Delete account')
 
-  // @@ TODO remove need for casting
-  const podServerNodes = store.each(profile as any, ns.space('storage'), null, profile.doc() as any)
+  const podServerNodes = store.each(profile, ns.space('storage'), null, profile.doc())
   const podServers = podServerNodes.map(node => node.value)
 
   const list = section.appendChild(dom.createElement('ul'))

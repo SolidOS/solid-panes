@@ -41,8 +41,7 @@ const editProfileView: PaneDefinition = {
       const preferencesFormDoc = preferencesForm.doc()
       if (!store.holds(undefined, undefined, undefined, preferencesFormDoc)) {
         // If not loaded already
-        // @@ TODO Remove casting (store as any)
-        parse(preferencesFormText, store as any, preferencesFormDoc.uri, 'text/turtle', () => null) // Load form directly
+        parse(preferencesFormText, store, preferencesFormDoc.uri, 'text/turtle', () => null) // Load form directly
       }
 
       widgets.appendForm(
@@ -94,11 +93,9 @@ const editProfileView: PaneDefinition = {
         heading('Edit your public profile')
 
         const profile = me.doc()
-        // @@ TODO Remove the casting (me as any)
-        if (store.any(me as any, ns.solid('editableProfile'))) {
+        if (store.any(me, ns.solid('editableProfile'))) {
           editableProfile = store.any(me as any, ns.solid('editableProfile')) as NamedNode
-          // @@ TODO Remove casting of store.updater
-        } else if ((store.updater as any).editable(profile.uri, store)) {
+        } else if (store.updater.editable(profile.uri, store)) {
           editableProfile = profile
         } else {
           statusArea.appendChild(widgets.errorMessageBlock(dom, `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`, 'straw'))

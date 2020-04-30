@@ -1,8 +1,5 @@
 import { authn, icons, ns, pad, widgets } from 'solid-ui'
-// @@ TODO: serialize is not part rdflib type definitions
-// Might be fixed in https://github.com/linkeddata/rdflib.js/issues/341
-// @ts-ignore
-import { graph, log, NamedNode, Namespace, sym, serialize, UpdateManager, Fetcher } from 'rdflib'
+import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 /*   pad Pane
  **
@@ -29,7 +26,7 @@ const paneDef: PaneDefinition = {
 
   mintNew: function (context, newPaneOptions: any) {
     const store = context.session.store
-    const updater = store.updater as UpdateManager
+    const updater = store.updater
     if (newPaneOptions.me && !newPaneOptions.me.uri) {
       throw new Error('notepad mintNew:  Invalid userid')
     }
@@ -41,9 +38,8 @@ const paneDef: PaneDefinition = {
     var newPadDoc = newInstance.doc()
 
     store.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc)
-    // @@ TODO Remove casting
-    ;(store.add as any)(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
-    ;(store.add as any)(newInstance, ns.dc('created'), new Date(), newPadDoc)
+    store.add(newInstance, ns.dc('title'), 'Shared Notes', newPadDoc)
+    store.add(newInstance, ns.dc('created'), new Date() as any, newPadDoc) // @@ TODO Remove casting
     if (newPaneOptions.me) {
       store.add(newInstance, ns.dc('author'), newPaneOptions.me, newPadDoc)
     }
@@ -53,15 +49,14 @@ const paneDef: PaneDefinition = {
     store.add(newInstance, ns.pad('next'), chunk, newPadDoc) // Linked list has one entry
     store.add(chunk, ns.pad('next'), newInstance, newPadDoc)
     store.add(chunk, ns.dc('author'), newPaneOptions.me, newPadDoc)
-    // @@ TODO Remove casting
-    ;(store.add as any)(chunk, ns.sioc('content'), '', newPadDoc)
+    store.add(chunk, ns.sioc('content'), '', newPadDoc)
 
     return new Promise(function (resolve, reject) {
       updater.put(
         newPadDoc,
         store.statementsMatching(undefined, undefined, undefined, newPadDoc),
         'text/turtle',
-        function (uri2: string, ok: boolean, message: string) {
+        function (uri2, ok, message) {
           if (ok) {
             resolve(newPaneOptions)
           } else {
@@ -137,7 +132,6 @@ const paneDef: PaneDefinition = {
       allWrite: boolean,
       callbackFunction: Function
     ) {
-      // @@ TODO Remove casting of aclDoc
       var aclDoc = store.any(
         sym(docURI),
         sym('http://www.iana.org/assignments/link-relations/acl')
@@ -145,16 +139,15 @@ const paneDef: PaneDefinition = {
 
       if (aclDoc) {
         // Great we already know where it is
-        var aclText = genACLtext(docURI, (aclDoc as NamedNode).uri, allWrite)
+        var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-        // @@ TODO Remove casting of fetcher
-        return (fetcher as any)
-          .webOperation('PUT', (aclDoc as NamedNode).uri, {
+        return fetcher
+          .webOperation('PUT', aclDoc.uri, {
             data: aclText,
             contentType: 'text/turtle'
           })
-          .then((_result: any) => callbackFunction(true))
-          .catch((err: Error) => {
+          .then(() => callbackFunction(true))
+          .catch(err => {
             callbackFunction(false, err.message)
           })
       } else {
@@ -164,7 +157,6 @@ const paneDef: PaneDefinition = {
             callbackFunction(false, 'Getting headers for ACL: ' + err)
           })
           .then(() => {
-            // @@ TODO Remove casting
             var aclDoc = store.any(
               sym(docURI),
               sym('http://www.iana.org/assignments/link-relations/acl')
@@ -177,14 +169,13 @@ const paneDef: PaneDefinition = {
 
             var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
-            // @@ TODO Remove casting of fetcher
-            return (fetcher as any).webOperation('PUT', aclDoc.uri, {
+            return fetcher.webOperation('PUT', aclDoc.uri, {
               data: aclText,
               contentType: 'text/turtle'
             })
           })
-          .then((_result: any) => callbackFunction(true))
-          .catch((err: Error) => {
+          .then(() => callbackFunction(true))
+          .catch(err => {
             callbackFunction(false, err.message)
           })
       }
@@ -299,19 +290,19 @@ const paneDef: PaneDefinition = {
                 }
               })
             }
-            ;(store as any).fetcher // @@ TODO Remove casting
+            store.fetcher
               .webCopy(
                 base + item.local,
                 newBase + item.local,
                 item.contentType
               )
               .then(() => authn.checkUser())
-              .then((webId: string) => {
+              .then(webId => {
                 me = webId
 
                 setThatACL()
               })
-              .catch((err: Error) => {
+              .catch(err => {
                 console.log(
                   'FAILED to copy ' + base + item.local + ' : ' + err.message
                 )
@@ -329,10 +320,10 @@ const paneDef: PaneDefinition = {
         store.add(newInstance, ns.rdf('type'), PAD('Notepad'), newPadDoc)
 
         // TODO @@ Remove casting of add
-        ;(store.add as any)(
+        store.add(
           newInstance,
           ns.dc('created'),
-          new Date(),
+          new Date() as any, // @@ TODO Remove casting
           newPadDoc
         )
         if (me) {
@@ -348,7 +339,7 @@ const paneDef: PaneDefinition = {
           newPadDoc,
           store.statementsMatching(undefined, undefined, undefined, newPadDoc),
           'text/turtle',
-          function (_uri2: string, ok: boolean, message: string) {
+          function (_uri2, ok, message) {
             if (ok) {
               agenda.shift()!()
             } else {
@@ -428,14 +419,12 @@ const paneDef: PaneDefinition = {
         options
       )
 
-      // @@ TODO Remove casting of updater
-      ;(store.updater as any).setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
+      store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
     }
 
     // Read or create empty data file
     var loadPadData = function () {
-      // @@ TODO Remove casting of fetcher
-      ;(fetcher as any).nowOrWhenFetched(padDoc.uri, undefined, function (
+      fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (
         ok: boolean,
         body: string,
         response: any
@@ -445,9 +434,9 @@ const paneDef: PaneDefinition = {
             // /  Check explicitly for 404 error
             console.log('Initializing results file ' + padDoc)
             updater.put(padDoc, [], 'text/turtle', function (
-              _uri2: string,
-              ok: boolean,
-              message: string
+              _uri2,
+              ok,
+              message
             ) {
               if (ok) {
                 clearElement(naviMain)
@@ -487,9 +476,8 @@ const paneDef: PaneDefinition = {
     //  Body of Pane
     var appPathSegment = 'app-pad.timbl.com' // how to allocate this string and connect to
 
-    // @@ TODO Remove castings
-    const fetcher = (store as any).fetcher as Fetcher
-    const updater = (store as any).updater as UpdateManager
+    const fetcher = store.fetcher
+    const updater = store.updater
     var me: any
 
     var PAD = Namespace('http://www.w3.org/ns/pim/pad#')
