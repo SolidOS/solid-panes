@@ -279,6 +279,67 @@ To add material to the meeting (let's say `https://example.com/agenda-meeting.ht
 </meeting.ttl#id1555492506279> mee:view        "iframe" .
 ```
 
+## Issue Tracker
+An empty issue tracker has a config.ttl something like this:
+```turtle
+@prefix : <#>.
+@prefix mee: <http://www.w3.org/ns/pim/meeting#>.
+@prefix n2: <http://purl.org/dc/elements/1.1/>.
+@prefix flow: <http://www.w3.org/2005/01/wf/flow#>.
+@prefix con: </settings/edu.mit.solid.pane.meeting/id1592905686421/Actions/config.ttl#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
+@prefix pim: <http://www.w3.org/ns/pim/space#>.
+@prefix ind: </settings/edu.mit.solid.pane.meeting/id1592905686421/index.ttl#>.
+
+ind:this mee:actions :this.
+
+:this
+    a flow:Tracker;
+    n2:title "Meeting  actions";
+    flow:assigneeClass foaf:Person;
+    flow:initialState flow:Open;
+    flow:issueClass flow:Task;
+    flow:stateStore <store.ttl>;
+    mee:parentMeeting ind:this;
+    pim:inspiration con:this.
+```
+
+And `store.ttl` will then contain the issues
+and the comments chat messages for each:
+```turtle
+@prefix : <#>.
+@prefix flow: <http://www.w3.org/2005/01/wf/flow#>.
+@prefix n0: <http://purl.org/dc/elements/1.1/>.
+@prefix terms: <http://purl.org/dc/terms/>.
+@prefix XML: <http://www.w3.org/2001/XMLSchema#>.
+@prefix con: <config.ttl#>.
+@prefix n: <http://rdfs.org/sioc/ns#>.
+@prefix n1: <http://xmlns.com/foaf/0.1/>.
+@prefix c: </profile/card#>.
+
+:Iss1592905727101
+    a flow:Closed;
+    n0:title "asdt";
+    terms:created "2020-06-23T09:48:47Z"^^XML:dateTime;
+    flow:message :Msg1592906081233;
+    flow:tracker con:this.
+    :Iss1592906579254
+    a flow:Open;
+    n0:title "qwer";
+    terms:created "2020-06-23T10:02:59Z"^^XML:dateTime;
+    flow:tracker con:this.
+:Iss1592906760745
+    a flow:Open;
+    n0:title "new";
+    terms:created "2020-06-23T10:06:00Z"^^XML:dateTime;
+    flow:tracker con:this.
+:Msg1592906081233
+    terms:created "2020-06-23T09:54:41Z"^^XML:dateTime;
+    n:content "test";
+    n1:maker c:me.
+```
+
+
 ## Schedulable Event
 
 // TODO
