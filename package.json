@@ -58,7 +58,7 @@
     "pane-registry": "^2.0.0",
     "rdflib": "^1.2.2",
     "solid-namespace": "^0.3.0",
-    "solid-ui": "^2.0.6",
+    "solid-ui": "^2.1.0",
     "source-pane": "^2.0.0"
   },
   "devDependencies": {
