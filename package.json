@@ -52,7 +52,7 @@
     "chat-pane": "^2.1.1",
     "contacts-pane": "^2.1.0",
     "folder-pane": "^2.1.0",
-    "issue-pane": "^2.1.0",
+    "issue-pane": "^2.2.0",
     "meeting-pane": "^2.1.1",
     "mime-types": "^2.1.27",
     "pane-registry": "^2.1.0",
