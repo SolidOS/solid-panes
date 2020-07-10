@@ -49,7 +49,7 @@
     "@solid/better-simple-slideshow": "^0.1.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-metalab": "^1.0.0",
-    "chat-pane": "^2.1.1",
+    "chat-pane": "^2.1.2",
     "contacts-pane": "^2.1.0",
     "folder-pane": "^2.1.0",
     "issue-pane": "^2.2.0",
