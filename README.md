@@ -60,11 +60,9 @@ cd dev
 npx webpack-dev-server
 ```
 2. open your browser at http://localhost:9000
-3. edit something in a file under dev/pane/, for instance
-change the color string constant at the end of line 81
-of dev/pane/index.ts.
+3. edit `dev/pane/index.ts` and change the color string constant at the end of line 61.
 4. wait about 5 seconds
-5. you'll see the color change in your browser
+5. you'll see the color of the box and heading change in your browser
 
 ## Contributing panes
 When you created a pane, you can either add it as an npm dependency

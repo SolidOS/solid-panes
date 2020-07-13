@@ -58,7 +58,7 @@ const thisPane: PaneDefinition = {
       const backgroundColor = store.anyValue(subject, ns.solid('profileBackgroundColor'), null, subject.doc()) || '#ffffff'
       // Todo: check format of color matches regexp and not too dark
       container.style.backgroundColor = backgroundColor // @@ Limit to pale?
-      const highlightColor = store.anyValue(subject, ns.solid('profileHighlightColor', null, subject.doc())) || '#009' // @@ beware injection attack
+      const highlightColor = store.anyValue(subject, ns.solid('profileHighlightColor', null, subject.doc())) || '#900' // @@ beware injection attack
       container.style.border = `0.3em solid ${highlightColor}`
       container.style.borderRadius = '0.5em'
       container.style.padding = '0.7em'
