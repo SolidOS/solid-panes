@@ -8,8 +8,7 @@ const SolidAuth = require('solid-auth-client')
 // FIXME:
 window.$rdf = $rdf
 
-async function renderPane () {
-  const uri = document.getElementById('subject').getAttribute('value')
+async function renderPane (uri: string) {
   console.log('renderPane', uri)
   const subject = $rdf.sym(uri)
   const doc = subject.doc()
@@ -25,13 +24,15 @@ async function renderPane () {
     }
   }
   const options = {}
-  console.log(Pane)
+  console.log(subject, Pane)
   const paneDiv = Pane.render(subject, context, options)
   document.getElementById('render').innerHTML=""
   document.getElementById('render').appendChild(paneDiv)
 }
 
-document.addEventListener('DOMContentLoaded', renderPane)
+document.addEventListener('DOMContentLoaded', () => {
+  renderPane('https://solidos.solid.community/profile/card#me')
+})
 
 window.onload = () => {
   console.log('document ready')
@@ -61,3 +62,5 @@ window.popupLogin = async function () {
     session = await SolidAuth.popupLogin({ popupUri })
   }
 }
+
+;(window as any).renderPane = renderPane
