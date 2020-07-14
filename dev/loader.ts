@@ -9,7 +9,10 @@ const SolidAuth = require('solid-auth-client')
 window.$rdf = $rdf
 
 async function renderPane (uri: string) {
-  console.log('renderPane', uri)
+  if (!uri) {
+    console.log('usage renderPane(\'http://example.com/#this\')', uri)
+    return
+  }
   const subject = $rdf.sym(uri)
   const doc = subject.doc()
 
@@ -31,7 +34,7 @@ async function renderPane (uri: string) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderPane('https://solidos.solid.community/profile/card#me')
+  renderPane('https://solidos.solid.community/Team/SolidOs%20team%20chat/index.ttl#this')
 })
 
 window.onload = () => {

@@ -1,3 +1,3 @@
-import sharingPane from '../../src/sharing/sharingPane'
+import { longChatPane as Pane } from 'chat-pane'
 
-export default sharingPane
+export default Pane
