@@ -5,11 +5,9 @@
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
-    "build": "npm run clean && npm run build-version && npm run build-dist && npm run build-dev && npm run build-lib && npm run build-types",
-    "build-browserified": "npm run build",
-    "build-dist": "webpack --progress --colors --mode=production",
-    "build-dev": "webpack --progress --colors --mode=development",
+    "build": "npm run clean && npm run build-version && npm run build-lib && npm run build-types",
     "build-lib": "babel src -d lib --source-maps --extensions '.ts,.js'",
+    "build-dev": "webpack --progress --colors --mode=development",
     "build-types": "tsc --emitDeclarationOnly",
     "build-version": "./timestamp.sh > src/versionInfo.ts  && eslint 'src/versionInfo.ts' --fix",
     "watch": "npm run build-version && babel src -d lib --source-maps --extensions '.ts,.js' --watch",
