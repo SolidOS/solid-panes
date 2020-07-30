@@ -53,7 +53,7 @@
     "issue-pane": "^2.3.0",
     "meeting-pane": "^2.2.0",
     "mime-types": "^2.1.27",
-    "pane-registry": "^2.1.1",
+    "pane-registry": "^2.2.1",
     "rdflib": "^1.2.3",
     "solid-namespace": "^0.3.0",
     "solid-ui": "^2.1.1",
