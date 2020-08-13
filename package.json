@@ -45,6 +45,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.10.4",
     "@solid/better-simple-slideshow": "^0.1.0",
+    "activitystreams-pane": "^0.2.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-metalab": "^1.0.0",
     "chat-pane": "^2.3.2",
@@ -55,6 +56,8 @@
     "mime-types": "^2.1.27",
     "pane-registry": "^2.2.1",
     "rdflib": "^1.3.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "solid-auth-cli": "^1.0.14",
     "solid-auth-client": "^2.5.0",
     "solid-namespace": "^0.4.0",

@@ -12,6 +12,7 @@ module.exports = function registerPanes (register) {
   register(require('./dashboard/basicPreferences')) // 20190702
   register(require('issue-pane'))
   register(require('contacts-pane'))
+  register(require('activitystreams-pane'))
 
   register(require('./pad/padPane'))
   // register(require('./argument/argumentPane.js')) // A position in an argument tree
