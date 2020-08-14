@@ -30,9 +30,10 @@ async function renderPane (uri: string) {
   console.log(subject, Pane)
   const icon = createIconElement(Pane);
   const paneDiv = Pane.render(subject, context, options)
-  document.getElementById('render').innerHTML=""
-  document.getElementById('render').appendChild(icon)
-  document.getElementById('render').appendChild(paneDiv)
+  const target = document.getElementById('render');
+  target.innerHTML=""
+  target.appendChild(icon)
+  target.appendChild(paneDiv)
 }
 
 function createIconElement(Pane) {
