@@ -28,9 +28,19 @@ async function renderPane (uri: string) {
   }
   const options = {}
   console.log(subject, Pane)
+  const icon = createIconElement(Pane);
   const paneDiv = Pane.render(subject, context, options)
   document.getElementById('render').innerHTML=""
+  document.getElementById('render').appendChild(icon)
   document.getElementById('render').appendChild(paneDiv)
+}
+
+function createIconElement(Pane) {
+  const icon = Pane.icon
+  const img = document.createElement('img')
+  img.src = icon;
+  img.width = 40;
+  return img;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
