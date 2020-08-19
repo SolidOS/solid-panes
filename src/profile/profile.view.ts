@@ -11,11 +11,11 @@
  * or standalone script adding onto existing mashlib.
  */
 
-import { icons, ns, widgets, authn } from 'solid-ui'
-import { NamedNode, st } from 'rdflib'
+import { icons, ns, widgets } from 'solid-ui'
+import { NamedNode } from 'rdflib'
 import { paneDiv } from './profile.dom'
 import { PaneDefinition } from 'pane-registry'
-import { longChatPane } from 'chat-pane'
+import { createChat } from 'chat-pane'
 
 const thisPane: PaneDefinition = {
   global: false,
@@ -84,102 +84,14 @@ const thisPane: PaneDefinition = {
       const button = main.appendChild(dom.createElement('button'))
       button.appendChild(dom.createTextNode('Chat with me'))
       button.onclick = async () => {
-        const me = authn.currentUser()
-        await store.fetcher.load(me)
-        const podRoot = store.any(me, ns.space('storage'))
-        if (!podRoot) {
-          window.alert('Current user pod root not found!')
-          return
+        try {
+          console.log('creating chat', subject)
+          ;(window as any).createChat = createChat
+          const chat = await createChat(subject)
+          window.alert(`Chat created at ${chat.value}`)
+        } catch (e) {
+          window.alert(e.message)
         }
-        const inviteeInbox = store.any(subject, ns.ldp('inbox'))
-        if (!inviteeInbox) {
-          window.alert('Invitee inbox not found!')
-          return
-        }
-
-        // Create chat
-        // See https://gitter.im/solid/chat-app?at=5f3c800f855be416a23ae74a
-        const chatLocationStr = new URL(`IndividualChats/${new URL(subject.value).host}/`, podRoot.value).toString()
-        const chatLocation = new NamedNode(chatLocationStr)
-        const created = await longChatPane.mintNew(context, { me, newBase: chatLocationStr })
-        console.log('Chat created', created.newInstance)
-
-        // Send invite
-        const inviteBody = `
-<> a <http://www.w3.org/ns/pim/meeting#LongChatInvite> ;
-  ${ns.rdf('seeAlso')} <${created.newInstance}> . 
-`
-        const inviteResponse = await fetch(inviteeInbox.value, {
-          method: 'POST',
-          body: inviteBody,
-          headers: {
-            'Content-Type': 'text/turtle'
-          }
-        })
-        const locationStr = inviteResponse.headers.get('location')
-        if (locationStr) {
-          console.log('Invite sent', new URL(locationStr, inviteeInbox.value).toString())
-        } else {
-          console.log('Invite sending returned', inviteResponse.status)
-        }
-
-        // Set ACL
-        console.log('Finding ACL for', chatLocation)
-        await store.fetcher.load(chatLocation)
-        const chatAclDoc = store.any(chatLocation, new NamedNode('http://www.iana.org/assignments/link-relations/acl'))
-        if (!chatAclDoc) {
-          window.alert('Chat ACL doc not found!')
-          return
-        }
-        console.log('Setting ACl', chatLocation, chatAclDoc)
-        const aclBody = `
-@prefix acl: <http://www.w3.org/ns/auth/acl#>.
-<#owner>
-    a acl:Authorization;
-    acl:agent <${me.value}>;
-    acl:accessTo <.>;
-    acl:default <.>;
-    acl:mode
-        acl:Read, acl:Write, acl:Control.
-<#invitee>
-    a acl:Authorization;
-    acl:agent <${subject.value}>;
-    acl:accessTo <.>;
-    acl:default <.>;
-    acl:mode
-        acl:Append.
-`
-        const aclResponse = await fetch(chatAclDoc.value, {
-          method: 'PUT',
-          body: aclBody,
-          headers: {
-            'Content-Type': 'text/turtle'
-          }
-        })
-        console.log('ACL created', chatAclDoc.value, aclResponse.status)
-
-        // Add to private type index
-        const privateTypeIndex = store.any(me, ns.solid('privateTypeIndex')) as NamedNode | null
-        if (!privateTypeIndex) {
-          window.alert('Private type index not found!')
-          return
-        }
-        await store.fetcher.load(privateTypeIndex)
-        const reg = widgets.newThing(privateTypeIndex)
-        const ins = [
-          st(reg, ns.rdf('type'), ns.solid('TypeRegistration'), privateTypeIndex.doc()),
-          st(reg, ns.solid('forClass'), ns.meeting('LongChat'), privateTypeIndex.doc()),
-          st(reg, ns.solid('instance'), chatLocation, privateTypeIndex.doc())
-        ]
-        await new Promise((resolve, reject) => {
-          store.updater.update([], ins, function (uri, ok, errm) {
-            if (!ok) {
-              reject(new Error(errm))
-            } else {
-              resolve()
-            }
-          })
-        })
       }
 
       const contactDisplay = paneDiv(context, subject, 'contact')
