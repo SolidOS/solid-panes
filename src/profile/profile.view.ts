@@ -88,8 +88,7 @@ const thisPane: PaneDefinition = {
         'Chat with me',
         async () => {
           try {
-            console.log('creating chat', subject)
-            ;(window as any).createChat = createChat
+            // FIXME: this will create a new chat every time.
             const chat: NamedNode = await createChat(subject)
             chatContainer.innerHTML = ''
             chatContainer.appendChild(longChatPane.render(chat, context, {}))
