@@ -15,7 +15,7 @@ import { icons, ns, widgets } from 'solid-ui'
 import { NamedNode } from 'rdflib'
 import { paneDiv } from './profile.dom'
 import { PaneDefinition } from 'pane-registry'
-import { createChat, longChatPane } from 'chat-pane'
+import { getChat, longChatPane } from 'chat-pane'
 
 const thisPane: PaneDefinition = {
   global: false,
@@ -82,23 +82,27 @@ const thisPane: PaneDefinition = {
       heading('Contact')
 
       const chatContainer = dom.createElement('div')
-      const button = widgets.button(
-        dom,
-        undefined,
-        'Chat with me',
-        async () => {
-          try {
-            // FIXME: this will create a new chat every time.
-            const chat: NamedNode = await createChat(subject)
-            chatContainer.innerHTML = ''
-            chatContainer.appendChild(longChatPane.render(chat, context, {}))
-          } catch (e) {
-            window.alert(e.message)
-          }
-        },
-        { needsBorder: true }
-      )
-      chatContainer.appendChild(button)
+      const exists = await getChat(subject, false)
+      if (exists) {
+        chatContainer.appendChild(longChatPane.render(exists, context, {}))
+      } else {
+        const button = widgets.button(
+          dom,
+          undefined,
+          'Chat with me',
+          async () => {
+            try {
+              const chat: NamedNode = await getChat(subject)
+              chatContainer.innerHTML = ''
+              chatContainer.appendChild(longChatPane.render(chat, context, {}))
+            } catch (e) {
+              window.alert(e.message)
+            }
+          },
+          { needsBorder: true }
+        )
+        chatContainer.appendChild(button)
+      }
       main.appendChild(chatContainer)
 
       const contactDisplay = paneDiv(context, subject, 'contact')
