@@ -48,7 +48,7 @@
     "activitystreams-pane": "^0.3.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-metalab": "^1.0.0",
-    "chat-pane": "^2.3.2",
+    "chat-pane": "^2.4.1",
     "contacts-pane": "^2.3.0",
     "folder-pane": "^2.3.0",
     "issue-pane": "^2.3.1",
