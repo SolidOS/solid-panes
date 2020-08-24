@@ -15,6 +15,7 @@ import { icons, ns, widgets } from 'solid-ui'
 import { NamedNode } from 'rdflib'
 import { paneDiv } from './profile.dom'
 import { PaneDefinition } from 'pane-registry'
+import { getChat, longChatPane } from 'chat-pane'
 
 const thisPane: PaneDefinition = {
   global: false,
@@ -79,6 +80,31 @@ const thisPane: PaneDefinition = {
 
       // Todo: only show this if there is vcard info
       heading('Contact')
+
+      const chatContainer = dom.createElement('div')
+      const exists = await getChat(subject, false)
+      if (exists) {
+        chatContainer.appendChild(longChatPane.render(exists, context, {}))
+      } else {
+        const button = widgets.button(
+          dom,
+          undefined,
+          'Chat with me',
+          async () => {
+            try {
+              const chat: NamedNode = await getChat(subject)
+              chatContainer.innerHTML = ''
+              chatContainer.appendChild(longChatPane.render(chat, context, {}))
+            } catch (e) {
+              chatContainer.appendChild(widgets.errorMessageBlock(dom, e.message))
+            }
+          },
+          { needsBorder: true }
+        )
+        chatContainer.appendChild(button)
+      }
+      main.appendChild(chatContainer)
+
       const contactDisplay = paneDiv(context, subject, 'contact')
       contactDisplay.style.border = '0em' // override form
       main.appendChild(contactDisplay)
