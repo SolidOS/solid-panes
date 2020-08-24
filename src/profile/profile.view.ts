@@ -82,7 +82,12 @@ const thisPane: PaneDefinition = {
       heading('Contact')
 
       const chatContainer = dom.createElement('div')
-      const exists = await getChat(subject, false)
+      let exists
+      try {
+        exists = await getChat(subject, false)
+      } catch (e) {
+        exists = false
+      }
       if (exists) {
         chatContainer.appendChild(longChatPane.render(exists, context, {}))
       } else {
