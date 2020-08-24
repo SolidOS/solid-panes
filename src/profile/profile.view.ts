@@ -96,7 +96,7 @@ const thisPane: PaneDefinition = {
               chatContainer.innerHTML = ''
               chatContainer.appendChild(longChatPane.render(chat, context, {}))
             } catch (e) {
-              window.alert(e.message)
+              chatContainer.appendChild(widgets.errorMessageBlock(dom, e.message))
             }
           },
           { needsBorder: true }
