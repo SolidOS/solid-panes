@@ -395,25 +395,25 @@ module.exports = function (context) {
   }
   this.getDashboard = globalAppTabs
 
-  async function getDashboardItems () {
+  async function getDashboardItems (outliner) {
     const me = UI.authn.currentUser()
     const div = dom.createElement('div')
     const [books, pods] = await Promise.all([getAddressBooks(), getPods()])
     return [
       {
-        paneName: 'home',
         label: 'Your stuff',
-        icon: UI.icons.iconBase + 'noun_547570.svg'
+        icon: UI.icons.iconBase + 'noun_547570.svg',
+        onclick: () => { console.log('your stuff clicked'); return outliner.showDashboard({ pane: 'home' }) }
       },
       {
-        paneName: 'basicPreferences',
         label: 'Preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
+        icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg',
+        onclick: () => outliner.showDashboard({ pane: 'basicPreferences' })
       },
       {
-        paneName: 'editProfile',
         label: 'Edit your profile',
-        icon: UI.icons.iconBase + 'noun_492246.svg'
+        icon: UI.icons.iconBase + 'noun_492246.svg',
+        onclick: () => outliner.showDashboard({ pane: 'editProfile' })
       }
     ]
       .concat(books)
