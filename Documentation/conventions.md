@@ -309,3 +309,10 @@ When you add a 'Folder' tool, the databrowser creates a new LDP container. As an
 ## Source
 
 When you add a 'Source' tool to a container, it creates an empty document as an LDP resource. The content type will be guessed from the extension; for instance, `source.ttl` will be a Turtle document, `source.txt` will be `text/plain`, etc.
+
+
+## Tasks
+
+Solid Focus creates tasks of class `http://purl.org/vocab/lifecycle/schema#Task` with `http://www.w3.org/2000/01/rdf-schema#label` for its text, and an optional `http://www.w3.org/2002/12/cal/ical#completed` date that indicates whether the task is done or not. There is a `workspace/tasklist/task.ttl` folder structure for organizing tasks into lists, and lists into workspaces. If tasks sit directly on `workspace/task.ttl` then they are in that workspace's special "Inbox" task list.
+
+Solid Focus does not use the private / public type index to discover the user's tasks, task lists, or task workspaces. [Instead, it crawls the entire pod from the root (?)](https://edit.tosdr.org/cases/117).
