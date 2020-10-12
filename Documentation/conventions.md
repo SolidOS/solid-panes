@@ -316,3 +316,28 @@ When you add a 'Source' tool to a container, it creates an empty document as an 
 Solid Focus creates tasks of class `http://purl.org/vocab/lifecycle/schema#Task` with `http://www.w3.org/2000/01/rdf-schema#label` for its text, and an optional `http://www.w3.org/2002/12/cal/ical#completed` date that indicates whether the task is done or not. There is a `workspace/tasklist/task.ttl` folder structure for organizing tasks into lists, and lists into workspaces. If tasks sit directly on `workspace/task.ttl` then they are in that workspace's special "Inbox" task list.
 
 Solid Focus does not use the private / public type index to discover the user's tasks, task lists, or task workspaces. [Instead, it crawls the entire pod from the root (?)](https://edit.tosdr.org/cases/117).
+
+An empty Solid OS Issue Tracker looks as follows:
+```turtle
+<#this> <http://purl.org/dc/elements/1.1/author> <https://michielbdejong.solidcommunity.net/profile/card#me> .
+<#this> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2005/01/wf/flow#Tracker> .
+<#this> <http://purl.org/dc/elements/1.1/created> "2020-10-12T10:36:11Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+<#this> <http://www.w3.org/2005/01/wf/flow#issueClass> <http://www.w3.org/2005/01/wf/flow#Task> .
+<#this> <http://www.w3.org/2005/01/wf/flow#initialState> <http://www.w3.org/2005/01/wf/flow#Open> .
+<#this> <http://www.w3.org/2005/01/wf/flow#stateStore> <state.ttl> .
+<#this> <http://www.w3.org/2005/01/wf/flow#assigneeClass> <http://xmlns.com/foaf/0.1/Person> .
+```
+Plus the state store which just repeats the triple that links to it:
+```turtle
+<#this> <http://www.w3.org/2005/01/wf/flow#stateStore> <state.ttl> .
+```
+
+And then when you add a task in the tracker, it adds the following triples to the state store:
+```turtle
+<state.ttl#Iss1602499131831> <http://www.w3.org/2005/01/wf/flow#tracker> <https://michielbdejong.solidcommunity.net/public/testing-tracker/index.ttl#this> .
+<state.ttl#Iss1602499131831> <http://purl.org/dc/elements/1.1/title> "some task" .
+<state.ttl#Iss1602499131831> <http://purl.org/dc/terms/created> "2020-10-12T10:38:51Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .
+<state.ttl#Iss1602499131831> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2005/01/wf/flow#Open> .
+ }
+ ```
+ Or `<http://www.w3.org/2005/01/wf/flow#Closed>` when the task has been completed.
