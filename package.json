@@ -62,7 +62,7 @@
     "solid-auth-client": "^2.5.2",
     "solid-namespace": "^0.5.0",
     "solid-ui": "^2.3.2",
-    "source-pane": "^2.2.3"
+    "source-pane": "^2.2.4"
   },
   "devDependencies": {
     "@babel/cli": "^7.12.1",
