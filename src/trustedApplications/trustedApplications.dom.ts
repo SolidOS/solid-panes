@@ -108,28 +108,28 @@ function createApplicationEntry (
         'form',
         origin
           ? [
-            createText('button', 'Update', {
-              class: 'controlButton',
-              style: 'background: LightGreen;'
-            }),
-            createText(
-              'button',
-              'Delete',
-              {
+              createText('button', 'Update', {
                 class: 'controlButton',
-                style: 'background: LightCoral;'
-              },
-              {
-                click: removeApplication
-              }
-            )
-          ]
+                style: 'background: LightGreen;'
+              }),
+              createText(
+                'button',
+                'Delete',
+                {
+                  class: 'controlButton',
+                  style: 'background: LightCoral;'
+                },
+                {
+                  click: removeApplication
+                }
+              )
+            ]
           : [
-            createText('button', 'Add', {
-              class: 'controlButton',
-              style: 'background: LightGreen;'
-            })
-          ],
+              createText('button', 'Add', {
+                class: 'controlButton',
+                style: 'background: LightGreen;'
+              })
+            ],
         {},
         {
           submit: addOrEditApplication

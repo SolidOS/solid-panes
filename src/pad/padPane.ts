@@ -1,6 +1,7 @@
 import { authn, icons, ns, pad, widgets } from 'solid-ui'
 import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+import { AppDetails } from 'solid-ui/lib/authn/types'
 /*   pad Pane
  **
  */
@@ -200,9 +201,13 @@ const paneDef: PaneDefinition = {
       noun: string
     ) {
       var div = clearElement(container)
-      var appDetails = { noun: 'notepad' }
+      var appDetails = { noun: 'notepad' } as AppDetails
       div.appendChild(
-        authn.newAppInstance(dom, appDetails, initializeNewInstanceInWorkspace)
+        authn.newAppInstance(dom, appDetails, (workspace: string | null, newBase) => {
+          // FIXME: not sure if this will work at all, just
+          // trying to get the types to match - Michiel.
+          return initializeNewInstanceInWorkspace(new NamedNode(workspace || newBase))
+        })
       )
 
       div.appendChild(dom.createElement('hr')) // @@
@@ -395,8 +400,8 @@ const paneDef: PaneDefinition = {
 
       me = authn.currentUser()
 
-      authn.checkUser().then((webId: string) => {
-        me = webId
+      authn.checkUser().then((webId: unknown) => {
+        me = webId as string
       })
 
       var title =

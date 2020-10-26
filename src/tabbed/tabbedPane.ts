@@ -36,7 +36,7 @@ const TabbedPane: PaneDefinition = {
         subject,
         predicate: store.any(subject, ns.meeting('predicate')) || ns.meeting('toolList'),
         ordered: true,
-        orientation: store.anyValue(subject, ns.meeting('orientation')) || 0,
+        orientation: (store.anyValue(subject, ns.meeting('orientation')) || '0') as ('0' | '1' | '2' | '3'),
         renderMain: (containerDiv, item) => {
           containerDiv.innerHTML = ''
           const table = containerDiv.appendChild(context.dom.createElement('table'))
