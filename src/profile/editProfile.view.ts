@@ -10,7 +10,7 @@
 
 import { authn, icons, ns, style, widgets } from 'solid-ui'
 
-import { NamedNode, parse, sym } from 'rdflib'
+import { NamedNode, parse, sym, Store } from 'rdflib'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import { PaneDefinition } from 'pane-registry'
@@ -29,7 +29,7 @@ const editProfileView: PaneDefinition = {
 
   render: function (subject, context) {
     const dom = context.dom
-    const store = context.session.store
+    const store = context.session.store as Store
 
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return

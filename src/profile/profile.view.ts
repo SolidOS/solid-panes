@@ -12,7 +12,7 @@
  */
 
 import { icons, ns, widgets } from 'solid-ui'
-import { NamedNode } from 'rdflib'
+import { NamedNode, Store } from 'rdflib'
 import { paneDiv } from './profile.dom'
 import { PaneDefinition } from 'pane-registry'
 import { getChat, longChatPane } from 'chat-pane'
@@ -25,7 +25,7 @@ const thisPane: PaneDefinition = {
   name: 'profile',
 
   label: function (subject, context) {
-    const t = context.session.store.findTypeURIs(subject)
+    const t = (context.session.store as Store).findTypeURIs(subject)
     if (
       t[ns.vcard('Individual').uri] ||
       t[ns.vcard('Organization').uri] ||
@@ -38,7 +38,7 @@ const thisPane: PaneDefinition = {
   },
 
   render: function (subject, context) {
-    const store = context.session.store
+    const store = context.session.store as Store
 
     async function doRender (
       container: HTMLElement,

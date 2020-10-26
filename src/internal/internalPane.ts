@@ -6,7 +6,7 @@
 /* global alert confirm */
 
 import { icons, ns, widgets } from 'solid-ui'
-import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable } from 'rdflib'
+import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 
 const pane: PaneDefinition = {
@@ -22,7 +22,7 @@ const pane: PaneDefinition = {
 
   render: function (subject, context) {
     const dom = context.dom
-    const store = context.session.store
+    const store = context.session.store as Store
     const canonizedSubject = store.canon(subject) as BlankNode | NamedNode | Variable
     const types = store.findTypeURIs(canonizedSubject)
 

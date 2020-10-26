@@ -1,5 +1,5 @@
 import { authn, icons, ns, pad, widgets } from 'solid-ui'
-import { graph, log, NamedNode, Namespace, sym, serialize } from 'rdflib'
+import { graph, log, NamedNode, Namespace, sym, serialize, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 import { AppDetails } from 'solid-ui/lib/authn/types'
 /*   pad Pane
@@ -16,7 +16,7 @@ const paneDef: PaneDefinition = {
 
   // Does the subject deserve an pad pane?
   label: function (subject, context) {
-    var t = context.session.store.findTypeURIs(subject)
+    var t = (context.session.store as Store).findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
       return 'pad'
     }
@@ -26,7 +26,7 @@ const paneDef: PaneDefinition = {
   mintClass: ns.pad('Notepad'),
 
   mintNew: function (context, newPaneOptions: any) {
-    const store = context.session.store
+    const store = context.session.store as Store
     const updater = store.updater
     if (newPaneOptions.me && !newPaneOptions.me.uri) {
       throw new Error('notepad mintNew:  Invalid userid')
@@ -73,7 +73,7 @@ const paneDef: PaneDefinition = {
   // @@ TODO Set better type for paneOptions
   render: function (subject, context, paneOptions: any) {
     const dom = context.dom
-    const store = context.session.store
+    const store = context.session.store as Store
     // Utility functions
     var complainIfBad = function (ok: boolean, message: string) {
       if (!ok) {

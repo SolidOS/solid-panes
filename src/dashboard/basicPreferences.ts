@@ -1,5 +1,5 @@
 import { authn, icons, ns, widgets } from 'solid-ui'
-import { IndexedFormula, NamedNode, parse } from 'rdflib'
+import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
 
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
@@ -16,7 +16,7 @@ export const basicPreferencesPane: PaneDefinition = {
   // The subject should be the logged in user.
   render: (subject, context) => {
     const dom = context.dom
-    const store = context.session.store
+    const store = context.session.store as Store
 
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
