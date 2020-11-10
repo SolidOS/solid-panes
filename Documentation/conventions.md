@@ -31,6 +31,7 @@ For short-hand, we will use the following namespace prefixes here:
 One of the most important RDF documents on your pod is your profile, which is the document that people get when they dereference your webid. We'll look at that first. After that, we'll look at each of the tools that can be created with the databrowser's + button: Addressbook, Notepad, Chat, LongChat, Meeting, Event, Link, Document, Folder, and Source.
 
 ## Profile
+(see also [pdsinterop.org's description](https://pdsinterop.org/conventions/profile/))
 
 ### Profile document
 
@@ -73,6 +74,7 @@ To publish some of your generic preferences to apps, use:
 ```
 
 ## Address Book
+(see also [pdsinterop.org's description](https://pdsinterop.org/conventions/addressbook/))
 
 You can create an addressbook containing persons and groups, by adding triples to RDF documents on your pod.
 To create an addressbook, create a document for it, e.g., `/address-book/index.ttl`, and add the following triples to that document:
@@ -107,6 +109,7 @@ To indicate that addressbook `/address-book/index.ttl` has a group called "Colle
 ```
 
 ## Notepad
+(see also [pdsinterop.org's description](https://pdsinterop.org/conventions/notepad/))
 
 To create a new notepad at `/notepad.ttl`, add the following triples into it:
 
@@ -190,6 +193,7 @@ Note that the first line still is the only line in the document, apart from the 
 ```
 
 ## Chat
+(see also [pdsinterop.org's description](https://pdsinterop.org/conventions/chat/))
 
 To create a chat conversation, create a document, e.g., `/chat.ttl`, and add the following triples to it:
 
@@ -210,7 +214,7 @@ To add a message in the chat conversation, for instance where you say "hi", gene
 
 Note that for historical reasons, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
 
-## Long Chat
+### Long Chat
 
 LongChat is similar to Chat, except that it uses LDP containers to discover the triples that describe the chat conversation,
 instead of having all the triples in one `chat.ttl` doc.
@@ -242,6 +246,7 @@ Note that there is no need to make `/long-chat/2019/04/17/chat.ttl` discoverable
 Also note that here too, for the chat conversation as a whole, we use `dc:created` and `dc:author`, whereas for the individual chat messages we use `dct:created` and `foaf:maker`.
 
 ## Meeting
+(see also [pdsinterop.org's description](https://pdsinterop.org/conventions/meeting/))
 
 To create a meeting, create a document, e.g., `/meeting.ttl` and add the following triples to it:
 
