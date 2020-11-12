@@ -1821,7 +1821,9 @@ module.exports = function (context) {
       node = UI.utils.ancestor(target, 'TD');
       node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
       node = UI.utils.ancestor(node.parentNode, 'TD')
-    ) {}
+    ) {
+      // ...
+    }
     if (!node) return
 
     // var node = target;

@@ -152,12 +152,12 @@ module.exports = {
     if (!store) {
       const docs = {}
       const docList = []
-      store.statementsMatching(subject).map(function (st) {
+      store.statementsMatching(subject).forEach(function (st) {
         docs[st.why.uri] = 1
       })
       store
         .statementsMatching(undefined, undefined, subject)
-        .map(function (st) {
+        .forEach(function (st) {
           docs[st.why.uri] = 2
         })
       for (const d in docs) docList.push(docs[d], d)

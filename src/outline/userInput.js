@@ -749,6 +749,7 @@ module.exports = function UserInput (outline) {
 
       UI.log.debug('removed')
       outline.walk('up')
+      // eslint-disable-next-line prefer-const
       removedTr = selectedTd.parentNode
       // afterTr = removedTr.nextSibling
       function removefromview () {
@@ -1577,7 +1578,9 @@ module.exports = function UserInput (outline) {
           trIterator.childNodes.length === 1 && trIterator.AJAR_statement;
           // number of nodes as condition, also beware of toggle Trs that don't have AJAR_statement
           trIterator = trIterator.nextSibling
-        ) {}
+        ) {
+          // ..
+        }
       } catch (e) {
         isEnd = true
       }
@@ -1843,7 +1846,7 @@ module.exports = function UserInput (outline) {
       // build NameSpaces here from knowledge base
       const NameSpaces = {}
       // for each (ontology in ontologies)
-      kb.each(undefined, UI.ns.rdf('type'), UI.ns.owl('Ontology')).map(
+      kb.each(undefined, UI.ns.rdf('type'), UI.ns.owl('Ontology')).forEach(
         function (ontology) {
           const label = UI.utils.label(ontology)
           if (!label) return
@@ -2136,7 +2139,9 @@ module.exports = function UserInput (outline) {
       const tr = selectedTd.parentNode
       let stat
       let isInverse
+      // eslint-disable-next-line prefer-const
       stat = tr.AJAR_statement
+      // eslint-disable-next-line prefer-const
       isInverse = tr.AJAR_inverse
 
       const reqTerm = type === 'object' ? stat.object : stat.predicate

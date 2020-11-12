@@ -46,7 +46,7 @@ module.exports = {
     if (sts.length > 0) {
       const already = {}
       const more = []
-      sts.map(st => {
+      sts.forEach(st => {
         already[st.subject.toNT()] = st
       })
       for (const nt in kb.findMembersNT(subject)) {
@@ -69,7 +69,7 @@ module.exports = {
       } else if (subject.sameTerm(ns.rdfs('Class'))) {
         const uses = kb.statementsMatching(undefined, ns.rdf('type'), undefined)
         const usedTypes = {}
-        uses.map(function (st) {
+        uses.forEach(function (st) {
           usedTypes[st.object] = st
         }) // Get unique
         const used = []

@@ -1072,7 +1072,7 @@ module.exports = {
 
         const responses = kb.each(invitation, ns.sched('response'))
         let myResponse = null
-        responses.map(function (r) {
+        responses.forEach(function (r) {
           if (kb.holds(r, ns.dc('author'), me)) {
             myResponse = r
           }
@@ -1089,7 +1089,7 @@ module.exports = {
           insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
         } else {
           const dps = kb.each(myResponse, ns.sched('cell'))
-          dps.map(function (dataPoint) {
+          dps.forEach(function (dataPoint) {
             const time = kb.any(dataPoint, ns.cal('dtstart'))
             dataPointForNT[time.toNT()] = dataPoint
           })
