@@ -19,8 +19,8 @@ module.exports = {
 
   // Does the subject deserve this pane?
   label: function (subject, context) {
-    var kb = context.session.store
-    var t = kb.findTypeURIs(subject)
+    const kb = context.session.store
+    const t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction']) return '$$'
     if (kb.any(subject, UI.ns.qu('amount'))) return '$$$' // In case schema not picked up
 
@@ -33,22 +33,22 @@ module.exports = {
 
   render: function (subject, context) {
     const dom = context.dom
-    var kb = context.session.store
-    var fetcher = kb.fetcher
-    var Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
-    var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
+    const kb = context.session.store
+    const fetcher = kb.fetcher
+    const Q = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
+    const TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     div.setAttribute('class', 'transactionPane')
 
-    var mention = function mention (message, style) {
+    const mention = function mention (message, style) {
       if (style === undefined) style = 'color: grey'
-      var pre = dom.createElement('pre')
+      const pre = dom.createElement('pre')
       pre.setAttribute('style', style)
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
     }
-    var complain = function complain (message) {
+    const complain = function complain (message) {
       return mention(message, 'color: #100; background-color: #fee')
     }
 
@@ -62,21 +62,21 @@ module.exports = {
     */
     // //////////////////////////////////////////////////////////////////////////////
 
-    var plist = kb.statementsMatching(subject)
-    var qlist = kb.statementsMatching(undefined, undefined, subject)
+    const plist = kb.statementsMatching(subject)
+    const qlist = kb.statementsMatching(undefined, undefined, subject)
 
-    var t = kb.findTypeURIs(subject)
+    const t = kb.findTypeURIs(subject)
 
     // var me = UI.authn.currentUser()
-    var predicateURIsDone = {}
-    var donePredicate = function (pred) {
+    const predicateURIsDone = {}
+    const donePredicate = function (pred) {
       predicateURIsDone[pred.uri] = true
     }
 
-    var setPaneStyle = function (account) {
-      var mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
+    const setPaneStyle = function (account) {
+      let mystyle = 'padding: 0.5em 1.5em 1em 1.5em; '
       if (account) {
-        var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
+        const backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
         if (backgroundColor) {
           mystyle += 'background-color: ' + backgroundColor.value + '; '
         }
@@ -89,17 +89,17 @@ module.exports = {
     // Click on the transaction line to expand it into a pane
     // Shift-click to expand without collapsing others
 
-    var d2 = function (n) {
+    const d2 = function (n) {
       if (n === undefined) return ''
-      var s = '' + n
+      const s = '' + n
       if (s.indexOf('.') >= 0) {
         return s.split('.')[0] + '.' + (s.split('.')[1] + '00').slice(0, 2)
       }
       return s + '.00'
     }
 
-    var numericCell = function numericCell (amount, suppressZero) {
-      var td = dom.createElement('td')
+    const numericCell = function numericCell (amount, suppressZero) {
+      const td = dom.createElement('td')
       if (!(0.0 + amount === 0.0 && suppressZero)) {
         td.textContent = d2(amount)
       }
@@ -107,14 +107,14 @@ module.exports = {
       return td
     }
 
-    var headerCell = function headerCell (str) {
-      var td = dom.createElement('th')
+    const headerCell = function headerCell (str) {
+      const td = dom.createElement('th')
       td.textContent = str
       td.setAttribute('style', 'text-align: right; ')
       return td
     }
 
-    var oderByDate = function (x, y) {
+    const oderByDate = function (x, y) {
       const dx = kb.any(x, ns.qu('date'))
       const dy = kb.any(y, ns.qu('date'))
       if (dx !== undefined && dy !== undefined) {
@@ -126,30 +126,30 @@ module.exports = {
       return 0
     }
 
-    var insertedPane = function (context, subject, paneName) {
-      var p = context.session.paneRegistry.byName(paneName)
-      var d = p.render(subject, context)
+    const insertedPane = function (context, subject, paneName) {
+      const p = context.session.paneRegistry.byName(paneName)
+      const d = p.render(subject, context)
       d.setAttribute('style', 'border: 0.1em solid green;')
       return d
     }
 
-    var expandAfterRow = function (dom, row, subject, paneName, solo) {
-      var siblings = row.parentNode.children
+    const expandAfterRow = function (dom, row, subject, paneName, solo) {
+      const siblings = row.parentNode.children
       if (solo) {
-        for (var j = siblings.length - 1; j >= 0; j--) {
+        for (let j = siblings.length - 1; j >= 0; j--) {
           if (siblings[j].expanded) {
             siblings[j].parentNode.removeChild(siblings[j].expanded)
             siblings[j].expanded = false
           }
         }
       }
-      var tr = dom.createElement('tr')
-      var td = tr.appendChild(dom.createElement('td'))
+      const tr = dom.createElement('tr')
+      const td = tr.appendChild(dom.createElement('td'))
       td.setAttribute(
         'style',
         'width: 98%; padding: 1em; border: 0.1em solid grey;'
       )
-      var cols = row.children.length
+      const cols = row.children.length
       if (row.nextSibling) {
         row.parentNode.insertBefore(tr, row.nextSibling)
       } else {
@@ -160,7 +160,7 @@ module.exports = {
       td.appendChild(insertedPane(context, subject, paneName))
     }
 
-    var expandAfterRowOrCollapse = function (
+    const expandAfterRowOrCollapse = function (
       dom,
       row,
       subject,
@@ -175,21 +175,21 @@ module.exports = {
       }
     }
 
-    var transactionTable = function (dom, list, filter) {
-      var table = dom.createElement('table')
+    const transactionTable = function (dom, list, filter) {
+      const table = dom.createElement('table')
       table.setAttribute(
         'style',
         'padding-left: 0.5em; padding-right: 0.5em; font-size: 9pt; width: 85%;'
       )
-      var transactionRow = function (dom, x) {
-        var tr = dom.createElement('tr')
+      const transactionRow = function (dom, x) {
+        const tr = dom.createElement('tr')
 
-        var setTRStyle = function (tr, account) {
+        const setTRStyle = function (tr, account) {
           // var mystyle = "padding: 0.5em 1.5em 1em 1.5em; "
-          var mystyle =
+          let mystyle =
             "'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;"
           if (account) {
-            var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
+            const backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
             if (backgroundColor) {
               mystyle += 'background-color: ' + backgroundColor.value + '; '
             }
@@ -197,24 +197,24 @@ module.exports = {
           tr.setAttribute('style', mystyle)
         }
 
-        var account = kb.any(x, ns.qu('toAccount'))
+        const account = kb.any(x, ns.qu('toAccount'))
         setTRStyle(tr, account)
 
-        var c0 = tr.appendChild(dom.createElement('td'))
-        var date = kb.any(x, ns.qu('date'))
+        const c0 = tr.appendChild(dom.createElement('td'))
+        const date = kb.any(x, ns.qu('date'))
         c0.textContent = date ? date.value.slice(0, 10) : '???'
         c0.setAttribute('style', 'width: 7em;')
 
-        var c1 = tr.appendChild(dom.createElement('td'))
+        const c1 = tr.appendChild(dom.createElement('td'))
         c1.setAttribute('style', 'width: 36em;')
-        var payee = kb.any(x, ns.qu('payee'))
+        const payee = kb.any(x, ns.qu('payee'))
         c1.textContent = payee ? payee.value : '???'
-        var a1 = c1.appendChild(dom.createElement('a'))
+        const a1 = c1.appendChild(dom.createElement('a'))
         a1.textContent = ' ➜'
         a1.setAttribute('href', x.uri)
 
-        var c3 = tr.appendChild(dom.createElement('td'))
-        var amount = kb.any(x, ns.qu('in_USD'))
+        const c3 = tr.appendChild(dom.createElement('td'))
+        const amount = kb.any(x, ns.qu('in_USD'))
         c3.textContent = amount ? d2(amount.value) : '???'
         c3.setAttribute('style', 'width: 6em; text-align: right; ') // @@ decimal alignment?
         tr.addEventListener(
@@ -229,10 +229,10 @@ module.exports = {
         return tr
       }
 
-      var list2 = filter ? list.filter(filter) : list.slice() // don't sort a paramater passed in place
+      const list2 = filter ? list.filter(filter) : list.slice() // don't sort a paramater passed in place
       list2.sort(oderByDate)
 
-      for (var i = 0; i < list2.length; i++) {
+      for (let i = 0; i < list2.length; i++) {
         table.appendChild(transactionRow(dom, list2[i]))
       }
       return table
@@ -249,7 +249,7 @@ module.exports = {
       // var trip = kb.any(subject, WF('trip'))
       donePredicate(ns.rdf('type'))
 
-      var account = kb.any(subject, UI.ns.qu('toAccount'))
+      const account = kb.any(subject, UI.ns.qu('toAccount'))
       setPaneStyle(account)
       if (!account) {
         complain(
@@ -259,8 +259,8 @@ module.exports = {
         )
       }
 
-      var store = null
-      var statement = kb.any(subject, UI.ns.qu('accordingTo'))
+      let store = null
+      const statement = kb.any(subject, UI.ns.qu('accordingTo'))
       if (statement === undefined) {
         complain(
           '(Error: There is no back link to the original data source foir this transaction <' +
@@ -281,15 +281,15 @@ module.exports = {
         }
       }
 
-      var nav = dom.createElement('div')
+      const nav = dom.createElement('div')
       nav.setAttribute('style', 'float:right')
       div.appendChild(nav)
 
-      var navLink = function (pred, label) {
+      const navLink = function (pred, label) {
         donePredicate(pred)
-        var obj = kb.any(subject, pred)
+        const obj = kb.any(subject, pred)
         if (!obj) return
-        var a = dom.createElement('a')
+        const a = dom.createElement('a')
         a.setAttribute('href', obj.uri)
         a.setAttribute('style', 'float:right')
         nav.appendChild(a).textContent = label || UI.utils.label(obj)
@@ -301,14 +301,14 @@ module.exports = {
       navLink(TRIP('trip'))
 
       // Basic data:
-      var table = dom.createElement('table')
+      const table = dom.createElement('table')
       div.appendChild(table)
-      var preds = ['date', 'payee', 'amount', 'in_USD', 'currency'].map(Q)
-      var inner = preds
+      const preds = ['date', 'payee', 'amount', 'in_USD', 'currency'].map(Q)
+      const inner = preds
         .map(function (p) {
           donePredicate(p)
-          var value = kb.any(subject, p)
-          var s = value ? UI.utils.labelForXML(value) : ''
+          const value = kb.any(subject, p)
+          const s = value ? UI.utils.labelForXML(value) : ''
           return (
             '<tr><td style="text-align: right; padding-right: 0.6em">' +
             UI.utils.labelForXML(p) +
@@ -320,7 +320,7 @@ module.exports = {
         .join('\n')
       table.innerHTML = inner
 
-      var complainIfBad = function (ok, body) {
+      const complainIfBad = function (ok, body) {
         if (ok) {
           // setModifiedDate(store, kb, store)
           // rerender(div) // deletes the new trip form
@@ -334,9 +334,9 @@ module.exports = {
         kb.fetcher.nowOrWhenFetched(store.uri, subject, function (ok, body) {
           if (!ok) complain('Cannot load store ' + store + ' ' + body)
 
-          var calendarYear = kb.any(store, ns.qu('calendarYear'))
+          const calendarYear = kb.any(store, ns.qu('calendarYear'))
 
-          var renderCatgorySelectors = function () {
+          const renderCatgorySelectors = function () {
             div.insertBefore(
               UI.widgets.makeSelectForNestedCategory(
                 dom,
@@ -382,17 +382,17 @@ module.exports = {
             )
           )
 
-          var trips = kb
+          let trips = kb
             .statementsMatching(undefined, TRIP('trip'), undefined, store)
             .map(function (st) {
               return st.object
             }) // @@ Use rdfs
-          var trips2 = kb.each(undefined, UI.ns.rdf('type'), TRIP('Trip'))
+          const trips2 = kb.each(undefined, UI.ns.rdf('type'), TRIP('Trip'))
           trips = trips.concat(trips2).sort() // @@ Unique
 
-          var sortedBy = function (kb, list, pred, reverse) {
+          const sortedBy = function (kb, list, pred, reverse) {
             const l2 = list.map(function (x) {
-              var key = kb.any(x, pred)
+              let key = kb.any(x, pred)
               key = key ? key.value : '9999-12-31'
               return [key, x]
             })
@@ -419,7 +419,7 @@ module.exports = {
                   mint: 'New Trip *',
                   mintClass: TRIP('Trip'),
                   mintStatementsFun: function (trip) {
-                    var is = []
+                    const is = []
                     is.push(
                       $rdf.st(trip, UI.ns.rdf('type'), TRIP('Trip'), trip.doc())
                     )
@@ -436,7 +436,7 @@ module.exports = {
 
           // Add in simple comments about the transaction
 
-          var outliner = context.getOutliner(dom)
+          const outliner = context.getOutliner(dom)
 
           donePredicate(ns.rdfs('comment')) // Done above
 
@@ -495,25 +495,25 @@ module.exports = {
           div.appendChild(tableDiv)
 
 */
-      var calculations = function () {
-        var total = {}
-        var yearTotal = {}
-        var yearCategoryTotal = {}
-        var trans = kb.each(undefined, TRIP('trip'), subject)
-        var bankStatements = trans.map(function (t) {
+      const calculations = function () {
+        const total = {}
+        const yearTotal = {}
+        const yearCategoryTotal = {}
+        const trans = kb.each(undefined, TRIP('trip'), subject)
+        const bankStatements = trans.map(function (t) {
           return t.doc()
         })
         kb.fetcher
           .load(bankStatements)
           .then(function () {
-            trans.map(function (t) {
-              var date = kb.the(t, ns.qu('date'))
-              var year = date ? ('' + date.value).slice(0, 4) : '????'
-              var ty = kb.the(t, ns.rdf('type')) // @@ find most specific type
+            trans.forEach(function (t) {
+              const date = kb.the(t, ns.qu('date'))
+              const year = date ? ('' + date.value).slice(0, 4) : '????'
+              let ty = kb.the(t, ns.rdf('type')) // @@ find most specific type
               // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')))
               if (!ty) ty = UI.ns.qu('ErrorNoType')
               if (ty && ty.uri) {
-                var tyuri = ty.uri
+                const tyuri = ty.uri
                 if (!yearTotal[year]) yearTotal[year] = 0.0
                 if (!yearCategoryTotal[year]) yearCategoryTotal[year] = {}
                 if (!total[tyuri]) total[tyuri] = 0.0
@@ -521,12 +521,12 @@ module.exports = {
                   yearCategoryTotal[year][tyuri] = 0.0
                 }
 
-                var lit = kb.any(t, UI.ns.qu('in_USD'))
+                const lit = kb.any(t, UI.ns.qu('in_USD'))
                 if (!lit) {
                   complain('@@ No amount in USD: ' + lit + ' for ' + t)
                 }
                 if (lit) {
-                  var amount = parseFloat(lit.value)
+                  const amount = parseFloat(lit.value)
                   total[tyuri] += amount
                   yearCategoryTotal[year][tyuri] += amount
                   yearTotal[year] += amount
@@ -534,12 +534,12 @@ module.exports = {
               }
             })
 
-            var types = []
-            var grandTotal = 0.0
-            var years = []
-            var i
+            const types = []
+            let grandTotal = 0.0
+            const years = []
+            let i
 
-            for (var y in yearCategoryTotal) {
+            for (const y in yearCategoryTotal) {
               // @@ TODO: Write away the need for exception on next line
               // eslint-disable-next-line no-prototype-builtins
               if (yearCategoryTotal.hasOwnProperty(y)) {
@@ -547,17 +547,17 @@ module.exports = {
               }
             }
             years.sort()
-            var ny = years.length
-            var cell
+            const ny = years.length
+            let cell
 
-            var table = div.appendChild(dom.createElement('table'))
+            const table = div.appendChild(dom.createElement('table'))
             table.setAttribute(
               'style',
               'font-size: 120%; margin-left:auto; margin-right:1em; margin-top: 1em; border: 0.05em solid gray; padding: 1em;'
             )
 
             if (ny > 1) {
-              var header = table.appendChild(dom.createElement('tr'))
+              const header = table.appendChild(dom.createElement('tr'))
               header.appendChild(headerCell(''))
               for (i = 0; i < ny; i++) {
                 header.appendChild(headerCell(years[i]))
@@ -565,7 +565,7 @@ module.exports = {
               header.appendChild(headerCell('total'))
             }
 
-            for (var uri in total) {
+            for (const uri in total) {
               // @@ TODO: Write away the need for exception on next line
               // eslint-disable-next-line no-prototype-builtins
               if (total.hasOwnProperty(uri)) {
@@ -574,9 +574,9 @@ module.exports = {
               }
             }
             types.sort()
-            var row, label, z
-            for (var j = 0; j < types.length; j++) {
-              var cat = kb.sym(types[j])
+            let row, label, z
+            for (let j = 0; j < types.length; j++) {
+              const cat = kb.sym(types[j])
               row = table.appendChild(dom.createElement('tr'))
               label = row.appendChild(dom.createElement('td'))
               label.textContent = UI.utils.label(cat)
@@ -606,7 +606,7 @@ module.exports = {
               )
             }
 
-            var tab = transactionTable(dom, trans)
+            const tab = transactionTable(dom, trans)
             tab.setAttribute(
               'style',
               'margin-left:auto; margin-right:1em; margin-top: 1em; border: padding: 1em;'

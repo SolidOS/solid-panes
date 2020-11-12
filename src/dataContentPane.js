@@ -27,7 +27,7 @@ module.exports = {
     ) {
       return null
     }
-    var n = context.session.store.statementsMatching(
+    const n = context.session.store.statementsMatching(
       undefined,
       undefined,
       undefined,
@@ -42,44 +42,44 @@ module.exports = {
   },
 */
   statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
-    var myDocument = context.dom
+    const myDocument = context.dom
     // var outliner = context.getOutliner(myDocument)
-    var rep = myDocument.createElement('table')
-    var sz = UI.rdf.Serializer(context.session.store)
-    var res = sz.rootSubjects(sts)
-    var roots = res.roots
-    var subjects = res.subjects
-    var loopBreakers = res.loopBreakers
-    for (var x in loopBreakers) {
+    const rep = myDocument.createElement('table')
+    const sz = UI.rdf.Serializer(context.session.store)
+    const res = sz.rootSubjects(sts)
+    let roots = res.roots
+    const subjects = res.subjects
+    const loopBreakers = res.loopBreakers
+    for (const x in loopBreakers) {
       console.log('\tdataContentPane: loopbreaker:' + x)
     }
-    var doneBnodes = {} // For preventing looping
-    var referencedBnodes = {} // Bnodes which need to be named alas
+    const doneBnodes = {} // For preventing looping
+    const referencedBnodes = {} // Bnodes which need to be named alas
 
     // The property tree for a single subject or anonymous node
     function propertyTree (subject) {
       // print('Proprty tree for '+subject)
-      var rep = myDocument.createElement('table')
-      var lastPred = null
-      var sts = subjects[sz.toStr(subject)] // relevant statements
+      const rep = myDocument.createElement('table')
+      let lastPred = null
+      const sts = subjects[sz.toStr(subject)] // relevant statements
       if (!sts) {
         // No statements in tree
         rep.appendChild(myDocument.createTextNode('...')) // just empty bnode as object
         return rep
       }
       sts.sort()
-      var same = 0
-      var predicateTD // The cell which holds the predicate
-      for (var i = 0; i < sts.length; i++) {
-        var st = sts[i]
-        var tr = myDocument.createElement('tr')
+      let same = 0
+      let predicateTD // The cell which holds the predicate
+      for (let i = 0; i < sts.length; i++) {
+        const st = sts[i]
+        const tr = myDocument.createElement('tr')
         if (st.predicate.uri !== lastPred) {
           if (lastPred && same > 1) {
             predicateTD.setAttribute('rowspan', '' + same)
           }
           predicateTD = myDocument.createElement('td')
           predicateTD.setAttribute('class', 'pred')
-          var anchor = myDocument.createElement('a')
+          const anchor = myDocument.createElement('a')
           anchor.setAttribute('href', st.predicate.uri)
           anchor.addEventListener(
             'click',
@@ -97,7 +97,7 @@ module.exports = {
           same = 0
         }
         same++
-        var objectTD = myDocument.createElement('td')
+        const objectTD = myDocument.createElement('td')
         objectTD.appendChild(objectTree(st.object))
         tr.appendChild(objectTD)
         rep.appendChild(tr)
@@ -108,7 +108,7 @@ module.exports = {
 
     // Convert a set of statements into a nested tree of tables
     function objectTree (obj) {
-      var res, anchor
+      let res, anchor
       switch (obj.termType) {
         case 'NamedNode':
           anchor = myDocument.createElement('a')
@@ -165,8 +165,8 @@ module.exports = {
         case 'Collection':
           res = myDocument.createElement('table')
           res.setAttribute('class', 'collectionAsTables')
-          for (var i = 0; i < obj.elements.length; i++) {
-            var tr = myDocument.createElement('tr')
+          for (let i = 0; i < obj.elements.length; i++) {
+            const tr = myDocument.createElement('tr')
             res.appendChild(tr)
             tr.appendChild(objectTree(obj.elements[i]))
           }
@@ -189,7 +189,7 @@ module.exports = {
     if (initialRoots) {
       roots = initialRoots.concat(
         roots.filter(function (x) {
-          for (var i = 0; i < initialRoots.length; i++) {
+          for (let i = 0; i < initialRoots.length; i++) {
             // Max 2
             if (x.sameTerm(initialRoots[i])) return false
           }
@@ -197,14 +197,14 @@ module.exports = {
         })
       )
     }
-    for (var i = 0; i < roots.length; i++) {
-      var tr = myDocument.createElement('tr')
+    for (let i = 0; i < roots.length; i++) {
+      const tr = myDocument.createElement('tr')
       rep.appendChild(tr)
-      var subjectTD = myDocument.createElement('td')
+      const subjectTD = myDocument.createElement('td')
       tr.appendChild(subjectTD)
-      var TDTree = myDocument.createElement('td')
+      const TDTree = myDocument.createElement('td')
       tr.appendChild(TDTree)
-      var root = roots[i]
+      const root = roots[i]
       if (root.termType === 'BlankNode') {
         subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
       } else {
@@ -212,11 +212,11 @@ module.exports = {
       }
       TDTree.appendChild(propertyTree(root))
     }
-    for (var bNT in referencedBnodes) {
+    for (const bNT in referencedBnodes) {
       // Add number to refer to
       const table = doneBnodes[bNT]
       // let tr = myDocument.createElement('tr')
-      var anchor = myDocument.createElement('a')
+      const anchor = myDocument.createElement('a')
       anchor.setAttribute('id', bNT.slice(2))
       anchor.setAttribute('class', 'bnodeDef')
       anchor.textContent = bNT.slice(3) + ')'
@@ -226,17 +226,17 @@ module.exports = {
   }, // statementsAsTables
   // View the data in a file in user-friendly way
   render: function (subject, context) {
-    var myDocument = context.dom
+    const myDocument = context.dom
 
     function alternativeRendering () {
-      var sz = UI.rdf.Serializer(context.session.store)
-      var res = sz.rootSubjects(sts)
-      var roots = res.roots
-      var p = {}
+      const sz = UI.rdf.Serializer(context.session.store)
+      const res = sz.rootSubjects(sts)
+      const roots = res.roots
+      const p = {}
       p.render = function (s2) {
-        var div = myDocument.createElement('div')
+        const div = myDocument.createElement('div')
         div.setAttribute('class', 'withinDocumentPane')
-        var plist = kb.statementsMatching(s2, undefined, undefined, subject)
+        const plist = kb.statementsMatching(s2, undefined, undefined, subject)
         outliner.appendPropertyTRs(div, plist, false, function (
           _pred,
           _inverse
@@ -245,11 +245,11 @@ module.exports = {
         })
         return div
       }
-      for (var i = 0; i < roots.length; i++) {
-        var tr = myDocument.createElement('TR')
-        var root = roots[i]
+      for (let i = 0; i < roots.length; i++) {
+        const tr = myDocument.createElement('TR')
+        const root = roots[i]
         tr.style.verticalAlign = 'top'
-        var td = outliner.outlineObjectTD(root, undefined, tr)
+        const td = outliner.outlineObjectTD(root, undefined, tr)
         tr.appendChild(td)
         div.appendChild(tr)
         outliner.outlineExpand(td, root, { pane: p })
@@ -257,12 +257,12 @@ module.exports = {
     }
 
     function mainRendering () {
-      var initialRoots = [] // Ordering: start with stuff about this doc
+      const initialRoots = [] // Ordering: start with stuff about this doc
       if (kb.holds(subject, undefined, undefined, subject)) {
         initialRoots.push(subject)
       }
       // Then about the primary topic of the document if any
-      var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
+      const ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
       if (ps) initialRoots.push(ps)
       div.appendChild(
         context.session.paneRegistry

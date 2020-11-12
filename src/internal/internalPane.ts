@@ -36,7 +36,7 @@ const pane: PaneDefinition = {
       )
     }
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     div.setAttribute('class', 'internalPane')
     div.setAttribute(
       'style',
@@ -69,7 +69,7 @@ const pane: PaneDefinition = {
                   resolve()
                 })
                 .catch((err: string) => {
-                  var str = 'Unable to delete ' + folder + ': ' + err
+                  const str = 'Unable to delete ' + folder + ': ' + err
                   console.log(str)
                   reject(new Error(str))
                 })
@@ -98,7 +98,7 @@ const pane: PaneDefinition = {
       const noun = isFolder ? 'folder' : 'file'
       if (!isProtectedUri(subject)) {
         console.log(subject)
-        var deleteButton = widgets.deleteButtonWithCheck(
+        const deleteButton = widgets.deleteButtonWithCheck(
           dom,
           deleteCell,
           noun,
@@ -111,16 +111,16 @@ const pane: PaneDefinition = {
               return
             }
             // @@ TODO Remove casing of store.fetcher
-            var promise = isFolder
+            const promise = isFolder
               ? (deleteRecursive(store, subject) || Promise.resolve())
               : store.fetcher.webOperation('DELETE', subject.uri) || Promise.resolve()
             promise
               .then(() => {
-                var str = 'Deleted: ' + subject
+                const str = 'Deleted: ' + subject
                 console.log(str)
               })
               .catch((err: any) => {
-                var str = 'Unable to delete ' + subject + ': ' + err
+                const str = 'Unable to delete ' + subject + ': ' + err
                 console.log(str)
                 alert(str)
               })
@@ -155,8 +155,8 @@ const pane: PaneDefinition = {
       })
     }
 
-    var plist = store.statementsMatching(subject)
-    var docURI = ''
+    let plist = store.statementsMatching(subject)
+    let docURI = ''
     if (subject.uri) {
       plist.push(
         st(
@@ -189,7 +189,7 @@ const pane: PaneDefinition = {
       }
     }
     if (docURI) {
-      var ed = store.updater.editable(docURI)
+      const ed = store.updater.editable(docURI)
       if (ed) {
         plist.push(
           st(

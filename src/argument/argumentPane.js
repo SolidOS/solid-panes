@@ -8,7 +8,7 @@
 */
 
 const UI = require('solid-ui')
-var panes = require('pane-registry')
+const panes = require('pane-registry')
 
 // console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
 module.exports = {
@@ -17,8 +17,8 @@ module.exports = {
   name: 'argument',
 
   label: function (subject) {
-    var kb = UI.store
-    var t = kb.findTypeURIs(subject)
+    const kb = UI.store
+    const t = kb.findTypeURIs(subject)
 
     if (t[UI.ns.arg('Position').uri]) return 'Argument'
 
@@ -27,21 +27,21 @@ module.exports = {
 
   // View the data in a file in user-friendly way
   render: function (subject, dom) {
-    var outliner = panes.getOutliner(dom)
-    var kb = UI.store
-    var arg = UI.ns.arg
+    const outliner = panes.getOutliner(dom)
+    const kb = UI.store
+    const arg = UI.ns.arg
 
     subject = kb.canon(subject)
     // var types = kb.findTypeURIs(subject)
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     div.setAttribute('class', 'argumentPane')
 
     // var title = kb.any(subject, UI.ns.dc('title'))
 
-    var comment = kb.any(subject, UI.ns.rdfs('comment'))
+    const comment = kb.any(subject, UI.ns.rdfs('comment'))
     if (comment) {
-      var para = dom.createElement('p')
+      const para = dom.createElement('p')
       para.setAttribute('style', 'margin-left: 2em; font-style: italic;')
       div.appendChild(para)
       para.textContent = comment.value
@@ -49,7 +49,7 @@ module.exports = {
 
     div.appendChild(dom.createElement('hr'))
 
-    var plist = kb.statementsMatching(subject, arg('support'))
+    let plist = kb.statementsMatching(subject, arg('support'))
     outliner.appendPropertyTRs(div, plist, false)
 
     div.appendChild(dom.createElement('hr'))

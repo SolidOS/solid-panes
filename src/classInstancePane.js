@@ -3,10 +3,10 @@
  **  This outline pane lists the members of a class
  */
 
-var UI = require('solid-ui')
+const UI = require('solid-ui')
 const $rdf = require('rdflib')
 
-var ns = UI.ns
+const ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
@@ -18,18 +18,18 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   label: function (subject, context) {
-    var kb = context.session.store
-    var n = kb.each(undefined, ns.rdf('type'), subject).length
+    const kb = context.session.store
+    const n = kb.each(undefined, ns.rdf('type'), subject).length
     if (n > 0) return 'List (' + n + ')' // Show how many in hover text
     return null // Suppress pane otherwise
   },
 
   render: function (subject, context) {
-    var dom = context.dom
-    var outliner = context.getOutliner(dom)
-    var kb = context.session.store
-    var complain = function complain (message, color) {
-      var pre = dom.createElement('pre')
+    const dom = context.dom
+    const outliner = context.getOutliner(dom)
+    const kb = context.session.store
+    const complain = function complain (message, color) {
+      const pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
@@ -42,14 +42,14 @@ module.exports = {
     )
 
     // If this is a class, look for all both explicit and implicit
-    var sts = kb.statementsMatching(undefined, ns.rdf('type'), subject)
+    const sts = kb.statementsMatching(undefined, ns.rdf('type'), subject)
     if (sts.length > 0) {
-      var already = {}
-      var more = []
+      const already = {}
+      const more = []
       sts.map(st => {
         already[st.subject.toNT()] = st
       })
-      for (var nt in kb.findMembersNT(subject)) {
+      for (const nt in kb.findMembersNT(subject)) {
         if (!already[nt]) {
           more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)) // @@ no provenance
         }
@@ -67,13 +67,13 @@ module.exports = {
       if (subject.sameTerm(ns.rdf('Property'))) {
         // / Do not find all properties used as properties .. unless look at kb index
       } else if (subject.sameTerm(ns.rdfs('Class'))) {
-        var uses = kb.statementsMatching(undefined, ns.rdf('type'), undefined)
-        var usedTypes = {}
+        const uses = kb.statementsMatching(undefined, ns.rdf('type'), undefined)
+        const usedTypes = {}
         uses.map(function (st) {
           usedTypes[st.object] = st
         }) // Get unique
-        var used = []
-        for (var i in usedTypes) {
+        const used = []
+        for (const i in usedTypes) {
           used.push($rdf.st($rdf.sym(i), ns.rdf('type'), ns.rdfs('Class')))
         }
         complain(
@@ -86,7 +86,7 @@ module.exports = {
       }
 
       if (sts.length > 10) {
-        var tr = dom.createElement('TR')
+        const tr = dom.createElement('TR')
         tr.appendChild(dom.createTextNode('' + sts.length))
         // tr.AJAR_statement=sts[i]
         div.appendChild(tr)

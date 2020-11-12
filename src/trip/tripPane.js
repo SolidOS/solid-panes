@@ -21,8 +21,8 @@ module.exports = {
 
   // Does the subject deserve this pane?
   label: function (subject, context) {
-    var kb = context.session.store
-    var t = kb.findTypeURIs(subject)
+    const kb = context.session.store
+    const t = kb.findTypeURIs(subject)
 
     // if (t['http://www.w3.org/2000/10/swap/pim/qif#Transaction']) return "$$";
     // if(kb.any(subject, UI.ns.qu('amount'))) return "$$$"; // In case schema not picked up
@@ -37,18 +37,18 @@ module.exports = {
 
   render: function (subject, context) {
     const myDocument = context.dom
-    var kb = context.store
-    var ns = UI.ns
-    var CAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
-    var TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
+    const kb = context.store
+    const ns = UI.ns
+    const CAL = $rdf.Namespace('http://www.w3.org/2002/12/cal/ical#')
+    const TRIP = $rdf.Namespace('http://www.w3.org/ns/pim/trip#')
 
-    var div = myDocument.createElement('div')
+    const div = myDocument.createElement('div')
     div.setAttribute('class', 'transactionPane')
     div.innerHTML = '<h2>Trip transactions</h2>'
 
-    var complain = function complain (message, style) {
+    const complain = function complain (message, style) {
       if (style === undefined) style = 'color: grey'
-      var pre = myDocument.createElement('pre')
+      const pre = myDocument.createElement('pre')
       pre.setAttribute('style', style)
       div.appendChild(pre)
       pre.appendChild(myDocument.createTextNode(message))
@@ -58,22 +58,22 @@ module.exports = {
     //
     //   Body of trip pane
 
-    var t = kb.findTypeURIs(subject)
+    const t = kb.findTypeURIs(subject)
 
     // var me = UI.authn.currentUser()
 
     //      Function: Render a single trip
 
-    var renderTrip = function renderTrip (subject, thisDiv) {
-      var query = new $rdf.Query(UI.utils.label(subject))
-      var vars = ['date', 'transaction', 'comment', 'type', 'in_USD']
-      var v = {}
-      vars.map(function (x) {
+    const renderTrip = function renderTrip (subject, thisDiv) {
+      const query = new $rdf.Query(UI.utils.label(subject))
+      const vars = ['date', 'transaction', 'comment', 'type', 'in_USD']
+      const v = {}
+      vars.forEach(function (x) {
         query.vars.push((v[x] = $rdf.variable(x)))
       }) // Only used by UI
       query.pat.add(v.transaction, TRIP('trip'), subject)
 
-      var opt = kb.formula()
+      const opt = kb.formula()
       opt.add(v.transaction, ns.rdf('type'), v.type) // Issue: this will get stored supertypes too
       query.pat.optional.push(opt)
 
@@ -86,18 +86,18 @@ module.exports = {
       query.pat.add(v.transaction, UI.ns.qu('in_USD'), v.in_USD)
       // query.pat.optional.push(opt);
 
-      var calculations = function () {
-        var total = {}
-        var trans = kb.each(undefined, TRIP('trip'), subject)
+      const calculations = function () {
+        const total = {}
+        const trans = kb.each(undefined, TRIP('trip'), subject)
         // complain("@@ Number of transactions in this trip: " + trans.length);
-        trans.map(function (t) {
-          var ty = kb.the(t, ns.rdf('type'))
+        trans.forEach(function (t) {
+          let ty = kb.the(t, ns.rdf('type'))
           // complain(" -- one trans: "+t.uri + ' -> '+kb.any(t, UI.ns.qu('in_USD')));
           if (!ty) ty = UI.ns.qu('ErrorNoType')
           if (ty && ty.uri) {
-            var tyuri = ty.uri
+            const tyuri = ty.uri
             if (!total[tyuri]) total[tyuri] = 0.0
-            var lit = kb.any(t, UI.ns.qu('in_USD'))
+            const lit = kb.any(t, UI.ns.qu('in_USD'))
             if (!lit) {
               complain('    @@ No amount in USD: ' + lit + ' for ' + t)
             }
@@ -108,10 +108,10 @@ module.exports = {
             }
           }
         })
-        var str = ''
-        var types = 0
-        var grandTotal = 0.0
-        for (var uri in total) {
+        let str = ''
+        let types = 0
+        let grandTotal = 0.0
+        for (const uri in total) {
           str += UI.utils.label(kb.sym(uri)) + ': ' + total[uri] + '; '
           types++
           grandTotal += total[uri]
@@ -121,7 +121,7 @@ module.exports = {
           complain('Overall net: ' + grandTotal, 'text-treatment: bold;')
         }
       }
-      var tableDiv = UI.table(myDocument, {
+      const tableDiv = UI.table(myDocument, {
         query: query,
         onDone: calculations
       })
@@ -133,17 +133,17 @@ module.exports = {
     if (UI.ns.qu('Transaction') in kb.findSuperClassesNT(subject)) {
       const ts = kb.each(undefined, ns.rdf('type'), subject)
       const triples = []
-      var index = []
-      for (var i = 0; i < ts.length; i++) {
-        var trans = ts[i]
-        var trip = kb.any(trans, TRIP('trip'))
+      const index = []
+      for (let i = 0; i < ts.length; i++) {
+        const trans = ts[i]
+        const trip = kb.any(trans, TRIP('trip'))
         if (!trip) {
           triples.push(trans)
         } else {
           if (!(trans in index)) index[trip] = { total: 0, transactions: [] }
-          var usd = kb.any(trans, UI.ns.qu('in_USD'))
+          const usd = kb.any(trans, UI.ns.qu('in_USD'))
           if (usd) index[trip].total += usd
-          var date = kb.any(trans, UI.ns.qu('date'))
+          const date = kb.any(trans, UI.ns.qu('date'))
           index[trip.toNT()].transactions.push([date, trans])
         }
       }
@@ -152,14 +152,14 @@ module.exports = {
                               new Date(kb.any(b, CAL('dtstart')));
                   }
       */
-      var list = []
-      for (var h1 in index) {
-        var t1 = kb.fromNT(h1)
+      const list = []
+      for (const h1 in index) {
+        const t1 = kb.fromNT(h1)
         list.push([kb.any(t1, CAL('dtstart')), t1])
       }
       list.sort()
-      for (var j = 0; j < list.length; j++) {
-        var t2 = list[j][1]
+      for (let j = 0; j < list.length; j++) {
+        const t2 = list[j][1]
         renderTrip(t2, div)
       }
 

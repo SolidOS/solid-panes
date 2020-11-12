@@ -16,7 +16,7 @@ module.exports = {
 
   // Does the subject deserve this pane?
   label: function (subject) {
-    var n = UI.widgets.formsFor(subject).length
+    const n = UI.widgets.formsFor(subject).length
     UI.log.debug('Form pane: forms for ' + subject + ': ' + n)
     if (!n) return null
     return '' + n + ' forms'
@@ -26,18 +26,18 @@ module.exports = {
     const kb = context.session.store
     const dom = context.dom
 
-    var mention = function complain (message, style) {
-      var pre = dom.createElement('p')
+    const mention = function complain (message, style) {
+      const pre = dom.createElement('p')
       pre.setAttribute('style', style || 'color: grey; background-color: white')
       box.appendChild(pre).textContent = message
       return pre
     }
 
-    var complain = function complain (message, style) {
+    const complain = function complain (message, style) {
       mention(message, 'style', style || 'color: grey; background-color: #fdd;')
     }
 
-    var complainIfBad = function (ok, body) {
+    const complainIfBad = function (ok, body) {
       if (ok) {
         // setModifiedDate(store, kb, store);
         // rerender(box);   // Deleted forms at the moment
@@ -50,7 +50,7 @@ module.exports = {
 
     // var t = kb.findTypeURIs(subject)
 
-    var me = UI.authn.currentUser()
+    const me = UI.authn.currentUser()
 
     var box = dom.createElement('div')
     box.setAttribute('class', 'formPane')
@@ -62,7 +62,7 @@ module.exports = {
           'to put this new information'
       )
     } else {
-      var ws = kb.each(me, ns.ui('workspace'))
+      const ws = kb.each(me, ns.ui('workspace'))
       if (ws.length === 0) {
         mention(
           "You don't seem to have any workspaces defined.  " +
@@ -76,24 +76,24 @@ module.exports = {
 
     // Render forms using a given store
 
-    var renderFormsFor = function (store, subject) {
+    const renderFormsFor = function (store, subject) {
       kb.fetcher.nowOrWhenFetched(store.uri, subject, function (ok, body) {
         if (!ok) return complain('Cannot load store ' + store.uri + ': ' + body)
 
         //              Render the forms
 
-        var forms = UI.widgets.formsFor(subject)
+        const forms = UI.widgets.formsFor(subject)
 
         // complain('Form for editing this form:');
-        for (var i = 0; i < forms.length; i++) {
-          var form = forms[i]
-          var heading = dom.createElement('h4')
+        for (let i = 0; i < forms.length; i++) {
+          const form = forms[i]
+          const heading = dom.createElement('h4')
           box.appendChild(heading)
           if (form.uri) {
-            var formStore = $rdf.Util.uri.document(form)
+            const formStore = $rdf.Util.uri.document(form)
             if (formStore.uri !== form.uri) {
               // The form is a hash-type URI
-              var e = box.appendChild(
+              const e = box.appendChild(
                 UI.widgets.editFormButton(
                   dom,
                   box,
@@ -105,7 +105,7 @@ module.exports = {
               e.setAttribute('style', 'float: right;')
             }
           }
-          var anchor = dom.createElement('a')
+          const anchor = dom.createElement('a')
           anchor.setAttribute('href', form.uri)
           heading.appendChild(anchor)
           anchor.textContent = UI.utils.label(form, true)
@@ -138,10 +138,10 @@ module.exports = {
 
     // Which places are editable and have stuff about the subject?
 
-    var store = null
+    let store = null
 
     // 1. The document URI of the subject itself
-    var docuri = $rdf.Util.uri.docpart(subject.uri)
+    const docuri = $rdf.Util.uri.docpart(subject.uri)
     if (subject.uri !== docuri && kb.updater.editable(docuri, kb)) {
       store = subject.doc()
     } // an editable data file with hash
@@ -150,8 +150,8 @@ module.exports = {
 
     // 2. where stuff is already stored
     if (!store) {
-      var docs = {}
-      var docList = []
+      const docs = {}
+      const docList = []
       store.statementsMatching(subject).map(function (st) {
         docs[st.why.uri] = 1
       })
@@ -160,10 +160,10 @@ module.exports = {
         .map(function (st) {
           docs[st.why.uri] = 2
         })
-      for (var d in docs) docList.push(docs[d], d)
+      for (const d in docs) docList.push(docs[d], d)
       docList.sort()
       for (var i = 0; i < docList.length; i++) {
-        var uri = docList[i][1]
+        const uri = docList[i][1]
         if (uri && store.updater.editable(uri)) {
           store = store.sym(uri)
           break
@@ -175,31 +175,31 @@ module.exports = {
     // @@ TODO: Can probably remove _followeach (not done this time because the commit is a very safe refactor)
     var _followeach = function (kb, subject, path) {
       if (path.length === 0) return [subject]
-      var oo = kb.each(subject, path[0])
-      var res = []
-      for (var i = 0; i < oo.length; i++) {
+      const oo = kb.each(subject, path[0])
+      let res = []
+      for (let i = 0; i < oo.length; i++) {
         res = res.concat(_followeach(kb, oo[i], path.slice(1)))
       }
       return res
     }
 
-    var date = '2014' // @@@@@@@@@@@@ pass as parameter
+    const date = '2014' // @@@@@@@@@@@@ pass as parameter
 
     if (store) {
       // mention("@@ Ok, we have a store <" + store.uri + ">.");
       renderFormsFor(store, subject)
     } else {
       complain('No suitable store is known, to edit <' + subject.uri + '>.')
-      var foobarbaz = UI.authn.selectWorkspace(dom, function (ws) {
+      const foobarbaz = UI.authn.selectWorkspace(dom, function (ws) {
         mention('Workspace selected OK: ' + ws)
 
-        var activities = store.each(undefined, ns.space('workspace'), ws)
-        for (var j = 0; j < activities.length; i++) {
-          var act = activities[j]
+        const activities = store.each(undefined, ns.space('workspace'), ws)
+        for (let j = 0; j < activities.length; i++) {
+          const act = activities[j]
 
-          var subjectDoc2 = store.any(ws, ns.space('store'))
-          var start = store.any(ws, ns.cal('dtstart')).value()
-          var end = store.any(ws, ns.cal('dtend')).value()
+          const subjectDoc2 = store.any(ws, ns.space('store'))
+          const start = store.any(ws, ns.cal('dtstart')).value()
+          const end = store.any(ws, ns.cal('dtend')).value()
           if (subjectDoc2 && start && end && start <= date && end > date) {
             renderFormsFor(subjectDoc2, subject)
             break

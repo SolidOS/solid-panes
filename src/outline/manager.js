@@ -1,14 +1,14 @@
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */
-var panes = require('pane-registry')
+const panes = require('pane-registry')
 const $rdf = require('rdflib')
 
-var YAHOO = require('./dragDrop.js')
-var outlineIcons = require('./outlineIcons.js')
-var UserInput = require('./userInput.js')
-var UI = require('solid-ui')
-var queryByExample = require('./queryByExample.js')
+const YAHOO = require('./dragDrop.js')
+const outlineIcons = require('./outlineIcons.js')
+const UserInput = require('./userInput.js')
+const UI = require('solid-ui')
+const queryByExample = require('./queryByExample.js')
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -22,15 +22,15 @@ module.exports = function (context) {
   this.outlineIcons = outlineIcons
   this.labeller = this.labeller || {}
   this.labeller.LanguagePreference = '' // for now
-  var outline = this // Kenny: do we need this?
-  var thisOutline = this
-  var selection = []
+  const outline = this // Kenny: do we need this?
+  const thisOutline = this
+  let selection = []
   this.selection = selection
   this.ancestor = UI.utils.ancestor // make available as outline.ancestor in callbacks
   this.sparql = UI.rdf.UpdateManager
   this.kb = UI.store
-  var kb = UI.store
-  var sf = UI.store.fetcher
+  const kb = UI.store
+  const sf = UI.store.fetcher
   dom.outline = this
   this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
@@ -39,10 +39,10 @@ module.exports = function (context) {
   this.UserInput = new UserInput(this)
   this.clipboardAddress = 'tabulator:clipboard' // Weird
   this.UserInput.clipboardInit(this.clipboardAddress)
-  var outlineElement = this.outlineElement
+  const outlineElement = this.outlineElement
 
   this.init = function () {
-    var table = getOutlineContainer()
+    const table = getOutlineContainer()
     table.outline = this
   }
 
@@ -50,12 +50,12 @@ module.exports = function (context) {
   benchmark.lastkbsize = 0
 
   function benchmark (f) {
-    var args = []
-    for (var i = arguments.length - 1; i > 0; i--) args[i - 1] = arguments[i]
+    const args = []
+    for (let i = arguments.length - 1; i > 0; i--) args[i - 1] = arguments[i]
     // UI.log.debug('BENCHMARK: args=' + args.join());
-    var begin = new Date().getTime()
-    var returnValue = f.apply(f, args)
-    var end = new Date().getTime()
+    const begin = new Date().getTime()
+    const returnValue = f.apply(f, args)
+    const end = new Date().getTime()
     UI.log.info(
       'BENCHMARK: kb delta: ' +
         (kb.statements.length - benchmark.lastkbsize) +
@@ -74,7 +74,7 @@ module.exports = function (context) {
   //  Represent an object in summary form as a table cell
 
   function appendRemoveIcon (node, subject, removeNode) {
-    var image = UI.utils.AJARImage(
+    const image = UI.utils.AJARImage(
       outlineIcons.src.icon_remove_node,
       'remove',
       undefined,
@@ -93,10 +93,10 @@ module.exports = function (context) {
 
   this.appendAccessIcons = function (kb, node, obj) {
     if (obj.termType !== 'NamedNode') return
-    var uris = kb.uris(obj)
+    const uris = kb.uris(obj)
     uris.sort()
-    var last = null
-    for (var i = 0; i < uris.length; i++) {
+    let last = null
+    for (let i = 0; i < uris.length; i++) {
       if (uris[i] === last) continue
       last = uris[i]
       thisOutline.appendAccessIcon(node, last)
@@ -105,10 +105,10 @@ module.exports = function (context) {
 
   this.appendAccessIcon = function (node, uri) {
     if (!uri) return ''
-    var docuri = UI.rdf.uri.docpart(uri)
+    const docuri = UI.rdf.uri.docpart(uri)
     if (docuri.slice(0, 5) !== 'http:') return ''
-    var state = sf.getState(docuri)
-    var icon, alt, listener
+    const state = sf.getState(docuri)
+    let icon, alt, listener
     switch (state) {
       case 'unrequested':
         icon = outlineIcons.src.icon_unrequested
@@ -144,7 +144,7 @@ module.exports = function (context) {
         UI.log.error('?? state = ' + state)
         break
     } // switch
-    var img = UI.utils.AJARImage(
+    const img = UI.utils.AJARImage(
       icon,
       alt,
       outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri),
@@ -176,13 +176,13 @@ module.exports = function (context) {
     deleteNode,
     statement
   ) {
-    var td = dom.createElement('td')
+    const td = dom.createElement('td')
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
     )
     td.setAttribute('notSelectable', 'false')
-    var theClass = 'obj'
+    let theClass = 'obj'
 
     // check the IPR on the data.  Ok if there is any checked license which is one the document has.
     if (statement && statement.why) {
@@ -243,16 +243,16 @@ module.exports = function (context) {
 
     // Create an inquiry icon if there is proof about this triple
     if (statement) {
-      var oneStatementFormula = new UI.rdf.IndexedFormula()
+      const oneStatementFormula = new UI.rdf.IndexedFormula()
       oneStatementFormula.statements.push(statement) // st.asFormula()
       // The following works because Formula.hashString works fine for
       // one statement formula
-      var reasons = kb.each(
+      const reasons = kb.each(
         oneStatementFormula,
         kb.sym('http://dig.csail.mit.edu/TAMI/2007/amord/tms#justification')
       )
       if (reasons.length) {
-        var inquirySpan = dom.createElement('span')
+        const inquirySpan = dom.createElement('span')
         if (reasons.length > 1) {
           inquirySpan.innerHTML = ' &times; ' + reasons.length
         }
@@ -279,7 +279,7 @@ module.exports = function (context) {
     inverse,
     internal
   ) {
-    var predicateTD = dom.createElement('TD')
+    const predicateTD = dom.createElement('TD')
     predicateTD.setAttribute('about', predicate.toNT())
     predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
 
@@ -297,7 +297,7 @@ module.exports = function (context) {
     lab = lab.slice(0, 1).toUpperCase() + lab.slice(1)
     // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
 
-    var labelTD = dom.createElement('TD')
+    const labelTD = dom.createElement('TD')
     labelTD.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -307,7 +307,7 @@ module.exports = function (context) {
     predicateTD.appendChild(labelTD)
     labelTD.style.width = '100%'
     predicateTD.appendChild(termWidget.construct(dom)) // termWidget is global???
-    for (var w in outlineIcons.termWidgets) {
+    for (const w in outlineIcons.termWidgets) {
       if (!newTr || !newTr.AJAR_statement) break // case for TBD as predicate
       // alert(Icon.termWidgets[w]+'   '+Icon.termWidgets[w].filter)
       if (
@@ -597,7 +597,7 @@ module.exports = function (context) {
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
           // ico.style.width = iconHeight
           // ico.style.height = iconHeight
-          var listen = function (ico, pane) {
+          const listen = function (ico, pane) {
             // Freeze scope for event time
             ico.addEventListener(
               'click',
@@ -609,8 +609,8 @@ module.exports = function (context) {
                 if (t.nodeName !== 'TABLE') {
                   throw new Error('outline: internal error.')
                 }
-                var removePanes = function (specific) {
-                  for (var d = t.firstChild; d; d = d.nextSibling) {
+                const removePanes = function (specific) {
+                  for (let d = t.firstChild; d; d = d.nextSibling) {
                     if (typeof d.pane !== 'undefined') {
                       if (!specific || d.pane === specific) {
                         if (d.paneButton) {
@@ -634,8 +634,8 @@ module.exports = function (context) {
                     }
                   }
                 }
-                var renderPane = function (pane) {
-                  var paneDiv
+                const renderPane = function (pane) {
+                  let paneDiv
                   UI.log.info('outline: Rendering pane (2): ' + pane.name)
                   if (UI.no_catch_pane_errors) {
                     // for debugging
@@ -647,7 +647,7 @@ module.exports = function (context) {
                       // Easier debugging for pane developers
                       paneDiv = dom.createElement('div')
                       paneDiv.setAttribute('class', 'exceptionPane')
-                      var pre = dom.createElement('pre')
+                      const pre = dom.createElement('pre')
                       paneDiv.appendChild(pre)
                       pre.appendChild(
                         dom.createTextNode(UI.utils.stackString(e))
@@ -660,16 +660,16 @@ module.exports = function (context) {
                   ) {
                     dom.getElementById('queryButton').removeAttribute('style')
                   }
-                  var second = t.firstChild.nextSibling
-                  var row = dom.createElement('tr')
-                  var cell = row.appendChild(dom.createElement('td'))
+                  const second = t.firstChild.nextSibling
+                  const row = dom.createElement('tr')
+                  const cell = row.appendChild(dom.createElement('td'))
                   cell.appendChild(paneDiv)
                   if (second) t.insertBefore(row, second)
                   else t.appendChild(row)
                   row.pane = pane
                   row.paneButton = ico
                 }
-                var state = ico.getAttribute('class')
+                const state = ico.getAttribute('class')
                 if (state === 'paneHidden') {
                   if (!event.shiftKey) {
                     // shift means multiple select
@@ -685,7 +685,7 @@ module.exports = function (context) {
                 }
 
                 var numberOfPanesRequiringQueryButton = 0
-                for (var d = t.firstChild; d; d = d.nextSibling) {
+                for (let d = t.firstChild; d; d = d.nextSibling) {
                   if (d.pane && d.pane.requireQueryButton) {
                     numberOfPanesRequiringQueryButton++
                   }
@@ -713,7 +713,7 @@ module.exports = function (context) {
       // By default no hide till hover as community deems it confusing
       tr.setAttribute('class', 'hoverControl')
     }
-    var td = tr.appendChild(dom.createElement('td'))
+    const td = tr.appendChild(dom.createElement('td'))
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;' +
@@ -731,7 +731,7 @@ module.exports = function (context) {
     const showHeader = !!requiredPane
 
     if (!options.solo && !showHeader) {
-      var icon = header.appendChild(
+      const icon = header.appendChild(
         UI.utils.AJARImage(
           UI.icons.originalIconBase + 'tbl-collapse.png',
           'collapse',
@@ -741,7 +741,7 @@ module.exports = function (context) {
       )
       icon.addEventListener('click', collapseMouseDownListener)
 
-      var strong = header.appendChild(dom.createElement('h1'))
+      const strong = header.appendChild(dom.createElement('h1'))
       strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
       strong.style =
         'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
@@ -790,16 +790,16 @@ module.exports = function (context) {
   // Remove a node from the DOM so that Firefox refreshes the screen OK
   // Just deleting it cause whitespace to accumulate.
   function removeAndRefresh (d) {
-    var table = d.parentNode
-    var par = table.parentNode
-    var placeholder = dom.createElement('table')
+    const table = d.parentNode
+    const par = table.parentNode
+    const placeholder = dom.createElement('table')
     placeholder.setAttribute('style', 'width: 100%;')
     par.replaceChild(placeholder, table)
     table.removeChild(d)
     par.replaceChild(table, placeholder) // Attempt to
   }
 
-  var propertyTable = (this.propertyTable = function propertyTable (
+  const propertyTable = (this.propertyTable = function propertyTable (
     subject,
     table,
     pane,
@@ -817,7 +817,7 @@ module.exports = function (context) {
         table.appendChild(tr1)
 
         if (tr1.firstPane) {
-          var paneDiv
+          let paneDiv
           try {
             UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
             paneDiv = tr1.firstPane.render(subject, context, options)
@@ -825,13 +825,13 @@ module.exports = function (context) {
             // Easier debugging for pane developers
             paneDiv = dom.createElement('div')
             paneDiv.setAttribute('class', 'exceptionPane')
-            var pre = dom.createElement('pre')
+            const pre = dom.createElement('pre')
             paneDiv.appendChild(pre)
             pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
           }
 
-          var row = dom.createElement('tr')
-          var cell = row.appendChild(dom.createElement('td'))
+          const row = dom.createElement('tr')
+          const cell = row.appendChild(dom.createElement('td'))
           cell.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&
@@ -855,12 +855,12 @@ module.exports = function (context) {
   }) /* propertyTable */
 
   function propertyTR (doc, st, inverse) {
-    var tr = doc.createElement('TR')
+    const tr = doc.createElement('TR')
     tr.AJAR_statement = st
     tr.AJAR_inverse = inverse
     // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
     tr.setAttribute('predTR', 'true')
-    var predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
+    const predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
     tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
     return tr
   }
@@ -874,7 +874,7 @@ module.exports = function (context) {
     // UI.log.info('@appendPropertyTRs, dom is now ' + thisOutline.document.location);
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
-    var sel, j, k
+    let sel, j, k
     if (inverse) {
       sel = function (x) {
         return x.subject
@@ -887,7 +887,7 @@ module.exports = function (context) {
       plist = plist.sort(UI.utils.RDFComparePredicateObject)
     }
 
-    var max = plist.length
+    const max = plist.length
     for (j = 0; j < max; j++) {
       // squishing together equivalent properties I think
       var s = plist[j]
@@ -905,8 +905,8 @@ module.exports = function (context) {
       //   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
 
       var dups = 0 // How many rows have the same predicate, -1?
-      var langTagged = 0 // how many objects have language tags?
-      var myLang = 0 // Is there one I like?
+      let langTagged = 0 // how many objects have language tags?
+      let myLang = 0 // Is there one I like?
 
       for (
         k = 0;
@@ -962,20 +962,20 @@ module.exports = function (context) {
        */
 
       tr.showNobj = function (n) {
-        var predDups = k - dups
-        var show = 2 * n < predDups ? n : predDups
-        var showLaterArray = []
+        const predDups = k - dups
+        const show = 2 * n < predDups ? n : predDups
+        const showLaterArray = []
         if (predDups !== 1) {
           predicateTD.setAttribute(
             'rowspan',
             show === predDups ? predDups : n + 1
           )
-          var l
+          let l
           if (show < predDups && show === 1) {
             // what case is this...
             predicateTD.setAttribute('rowspan', 2)
           }
-          var displayed = 0 // The number of cells generated-1,
+          let displayed = 0 // The number of cells generated-1,
           // all duplicate thing removed
           for (l = 1; l < k; l++) {
             // This detects the same things
@@ -987,7 +987,7 @@ module.exports = function (context) {
               displayed++
               s = plist[j + l]
               defaultpropview = views.defaults[s.predicate.uri]
-              var trObj = dom.createElement('tr')
+              const trObj = dom.createElement('tr')
               trObj.style.colspan = '1'
               trObj.appendChild(
                 thisOutline.outlineObjectTD(
@@ -1017,8 +1017,8 @@ module.exports = function (context) {
 
         if (show < predDups) {
           // Add the x more <TR> here
-          var moreTR = dom.createElement('tr')
-          var moreTD = moreTR.appendChild(dom.createElement('td'))
+          const moreTR = dom.createElement('tr')
+          const moreTD = moreTR.appendChild(dom.createElement('td'))
           moreTD.setAttribute(
             'style',
             'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -1026,10 +1026,10 @@ module.exports = function (context) {
           moreTD.setAttribute('notSelectable', 'false')
           if (predDups > n) {
             // what is this for??
-            var small = dom.createElement('a')
+            const small = dom.createElement('a')
             moreTD.appendChild(small)
 
-            var predToggle = (function (f) {
+            const predToggle = (function (f) {
               return f(predicateTD, k, dups, n)
             })(function (predicateTD, k, dups, n) {
               return function (display) {
@@ -1058,14 +1058,14 @@ module.exports = function (context) {
                   )
                   predicateTD.setAttribute('rowspan', predDups + 1)
                 }
-                for (var i = 0; i < showLaterArray.length; i++) {
-                  var trObj = showLaterArray[i]
+                for (let i = 0; i < showLaterArray.length; i++) {
+                  const trObj = showLaterArray[i]
                   trObj.style.display = display
                 }
               }
             }) // ???
-            var current = 'none'
-            var toggleObj = function (event) {
+            let current = 'none'
+            const toggleObj = function (event) {
               predToggle(current)
               current = current === 'none' ? '' : 'none'
               if (event) event.stopPropagation()
@@ -1097,7 +1097,7 @@ module.exports = function (context) {
   global.termWidget = termWidget
   termWidget.construct = function (dom) {
     dom = dom || document
-    var td = dom.createElement('TD')
+    const td = dom.createElement('TD')
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -1108,10 +1108,10 @@ module.exports = function (context) {
     return td
   }
   termWidget.addIcon = function (td, icon, listener) {
-    var iconTD = td.childNodes[1]
+    const iconTD = td.childNodes[1]
     if (!iconTD) return
-    var width = iconTD.style.width
-    var img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
+    let width = iconTD.style.width
+    const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
     width = parseInt(width)
     width = width + icon.width
     iconTD.style.width = width + 'px'
@@ -1121,16 +1121,16 @@ module.exports = function (context) {
     }
   }
   termWidget.removeIcon = function (td, icon) {
-    var iconTD = td.childNodes[1]
-    var baseURI
+    const iconTD = td.childNodes[1]
+    let baseURI
     if (!iconTD) return
-    var width = iconTD.style.width
+    let width = iconTD.style.width
     width = parseInt(width)
     width = width - icon.width
     iconTD.style.width = width + 'px'
-    for (var x = 0; x < iconTD.childNodes.length; x++) {
-      var elt = iconTD.childNodes[x]
-      var eltSrc = elt.src
+    for (let x = 0; x < iconTD.childNodes.length; x++) {
+      const elt = iconTD.childNodes[x]
+      const eltSrc = elt.src
 
       // ignore first '?' and everything after it //Kenny doesn't know what this is for
       try {
@@ -1139,7 +1139,7 @@ module.exports = function (context) {
         console.log(e)
         baseURI = ''
       }
-      var relativeIconSrc = UI.rdf.uri.join(icon.src, baseURI)
+      const relativeIconSrc = UI.rdf.uri.join(icon.src, baseURI)
       if (eltSrc === relativeIconSrc) {
         iconTD.removeChild(elt)
       }
@@ -1174,7 +1174,7 @@ module.exports = function (context) {
     // this.orderBy = []
   }
 
-  var queries = []
+  const queries = []
   queries[0] = new QueryObj()
   /*
   function querySave () {
@@ -1216,7 +1216,7 @@ module.exports = function (context) {
 */
   function addButtonCallbacks (target, fireOn) {
     UI.log.debug('Button callbacks for ' + fireOn + ' added')
-    var makeIconCallback = function (icon) {
+    const makeIconCallback = function (icon) {
       return function IconCallback (req) {
         if (req.indexOf('#') >= 0) {
           console.log(
@@ -1245,7 +1245,7 @@ module.exports = function (context) {
   //   Selection support
 
   function selected (node) {
-    var a = node.getAttribute('class')
+    const a = node.getAttribute('class')
     if (a && a.indexOf('selected') >= 0) return true
     return false
   }
@@ -1253,8 +1253,8 @@ module.exports = function (context) {
   // These woulkd be simpler using closer variables below
   function optOnIconMouseDownListener (e) {
     // outlineIcons.src.icon_opton  needed?
-    var target = thisOutline.targetOf(e)
-    var p = target.parentNode
+    const target = thisOutline.targetOf(e)
+    const p = target.parentNode
     termWidget.replaceIcon(
       p.parentNode,
       outlineIcons.termWidgets.optOn,
@@ -1266,8 +1266,8 @@ module.exports = function (context) {
 
   function optOffIconMouseDownListener (e) {
     // outlineIcons.src.icon_optoff needed?
-    var target = thisOutline.targetOf(e)
-    var p = target.parentNode
+    const target = thisOutline.targetOf(e)
+    const p = target.parentNode
     termWidget.replaceIcon(
       p.parentNode,
       outlineIcons.termWidgets.optOff,
@@ -1278,12 +1278,12 @@ module.exports = function (context) {
   }
 
   function setSelectedParent (node, inc) {
-    var onIcon = outlineIcons.termWidgets.optOn
-    var offIcon = outlineIcons.termWidgets.optOff
-    for (var n = node; n.parentNode; n = n.parentNode) {
+    const onIcon = outlineIcons.termWidgets.optOn
+    const offIcon = outlineIcons.termWidgets.optOff
+    for (let n = node; n.parentNode; n = n.parentNode) {
       while (true) {
         if (n.getAttribute('predTR')) {
-          var num = n.getAttribute('parentOfSelected')
+          let num = n.getAttribute('parentOfSelected')
           if (!num) num = 0
           else num = parseInt(num)
           if (num === 0 && inc > 0) {
@@ -1313,7 +1313,7 @@ module.exports = function (context) {
   }
 
   this.statusBarClick = function (event) {
-    var target = UI.utils.getTarget(event)
+    const target = UI.utils.getTarget(event)
     if (target.label) {
       window.content.location = target.label
       // The following alternative does not work in the extension.
@@ -1333,17 +1333,17 @@ module.exports = function (context) {
     if (typeof sourceWidget === 'undefined') return
     // deselect all before going on, this is necessary because you would switch tab,
     // close tab or so on...
-    for (var uri in sourceWidget.sources) {
+    for (const uri in sourceWidget.sources) {
       sourceWidget.sources[uri].setAttribute('class', '')
     } // .class doesn't work. Be careful!
-    for (var i = 0; i < selection.length; i++) {
+    for (let i = 0; i < selection.length; i++) {
       if (!selection[i].parentNode) {
         console.log('showSource: EH? no parentNode? ' + selection[i] + '\n')
         continue
       }
-      var st = selection[i].parentNode.AJAR_statement
+      const st = selection[i].parentNode.AJAR_statement
       if (!st) continue // for root TD
-      var source = st.why
+      const source = st.why
       if (source && source.uri) {
         sourceWidget.highlight(source, true)
       }
@@ -1368,7 +1368,7 @@ module.exports = function (context) {
       )
     }
     UI.log.debug('pass')
-    var cla = node.getAttribute('class')
+    let cla = node.getAttribute('class')
     if (!cla) cla = ''
     if (newValue) {
       cla += ' selected'
@@ -1378,17 +1378,17 @@ module.exports = function (context) {
       selection.push(node)
       // UI.log.info('Selecting '+node.textContent)
 
-      var about = UI.utils.getTerm(node) // show uri for a newly selectedTd
+      const about = UI.utils.getTerm(node) // show uri for a newly selectedTd
       thisOutline.showURI(about)
 
-      var st = node.AJAR_statement // show blue cross when the why of that triple is editable
+      let st = node.AJAR_statement // show blue cross when the why of that triple is editable
       if (typeof st === 'undefined') st = node.parentNode.AJAR_statement
       // if (typeof st === 'undefined') return; // @@ Kludge?  Click in the middle of nowhere
       if (st) {
         // don't do these for headers or base nodes
-        var source = st.why
+        const source = st.why
         // var target = st.why
-        var editable = UI.store.updater.editable(source.uri, kb)
+        const editable = UI.store.updater.editable(source.uri, kb)
         if (!editable) {
           // let target = node.parentNode.AJAR_inverse ? st.object : st.subject
         } // left hand side
@@ -1422,14 +1422,14 @@ module.exports = function (context) {
   }
 
   function deselectAll () {
-    var n = selection.length
+    const n = selection.length
     for (let i = n - 1; i >= 0; i--) setSelected(selection[i], false)
     selection = []
   }
 
   /** Get the target of an event **/
   this.targetOf = function (e) {
-    var target
+    let target
     if (!e) e = window.event
     if (e.target) {
       target = e.target
@@ -1447,8 +1447,8 @@ module.exports = function (context) {
   } // targetOf
 
   this.walk = function walk (directionCode, inputTd) {
-    var selectedTd = inputTd || selection[0]
-    var newSelTd
+    const selectedTd = inputTd || selection[0]
+    let newSelTd
     switch (directionCode) {
       case 'down':
         try {
@@ -1477,7 +1477,7 @@ module.exports = function (context) {
         ) {
           setSelected(selectedTd.nextSibling, true)
         } else {
-          var newSelected = dom.evaluate(
+          const newSelected = dom.evaluate(
             'table/div/tr/td[2]',
             selectedTd,
             null,
@@ -1530,7 +1530,7 @@ module.exports = function (context) {
       showURI(UI.utils.getAbout(kb, selection[0]))
       return true
     }
-    var target, editable
+    let target, editable
 
     if (UI.utils.getTarget(e).tagName === 'TEXTAREA') return
     if (UI.utils.getTarget(e).id === 'UserURI') return
@@ -1557,7 +1557,7 @@ module.exports = function (context) {
       case 13: // enter
         if (UI.utils.getTarget(e).tagName === 'HTML') {
           // I don't know why 'HTML'
-          var object = UI.utils.getAbout(kb, selectedTd)
+          const object = UI.utils.getAbout(kb, selectedTd)
           target = selectedTd.parentNode.AJAR_statement.why
           editable = UI.store.updater.editable(target.uri, kb)
           if (object) {
@@ -1699,7 +1699,7 @@ module.exports = function (context) {
 
     // var thisHtml=selection[0].owner
     if (selection[0]) {
-      var PosY = UI.utils.findPos(selection[0])[1]
+      const PosY = UI.utils.findPos(selection[0])[1]
       if (
         PosY + selection[0].clientHeight >
         window.scrollY + window.innerHeight
@@ -1737,10 +1737,10 @@ module.exports = function (context) {
 
   function expandMouseDownListener (e) {
     // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
-    var target = thisOutline.targetOf(e)
-    var p = target.parentNode
-    var subject = UI.utils.getAbout(kb, target)
-    var pane = e.altKey ? panes.byName('internal') : undefined // set later: was panes.defaultPane
+    const target = thisOutline.targetOf(e)
+    const p = target.parentNode
+    const subject = UI.utils.getAbout(kb, target)
+    const pane = e.altKey ? panes.byName('internal') : undefined // set later: was panes.defaultPane
 
     if (e.shiftKey) {
       // Shift forces a refocus - bring this to the top
@@ -1760,17 +1760,17 @@ module.exports = function (context) {
 
   function collapseMouseDownListener (e) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
-    var target = thisOutline.targetOf(e)
-    var subject = UI.utils.getAbout(kb, target)
-    var pane = e.altKey ? panes.byName('internal') : undefined
-    var p = target.parentNode.parentNode
+    const target = thisOutline.targetOf(e)
+    const subject = UI.utils.getAbout(kb, target)
+    const pane = e.altKey ? panes.byName('internal') : undefined
+    const p = target.parentNode.parentNode
     outlineCollapse(p, subject, pane)
   }
 
   function failedIconMouseDownListener (e) {
     // outlineIcons.src.icon_failed
-    var target = thisOutline.targetOf(e)
-    var uri = target.getAttribute('uri') // Put on access buttons
+    const target = thisOutline.targetOf(e)
+    const uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
       sf.fetch(UI.rdf.uri.docpart(uri), {
         force: true
@@ -1782,8 +1782,8 @@ module.exports = function (context) {
 
   function fetchedIconMouseDownListener (e) {
     // outlineIcons.src.icon_fetched
-    var target = thisOutline.targetOf(e)
-    var uri = target.getAttribute('uri') // Put on access buttons
+    const target = thisOutline.targetOf(e)
+    const uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
       sf.fetch(UI.rdf.uri.docpart(uri), {
         force: true
@@ -1794,15 +1794,15 @@ module.exports = function (context) {
   }
 
   function unrequestedIconMouseDownListener (e) {
-    var target = thisOutline.targetOf(e)
-    var uri = target.getAttribute('uri') // Put on access buttons
+    const target = thisOutline.targetOf(e)
+    const uri = target.getAttribute('uri') // Put on access buttons
     sf.fetch(UI.rdf.uri.docpart(uri))
   }
 
   function removeNodeIconMouseDownListener (e) {
     // icon_remove_node
-    var target = thisOutline.targetOf(e)
-    var node = target.node
+    const target = thisOutline.targetOf(e)
+    let node = target.node
     if (node.childNodes.length > 1) node = target.parentNode // parallel outline view @@ Hack
     removeAndRefresh(node) // @@ update icons for pane?
   }
@@ -1813,10 +1813,10 @@ module.exports = function (context) {
       return thisOutline.UserInput.Click(e)
     }
 
-    var target = thisOutline.targetOf(e)
+    const target = thisOutline.targetOf(e)
     // Originally this was set on the whole tree and could happen anywhere
     // var p = target.parentNode
-    var node
+    let node
     for (
       node = UI.utils.ancestor(target, 'TD');
       node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
@@ -1826,7 +1826,7 @@ module.exports = function (context) {
 
     // var node = target;
 
-    var sel = selected(node)
+    const sel = selected(node)
     // var cla = node.getAttribute('class')
     UI.log.debug('Was node selected before: ' + sel)
     if (e.altKey) {
@@ -1846,10 +1846,10 @@ module.exports = function (context) {
       }
       // if the node is already selected and the corresponding statement is editable,
       // go to UserInput
-      var st = node.parentNode.AJAR_statement
+      const st = node.parentNode.AJAR_statement
       if (!st) return // For example in the title TD of an expanded pane
       const target = st.why
-      var editable = UI.store.updater.editable(target.uri, kb)
+      const editable = UI.store.updater.editable(target.uri, kb)
       if (sel && editable) thisOutline.UserInput.Click(e, selection[0]) // was next 2 lines
       // var text='TabulatorMouseDown@Outline()';
       // HCIoptions['able to edit in Discovery Mode by mouse'].setupHere([sel,e,thisOutline,selection[0]],text);
@@ -1873,9 +1873,9 @@ module.exports = function (context) {
 
   function TabulatorMousedown (e) {
     UI.log.info('@TabulatorMousedown, dom.location is now ' + dom.location)
-    var target = thisOutline.targetOf(e)
+    const target = thisOutline.targetOf(e)
     if (!target) return
-    var tname = target.tagName
+    const tname = target.tagName
     // UI.log.debug('TabulatorMousedown: ' + tname + ' shift='+e.shiftKey+' alt='+e.altKey+' ctrl='+e.ctrlKey);
     // var p = target.parentNode
     // var about = UI.utils.getAbout(kb, target)
@@ -1931,23 +1931,23 @@ module.exports = function (context) {
    */
   function outlineExpand (p, subject1, options) {
     options = options || {}
-    var pane = options.pane
-    var already = !!options.already
-    var immediate = options.immediate
+    const pane = options.pane
+    let already = !!options.already
+    const immediate = options.immediate
 
     UI.log.info('@outlineExpand, dom is now ' + dom.location)
     // remove callback to prevent unexpected repaint
     sf.removeCallback('done', 'expand')
     sf.removeCallback('fail', 'expand')
 
-    var subject = kb.canon(subject1)
+    let subject = kb.canon(subject1)
     // var requTerm = subject.uri ? kb.sym(UI.rdf.uri.docpart(subject.uri)) : subject
 
     function render () {
       subject = kb.canon(subject)
       if (!p || !p.parentNode || !p.parentNode.parentNode) return false
 
-      var newTable
+      let newTable
       UI.log.info('@@ REPAINTING ')
       if (!already) {
         // first expand
@@ -1986,8 +1986,8 @@ module.exports = function (context) {
       // fetch seeAlso when render()
       // var seeAlsoStats = sf.store.statementsMatching(subject, UI.ns.rdfs('seeAlso'))
       // seeAlsoStats.map(function (x) {sf.lookUpThing(x.object, subject,false);})
-      var seeAlsoWhat = kb.each(subject, UI.ns.rdfs('seeAlso'))
-      for (var i = 0; i < seeAlsoWhat.length; i++) {
+      const seeAlsoWhat = kb.each(subject, UI.ns.rdfs('seeAlso'))
+      for (let i = 0; i < seeAlsoWhat.length; i++) {
         if (i === 25) {
           UI.log.warn(
             'expand: Warning: many (' +
@@ -2003,7 +2003,7 @@ module.exports = function (context) {
 
     function expand (uri) {
       if (arguments[3]) return true // already fetched indicator
-      var cursubj = kb.canon(subject) // canonical identifier may have changed
+      const cursubj = kb.canon(subject) // canonical identifier may have changed
       UI.log.info(
         '@@ expand: relevant subject=' +
           cursubj +
@@ -2013,20 +2013,20 @@ module.exports = function (context) {
           already
       )
       // var term = kb.sym(uri)
-      var docTerm = kb.sym(UI.rdf.uri.docpart(uri))
+      const docTerm = kb.sym(UI.rdf.uri.docpart(uri))
       if (uri.indexOf('#') >= 0) {
         throw new Error('Internal error: hash in ' + uri)
       }
 
-      var relevant = function () {
+      const relevant = function () {
         // Is the loading of this URI relevam to the display of subject?
         if (!cursubj.uri) return true // bnode should expand()
-        var as = kb.uris(cursubj)
+        const as = kb.uris(cursubj)
         if (!as) return false
-        for (var i = 0; i < as.length; i++) {
+        for (let i = 0; i < as.length; i++) {
           // canon'l uri or any alias
           for (
-            var rd = UI.rdf.uri.docpart(as[i]);
+            let rd = UI.rdf.uri.docpart(as[i]);
             rd;
             rd = kb.HTTPRedirects[rd]
           ) {
@@ -2059,12 +2059,12 @@ module.exports = function (context) {
       setUrlBarAndTitle(subject)
     }
     UI.log.debug('outlineExpand: dereferencing ' + subject)
-    var status = dom.createElement('span')
+    const status = dom.createElement('span')
     p.appendChild(status)
     sf.addCallback('done', expand) // @@@@@@@ This can really mess up existing work
     sf.addCallback('fail', expand) // Need to do if there s one a gentle resync of page with store
 
-    var returnConditions = [] // this is quite a general way to do cut and paste programming
+    const returnConditions = [] // this is quite a general way to do cut and paste programming
     // I might make a class for this
     if (subject.uri && subject.uri.split(':')[0] === 'rdf') {
       // what is this? -tim
@@ -2072,7 +2072,7 @@ module.exports = function (context) {
       return
     }
 
-    for (var i = 0; i < returnConditions.length; i++) {
+    for (let i = 0; i < returnConditions.length; i++) {
       var returnCode
       if (returnCode === returnConditions[i](subject)) {
         render()
@@ -2104,7 +2104,7 @@ module.exports = function (context) {
             setUrlBarAndTitle(subject)
           }
         } else {
-          var message = dom.createElement('pre')
+          const message = dom.createElement('pre')
           message.textContent = body
           message.setAttribute('style', 'background-color: #fee;')
           message.textContent =
@@ -2118,10 +2118,10 @@ module.exports = function (context) {
   } // outlineExpand
 
   function outlineCollapse (p, subject) {
-    var row = UI.utils.ancestor(p, 'TR')
+    let row = UI.utils.ancestor(p, 'TR')
     row = UI.utils.ancestor(row.parentNode, 'TR') // two levels up
     if (row) var statement = row.AJAR_statement
-    var level // find level (the enclosing TD)
+    let level // find level (the enclosing TD)
     for (
       level = p.parentNode;
       level.tagName !== 'TD';
@@ -2134,7 +2134,7 @@ module.exports = function (context) {
     }
 
     UI.log.debug('Collapsing subject ' + subject)
-    var myview
+    let myview
     if (statement) {
       UI.log.debug('looking up pred ' + statement.predicate.uri + 'in defaults')
       myview = views.defaults[statement.predicate.uri]
@@ -2150,13 +2150,13 @@ module.exports = function (context) {
   } // outlineCollapse
 
   this.replaceTD = function replaceTD (newTd, replacedTd) {
-    var reselect
+    let reselect
     if (selected(replacedTd)) reselect = true
 
     // deselects everything being collapsed. This goes backwards because
     // deselecting an element decreases selection.length
-    for (var x = selection.length - 1; x > -1; x--) {
-      for (var elt = selection[x]; elt.parentNode; elt = elt.parentNode) {
+    for (let x = selection.length - 1; x > -1; x--) {
+      for (let elt = selection[x]; elt.parentNode; elt = elt.parentNode) {
         if (elt === replacedTd) {
           setSelected(selection[x], false)
         }
@@ -2169,8 +2169,8 @@ module.exports = function (context) {
 
   function outlineRefocus (p, subject) {
     // Shift-expand or shift-collapse: Maximize
-    var outer = null
-    for (var level = p.parentNode; level; level = level.parentNode) {
+    let outer = null
+    for (let level = p.parentNode; level; level = level.parentNode) {
       UI.log.debug('level ' + level.tagName)
       if (level.tagName === 'TD') outer = level
     } // find outermost td
@@ -2199,11 +2199,11 @@ module.exports = function (context) {
   }
 
   function GotoURI (uri) {
-    var subject = kb.sym(uri)
+    const subject = kb.sym(uri)
     this.GotoSubject(subject, true)
   }
   this.GotoURIinit = function (uri) {
-    var subject = kb.sym(uri)
+    const subject = kb.sym(uri)
     this.GotoSubject(subject)
   }
 
@@ -2224,15 +2224,15 @@ module.exports = function (context) {
     }
 
     function GotoSubjectDefault () {
-      var tr = dom.createElement('TR')
+      const tr = dom.createElement('TR')
       tr.style.verticalAlign = 'top'
       table.appendChild(tr)
-      var td = thisOutline.outlineObjectTD(subject, undefined, tr)
+      const td = thisOutline.outlineObjectTD(subject, undefined, tr)
       tr.appendChild(td)
       return td
     }
 
-    var td = GotoSubjectDefault()
+    const td = GotoSubjectDefault()
 
     if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
@@ -2241,7 +2241,7 @@ module.exports = function (context) {
         pane: pane,
         solo: solo
       })
-      var tr = td.parentNode
+      const tr = td.parentNode
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
 
@@ -2308,10 +2308,10 @@ module.exports = function (context) {
 
   function viewAsBoringDefault (obj) {
     // UI.log.debug('entered viewAsBoringDefault...');
-    var rep // representation in html
+    let rep // representation in html
 
     if (obj.termType === 'Literal') {
-      var styles = {
+      const styles = {
         integer: 'text-align: right;',
         decimal: "text-align: '.';",
         double: "text-align: '.';"
@@ -2319,9 +2319,9 @@ module.exports = function (context) {
       rep = dom.createElement('span')
       rep.textContent = obj.value
       // Newlines have effect and overlong lines wrapped automatically
-      var style = ''
+      let style = ''
       if (obj.datatype && obj.datatype.uri) {
-        var xsd = UI.ns.xsd('').uri
+        const xsd = UI.ns.xsd('').uri
         if (obj.datatype.uri.slice(0, xsd.length) === xsd) {
           style = styles[obj.datatype.uri.slice(xsd.length)]
         }
@@ -2334,8 +2334,8 @@ module.exports = function (context) {
 
       if (obj.termType === 'NamedNode') {
         if (obj.uri.slice(0, 4) === 'tel:') {
-          var num = obj.uri.slice(4)
-          var anchor = dom.createElement('a')
+          const num = obj.uri.slice(4)
+          const anchor = dom.createElement('a')
           rep.appendChild(dom.createTextNode(num))
           anchor.setAttribute('href', obj.uri)
           anchor.appendChild(
@@ -2368,10 +2368,10 @@ module.exports = function (context) {
                 tr.appendChild(document.createTextNode(
                         obj.elements.length ? '(' + obj.elements.length+')' : '(none)'));
         */
-      for (var i = 0; i < obj.elements.length; i++) {
-        var elt = obj.elements[i]
-        var row = rep.appendChild(dom.createElement('tr'))
-        var numcell = row.appendChild(dom.createElement('td'))
+      for (let i = 0; i < obj.elements.length; i++) {
+        const elt = obj.elements[i]
+        const row = rep.appendChild(dom.createElement('tr'))
+        const numcell = row.appendChild(dom.createElement('td'))
         numcell.setAttribute(
           'style',
           'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -2395,7 +2395,7 @@ module.exports = function (context) {
   } // boring_default
 
   function viewAsImage (obj) {
-    var img = UI.utils.AJARImage(
+    const img = UI.utils.AJARImage(
       obj.uri,
       UI.utils.label(obj),
       UI.utils.label(obj),
@@ -2406,14 +2406,14 @@ module.exports = function (context) {
   }
 
   function viewAsMbox (obj) {
-    var anchor = dom.createElement('a')
+    const anchor = dom.createElement('a')
     // previous implementation assumed email address was Literal. fixed.
 
     // FOAF mboxs must NOT be literals -- must be mailto: URIs.
 
-    var address = obj.termType === 'NamedNode' ? obj.uri : obj.value // this way for now
+    let address = obj.termType === 'NamedNode' ? obj.uri : obj.value // this way for now
     if (!address) return viewAsBoringDefault(obj)
-    var index = address.indexOf('mailto:')
+    const index = address.indexOf('mailto:')
     address = index >= 0 ? address.slice(index + 7) : address
     anchor.setAttribute('href', 'mailto:' + address)
     anchor.appendChild(dom.createTextNode(address))

@@ -28,8 +28,8 @@ const HomePaneSource: PaneDefinition = {
 
   render: function (subject, context) {
     const dom = context.dom
-    var showContent = async function () {
-      var homePaneContext = { div: div, dom: dom, statusArea: div, me: me }
+    const showContent = async function () {
+      const homePaneContext = { div: div, dom: dom, statusArea: div, me: me }
       /*
             div.appendChild(dom.createElement('h4')).textContent = 'Login status'
             var loginStatusDiv = div.appendChild(context.dom.createElement('div'))
@@ -41,8 +41,8 @@ const HomePaneSource: PaneDefinition = {
       */
       div.appendChild(dom.createElement('h4')).textContent =
         'Create new thing somewhere'
-      var creationDiv = div.appendChild(dom.createElement('div'))
-      var creationContext = {
+      const creationDiv = div.appendChild(dom.createElement('div'))
+      const creationContext = {
         div: creationDiv,
         dom: dom,
         statusArea: div,

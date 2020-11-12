@@ -3,7 +3,7 @@
  **  This outline pane contains the document contents for an HTML document
  **  This is for peeking at a page, because the user might not want to leave the data browser.
  */
-var UI = require('solid-ui')
+const UI = require('solid-ui')
 const $rdf = require('rdflib')
 
 module.exports = {
@@ -12,12 +12,12 @@ module.exports = {
   name: 'humanReadable',
 
   label: function (subject, context) {
-    var kb = context.session.store
-    var ns = UI.ns
+    const kb = context.session.store
+    const ns = UI.ns
 
     //   See also the source pane, which has lower precedence.
 
-    var allowed = [
+    const allowed = [
       'text/plain',
       'text/html',
       'application/xhtml+xml',
@@ -27,11 +27,11 @@ module.exports = {
       'video/mp4'
     ]
 
-    var hasContentTypeIn = function (kb, x, displayables) {
-      var cts = kb.fetcher.getHeader(x, 'content-type')
+    const hasContentTypeIn = function (kb, x, displayables) {
+      const cts = kb.fetcher.getHeader(x, 'content-type')
       if (cts) {
-        for (var j = 0; j < cts.length; j++) {
-          for (var k = 0; k < displayables.length; k++) {
+        for (let j = 0; j < cts.length; j++) {
+          for (let k = 0; k < displayables.length; k++) {
             if (cts[j].indexOf(displayables[k]) >= 0) {
               return true
             }
@@ -42,9 +42,9 @@ module.exports = {
     }
 
     // This data could come from a fetch OR from ldp container
-    var hasContentTypeIn2 = function (kb, x, displayables) {
-      var t = kb.findTypeURIs(subject)
-      for (var k = 0; k < displayables.length; k++) {
+    const hasContentTypeIn2 = function (kb, x, displayables) {
+      const t = kb.findTypeURIs(subject)
+      for (let k = 0; k < displayables.length; k++) {
         if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
         }
@@ -54,7 +54,7 @@ module.exports = {
 
     if (!subject.uri) return null // no bnodes
 
-    var t = kb.findTypeURIs(subject)
+    const t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 
     if (
@@ -68,18 +68,18 @@ module.exports = {
   },
 
   render: function (subject, context) {
-    var myDocument = context.dom
-    var div = myDocument.createElement('div')
-    var kb = context.session.store
+    const myDocument = context.dom
+    const div = myDocument.createElement('div')
+    const kb = context.session.store
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
-    var iframe = myDocument.createElement('IFRAME')
+    const iframe = myDocument.createElement('IFRAME')
     iframe.setAttribute('src', subject.uri) // allow-same-origin
     iframe.setAttribute('class', 'doc')
 
-    var cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    var ct = cts ? cts[0] : null
+    const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+    const ct = cts ? cts[0] : null
     if (ct) {
       console.log('humanReadablePane: c-t:' + ct)
     } else {
@@ -97,7 +97,7 @@ module.exports = {
     iframe.setAttribute('style', 'resize = both; height: 120em; width:80em;')
     //        iframe.setAttribute('height', '480')
     //        iframe.setAttribute('width', '640')
-    var tr = myDocument.createElement('TR')
+    const tr = myDocument.createElement('TR')
     tr.appendChild(iframe)
     div.appendChild(tr)
     return div

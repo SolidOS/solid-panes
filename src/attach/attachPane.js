@@ -8,7 +8,7 @@
  **
  */
 
-var UI = require('solid-ui')
+const UI = require('solid-ui')
 const $rdf = require('rdflib')
 
 module.exports = {
@@ -24,10 +24,10 @@ module.exports = {
   // We also offer the pane for anything of any class which just has an attachment already.
   //
   label: function (subject, context) {
-    var kb = context.session.store
-    var t = kb.findTypeURIs(subject)
-    var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
-    var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
+    const kb = context.session.store
+    const t = kb.findTypeURIs(subject)
+    const QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
+    const WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
     if (
       t['http://www.w3.org/ns/pim/trip#Trip'] || // If in any subclass
       subject.uri === 'http://www.w3.org/ns/pim/trip#Trip' ||
@@ -44,14 +44,14 @@ module.exports = {
 
   render: function (subject, context) {
     const dom = context.dom
-    var kb = context.session.store
-    var WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
-    var QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
+    const kb = context.session.store
+    const WF = $rdf.Namespace('http://www.w3.org/2005/01/wf/flow#')
+    const QU = $rdf.Namespace('http://www.w3.org/2000/10/swap/pim/qif#')
 
     // ////////////////////////////////////////////////////////////////////////////
 
-    var complain = function complain (message) {
-      var pre = dom.createElement('pre')
+    const complain = function complain (message) {
+      const pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: pink')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
@@ -60,33 +60,33 @@ module.exports = {
     // Where can we write about this thing?
     //
     // Returns term for document or null
-    var findStore = function (kb, subject) {
+    const findStore = function (kb, subject) {
       if (kb.updater.editable(subject.doc(), kb)) return subject.doc()
-      var store = kb.any(subject.doc(), QU('annotationStore'))
+      const store = kb.any(subject.doc(), QU('annotationStore'))
       return store
     }
 
     var div = dom.createElement('div')
-    var esc = UI.utils.escapeForXML
+    const esc = UI.utils.escapeForXML
     div.setAttribute('class', 'attachPane')
     div.innerHTML =
       '<h1>' + esc(UI.utils.label(subject, true)) + ' attachments</h1>' //
 
-    var predicate = WF('attachment')
-    var range = QU('SupportingDocument')
+    const predicate = WF('attachment')
+    const range = QU('SupportingDocument')
 
-    var subjects, multi
-    var options = {}
-    var currentMode = 0 // 0 -> Show all;  1 -> Attached;    2 -> unattached
-    var currentSubject = null
-    var currentObject = null
-    var objectType = QU('SupportingDocument')
+    let subjects, multi
+    const options = {}
+    let currentMode = 0 // 0 -> Show all;  1 -> Attached;    2 -> unattached
+    let currentSubject = null
+    let currentObject = null
+    const objectType = QU('SupportingDocument')
 
     // Find all members of the class which we know about
     // and sort them by an appropriate property.   @@ Move to library
     //
 
-    var getSortKeySimple = function (_c) {
+    const getSortKeySimple = function (_c) {
       const uriMap = {
         'http://www.w3.org/2005/01/wf/flow#Task': 'http://purl.org/dc/elements/1.1/created',
         'http://www.w3.org/ns/pim/trip#Trip': 'http://www.w3.org/2002/12/cal/ical#dtstart',
@@ -97,11 +97,11 @@ module.exports = {
       return uri ? kb.sym(uri) : kb.any(subject, UI.ns.ui('sortBy'))
     }
 
-    var getSortKey = function (c) {
-      var k = getSortKeySimple(c.uri)
+    const getSortKey = function (c) {
+      let k = getSortKeySimple(c.uri)
       if (k) return k
-      var sup = kb.findSuperClassesNT(c)
-      for (var cl in sup) {
+      const sup = kb.findSuperClassesNT(c)
+      for (const cl in sup) {
         // note unordered -- could be closest first
         k = getSortKeySimple(kb.fromNT(cl).uri)
         if (k) return k
@@ -109,12 +109,12 @@ module.exports = {
       return undefined // failure
     }
 
-    var getMembersAndSort = function (subject) {
-      var sortBy = getSortKey(subject)
-      var u, x, key
-      var uriHash = kb.findMemberURIs(subject)
-      var pairs = []
-      var subjects = []
+    const getMembersAndSort = function (subject) {
+      const sortBy = getSortKey(subject)
+      let u, x, key
+      const uriHash = kb.findMemberURIs(subject)
+      const pairs = []
+      const subjects = []
       for (u in uriHash) {
         // @@ TODO: Write away the need for exception on next line
         // eslint-disable-next-line no-prototype-builtins
@@ -139,7 +139,7 @@ module.exports = {
       }
       pairs.sort()
       pairs.reverse() // @@ Descending order .. made a toggle?
-      for (var i = 0; i < pairs.length; i++) {
+      for (let i = 0; i < pairs.length; i++) {
         subjects.push(pairs[i][1])
       }
       return subjects
@@ -164,16 +164,16 @@ module.exports = {
     // if (!store) complain("There is no annotation store for: "+subject.uri)
 
     // var objects = kb.each(undefined, ns.rdf('type'), range)
-    var objects = getMembersAndSort(range)
+    const objects = getMembersAndSort(range)
     if (!objects) complain('objects:' + objects.length)
 
-    var deselectObject = function () {
+    const deselectObject = function () {
       currentObject = null
       preview.innerHTML = ''
     }
 
-    var showFiltered = function (mode) {
-      var filtered = mode === 0 ? objects : getFiltered()
+    const showFiltered = function (mode) {
+      const filtered = mode === 0 ? objects : getFiltered()
       // eslint-enable
       UI.widgets.selectorPanelRefresh(
         objectList,
@@ -203,11 +203,11 @@ module.exports = {
       }
     }
 
-    var setAttachment = function (x, y, value, refresh) {
+    const setAttachment = function (x, y, value, refresh) {
       if (kb.holds(x, predicate, y) === value) return
-      var verb = value ? 'attach' : 'detach'
+      const verb = value ? 'attach' : 'detach'
       // complain("Info: starting to "+verb+" " + y.uri + " to "+x.uri+ ":\n")
-      var linkDone3 = function (uri, ok, body) {
+      const linkDone3 = function (uri, ok, body) {
         if (ok) {
           // complain("Success "+verb+" "+y.uri+" to "+x.uri+ ":\n"+ body)
           refresh()
@@ -225,11 +225,11 @@ module.exports = {
         }
       }
 
-      var store = findStore(kb, x)
+      const store = findStore(kb, x)
       if (!store) {
         complain('There is no annotation store for: ' + x.uri)
       } else {
-        var sts = [$rdf.st(x, predicate, y, store)]
+        const sts = [$rdf.st(x, predicate, y, store)]
         if (value) {
           kb.updater.update([], sts, linkDone3)
         } else {
@@ -239,7 +239,7 @@ module.exports = {
     }
 
     var linkClicked = function (x, event, inverse, refresh) {
-      var s, o
+      let s, o
       if (inverse) {
         // Objectlist
         if (!currentSubject) {
@@ -263,7 +263,7 @@ module.exports = {
     }
 
     // When you click on a subject, filter the objects connected to the subject in Mode 1
-    var showSubject = function (x, event, selected) {
+    const showSubject = function (x, event, selected) {
       if (selected) {
         currentSubject = x
       } else {
@@ -274,7 +274,7 @@ module.exports = {
     }
 
     if (multi) {
-      var subjectList = UI.widgets.selectorPanel(
+      const subjectList = UI.widgets.selectorPanel(
         dom,
         kb,
         subject,
@@ -322,8 +322,8 @@ module.exports = {
           kb.fetcher
             .load(x.uri)
             .then(() => {
-              var outliner = context.getOutliner(dom)
-              var display = outliner.propertyTable(x) //  ,table, pane
+              const outliner = context.getOutliner(dom)
+              const display = outliner.propertyTable(x) //  ,table, pane
               preview.innerHTML = ''
               preview.appendChild(display)
             })
@@ -350,29 +350,29 @@ module.exports = {
       'background-color: white; width:40cm; height:20cm;'
     )
 
-    var headerButtons = function (dom, labels, intial, callback) {
-      var head = dom.createElement('table')
-      var current = intial
+    const headerButtons = function (dom, labels, intial, callback) {
+      const head = dom.createElement('table')
+      let current = intial
       head.setAttribute(
         'style',
         'float: left; width: 30em; padding: 0.5em; height: 1.5em; background-color: #ddd; color: #444; font-weight: bold'
       )
-      var tr = dom.createElement('tr')
-      var style0 = 'border-radius: 0.6em; text-align: center;'
-      var style1 = style0 + 'background-color: #ccc; color: black;'
+      const tr = dom.createElement('tr')
+      const style0 = 'border-radius: 0.6em; text-align: center;'
+      const style1 = style0 + 'background-color: #ccc; color: black;'
       head.appendChild(tr)
-      var setStyles = function () {
+      const setStyles = function () {
         for (i = 0; i < labels.length; i++) {
           buttons[i].setAttribute('style', i === current ? style1 : style0)
         }
       }
-      var i, b
+      let i, b
       var buttons = []
       for (i = 0; i < labels.length; i++) {
         b = buttons[i] = dom.createElement('td')
         b.textContent = labels[i]
         tr.appendChild(buttons[i])
-        var listen = function (b, i) {
+        const listen = function (b, i) {
           b.addEventListener('click', function (_e) {
             current = i
             setStyles()
@@ -385,7 +385,7 @@ module.exports = {
       return head
     }
 
-    var setMode = function (mode) {
+    const setMode = function (mode) {
       if (mode !== currentMode) {
         currentMode = mode
         deselectObject()
@@ -393,7 +393,7 @@ module.exports = {
       }
     }
 
-    var wrapper = dom.createElement('div')
+    const wrapper = dom.createElement('div')
     wrapper.setAttribute(
       'style',
       ' width: 30em; height: 100%;  padding: 0em; float:left;'
@@ -437,13 +437,13 @@ module.exports = {
     showFiltered(currentMode)
 
     if (subjects.length > 0 && multi) {
-      var stores = {}
-      for (var k = 0; k < subjects.length; k++) {
-        var store = findStore(kb, subjects[k])
+      const stores = {}
+      for (let k = 0; k < subjects.length; k++) {
+        const store = findStore(kb, subjects[k])
         if (store) stores[store.uri] = subjects[k]
         // if (!store) complain("No store for "+subjects[k].uri)
       }
-      for (var storeURI in stores) {
+      for (const storeURI in stores) {
         // var store = findStore(kb,subjects[subjectList.length-1])
         const store = kb.sym(storeURI)
         var mintBox = dom.createElement('div')
@@ -454,7 +454,7 @@ module.exports = {
         mintBox.textContent = '+ New ' + UI.utils.label(subject)
 
         mintBox.textContent += ' in ' + UI.utils.label(store)
-        var storeLab = dom.createElement('span')
+        const storeLab = dom.createElement('span')
         storeLab.setAttribute(
           'style',
           'font-weight: normal; font-size: 80%; color: #777;'
@@ -470,7 +470,7 @@ module.exports = {
         mintBox.addEventListener(
           'click',
           function (_event) {
-            var thisForm = UI.widgets.promptForNew(
+            const thisForm = UI.widgets.promptForNew(
               dom,
               kb,
               subject,
