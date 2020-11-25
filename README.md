@@ -56,6 +56,7 @@ through https://github.com/nvm-sh/nvm), and:
 git clone https://github.com/solid/solid-panes
 cd solid-panes
 npm install
+npm run build-version
 npx webpack-dev-server
 ```
 2. open your browser at http://localhost:9000
