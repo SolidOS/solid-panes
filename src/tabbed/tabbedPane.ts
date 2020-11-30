@@ -30,6 +30,9 @@ const TabbedPane: PaneDefinition = {
     const div = dom.createElement('div')
 
     ;(async () => {
+      if (!store.fetcher) {
+        throw new Error('Store has no fetcher')
+      }
       await store.fetcher.load(subject)
 
       div.appendChild(tabs.tabWidget({

@@ -25,12 +25,12 @@ export function createApplicationTable (subject: NamedNode) {
   applicationsTable.appendChild(header);
 
   // creating rows
-  (store.each(subject, ns.acl('trustedApp'), undefined, undefined) as Statement[])
+  (store.each(subject, ns.acl('trustedApp'), undefined, undefined) as unknown as Statement[])
     .flatMap(app => store
-      .each(app, ns.acl('origin'), undefined, undefined)
+      .each(app as any, ns.acl('origin'), undefined, undefined)
       .map(origin => ({
-        appModes: store.each(app, ns.acl('mode'), undefined, undefined),
-        origin
+        appModes: store.each(app as any, ns.acl('mode'), undefined, undefined) as NamedNode[],
+        origin: origin as NamedNode
       })))
     .sort((a: any, b: any) => (a.origin.value < b.origin.value ? -1 : 1))
     .forEach(
@@ -164,6 +164,9 @@ function createApplicationEntry (
       subject,
       ns
     )
+    if (!store.updater) {
+      throw new Error('Store has no updater')
+    }
     store.updater.update(deletions, additions, handleUpdateResponse)
   }
 
@@ -179,6 +182,9 @@ function createApplicationEntry (
     }
 
     const deletions = getStatementsToDelete(origin, subject, store, ns)
+    if (!store.updater) {
+      throw new Error('Store has no updater')
+    }
     store.updater.update(deletions, [], handleUpdateResponse)
   }
 

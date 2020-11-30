@@ -1,6 +1,6 @@
 import { SolidSession } from '../types'
 import { authn, icons, store } from 'solid-ui'
-import { NamedNode, sym } from 'rdflib'
+import { Fetcher, NamedNode, sym } from 'rdflib'
 import { generateHomepage } from './homepage'
 import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 
@@ -58,7 +58,7 @@ function buildHomePage (container: HTMLElement, subject: NamedNode) {
   link.rel = 'stylesheet'
   link.href = '/common/css/bootstrap.min.css'
   shadow.appendChild(link)
-  generateHomepage(subject, store, store.fetcher).then(homepage =>
+  generateHomepage(subject, store, store.fetcher as Fetcher).then(homepage =>
     shadow.appendChild(homepage)
   )
 }

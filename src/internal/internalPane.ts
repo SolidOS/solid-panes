@@ -66,14 +66,14 @@ const pane: PaneDefinition = {
                 .webOperation('DELETE', folder.uri)
                 .then(() => {
                   console.log('Deleted Ok: ' + folder)
-                  resolve()
+                  resolve(undefined)
                 })
                 .catch((err: string) => {
                   const str = 'Unable to delete ' + folder + ': ' + err
                   console.log(str)
                   reject(new Error(str))
                 })
-              resolve()
+              resolve(undefined)
             },
             err => {
               alert(err)
@@ -111,6 +111,9 @@ const pane: PaneDefinition = {
               return
             }
             // @@ TODO Remove casing of store.fetcher
+            if (!store.fetcher) {
+              throw new Error('Store has no fetcher')
+            }
             const promise = isFolder
               ? (deleteRecursive(store, subject) || Promise.resolve())
               : store.fetcher.webOperation('DELETE', subject.uri) || Promise.resolve()
@@ -139,6 +142,9 @@ const pane: PaneDefinition = {
       )
       refreshCell.appendChild(refreshButton)
       refreshButton.addEventListener('click', () => {
+        if (!store.fetcher) {
+          throw new Error('Store has no fetcher')
+        }
         store.fetcher.refresh(subject, function (
           ok,
           errm
@@ -157,6 +163,10 @@ const pane: PaneDefinition = {
 
     let plist = store.statementsMatching(subject)
     let docURI = ''
+    if (!store.fetcher) {
+      throw new Error('Store has no fetcher')
+    }
+
     if (subject.uri) {
       plist.push(
         st(
@@ -189,6 +199,10 @@ const pane: PaneDefinition = {
       }
     }
     if (docURI) {
+      if (!store.updater) {
+        throw new Error('Store has no updater')
+      }
+
       const ed = store.updater.editable(docURI)
       if (ed) {
         plist.push(

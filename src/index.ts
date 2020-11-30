@@ -21,7 +21,8 @@ import {
   paneForIcon,
   paneForPredicate,
   register,
-  byName
+  byName,
+  LiveStore
 } from 'pane-registry'
 import { createContext } from './outline/context'
 
@@ -30,7 +31,7 @@ export function getOutliner (dom) {
     const context = createContext(
       dom,
       { list, paneForIcon, paneForPredicate, register, byName },
-      UI.store
+      UI.store as LiveStore
     )
     dom.outlineManager = new OutlineManager(context)
   }

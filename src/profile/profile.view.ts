@@ -50,6 +50,9 @@ const thisPane: PaneDefinition = {
       const otherProfiles = store.each(subject, ns.rdfs('seeAlso'), null, profile) as Array<NamedNode>
       if (otherProfiles.length > 0) {
         try {
+          if (!store.fetcher) {
+            throw new Error('Store has no fetcher')
+          }
           await store.fetcher.load(otherProfiles)
         } catch (err) {
           container.appendChild(widgets.errorMessageBlock(err))

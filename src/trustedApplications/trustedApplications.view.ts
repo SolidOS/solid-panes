@@ -36,6 +36,9 @@ async function render (dom, main, statusArea): Promise<void> {
   const subject = authContext.me as NamedNode
 
   const profile = subject.doc()
+  if (!store.updater) {
+    throw new Error('Store has no updater')
+  }
   const editable = store.updater.editable(profile.uri, store)
 
   main.appendChild(createText('h3', 'Manage your trusted applications'))

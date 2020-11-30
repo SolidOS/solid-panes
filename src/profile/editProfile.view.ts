@@ -93,6 +93,9 @@ const editProfileView: PaneDefinition = {
         heading('Edit your public profile')
 
         const profile = me.doc()
+        if (!store.updater) {
+          throw new Error('Store has no updater')
+        }
         if (store.any(me, ns.solid('editableProfile'))) {
           editableProfile = store.any(me as any, ns.solid('editableProfile')) as NamedNode
         } else if (store.updater.editable(profile.uri, store)) {

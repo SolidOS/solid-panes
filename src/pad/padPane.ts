@@ -53,6 +53,10 @@ const paneDef: PaneDefinition = {
     store.add(chunk, ns.sioc('content'), '', newPadDoc)
 
     return new Promise(function (resolve, reject) {
+      if (!updater) {
+        reject(new Error('Have no updater'))
+        return
+      }
       updater.put(
         newPadDoc,
         store.statementsMatching(undefined, undefined, undefined, newPadDoc),
@@ -137,11 +141,12 @@ const paneDef: PaneDefinition = {
         sym(docURI),
         sym('http://www.iana.org/assignments/link-relations/acl')
       ) as NamedNode // @@ check that this get set by web.js
-
+      if (!fetcher) {
+        throw new Error('Have no fetcher')
+      }
       if (aclDoc) {
         // Great we already know where it is
         const aclText = genACLtext(docURI, aclDoc.uri, allWrite)
-
         return fetcher
           .webOperation('PUT', aclDoc.uri, {
             data: aclText,
@@ -295,6 +300,9 @@ const paneDef: PaneDefinition = {
                 }
               })
             }
+            if (!store.fetcher) {
+              throw new Error('Store has no fetcher')
+            }
             store.fetcher
               .webCopy(
                 base + item.local,
@@ -339,7 +347,9 @@ const paneDef: PaneDefinition = {
         // Keep a paper trail   @@ Revisit when we have non-public ones @@ Privacy
         store.add(newInstance, ns.space('inspiration'), thisInstance, padDoc)
         store.add(newInstance, ns.space('inspiration'), thisInstance, newPadDoc)
-
+        if (!updater) {
+          throw new Error('Have no updater')
+        }
         updater.put(
           newPadDoc,
           store.statementsMatching(undefined, undefined, undefined, newPadDoc),
@@ -419,16 +429,22 @@ const paneDef: PaneDefinition = {
         dom,
         naviMiddle2,
         padDoc,
-        partipationTarget,
+        partipationTarget as any,
         me,
         options
       )
+      if (!store.updater) {
+        throw new Error('Store has no updater')
+      }
 
       store.updater.setRefreshHandler(padDoc, padEle.reloadAndSync) // initiated =
     }
 
     // Read or create empty data file
     const loadPadData = function () {
+      if (!fetcher) {
+        throw new Error('Have no fetcher')
+      }
       fetcher.nowOrWhenFetched(padDoc.uri, undefined, function (
         ok: boolean,
         body: string,
@@ -438,6 +454,9 @@ const paneDef: PaneDefinition = {
           if (response.status === 404) {
             // /  Check explicitly for 404 error
             console.log('Initializing results file ' + padDoc)
+            if (!updater) {
+              throw new Error('Have no updater')
+            }
             updater.put(padDoc, [], 'text/turtle', function (
               _uri2,
               ok,
