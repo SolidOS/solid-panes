@@ -11,7 +11,7 @@
  * or standalone script adding onto existing mashlib.
  */
 
-import { icons, ns, widgets } from 'solid-ui'
+import { icons, ns, style, widgets } from 'solid-ui'
 import { NamedNode, Store } from 'rdflib'
 import { paneDiv } from './profile.dom'
 import { PaneDefinition } from 'pane-registry'
@@ -72,8 +72,9 @@ const thisPane: PaneDefinition = {
       statusArea.setAttribute('style', 'padding: 0.7em;')
 
       function heading (str: string) {
-        const h = main.appendChild(dom.createElement('h3'))
-        h.setAttribute('style', `font-size: 120%; color:${highlightColor};`)
+        const h = main.appendChild(dom.createElement('h3')) // bigger than the headings within forms
+        h.style = style.heading3Style
+        h.style.color = highlightColor // User defined
         h.textContent = str
         return h
       }
@@ -100,6 +101,7 @@ const thisPane: PaneDefinition = {
               const chat: NamedNode = await getChat(subject)
               chatContainer.innerHTML = ''
               chatContainer.appendChild(longChatPane.render(chat, context, {}))
+              chatContainer.style.margin = '0.7em'
             } catch (e) {
               chatContainer.appendChild(widgets.errorMessageBlock(dom, e.message))
             }
