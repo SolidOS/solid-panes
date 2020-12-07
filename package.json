@@ -52,6 +52,7 @@
     "contacts-pane": "^2.4.3",
     "folder-pane": "^2.4.4",
     "issue-pane": "^2.4.4",
+    "markdown-pane": "^0.1.1",
     "meeting-pane": "^2.3.3",
     "mime-types": "^2.1.27",
     "pane-registry": "^2.3.4",

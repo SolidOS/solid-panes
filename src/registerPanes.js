@@ -13,6 +13,7 @@ module.exports = function registerPanes (register) {
   register(require('issue-pane'))
   register(require('contacts-pane'))
   register(require('activitystreams-pane'))
+  register(require('markdown-pane').Pane)
 
   register(require('./pad/padPane'))
   // register(require('./argument/argumentPane.js')) // A position in an argument tree
