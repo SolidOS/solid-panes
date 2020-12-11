@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 // The query-by-example functionality in the tabulator
 // was the ability to expore a bit of the web in outline mode,
 // select a ceratain set of fields in the tree,

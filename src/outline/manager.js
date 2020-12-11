@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */

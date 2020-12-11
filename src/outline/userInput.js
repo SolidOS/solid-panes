@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 // Original author: kennyluck
 //
 // Kenny's Notes:
