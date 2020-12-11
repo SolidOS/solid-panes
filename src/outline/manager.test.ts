@@ -1,17 +1,33 @@
 /* eslint-env jest */
-
 import OutlineManager from './manager'
 
-import { lit, sym } from 'rdflib'
-import { getByText } from '@testing-library/dom'
+import { lit, NamedNode, sym } from 'rdflib'
+import { findByText, getByText } from '@testing-library/dom'
+
+const MockPane = {
+  render: (subject: NamedNode) => {
+    const div = document.createElement('div')
+    div.appendChild(document.createTextNode(`Mock Pane for ${subject.uri}`))
+    return div
+  }
+}
+
+const mockPaneRegistry = {
+  list: [],
+  byName: () => MockPane
+}
 
 describe('manager', () => {
   describe('outline object td', () => {
     describe('for a named node', () => {
       let result
-      beforeEach(() => {
-        const manager = new OutlineManager({ dom: document })
+      beforeAll(() => {
+        const table = document.createElement('table')
+        const row = document.createElement('tr')
+        table.appendChild(row)
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
         result = manager.outlineObjectTD(sym('https://namednode.example/'))
+        row.appendChild(result)
       })
       it('is a html td element', () => {
         expect(result.nodeName).toBe('TD')
@@ -40,11 +56,19 @@ describe('manager', () => {
         const label = getByText(result, 'namednode.example')
         expect(label).toHaveAttribute('draggable', 'true')
       })
+      describe('expanding', () => {
+        it('renders relevant pane', async () => {
+          const expand = result.firstChild
+          expand.click()
+          const error = await findByText(result.parentNode, /Mock Pane/)
+          expect(error).toHaveTextContent('Mock Pane for https://namednode.example/')
+        })
+      })
     })
 
     describe('for a literal', () => {
       let result
-      beforeEach(() => {
+      beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
         result = manager.outlineObjectTD(lit('some text'))
       })
