@@ -226,12 +226,6 @@ module.exports = function (context) {
       appendRemoveIcon(td, obj, deleteNode)
     }
 
-    try {
-      // new YAHOO.util.DDExternalProxy(td)
-    } catch (e) {
-      UI.log.error('YAHOO Drag and drop not supported:\n' + e)
-    }
-
     // set DOM methods
     td.tabulatorSelect = function () {
       setSelected(this, true)
@@ -239,7 +233,6 @@ module.exports = function (context) {
     td.tabulatorDeselect = function () {
       setSelected(this, false)
     }
-    // td.appendChild( iconBox.construct(document.createTextNode('bla')) );
 
     // Create an inquiry icon if there is proof about this triple
     if (statement) {
