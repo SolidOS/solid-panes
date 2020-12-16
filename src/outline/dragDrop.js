@@ -1,3 +1,4 @@
+/* istanbul ignore file */
 /**
     This is for outliner features that only work in the extension version, say drag and drop.
     I am always happy creating new files.
