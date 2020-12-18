@@ -56,6 +56,17 @@ describe('manager', () => {
         const label = getByText(result, 'namednode.example')
         expect(label).toHaveAttribute('draggable', 'true')
       })
+      describe('link icon', () => {
+        let linkIcon
+        beforeEach(() => {
+          const label = getByText(result, 'namednode.example')
+          linkIcon = label.lastChild
+        })
+        it('is linked to named node URI', () => {
+          expect(linkIcon.nodeName).toBe('A')
+          expect(linkIcon).toHaveAttribute('href', 'https://namednode.example/')
+        })
+      })
       describe('expanding', () => {
         it('renders relevant pane', async () => {
           const expand = result.firstChild
