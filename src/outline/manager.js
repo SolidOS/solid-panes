@@ -2347,6 +2347,8 @@ module.exports = function (context) {
         } else {
           // not tel:
           rep.appendChild(dom.createTextNode(UI.utils.label(obj)))
+          const anchor = UI.widgets.linkIcon(dom, obj)
+          rep.appendChild(anchor)
           UI.widgets.makeDraggable(rep, obj) // 2017
         }
       } else {
