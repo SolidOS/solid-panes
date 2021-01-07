@@ -1,8 +1,8 @@
+import * as paneRegistry from 'pane-registry'
+import { getOutliner } from '../src'
 const Pane = require('./pane').default
 const $rdf = require('rdflib')
 const UI = require('solid-ui')
-import * as paneRegistry from 'pane-registry'
-import {getOutliner} from '../src'
 const SolidAuth = require('solid-auth-client')
 
 // FIXME:
@@ -29,24 +29,24 @@ async function renderPane (uri: string) {
   }
   const options = {}
   console.log(subject, Pane)
-  const icon = createIconElement(Pane);
+  const icon = createIconElement(Pane)
   const paneDiv = Pane.render(subject, context, options)
-  const target = document.getElementById('render');
-  target.innerHTML=""
+  const target = document.getElementById('render')
+  target.innerHTML = ''
   target.appendChild(icon)
   target.appendChild(paneDiv)
 }
 
-function createIconElement(Pane) {
+function createIconElement (Pane) {
   const icon = Pane.icon
   const img = document.createElement('img')
-  img.src = icon;
-  img.width = 40;
-  return img;
+  img.src = icon
+  img.width = 40
+  return img
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderPane('https://solidos.solidcommunity.net/Team/SolidOs%20team%20chat/index.ttl#this')
+  renderPane('https://angelo.veltens.org/profile/card#me')
 })
 
 window.onload = () => {
