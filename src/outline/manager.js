@@ -2,21 +2,21 @@
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */
-const panes = require('pane-registry')
-const $rdf = require('rdflib')
 
-const YAHOO = require('./dragDrop.js')
-const outlineIcons = require('./outlineIcons.js')
-const UserInput = require('./userInput.js')
-const UI = require('solid-ui')
-const queryByExample = require('./queryByExample.js')
+import * as UI from 'solid-ui'
+import * as panes from 'pane-registry'
+import * as $rdf from 'rdflib'
+import YAHOO from './dragDrop'
+import outlineIcons from './outlineIcons'
+import UserInput from './userInput'
+import queryByExample from './queryByExample'
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
 
 // const iconHeight = '24px'
 
-module.exports = function (context) {
+export default function (context) {
   const dom = context.dom
 
   this.document = context.dom
@@ -596,15 +596,16 @@ module.exports = function (context) {
             ico.addEventListener(
               'click',
               function (event) {
+                let containingTable
                 // Find the containing table for this subject
-                for (var t = td; t.parentNode; t = t.parentNode) {
-                  if (t.nodeName === 'TABLE') break
+                for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
+                  if (containingTable.nodeName === 'TABLE') break
                 }
-                if (t.nodeName !== 'TABLE') {
+                if (containingTable.nodeName !== 'TABLE') {
                   throw new Error('outline: internal error.')
                 }
                 const removePanes = function (specific) {
-                  for (let d = t.firstChild; d; d = d.nextSibling) {
+                  for (let d = containingTable.firstChild; d; d = d.nextSibling) {
                     if (typeof d.pane !== 'undefined') {
                       if (!specific || d.pane === specific) {
                         if (d.paneButton) {
@@ -616,7 +617,7 @@ module.exports = function (context) {
                         // state = 'paneHidden';
                         if (
                           d.pane.requireQueryButton &&
-                          t.parentNode.className /* outer table */ &&
+                          containingTable.parentNode.className /* outer table */ &&
                           numberOfPanesRequiringQueryButton === 1 &&
                           dom.getElementById('queryButton')
                         ) {
@@ -654,12 +655,12 @@ module.exports = function (context) {
                   ) {
                     dom.getElementById('queryButton').removeAttribute('style')
                   }
-                  const second = t.firstChild.nextSibling
+                  const second = containingTable.firstChild.nextSibling
                   const row = dom.createElement('tr')
                   const cell = row.appendChild(dom.createElement('td'))
                   cell.appendChild(paneDiv)
-                  if (second) t.insertBefore(row, second)
-                  else t.appendChild(row)
+                  if (second) containingTable.insertBefore(row, second)
+                  else containingTable.appendChild(row)
                   row.pane = pane
                   row.paneButton = ico
                 }
@@ -678,8 +679,8 @@ module.exports = function (context) {
                   ico.style = paneHiddenStyle
                 }
 
-                var numberOfPanesRequiringQueryButton = 0
-                for (let d = t.firstChild; d; d = d.nextSibling) {
+                let numberOfPanesRequiringQueryButton = 0
+                for (let d = containingTable.firstChild; d; d = d.nextSibling) {
                   if (d.pane && d.pane.requireQueryButton) {
                     numberOfPanesRequiringQueryButton++
                   }
@@ -702,7 +703,7 @@ module.exports = function (context) {
     } // renderPaneIconTray
 
     // Body of expandedHeaderTR
-    var tr = dom.createElement('tr')
+    const tr = dom.createElement('tr')
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
       tr.setAttribute('class', 'hoverControl')
@@ -884,21 +885,21 @@ module.exports = function (context) {
     const max = plist.length
     for (j = 0; j < max; j++) {
       // squishing together equivalent properties I think
-      var s = plist[j]
+      let s = plist[j]
       //      if (s.object == parentSubject) continue; // that we knew
 
       // Avoid predicates from other panes
       if (predicateFilter && !predicateFilter(s.predicate, inverse)) continue
 
-      var tr = propertyTR(dom, s, inverse)
+      const tr = propertyTR(dom, s, inverse)
       parent.appendChild(tr)
-      var predicateTD = tr.firstChild // we need to kludge the rowspan later
+      const predicateTD = tr.firstChild // we need to kludge the rowspan later
 
-      var defaultpropview = views.defaults[s.predicate.uri]
+      let defaultpropview = views.defaults[s.predicate.uri]
 
       //   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
 
-      var dups = 0 // How many rows have the same predicate, -1?
+      let dups = 0 // How many rows have the same predicate, -1?
       let langTagged = 0 // how many objects have language tags?
       let myLang = 0 // Is there one I like?
 
@@ -1087,7 +1088,7 @@ module.exports = function (context) {
   /*   termWidget
    **
    */
-  var termWidget = {} // @@@@@@ global
+  const termWidget = {} // @@@@@@ global
   global.termWidget = termWidget
   termWidget.construct = function (dom) {
     dom = dom || document
@@ -1542,7 +1543,7 @@ module.exports = function (context) {
       }
       return
     }
-    var selectedTd = selection[0]
+    const selectedTd = selection[0]
     // if not done, Have to deal with redraw...
     sf.removeCallback('done', 'setSelectedAfterward')
     sf.removeCallback('fail', 'setSelectedAfterward')
