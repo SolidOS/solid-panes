@@ -17,6 +17,8 @@ import { PaneDefinition } from 'pane-registry'
 import { html, render } from 'lit-html'
 import { findImage } from 'solid-ui/lib/widgets/buttons'
 
+import 'tailwindcss/tailwind.css'
+
 const thisPane: PaneDefinition = {
   global: false,
 
@@ -70,49 +72,53 @@ const thisPane: PaneDefinition = {
       const image = findImage(subject)
 
       const page = ({ name }) => html`
-                <ion-grid>
-                    <ion-row>
-                        <ion-col size-xs="12" size-sm="6" size-xl="3" size-lg="4">
-                            <ion-card>
-                                <img src="${image}" alt="${name}" style="width:100%">
-                                <ion-card-header>
-                                    <ion-card-title>${name}</ion-card-title>
-                                    <ion-card-subtitle>${role}</ion-card-subtitle>
-                                    <ion-fab vertical="top" horizontal="end">
-                                        <ion-fab-button>
-                                            <ion-icon name="chatbubble-outline"></ion-icon>
-                                        </ion-fab-button>
-                                    </ion-fab>
-                                </ion-card-header>
-                                <ion-card-content>
-                                    <ion-list>
-                                        <ion-item>
-                                            <ion-icon slot="start" name="briefcase"></ion-icon>
-                                            <ion-label>${comp}</ion-label>
-                                        </ion-item>
-                                        <ion-item>
-                                            <ion-icon slot="start" name="earth"></ion-icon>
-                                            <ion-label>${country}</ion-label>
-                                        </ion-item>
-                                        <ion-item>
-                                            <ion-icon slot="start" name="at-circle"></ion-icon>
-                                            <a href="${mbox ? mbox.value : '#'}">
-                                                ${mbox ? mbox.value.replace('mailto:', '') : ''}
-                                            </a>
-                                            </ion-label>
-                                        </ion-item>
-                                    </ion-list>
-                                </ion-card-content>
-                            </ion-card>
-                        </ion-col>
-                        <ion-col size-xs="12" size-sm="6">
-                            <div>
-                                <h2>Friends</h2>
-                                ${friendList}
+                <div class="flex items-start h-full w-full bg-gray-50">
+                    <div class="grid grid md:grid-cols-2 grid-cols-1 gap-4 p-4">
+                        <div class="max-w-s">
+                            <div class="bg-white shadow-xl rounded-lg">
+                                <div class="photo-wrapper p-2">
+                                    <img class="w-64 h-64 rounded-full mx-auto" src="${image}" alt="${name}">
+                                </div>
+                                <div class="p-2">
+                                    <h3 class="text-center text-xl text-gray-900 font-medium leading-8">${name}</h3>
+                                    <div class="text-center text-gray-400 text-xs font-semibold">
+                                        <p>${role}</p>
+                                    </div>
+                                    <table class="text-md my-3">
+                                        <tbody>
+                                        <tr>
+                                            <td class="px-2 py-2 text-gray-500 font-semibold">Country</td>
+                                            <td class="px-2 py-2">${country}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-2 py-2 text-gray-500 font-semibold">Organization</td>
+                                            <td class="px-2 py-2">${comp}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-2 py-2 text-gray-500 font-semibold">Email</td>
+                                            <td class="px-2 py-2">
+                                                <a href="${mbox ? mbox.value : '#'}">
+                                                    ${mbox ? mbox.value.replace('mailto:', '') : ''}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+                                    <div class="text-center my-3">
+                                        <a class="uppercase m-4 px-10 py-2 bg-white border border-solid text-purple-500 border-purple-500 hover:bg-purple-500 hover:text-white rounded-md"
+                                           href="#">Chat with me</a>
+                                    </div>
+
+                                </div>
                             </div>
-                        </ion-col>
-                    </ion-row>
-                </ion-grid>
+                        </div>
+                        <div class="bg-white shadow-xl rounded-xs p-2">
+                            <h2 class="text-lg text-gray-800 font-light">Friends</h2>
+                            ${friendList}
+                        </div>
+                    </div>
+                </div>
             `
 
       render(page({ name: store.any(subject, ns.vcard('fn')) }), container)
