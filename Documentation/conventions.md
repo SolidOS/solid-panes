@@ -25,7 +25,7 @@ For short-hand, we will use the following namespace prefixes here:
 @prefix   stat: <http://www.w3.org/ns/posix/stat#> .
 @prefix     ui: <http://www.w3.org/ns/ui#> .
 @prefix  vcard: <http://www.w3.org/2006/vcard/ns#> .
-@prefix    xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix    XML: <http://www.w3.org/2001/XMLSchema#> .
 ```
 
 One of the most important RDF documents on your pod is your profile, which is the document that people get when they dereference your webid. We'll look at that first. After that, we'll look at each of the tools that can be created with the databrowser's + button: Addressbook, Notepad, Chat, LongChat, Meeting, Event, Link, Document, Folder, and Source.
