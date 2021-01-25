@@ -1,6 +1,6 @@
 // import { longChatPane as Pane } from 'chat-pane'
 // import Pane from '../../src/profile/profile.view'
-import Pane from '../../../contacts-pane'
+import Pane from 'profile-pane'
 import * as UI from 'solid-ui'
 
 console.log('Loaded pane into Solid Pane Tester. Check window.Pane and window.UI')
