@@ -4,9 +4,9 @@ module.exports = function registerPanes (register) {
    */
   // Developer designed:
 
-  register(require('./profile/profile.view')) // View someone's public profile - dominates all other panes.
-  register(require('./profile/editProfile.view')) // Edit my profile. App. 201900802
+  register(require('profile-pane')) // View someone's public profile - dominates all other panes.
 
+  register(require('./profile/editProfile.view')) // Edit my profile. App. 201900802
   register(require('./trustedApplications/trustedApplications.view')) // must be registered before basicPreferences
   register(require('./dashboard/dashboardPane'))
   register(require('./dashboard/basicPreferences')) // 20190702
