@@ -10,6 +10,8 @@
 
 import { authn, create, icons } from 'solid-ui'
 import { PaneDefinition } from 'pane-registry'
+import { CreateContext } from 'solid-ui/lib/create/types'
+import { NamedNode } from 'rdflib'
 
 const HomePaneSource: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg', // noun_25830
@@ -42,7 +44,7 @@ const HomePaneSource: PaneDefinition = {
       div.appendChild(dom.createElement('h4')).textContent =
         'Create new thing somewhere'
       const creationDiv = div.appendChild(dom.createElement('div'))
-      const creationContext = {
+      const creationContext: CreateContext = {
         div: creationDiv,
         dom: dom,
         statusArea: div,
@@ -69,8 +71,8 @@ const HomePaneSource: PaneDefinition = {
         })
     }
 
-    var div = dom.createElement('div')
-    var me = authn.currentUser()
+    const div = dom.createElement('div')
+    const me: NamedNode = authn.currentUser() as NamedNode // this will be incorrect if not logged in
 
     showContent()
 
