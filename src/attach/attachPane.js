@@ -197,8 +197,8 @@ module.exports = {
       function getFiltered () {
         return mode === 1
           ? currentSubject === null
-              ? objects.filter(y => !!kb.holds(undefined, predicate, y))
-              : objects.filter(y => !!kb.holds(currentSubject, predicate, y))
+            ? objects.filter(y => !!kb.holds(undefined, predicate, y))
+            : objects.filter(y => !!kb.holds(currentSubject, predicate, y))
           : objects.filter(y => kb.each(undefined, predicate, y).length === 0)
       }
     }
