@@ -7,29 +7,10 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 @prefix schema: <http://schema.org/>.
+@prefix solid: <http://www.w3.org/ns/solid/terms#>.
 @prefix ui: <http://www.w3.org/ns/ui#>.
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
 @prefix : <#>.
-
-
-# Ontology which may be useful
-
-:InterestingOrganization owl:disjointUnionOf  (
-# Airline - a Corpration
-# Consortium - a Corporation or a NGO
- schema:Corporation
- schema:EducationalOrganization
-# FundingScheme - eh?
- schema:GovernmentOrganization
-# LibrarySystem
-# LocalBusiness - Corporation
-# MedicalOrganization - a Corporation or a NGO
- schema:NGO
- # NewsMediaOrganization - a Corporation or a NGO
-schema:PerformingGroup # a band
-schema:Project # like Solid
-schema:SportsOrganization # a Team
- ) .
 
 
 ## Example:
@@ -54,13 +35,10 @@ _:b4 <http://www.w3.org/2006/time#inXSDDate> "2018-02-01"^^<http://www.w3.org/20
 
 
 :RoleForm a ui:Form; schema:name "Form for editing a role" ;
-  ui:parts ( :roleNameField :OrganinizationField :startDateField :endDateField ) .
-
+  ui:parts ( :roleTypeField :roleNameField :wikidatOrganizationField :startDateField :endDateField ) . # @@ add: commentField?
 
   :OrganinizationForm a ui:Form; schema:name "Form for editing a role" ;
-    ui:parts ( :roleNameField :instituteNameField :hopePageURIField :startDateField :endDateField ) .
-
-
+    ui:parts ( :roleNameField :instituteNameField :hopePageURIField ) .
 
   :startDateField
       a ui:DateField ;
@@ -74,12 +52,38 @@ _:b4 <http://www.w3.org/2006/time#inXSDDate> "2018-02-01"^^<http://www.w3.org/20
 
   :roleNameField
       a ui:SingleLineTextField ;
-      ui:label "Intitute Name";
+      ui:label "Role";
       ui:maxLength "80" ;
       ui:property schema:roleName ;
       ui:size "20" .
 
-  :OrganinizationField
+  :roleTypeField
+      a ui:AutocompleteField ;
+      ui:label "occupation";
+    #  ui:maxLength "80" ;
+      ui:nameSearchTemplate """https://ec.europa.eu/esco/api/search?language=$(language)&type=occupation&text=$(name)""" ;
+      ui:property solid:occupation ;
+      ui:labelProperty rdfs:label; # @@ New - please label the object too
+      ui:size "80" .
+
+  :wikidatOrganizationField
+      a ui:AutocompleteField ;
+      ui:label "organization"; # @@ get label from WD?
+      ui:maxLength "80" ;
+      ui:fromClass wd:@@;
+      ui:endPoint <https://query.wikidata.org/sparql>;
+      ui:queryTemplate """SELECT *
+          WHERE
+          { ?klass wdt:P279* $(class) .
+            ?subject wdt:P31 ?klass .
+            ?subject rdfs:label ?name.
+            FILTER regex(?name, "$(name)", "i")
+          } LIMIT $(limit) """;
+      ui:property solid:employer ;
+      ui:labelProperty rdfs:label; # @@ New - please label the object too
+      ui:size "80" .
+
+  :OrganinizationField # @@  This is one which needs to be an autocomplete
       a ui:Choice ;
       ui:from schema:Organization; # but check in contacts for vcard:Organization maybe
       ui:mintNew true; ui:use :OrganinizationForm;
@@ -95,9 +99,9 @@ _:b4 <http://www.w3.org/2006/time#inXSDDate> "2018-02-01"^^<http://www.w3.org/20
       ui:property schema:name ;
       ui:size "80" .
 
-   :institteHomePage a ui:NamedNodeURIField;
-     ui:size "80" .
-      ui:property  schema:url . # @@ ??
+   :institteHomePage a ui:NamedNodeURIField ;
+     ui:size "80";
+     ui:property  schema:url . # @@ ??
 
     :initituteTypeField a ui:Classifier;
     ui:label "What sort of organization";

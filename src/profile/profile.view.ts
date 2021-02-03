@@ -52,7 +52,9 @@ const thisPane: PaneDefinition = {
         try {
           await store.fetcher.load(otherProfiles)
         } catch (err) {
-          container.appendChild(widgets.errorMessageBlock(err))
+          const msg = `Profile ${subject} sameAs target error: ${err} err`
+          console.log(msg, err)
+          container.appendChild(widgets.errorMessageBlock(dom, msg))
         }
       }
 
