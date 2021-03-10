@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "3.4.8",
+  "version": "3.5.0",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -55,7 +55,7 @@
     "markdown-pane": "^0.1.1",
     "meeting-pane": "^2.3.4",
     "mime-types": "^2.1.28",
-    "pane-registry": "^2.3.5",
+    "pane-registry": "^2.4.1",
     "profile-pane": "^0.1.0",
     "rdflib": "^2.1.7",
     "react": "^17.0.1",
