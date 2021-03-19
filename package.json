@@ -56,7 +56,7 @@
     "meeting-pane": "^2.3.4",
     "mime-types": "^2.1.28",
     "pane-registry": "^2.4.1",
-    "profile-pane": "^1.0.0-22061dcc",
+    "profile-pane": "^1.0.0",
     "rdflib": "^2.1.7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
