@@ -56,14 +56,14 @@
     "meeting-pane": "^2.3.4",
     "mime-types": "^2.1.28",
     "pane-registry": "^2.4.1",
-    "profile-pane": "^0.1.0",
+    "profile-pane": "^1.0.0-22061dcc",
     "rdflib": "^2.1.7",
     "react": "^17.0.1",
     "react-dom": "^17.0.1",
     "solid-auth-cli": "^1.0.15",
     "solid-auth-client": "^2.5.5",
     "solid-namespace": "^0.5.0",
-    "solid-ui": "^2.3.9",
+    "solid-ui": "^2.4.0",
     "source-pane": "^2.2.8"
   },
   "devDependencies": {
