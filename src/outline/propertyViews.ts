@@ -19,6 +19,7 @@ export default (dom) => {
   viewsAddPropertyView(views, ns.foaf('img').uri, asImage, true)
   viewsAddPropertyView(views, ns.foaf('thumbnail').uri, asImage, true)
   viewsAddPropertyView(views, ns.foaf('logo').uri, asImage, true)
+  viewsAddPropertyView(views, ns.schema('image').uri, asImage, true)
   viewsAddPropertyView(views, ns.foaf('mbox').uri, asMbox, true)
   return views
 }

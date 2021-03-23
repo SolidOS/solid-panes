@@ -8,7 +8,8 @@ describe('property views', () => {
     'http://xmlns.com/foaf/0.1/depiction',
     'http://xmlns.com/foaf/0.1/img',
     'http://xmlns.com/foaf/0.1/thumbnail',
-    'http://xmlns.com/foaf/0.1/logo'
+    'http://xmlns.com/foaf/0.1/logo',
+    'http://schema.org/image'
   ])('renders %s as image', (property) => {
     const asImage = viewAsImage(document)
     const views = propertyViews(document)
