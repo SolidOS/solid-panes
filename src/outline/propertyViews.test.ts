@@ -13,7 +13,7 @@ describe('property views', () => {
   ])('renders %s as image', (property) => {
     const asImage = viewAsImage(document)
     const views = propertyViews(document)
-    const view = views.properties[property][0]
+    const view = views.defaults[property]
     const result = view(sym('https://pod.example/img.jpg'))
     expect(result).toBeInstanceOf(HTMLImageElement)
     expect(result).toHaveAttribute('src', 'https://pod.example/img.jpg')
@@ -24,7 +24,7 @@ describe('property views', () => {
   ])('renders %s as anchor', (property) => {
     const asImage = viewAsImage(document)
     const views = propertyViews(document)
-    const view = views.properties[property][0]
+    const view = views.defaults[property]
     const result = view(sym('mailto:alice@mail.example'))
     expect(result).toBeInstanceOf(HTMLAnchorElement)
     expect(result).toHaveAttribute('href', 'mailto:alice@mail.example')
