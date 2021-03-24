@@ -10,6 +10,7 @@ import YAHOO from './dragDrop'
 import outlineIcons from './outlineIcons'
 import UserInput from './userInput'
 import queryByExample from './queryByExample'
+import propertyViews from './propertyViews'
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -2271,34 +2272,9 @@ export default function (context) {
   //
   // / /////////////////////////////////////////////////////
 
-  var views = {
-    properties: [],
-    defaults: [],
-    classes: []
-  } // views
-
-  /** add a property view function **/
-  function viewsAddPropertyView (property, pviewfunc, isDefault) {
-    if (!views.properties[property]) {
-      views.properties[property] = []
-    }
-    views.properties[property].push(pviewfunc)
-    if (isDefault) {
-      // will override an existing default!
-      views.defaults[property] = pviewfunc
-    }
-  } // addPropertyView
-
   var ns = UI.ns
-  // view that applies to items that are objects of certain properties.
-  // viewsAddPropertyView(property, viewjsfile, default?)
-  viewsAddPropertyView(ns.foaf('depiction').uri, viewAsImage, true)
-  viewsAddPropertyView(ns.foaf('img').uri, viewAsImage, true)
-  viewsAddPropertyView(ns.foaf('thumbnail').uri, viewAsImage, true)
-  viewsAddPropertyView(ns.foaf('logo').uri, viewAsImage, true)
-  viewsAddPropertyView(ns.foaf('mbox').uri, viewAsMbox, true)
-  // viewsAddPropertyView(ns.foaf('based_near').uri, VIEWAS_map, true);
-  // viewsAddPropertyView(ns.foaf('birthday').uri, VIEWAS_cal, true);
+
+  const views = propertyViews(dom)
 
   // var thisOutline = this   dup
   /** some builtin simple views **/
@@ -2392,32 +2368,6 @@ export default function (context) {
     UI.log.debug('contents: ' + rep.innerHTML)
     return rep
   } // boring_default
-
-  function viewAsImage (obj) {
-    const img = UI.utils.AJARImage(
-      obj.uri,
-      UI.utils.label(obj),
-      UI.utils.label(obj),
-      dom
-    )
-    img.setAttribute('class', 'outlineImage')
-    return img
-  }
-
-  function viewAsMbox (obj) {
-    const anchor = dom.createElement('a')
-    // previous implementation assumed email address was Literal. fixed.
-
-    // FOAF mboxs must NOT be literals -- must be mailto: URIs.
-
-    let address = obj.termType === 'NamedNode' ? obj.uri : obj.value // this way for now
-    if (!address) return viewAsBoringDefault(obj)
-    const index = address.indexOf('mailto:')
-    address = index >= 0 ? address.slice(index + 7) : address
-    anchor.setAttribute('href', 'mailto:' + address)
-    anchor.appendChild(dom.createTextNode(address))
-    return anchor
-  }
 
   this.createTabURI = function () {
     dom.getElementById('UserURI').value =
