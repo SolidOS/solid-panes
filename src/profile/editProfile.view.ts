@@ -12,7 +12,7 @@ import { authn, icons, ns, style, widgets } from 'solid-ui'
 
 import { NamedNode, parse, sym, Store } from 'rdflib'
 
-import preferencesFormText from './preferencesFormText.ttl'
+import profileFormText from './profileFormText.ttl'
 import { PaneDefinition } from 'pane-registry'
 import { paneDiv } from './profile.dom'
 
@@ -41,7 +41,7 @@ const editProfileView: PaneDefinition = {
       const preferencesFormDoc = preferencesForm.doc()
       if (!store.holds(undefined, undefined, undefined, preferencesFormDoc)) {
         // If not loaded already
-        parse(preferencesFormText, store, preferencesFormDoc.uri, 'text/turtle', () => null) // Load form directly
+        parse(profileFormText, store, preferencesFormDoc.uri, 'text/turtle', () => null) // Load form directly
       }
 
       widgets.appendForm(

@@ -1,0 +1,60 @@
+    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+    @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+    @prefix owl: <http://www.w3.org/2002/07/owl#>.
+    @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+    @prefix ui: <http://www.w3.org/ns/ui#>.
+    @prefix schema: <http://schema.org/>.
+    @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
+
+    @prefix org: <http://www.w3.org/ns/org#>.
+    @prefix : <#>.
+
+    :this
+      <http://purl.org/dc/elements/1.1/title> "Profile form" ;
+      a ui:Form ;
+      ui:part :backgroundColor, :highlightColor;
+      ui:parts (
+        :backgroundColor :highlightColor
+        :pronounsForm
+        :involvementWithOrganizationsForm
+        ).
+
+  :backgroundColor a ui:ColorField; ui:property solid:profileBackgroundColor;
+    ui:label "Background color"; ui:default "#ffffff".
+    :highlightColor a ui:ColorField; ui:property solid:profileHighlightColor;
+      ui:label "Highlight color"; ui:default "#000000".
+
+ # Pronouns
+
+ :pronounsForm a ui:Group; ui:parts ( :subjectPronounForm :objectPronounForm :relativePronounForm) .
+
+    :subjectPronounForm a ui:SingleLineTextField; ui:property solid:preferredSubjectPronoun;
+        ui:size 10; ui:label "he/she/they..." .
+    :subjectPronounForm a ui:SingleLineTextField; ui:property solid:preferredSubjectPronoun;
+        ui:size 10; ui:label "him/her/them..." .
+    :subjectPronounForm a ui:SingleLineTextField; ui:property solid:preferredSubjectPronoun;
+        ui:size 10; ui:label "his/hers/theirs..." .
+
+  # Curriculum Vitae
+
+  solid:Role a rdfs:Class; owl:oneOf ( solid:CurrentRole solid:FormerRole). # Future Role too?
+
+  :involvementWithOrganizationsForm a ui:Multiple;
+      ui:label "Involvement with Organization";
+      ui:property org:member; ui:inverse true; # link back from role to member
+      ui:ordered true; # Allow user order CV secions rather than force date order (?)
+      ui:part :membershipForm.
+
+  :membershipForm a ui:Group; ui:parts ( :orgField :roleNameField :startField :endField ).
+
+      :startField a ui:DateField; ui:label "Starting"@en, "Début"@fr.
+      :endField a ui:DateField; ui:label "Ending"@en, "Fin"@fr.
+      :orgField a ui:Choice; ui:label "Organization"@en, "Organization"@fr; ui:canMintNew true;
+      ui:from vcard:Organization.  # Make sure you load Contacts
+
+     :roleNameField a ui:SingleLineTextField; ui:property vcard:role; ui:size 60 .
+
+      #:roleField a ui:AutocompleteField; ui:label "Role"@en; ui:from schema:Role # ESCO occupation
+
+      # This should be later an autocomplete field driven by ESCO role data @@
+      #   :roleField a ui:AutocompleteField ui:from schema:Occupation ui:dataSource ...
