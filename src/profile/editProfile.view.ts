@@ -132,7 +132,7 @@ const editProfileView: PaneDefinition = {
           noun: 'friend'
         })
 
-        heading('The style of your public profile')
+        // heading('The style of your public profile') headings are in form now
         renderProfileForm(main, me)
 
         heading('Thank you for filling your profile.')
