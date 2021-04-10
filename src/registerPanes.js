@@ -65,7 +65,6 @@ module.exports = function registerPanes (register) {
 
   // Generic:
 
-  register(require('./attach/attachPane.js'))
   register(require('./tableViewPane.js'))
 
   // Fallback totally generic:
