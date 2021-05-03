@@ -8,6 +8,8 @@
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
 
 @prefix org: <http://www.w3.org/ns/org#>.
+@prefix esco: <http://data.europa.eu/esco/model#>.
+
 @prefix : <#>.
 
 :this
@@ -17,7 +19,9 @@
     ui:parts (
       :styleGroup
       :pronounsForm
-      :involvementWithOrganizationsForm
+      :CVGroup
+      :SkillsPrompt :SkillsForm
+      :LanguagesPrompt :LanguagesForm
       ).
 
 :styleGroup a ui:Group; ui:parts ( :styleHeading :backgroundColor :highlightColor ).
@@ -42,7 +46,13 @@
 
   # Curriculum Vitae: membership of organizations
 
-  solid:Role a rdfs:Class; owl:oneOf ( solid:CurrentRole solid:FormerRole). # Future Role too?
+  :CVHeading a ui:Heading; ui:contents "Public Curriculum Vitae".
+  :CVPrompt a ui:Comment; ui:contents  "What organizations have you been involved with?" .
+
+    :CVGroup a ui:Group; ui:parts ( :CVHeading :CVPrompt :involvementWithOrganizationsForm ).
+
+
+  solid:Role a rdfs:Class; owl:oneOf ( solid:CurrentRole solid:FormerRole ). # Future Role too?
 
   org:member owl:inverse [ ui:label "involvement with company, org etc" ]. # timelimited involvement
 
@@ -62,21 +72,26 @@
           ui:from vcard:Organization .
      :roleNameField a ui:SingleLineTextField; ui:property vcard:role; ui:size 60 .
 
-    :escoOccupationField a ui:AutocompleteField; ui:label "occupation";
-         ui:property org:; ui:dataSource :ESCO_Occupation_DataSource .
+    :escoOccupationField a ui:AutocompleteField;
+          ui:label "occupation"; ui:size 60;
+          ui:property org:Role;
+          ui:dataSource :ESCO_Occupation_DataSource;
+           ui:targetClass schema:Occupation .
 
          :ESCO_Occupation_DataSource a ui:DataSource;
             schema:name "ESCO";
-            schema:logo "https://ec.europa.eu/esco/portal/static_resource2/images/logo/logo_en.gif";
+            ui:targetClass schema:Occupation ;
+            schema:logo <https://ec.europa.eu/esco/portal/static_resource2/images/logo/logo_en.gif>;
             ui:searchByNameURI "https://ec.europa.eu/esco/api/search?language=$(language)&type=occupation&text=$(name)".
 
-
      :instituteIdentityField a ui:AutocompleteField; ui:label "in wikidata";
+          ui:size 60;
           ui:property solid:publicId; ui:dataSource :WikidataOnOrganizations.
 
      :WikidataOnOrganizations a ui:DataSource ;
        schema:name "Wikidata";
        ui:endpoint "https://query.wikidata.org/sparql" ;
+       ui:targetClass  <http://www.wikidata.org/entity/Q43229>; # Use if nothing else
        ui:searchByNameQuery """SELECT ?subject ?name
        WHERE {
          ?klass wdt:P279* $(targetClass) .
@@ -85,9 +100,20 @@
          FILTER regex(?name, "$(name)", "i")
        } LIMIT $(limit) """ .
 
+      :WikidataOnOrganizations ui:classMap
+       [ ui:internalClass schema:Corporation; ui:externalClass <http://www.wikidata.org/entity/Q6881511>], #Enterprise is for-profit
+       [ ui:internalClass schema:vEducationalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q178706>], #insitution
+       [ ui:internalClass schema:GovernmentOrganization; ui:externalClass <http://www.wikidata.org/entity/Q327333>], #government agency
+       [ ui:internalClass schema:MedicalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q4287745>],
+       [ ui:internalClass schema:MusicGroup; ui:externalClass <http://www.wikidata.org/entity/Q32178211>], #music organization
+       [ ui:internalClass schema:NGO; ui:externalClass <http://www.wikidata.org/entity/Q163740>], #nonprofit organization @@
+       [ ui:internalClass schema:Occupation; ui:externalClass <http://www.wikidata.org/entity/Q28640>], # superclass: Profession
+       [ ui:internalClass schema:Organization; ui:externalClass <http://www.wikidata.org/entity/Q43229>], # Superclass; Organization
+       [ ui:internalClass schema:Project; ui:externalClass <http://www.wikidata.org/entity/Q170584>],
+       [ ui:internalClass schema:SportsOrganization; ui:externalClass <http://www.wikidata.org/entity/Q4438121>] .
 
-#############################################################################
-# @@@@@ Kludge:  a copy of organizationForm here for simpliciity
+
+# Organizations
 
  vcard:Organization ui:creationForm :OrganizationCreationForm  .
 
@@ -117,7 +143,6 @@ schema:SportsOrganization # a Team
  :OrgClassifier a ui:Classifier; ui:label "What sort of organization?"@en;
     ui:category solid:InterestingOrganization .
 
-
   :instituteNameField
       a ui:SingleLineTextField ;
       ui:label "Intitute Name";
@@ -131,3 +156,69 @@ schema:SportsOrganization # a Team
     :initituteTypeField a ui:Classifier;
     ui:label "What sort of organization";
     ui:category solid:InterestingOrganization .
+
+
+  # Skills
+
+  :SkillsPrompt a ui:Comment; ui:contents  "Skills?" .
+
+  :SkillsForm a ui:Multiple;
+      ui:label "Skills";
+      ui:property schema:skills;
+      ui:ordered false; # Allow user to order CV secions rather than force date order? No.
+      ui:part :SkillForm.
+
+  :SkillForm a ui:Group; ui:parts ( :skillNameField :escoSkillField ).
+
+        :skillNameField a ui:SingleLineTextField; ui:property vcard:role; ui:size 30 .
+
+        :escoSkillField a ui:AutocompleteField;
+              ui:label "skill"; ui:size 30;
+              ui:property solid:publicId;
+              ui:dataSource :ESCO_Skill_DataSource;
+               ui:targetClass schema:Skill .
+
+        :ESCO_Skill_DataSource a ui:DataSource;
+           schema:name "ESCO Skill";
+           ui:targetClass esco:Skill ;
+           schema:logo <https://ec.europa.eu/esco/portal/static_resource2/images/logo/logo_en.gif>;
+           ui:searchByNameURI "https://ec.europa.eu/esco/api/search?language=$(language)&type=skill&text=$(name)".
+
+# Language
+
+:LanguagesPrompt a ui:Comment; ui:contents  "Languages?" .
+
+:LanguagesForm a ui:Multiple;
+    ui:label "Languages";
+    ui:property schema:knowsLanguage; # @@@
+    ui:ordered true; # Allow user to order languages most important first.
+    ui:part :LanguageForm.
+
+:LanguageForm a ui:Group; ui:parts ( :WikidataLanguageField ).
+
+    :WikidataLanguageField a ui:AutocompleteField;
+          ui:label "Language"; ui:size 30;
+          ui:property solid:publicId; # @@
+          ui:dataSource :WikidataLanguageDataSource;
+           ui:targetClass schema:Language .
+
+    :WikidataLanguageDataSource
+        schema:name "Wikidata languages";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:objectURIBase <https://www.w3.org/ns/iana/language-code/>;
+        # Add this to any literal string returned as ?subject
+
+         ui:searchByNameQuery """SELECT ?item ?subject ?name
+WHERE
+{ ?item wdt:P305 ?subject .
+  OPTIONAL {?item rdfs:label ?name}
+  OPTIONAL {?item wdt:P1705 ?name}
+  FILTER regex(?name, "$(name)", "i")
+  FILTER regex(?subject, "^..$", "i")
+}""" .
+ # Note we restrict code to two-letter codes with the second regex, so as to limit the deluge of languages
+ # Hope there are not any important ones which have three-letter codes.
+ # Omitted: SERVICE wikibase:label { bd:serviceParam wikibase:language "$(languages)". }
+
+
+# ENDS
