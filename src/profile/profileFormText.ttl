@@ -104,6 +104,7 @@
       :WikidataOnOrganizations ui:classMap
        [ ui:internalClass schema:Corporation; ui:externalClass <http://www.wikidata.org/entity/Q6881511>], #Enterprise is for-profit
        [ ui:internalClass schema:EducationalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q178706>], #insitution
+       [ ui:internalClass schema:ResearchOrganization; ui:externalClass <http://www.wikidata.org/entity/Q31855>], # reearch insitutie
        [ ui:internalClass schema:GovernmentOrganization; ui:externalClass <http://www.wikidata.org/entity/Q327333>], #government agency
        [ ui:internalClass schema:MedicalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q4287745>],
        [ ui:internalClass schema:MusicGroup; ui:externalClass <http://www.wikidata.org/entity/Q32178211>], #music organization
@@ -125,6 +126,7 @@ solid:InterestingOrganization owl:disjointUnionOf  (
 # Consortium - a Corporation or a NGO
  schema:Corporation
  schema:EducationalOrganization
+ schema:ResearchOrganization  # Proposed. https://github.com/schemaorg/schemaorg/issues/2877
 # FundingScheme - eh?
  schema:GovernmentOrganization
 # LibrarySystem
@@ -136,6 +138,10 @@ schema:PerformingGroup # a band
 schema:Project # like Solid
 schema:SportsOrganization # a Team
  ) .
+ 
+# This until the schema.org ontology adopts it
+schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en, "Organization de Recherche"@fr ,
+   "organización de investigación"@es, "منظمة البحث"@ar, "अनुसंधान संगठन"@hi, "Forschungsorganisation"@de, "shirika la utafiti"@sw .
 
   :OrganizationCreationForm a ui:Form; schema:name "Form for editing an organization using public data" ;
     ui:parts ( :OrgClassifier :OrgSwitch   :OrganizationNameField :homePageURIField  ) .
@@ -169,6 +175,7 @@ schema:SportsOrganization # a Team
    [  ui:for schema:Project; ui:use :ProjectForm ],
    [  ui:for schema:NGO; ui:use :NGOForm ],
    [  ui:for schema:EducationalOrganization; ui:use :EducationalOrganizationForm ],
+   [  ui:for schema:ResearchOrganization; ui:use :ResearchOrganizationForm ],
    [  ui:for :SportsOrganization; ui:use :SportsOrganizationForm ].
 
   :CorporationForm a ui:Group; ui:parts ( :CorporationPrompt :CorporationAutocomplete ) .
@@ -202,17 +209,6 @@ schema:SportsOrganization # a Team
            ui:targetClass  <http://www.wikidata.org/entity/Q327333>; # GovernmentOrganization
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-      :WikidataOnGovernmentOrganizations a ui:DataSource ;
-        schema:name "Wikidata on Corprations";
-        ui:endpoint "https://query.wikidata.org/sparql" ;
-        ui:searchByNameQuery """SELECT ?subject ?name
-        WHERE {
-          ?klass wdt:P279* $(targetClass) .
-          ?subject wdt:P31 ?klass .
-          ?subject rdfs:label ?name.
-          FILTER regex(?name, "$(name)", "i")
-        } LIMIT $(limit) """ .
-
     :EducationalOrganizationForm a ui:Group; ui:parts ( :EducationalOrganizationPrompt :EducationalOrganizationAutocomplete ) .
 
         :EducationalOrganizationPrompt a ui:Comment; ui:contents "Which Educational Organization?".
@@ -223,16 +219,16 @@ schema:SportsOrganization # a Team
              ui:targetClass  <http://www.wikidata.org/entity/Q2385804>; # EducationalOrganization
              ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-        :WikidataOnEducationalOrganizations a ui:DataSource ;
-          schema:name "Wikidata on Corprations";
-          ui:endpoint "https://query.wikidata.org/sparql" ;
-          ui:searchByNameQuery """SELECT ?subject ?name
-          WHERE {
-            ?klass wdt:P279* $(targetClass) .
-            ?subject wdt:P31 ?klass .
-            ?subject rdfs:label ?name.
-            FILTER regex(?name, "$(name)", "i")
-          } LIMIT $(limit) """ .
+
+    :ResearchOrganizationForm a ui:Group; ui:parts ( :ResearchOrganizationPrompt :ResearchOrganizationAutocomplete ) .
+
+        :ResearchOrganizationPrompt a ui:Comment; ui:contents "Which Research Organization?".
+
+        :ResearchOrganizationAutocomplete a ui:AutocompleteField;
+        a ui:AutocompleteField; ui:label "Research Insitute in wikidata";
+             ui:size 60;
+             ui:targetClass  <http://www.wikidata.org/entity/Q31855>; # research institute
+             ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
 
   :NGOForm a ui:Group; ui:parts ( :NGOPrompt :NGOAutocomplete ) .
@@ -245,18 +241,6 @@ schema:SportsOrganization # a Team
            ui:targetClass  <http://www.wikidata.org/entity/Q163740>; # Non-profit org
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-      :WikidataOnNGOs a ui:DataSource ;
-        schema:name "Wikidata on NGOs";
-        ui:endpoint "https://query.wikidata.org/sparql" ;
-        ui:searchByNameQuery """SELECT ?subject ?name
-        WHERE {
-          ?klass wdt:P279* $(targetClass) .
-          ?subject wdt:P31 ?klass .
-          ?subject rdfs:label ?name.
-          FILTER regex(?name, "$(name)", "i")
-        } LIMIT $(limit) """ .
-
-
   :PerformingGroupForm a ui:Group; ui:parts ( :PerformingGroupPrompt :PerformingGroupAutocomplete ) .
 
       :PerformingGroupPrompt a ui:Comment; ui:contents "Which PerformingGroup?".
@@ -267,16 +251,6 @@ schema:SportsOrganization # a Team
            ui:targetClass  <http://www.wikidata.org/entity/Q32178211>; # Music Org
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-      :WikidataOnPerformingGroups a ui:DataSource ;
-        schema:name "Wikidata on Corprations";
-        ui:endpoint "https://query.wikidata.org/sparql" ;
-        ui:searchByNameQuery """SELECT ?subject ?name
-        WHERE {
-          ?klass wdt:P279* $(targetClass) .
-          ?subject wdt:P31 ?klass .
-          ?subject rdfs:label ?name.
-          FILTER regex(?name, "$(name)", "i")
-        } LIMIT $(limit) """ .
 
   :ProjectForm a ui:Group; ui:parts ( :ProjectPrompt  ) . #  :ProjectAutocomplete - no: supress, as not in WD
 
@@ -288,17 +262,6 @@ schema:SportsOrganization # a Team
            ui:targetClass  <http://www.wikidata.org/entity/Q170584>; # Project
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-      :WikidataOnProjects a ui:DataSource ;
-        schema:name "Wikidata on Corprations";
-        ui:endpoint "https://query.wikidata.org/sparql" ;
-        ui:searchByNameQuery """SELECT ?subject ?name
-        WHERE {
-          ?klass wdt:P279* $(targetClass) .
-          ?subject wdt:P31 ?klass .
-          ?subject rdfs:label ?name.
-          FILTER regex(?name, "$(name)", "i")
-        } LIMIT $(limit) """ .
-
   :SportsOrganizationForm a ui:Group; ui:parts ( :SportsOrganizationPrompt :SportsOrganizationAutocomplete ) .
 
       :SportsOrganizationPrompt a ui:Comment; ui:contents "Which Sports Organization?".
@@ -308,17 +271,6 @@ schema:SportsOrganization # a Team
            ui:size 60;
            ui:targetClass  <http://www.wikidata.org/entity/Q4438121>; # SportsOrganization
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
-
-      :WikidataOnSportsOrganizations a ui:DataSource ;
-        schema:name "Wikidata on Corprations";
-        ui:endpoint "https://query.wikidata.org/sparql" ;
-        ui:searchByNameQuery """SELECT ?subject ?name
-        WHERE {
-          ?klass wdt:P279* $(targetClass) .
-          ?subject wdt:P31 ?klass .
-          ?subject rdfs:label ?name.
-          FILTER regex(?name, "$(name)", "i")
-        } LIMIT $(limit) """ .
 
 
   #################### Skills
