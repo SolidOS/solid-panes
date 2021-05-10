@@ -1,6 +1,7 @@
 # 20210404a
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>.
+@prefix foaf: <http://xmlns.com/foaf/0.1/>.
 @prefix owl: <http://www.w3.org/2002/07/owl#>.
 @prefix solid: <http://www.w3.org/ns/solid/terms#>.
 @prefix ui: <http://www.w3.org/ns/ui#>.
@@ -19,9 +20,9 @@
     ui:parts (
       :styleGroup
       :pronounsForm
+      :LanguagesPrompt :LanguagesForm
       :CVGroup
       :SkillsPrompt :SkillsForm
-      :LanguagesPrompt :LanguagesForm
       ).
 
 :styleGroup a ui:Group; ui:parts ( :styleHeading :backgroundColor :highlightColor ).
@@ -52,7 +53,7 @@
     :CVGroup a ui:Group; ui:parts ( :CVHeading :CVPrompt :involvementWithOrganizationsForm ).
 
 
-  solid:Role a rdfs:Class; owl:oneOf ( solid:CurrentRole solid:FormerRole ). # Future Role too?
+  solid:Role a rdfs:Class; owl:oneOf ( solid:CurrentRole solid:FormerRole solid:FutureRole ). # Future Role too?
 
   org:member owl:inverse [ ui:label "involvement with company, org etc" ]. # timelimited involvement
 
@@ -62,7 +63,7 @@
       ui:ordered false; # Allow user to order CV secions rather than force date order? No.
       ui:part :membershipForm.
 
-  :membershipForm a ui:Group; ui:parts ( :roleNameField :escoOccupationField :instituteIdentityField :orgField :startField :endField ).
+  :membershipForm a ui:Group; ui:parts ( :roleNameField :escoOccupationField :orgField :startField :endField ).
 
       :startField a ui:DateField; ui:property schema:startDate; ui:label "Starting"@en, "Début"@fr.
       :endField   a ui:DateField; ui:property schema:endDate;   ui:label "Ending"@en, "Fin"@fr.
@@ -102,7 +103,7 @@
 
       :WikidataOnOrganizations ui:classMap
        [ ui:internalClass schema:Corporation; ui:externalClass <http://www.wikidata.org/entity/Q6881511>], #Enterprise is for-profit
-       [ ui:internalClass schema:vEducationalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q178706>], #insitution
+       [ ui:internalClass schema:EducationalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q178706>], #insitution
        [ ui:internalClass schema:GovernmentOrganization; ui:externalClass <http://www.wikidata.org/entity/Q327333>], #government agency
        [ ui:internalClass schema:MedicalOrganization; ui:externalClass <http://www.wikidata.org/entity/Q4287745>],
        [ ui:internalClass schema:MusicGroup; ui:externalClass <http://www.wikidata.org/entity/Q32178211>], #music organization
@@ -136,29 +137,191 @@ schema:Project # like Solid
 schema:SportsOrganization # a Team
  ) .
 
-  :OrganizationCreationForm a ui:Form; schema:name "Form for editing a role" ;
-    ui:parts ( :OrgClassifier :homePageURIField  ) .
+  :OrganizationCreationForm a ui:Form; schema:name "Form for editing an organization using public data" ;
+    ui:parts ( :OrgClassifier :OrgSwitch   :OrganizationNameField :homePageURIField  ) .
 
 
  :OrgClassifier a ui:Classifier; ui:label "What sort of organization?"@en;
     ui:category solid:InterestingOrganization .
 
-  :instituteNameField
+  :OrganizationNameField
       a ui:SingleLineTextField ;
-      ui:label "Intitute Name";
+      ui:label "Organization Name";
       ui:maxLength "200" ;
       ui:property schema:name ;
-      ui:size "80" .
+      ui:size    80 .
 
-   :homePageURIField a ui:NamedNodeURIField;
-      ui:property  schema:url . # @@ ??
+   :homePageURIField a ui:NamedNodeURIField; ui:size 80;
+      ui:label "Home page URI"@en;
+      ui:property  schema:uri . # @@ ??
 
     :initituteTypeField a ui:Classifier;
     ui:label "What sort of organization";
     ui:category solid:InterestingOrganization .
 
+#  Depending on the type of org, chose
 
-  # Skills
+ :OrgSwitch a ui:Options; ui:dependingOn rdf:type;
+   ui:case
+   [  ui:for schema:Corporation; ui:use :CorporationForm ],
+   [  ui:for schema:GovernmentOrganization; ui:use :GovernmentOrganizationForm ],
+   [  ui:for schema:PerformingGroup; ui:use :PerformingGroupForm ],
+   [  ui:for schema:Project; ui:use :ProjectForm ],
+   [  ui:for schema:NGO; ui:use :NGOForm ],
+   [  ui:for schema:EducationalOrganization; ui:use :EducationalOrganizationForm ],
+   [  ui:for :SportsOrganization; ui:use :SportsOrganizationForm ].
+
+  :CorporationForm a ui:Group; ui:parts ( :CorporationPrompt :CorporationAutocomplete ) .
+
+      :CorporationPrompt a ui:Comment; ui:contents "Which corporation?".
+
+      :CorporationAutocomplete a ui:AutocompleteField;
+      a ui:AutocompleteField; ui:label "Corporation in wikidata";
+           ui:size 60;
+           ui:targetClass  <http://www.wikidata.org/entity/Q6881511>; # Enterprise
+           ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+      :WikidataInstancesByName a ui:DataSource ;
+        schema:name "Wikidata instances by name";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:searchByNameQuery """SELECT ?subject ?name
+        WHERE {
+          ?klass wdt:P279* $(targetClass) .
+          ?subject wdt:P31 ?klass .
+          ?subject rdfs:label ?name.
+          FILTER regex(?name, "$(name)", "i")
+        } LIMIT $(limit) """ .
+
+  :GovernmentOrganizationForm a ui:Group; ui:parts ( :GovernmentOrganizationPrompt :GovernmentOrganizationAutocomplete ) .
+
+      :GovernmentOrganizationPrompt a ui:Comment; ui:contents "Which GovernmentOrganization?".
+
+      :GovernmentOrganizationAutocomplete a ui:AutocompleteField;
+      a ui:AutocompleteField; ui:label "GovernmentOrganization in wikidata";
+           ui:size 60;
+           ui:targetClass  <http://www.wikidata.org/entity/Q327333>; # GovernmentOrganization
+           ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+      :WikidataOnGovernmentOrganizations a ui:DataSource ;
+        schema:name "Wikidata on Corprations";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:searchByNameQuery """SELECT ?subject ?name
+        WHERE {
+          ?klass wdt:P279* $(targetClass) .
+          ?subject wdt:P31 ?klass .
+          ?subject rdfs:label ?name.
+          FILTER regex(?name, "$(name)", "i")
+        } LIMIT $(limit) """ .
+
+    :EducationalOrganizationForm a ui:Group; ui:parts ( :EducationalOrganizationPrompt :EducationalOrganizationAutocomplete ) .
+
+        :EducationalOrganizationPrompt a ui:Comment; ui:contents "Which Educational Organization?".
+
+        :EducationalOrganizationAutocomplete a ui:AutocompleteField;
+        a ui:AutocompleteField; ui:label "Educational Organization in wikidata";
+             ui:size 60;
+             ui:targetClass  <http://www.wikidata.org/entity/Q2385804>; # EducationalOrganization
+             ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+        :WikidataOnEducationalOrganizations a ui:DataSource ;
+          schema:name "Wikidata on Corprations";
+          ui:endpoint "https://query.wikidata.org/sparql" ;
+          ui:searchByNameQuery """SELECT ?subject ?name
+          WHERE {
+            ?klass wdt:P279* $(targetClass) .
+            ?subject wdt:P31 ?klass .
+            ?subject rdfs:label ?name.
+            FILTER regex(?name, "$(name)", "i")
+          } LIMIT $(limit) """ .
+
+
+  :NGOForm a ui:Group; ui:parts ( :NGOPrompt :NGOAutocomplete ) .
+
+      :NGOPrompt a ui:Comment; ui:contents "Which NGO?".
+
+      :NGOAutocomplete a ui:AutocompleteField;
+      a ui:AutocompleteField; ui:label "NGO in wikidata";
+           ui:size 60;
+           ui:targetClass  <http://www.wikidata.org/entity/Q163740>; # Non-profit org
+           ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+      :WikidataOnNGOs a ui:DataSource ;
+        schema:name "Wikidata on NGOs";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:searchByNameQuery """SELECT ?subject ?name
+        WHERE {
+          ?klass wdt:P279* $(targetClass) .
+          ?subject wdt:P31 ?klass .
+          ?subject rdfs:label ?name.
+          FILTER regex(?name, "$(name)", "i")
+        } LIMIT $(limit) """ .
+
+
+  :PerformingGroupForm a ui:Group; ui:parts ( :PerformingGroupPrompt :PerformingGroupAutocomplete ) .
+
+      :PerformingGroupPrompt a ui:Comment; ui:contents "Which PerformingGroup?".
+
+      :PerformingGroupAutocomplete a ui:AutocompleteField;
+      a ui:AutocompleteField; ui:label "PerformingGroup in wikidata";
+           ui:size 60;
+           ui:targetClass  <http://www.wikidata.org/entity/Q32178211>; # Music Org
+           ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+      :WikidataOnPerformingGroups a ui:DataSource ;
+        schema:name "Wikidata on Corprations";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:searchByNameQuery """SELECT ?subject ?name
+        WHERE {
+          ?klass wdt:P279* $(targetClass) .
+          ?subject wdt:P31 ?klass .
+          ?subject rdfs:label ?name.
+          FILTER regex(?name, "$(name)", "i")
+        } LIMIT $(limit) """ .
+
+  :ProjectForm a ui:Group; ui:parts ( :ProjectPrompt  ) . #  :ProjectAutocomplete - no: supress, as not in WD
+
+      :ProjectPrompt a ui:Comment; ui:contents "Which Project?".
+
+      :ProjectAutocomplete a ui:AutocompleteField;
+      a ui:AutocompleteField; ui:label "Project in wikidata";
+           ui:size 60;
+           ui:targetClass  <http://www.wikidata.org/entity/Q170584>; # Project
+           ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+      :WikidataOnProjects a ui:DataSource ;
+        schema:name "Wikidata on Corprations";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:searchByNameQuery """SELECT ?subject ?name
+        WHERE {
+          ?klass wdt:P279* $(targetClass) .
+          ?subject wdt:P31 ?klass .
+          ?subject rdfs:label ?name.
+          FILTER regex(?name, "$(name)", "i")
+        } LIMIT $(limit) """ .
+
+  :SportsOrganizationForm a ui:Group; ui:parts ( :SportsOrganizationPrompt :SportsOrganizationAutocomplete ) .
+
+      :SportsOrganizationPrompt a ui:Comment; ui:contents "Which Sports Organization?".
+
+      :SportsOrganizationAutocomplete a ui:AutocompleteField;
+      a ui:AutocompleteField; ui:label "SportsOrganization in wikidata";
+           ui:size 60;
+           ui:targetClass  <http://www.wikidata.org/entity/Q4438121>; # SportsOrganization
+           ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
+
+      :WikidataOnSportsOrganizations a ui:DataSource ;
+        schema:name "Wikidata on Corprations";
+        ui:endpoint "https://query.wikidata.org/sparql" ;
+        ui:searchByNameQuery """SELECT ?subject ?name
+        WHERE {
+          ?klass wdt:P279* $(targetClass) .
+          ?subject wdt:P31 ?klass .
+          ?subject rdfs:label ?name.
+          FILTER regex(?name, "$(name)", "i")
+        } LIMIT $(limit) """ .
+
+
+  #################### Skills
 
   :SkillsPrompt a ui:Comment; ui:contents  "Skills?" .
 
@@ -182,7 +345,7 @@ schema:SportsOrganization # a Team
            schema:name "ESCO Skill";
            ui:targetClass esco:Skill ;
            schema:logo <https://ec.europa.eu/esco/portal/static_resource2/images/logo/logo_en.gif>;
-           ui:searchByNameURI "https://ec.europa.eu/esco/api/search?language=$(language)&type=skill&text=$(name)".
+           ui:searchByNameURI "https://ec.europa.eu/esco/api/search?language=$(language)&limit=$(limit)&type=skill&text=$(name)".
 
 # Language
 
