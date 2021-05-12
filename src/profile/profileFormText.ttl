@@ -19,6 +19,7 @@
     # ui:part :backgroundColor, :highlightColor;
     ui:parts (
       :styleGroup
+      :nicknameField
       :pronounsForm
       :LanguagesPrompt :LanguagesForm
       :CVGroup
@@ -31,6 +32,10 @@
       ui:label "Background color"; ui:default "#ffffff".
     :highlightColor a ui:ColorField; ui:property solid:profileHighlightColor;
       ui:label "Highlight color"; ui:default "#000000".
+
+# Nickname
+
+:nicknameField a ui:SingleLineTextField; ui:size 12; ui:property foaf:nick.
 
  # Pronouns
 
@@ -63,10 +68,10 @@
       ui:ordered false; # Allow user to order CV secions rather than force date order? No.
       ui:part :membershipForm.
 
-  :membershipForm a ui:Group; ui:parts ( :roleNameField :escoOccupationField :orgField :startField :endField ).
+  :membershipForm a ui:Group; ui:parts ( :roleNameField :escoOccupationField :orgField :RoleClassifier :RoleDatesForm ). # was::startField :endField
 
-      :startField a ui:DateField; ui:property schema:startDate; ui:label "Starting"@en, "Début"@fr.
-      :endField   a ui:DateField; ui:property schema:endDate;   ui:label "Ending"@en, "Fin"@fr.
+    #  :startField a ui:DateField; ui:property schema:startDate; ui:label "Starting"@en, "Début"@fr.
+    #  :endField   a ui:DateField; ui:property schema:endDate;   ui:label "Ending"@en, "Fin"@fr.
       :orgField a ui:Choice; ui:label "Organization"@en, "Organization"@fr;
           ui:canMintNew true; ui:use :OrganizationCreationForm ;
           ui:property org:organization;
@@ -75,7 +80,7 @@
 
     :escoOccupationField a ui:AutocompleteField;
           ui:label "occupation"; ui:size 60;
-          ui:property org:Role;
+          ui:property org:role;
           ui:dataSource :ESCO_Occupation_DataSource;
            ui:targetClass schema:Occupation .
 
@@ -115,6 +120,28 @@
        [ ui:internalClass schema:SportsOrganization; ui:externalClass <http://www.wikidata.org/entity/Q4438121>] .
 
 
+# eposodes in one's career - Roles
+
+solid:Role owl:disjointUnionOf ( solid:PastRole solid:CurrentRole solid:FutureRole ) .
+solid:PastRole a rdfs:Class; rdfs:label "former role"@en, "ancien rôle"@fr, "vergangene Rolle"@de, "rol anterior"@es .
+solid:CurrentRole a rdfs:Class; rdfs:label "current role"@en, "rôle actuel"@fr, "momentane Rolle"@de , "rol actual"@es .
+solid:FutureRole a rdfs:Class; rdfs:label "future role"@en, "rôle à venir"@fr, "zukünftige Rolle"@de, "rol futuro"@es .
+
+:RoleDatesGroup a ui:Group; ui:parts ( :RoleClassifier :RoleDatesForm ) .
+  :RoleClassifier a ui:Classifier; ui:label "What sort of role?"@en;
+      ui:category solid:Role .
+
+  :RoleDatesForm a ui:Options; ui:dependingOn rdf:type; ui:case
+     [ ui:for solid:PastRole; ui:use :TwoDateForm ],
+     [ ui:for solid:PresentRole; ui:use :StartDateForm ],
+     [ ui:for solid:FutureRole; ui:use :StartDateForm ].
+
+      :StartDateForm a ui:DateField; ui:label "start"@en,"début"@fr;
+          ui:property schema:startDate .
+      :TwoDateForm a ui:Group; ui:parts ( :StartDateForm :EndDateForm ) .
+      :EndDateForm a ui:DateField; ui:label "end"@en,"fin"@fr;
+          ui:property schema:endDate .
+
 # Organizations
 
  vcard:Organization ui:creationForm :OrganizationCreationForm  .
@@ -138,7 +165,7 @@ schema:PerformingGroup # a band
 schema:Project # like Solid
 schema:SportsOrganization # a Team
  ) .
- 
+
 # This until the schema.org ontology adopts it
 schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en, "Organization de Recherche"@fr ,
    "organización de investigación"@es, "منظمة البحث"@ar, "अनुसंधान संगठन"@hi, "Forschungsorganisation"@de, "shirika la utafiti"@sw .
@@ -165,7 +192,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
     ui:label "What sort of organization";
     ui:category solid:InterestingOrganization .
 
-#  Depending on the type of org, chose
+#  Depending on the type of org, chose a different form
 
  :OrgSwitch a ui:Options; ui:dependingOn rdf:type;
    ui:case
@@ -203,7 +230,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
       :GovernmentOrganizationPrompt a ui:Comment; ui:contents "Which GovernmentOrganization?".
 
-      :GovernmentOrganizationAutocomplete a ui:AutocompleteField;
+      :GovernmentOrganizationAutocomplete
       a ui:AutocompleteField; ui:label "GovernmentOrganization in wikidata";
            ui:size 60;
            ui:targetClass  <http://www.wikidata.org/entity/Q327333>; # GovernmentOrganization
@@ -213,7 +240,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
         :EducationalOrganizationPrompt a ui:Comment; ui:contents "Which Educational Organization?".
 
-        :EducationalOrganizationAutocomplete a ui:AutocompleteField;
+        :EducationalOrganizationAutocomplete
         a ui:AutocompleteField; ui:label "Educational Organization in wikidata";
              ui:size 60;
              ui:targetClass  <http://www.wikidata.org/entity/Q2385804>; # EducationalOrganization
@@ -224,7 +251,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
         :ResearchOrganizationPrompt a ui:Comment; ui:contents "Which Research Organization?".
 
-        :ResearchOrganizationAutocomplete a ui:AutocompleteField;
+        :ResearchOrganizationAutocomplete
         a ui:AutocompleteField; ui:label "Research Insitute in wikidata";
              ui:size 60;
              ui:targetClass  <http://www.wikidata.org/entity/Q31855>; # research institute
@@ -235,7 +262,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
       :NGOPrompt a ui:Comment; ui:contents "Which NGO?".
 
-      :NGOAutocomplete a ui:AutocompleteField;
+      :NGOAutocomplete
       a ui:AutocompleteField; ui:label "NGO in wikidata";
            ui:size 60;
            ui:targetClass  <http://www.wikidata.org/entity/Q163740>; # Non-profit org
@@ -245,7 +272,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
       :PerformingGroupPrompt a ui:Comment; ui:contents "Which PerformingGroup?".
 
-      :PerformingGroupAutocomplete a ui:AutocompleteField;
+      :PerformingGroupAutocomplete
       a ui:AutocompleteField; ui:label "PerformingGroup in wikidata";
            ui:size 60;
            ui:targetClass  <http://www.wikidata.org/entity/Q32178211>; # Music Org
@@ -256,7 +283,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
       :ProjectPrompt a ui:Comment; ui:contents "Which Project?".
 
-      :ProjectAutocomplete a ui:AutocompleteField;
+      :ProjectAutocomplete
       a ui:AutocompleteField; ui:label "Project in wikidata";
            ui:size 60;
            ui:targetClass  <http://www.wikidata.org/entity/Q170584>; # Project
@@ -266,7 +293,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
       :SportsOrganizationPrompt a ui:Comment; ui:contents "Which Sports Organization?".
 
-      :SportsOrganizationAutocomplete a ui:AutocompleteField;
+      :SportsOrganizationAutocomplete
       a ui:AutocompleteField; ui:label "SportsOrganization in wikidata";
            ui:size 60;
            ui:targetClass  <http://www.wikidata.org/entity/Q4438121>; # SportsOrganization
