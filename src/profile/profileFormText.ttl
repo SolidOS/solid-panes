@@ -68,11 +68,13 @@
       ui:ordered false; # Allow user to order CV secions rather than force date order? No.
       ui:part :membershipForm.
 
-  :membershipForm a ui:Group; ui:parts ( :roleNameField :escoOccupationField :orgField :RoleClassifier :RoleDatesForm ). # was::startField :endField
+# This is a big important form for one of a series of roles in the list.
 
-    #  :startField a ui:DateField; ui:property schema:startDate; ui:label "Starting"@en, "Début"@fr.
-    #  :endField   a ui:DateField; ui:property schema:endDate;   ui:label "Ending"@en, "Fin"@fr.
-      :orgField a ui:Choice; ui:label "Organization"@en, "Organization"@fr;
+  :membershipForm a ui:Group; ui:parts ( :MembershipFormHeading :roleNameField :escoOccupationField :orgField :RoleClassifier :RoleDatesForm ). # was::startField :endField
+
+     :MembershipFormHeading a ui:Heading; ui:contents "Details of this role"@en, "Détailes de ce rôle"@fr .
+
+     :orgField a ui:Choice; ui:label "Organization"@en, "Organization"@fr;
           ui:canMintNew true; ui:use :OrganizationCreationForm ;
           ui:property org:organization;
           ui:from vcard:Organization .
@@ -133,7 +135,7 @@ solid:FutureRole a rdfs:Class; rdfs:label "future role"@en, "rôle à venir"@fr,
 
   :RoleDatesForm a ui:Options; ui:dependingOn rdf:type; ui:case
      [ ui:for solid:PastRole; ui:use :TwoDateForm ],
-     [ ui:for solid:PresentRole; ui:use :StartDateForm ],
+     [ ui:for solid:CurrentRole; ui:use :StartDateForm ],
      [ ui:for solid:FutureRole; ui:use :StartDateForm ].
 
       :StartDateForm a ui:DateField; ui:label "start"@en,"début"@fr;
@@ -307,12 +309,12 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
   :SkillsForm a ui:Multiple;
       ui:label "Skills";
       ui:property schema:skills;
-      ui:ordered false; # Allow user to order CV secions rather than force date order? No.
+      ui:ordered false; # Allow reader to order skills
       ui:part :SkillForm.
 
-  :SkillForm a ui:Group; ui:parts ( :skillNameField :escoSkillField ).
+  :SkillForm a ui:Group; ui:parts ( :escoSkillField ).
 
-        :skillNameField a ui:SingleLineTextField; ui:property vcard:role; ui:size 30 .
+        # :skillNameField a ui:SingleLineTextField; ui:property vcard:role; ui:size 30 .
 
         :escoSkillField a ui:AutocompleteField;
               ui:label "skill"; ui:size 30;
