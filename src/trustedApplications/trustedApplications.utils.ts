@@ -6,7 +6,7 @@ export function getStatementsToDelete (
   person: NamedNode,
   kb: IndexedFormula,
   ns: Namespaces
-) {
+): any {
   const applicationStatements = kb.statementsMatching(
     null,
     ns.acl('origin'),
@@ -35,7 +35,7 @@ export function getStatementsToAdd (
   modes: string[],
   person: NamedNode,
   ns: Namespaces
-) {
+): any {
   const application = new BlankNode(`bn_${nodeName}`)
   return [
     st(person, ns.acl('trustedApp'), application, person.doc()),
