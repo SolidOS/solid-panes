@@ -423,6 +423,19 @@ export default function (context) {
         return []
       }
       const pods = kb.each(me, ns.space('storage'), null, me.doc())
+      try {
+        // make sure container representation is loaded (when server returns index.html)
+        pods.map(async pod => {
+          if (!kb.any(pod, ns.ldp('contains'), undefined, pod.doc())) {
+            const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
+            const podTurtle = response.responseText
+            $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
+          }
+        })
+      } catch (err) {
+        console.error('cannot load container', err)
+        return []
+      }
       return pods.map((pod, index) => {
         const label =
           pods.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
