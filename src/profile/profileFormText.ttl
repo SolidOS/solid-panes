@@ -10,6 +10,8 @@
 
 @prefix org: <http://www.w3.org/ns/org#>.
 @prefix esco: <http://data.europa.eu/esco/model#>.
+@prefix wd: <http://www.wikidata.org/entity/>.
+@prefix wdt: <http://www.wikidata.org/prop/direct/>.
 
 @prefix : <#>.
 
@@ -26,7 +28,7 @@
       :SkillsPrompt :SkillsForm
       ).
 
-:styleGroup a ui:Group; ui:parts ( :styleHeading :backgroundColor :highlightColor ).
+:styleGroup a ui:Group; ui:weight 0; ui:parts ( :styleHeading :backgroundColor :highlightColor ).
     :styleHeading a ui:Heading; ui:contents "The style of your public profile.".
     :backgroundColor a ui:ColorField; ui:property solid:profileBackgroundColor;
       ui:label "Background color"; ui:default "#ffffff".
@@ -35,11 +37,12 @@
 
 # Nickname
 
-:nicknameField a ui:SingleLineTextField; ui:size 12; ui:property foaf:nick.
+:nicknameField a ui:SingleLineTextField; ui:size 12; ui:property foaf:nick;
+      ui:label "Short name for chats, etc."@en, "nom court"@fr.
 
  # Pronouns
 
- :pronounsForm a ui:Group; ui:parts ( :pronounsPrompt :subjectPronounForm :objectPronounForm :relativePronounForm) .
+ :pronounsForm a ui:Group; ui:weight 0; ui:parts ( :pronounsPrompt :subjectPronounForm :objectPronounForm :relativePronounForm) .
 
     :pronounsPrompt a ui:Comment; ui:contents  "What are your pronouns?" .
 
@@ -55,7 +58,7 @@
   :CVHeading a ui:Heading; ui:contents "Public Curriculum Vitae".
   :CVPrompt a ui:Comment; ui:contents  "What organizations have you been involved with?" .
 
-    :CVGroup a ui:Group; ui:parts ( :CVHeading :CVPrompt :involvementWithOrganizationsForm ).
+    :CVGroup a ui:Group; ui:weight 1; ui:parts ( :CVHeading :CVPrompt :involvementWithOrganizationsForm ).
 
 
   solid:Role a rdfs:Class; owl:oneOf ( solid:CurrentRole solid:FormerRole solid:FutureRole ). # Future Role too?
@@ -66,11 +69,12 @@
       ui:label "Involvement with Organization";
       ui:property org:member; ui:reverse true; # link back from role to member
       ui:ordered false; # Allow user to order CV secions rather than force date order? No.
-      ui:part :membershipForm.
+      ui:part :RoleMembershipForm.
 
 # This is a big important form for one of a series of roles in the list.
 
-  :membershipForm a ui:Group; ui:parts ( :MembershipFormHeading :roleNameField :escoOccupationField :orgField :RoleClassifier :RoleDatesForm ). # was::startField :endField
+  :RoleMembershipForm a ui:Group; ui:weight 3; ui:parts ( :MembershipFormHeading :roleNameField
+        :escoOccupationField :orgField :RoleClassifier :RoleDatesForm :RoleDescriptionForm).
 
      :MembershipFormHeading a ui:Heading; ui:contents "Details of this role"@en, "Détailes de ce rôle"@fr .
 
@@ -129,7 +133,7 @@ solid:PastRole a rdfs:Class; rdfs:label "former role"@en, "ancien rôle"@fr, "ve
 solid:CurrentRole a rdfs:Class; rdfs:label "current role"@en, "rôle actuel"@fr, "momentane Rolle"@de , "rol actual"@es .
 solid:FutureRole a rdfs:Class; rdfs:label "future role"@en, "rôle à venir"@fr, "zukünftige Rolle"@de, "rol futuro"@es .
 
-:RoleDatesGroup a ui:Group; ui:parts ( :RoleClassifier :RoleDatesForm ) .
+:RoleDatesGroup a ui:Group; ui:weight 0; ui:parts ( :RoleClassifier :RoleDatesForm ) .
   :RoleClassifier a ui:Classifier; ui:label "What sort of role?"@en;
       ui:category solid:Role .
 
@@ -140,9 +144,12 @@ solid:FutureRole a rdfs:Class; rdfs:label "future role"@en, "rôle à venir"@fr,
 
       :StartDateForm a ui:DateField; ui:label "start"@en,"début"@fr;
           ui:property schema:startDate .
-      :TwoDateForm a ui:Group; ui:parts ( :StartDateForm :EndDateForm ) .
+      :TwoDateForm a ui:Group; ui:weight 0; ui:parts ( :StartDateForm :EndDateForm ) .
       :EndDateForm a ui:DateField; ui:label "end"@en,"fin"@fr;
           ui:property schema:endDate .
+
+:RoleDescriptionForm a ui:MultiLineTextField; ui:property schema:description;
+  ui:label "Describe your role" .
 
 # Organizations
 
@@ -166,6 +173,7 @@ solid:InterestingOrganization owl:disjointUnionOf  (
 schema:PerformingGroup # a band
 schema:Project # like Solid
 schema:SportsOrganization # a Team
+solid:OtherOrganization
  ) .
 
 # This until the schema.org ontology adopts it
@@ -198,16 +206,18 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
 
  :OrgSwitch a ui:Options; ui:dependingOn rdf:type;
    ui:case
-   [  ui:for schema:Corporation; ui:use :CorporationForm ],
-   [  ui:for schema:GovernmentOrganization; ui:use :GovernmentOrganizationForm ],
-   [  ui:for schema:PerformingGroup; ui:use :PerformingGroupForm ],
-   [  ui:for schema:Project; ui:use :ProjectForm ],
-   [  ui:for schema:NGO; ui:use :NGOForm ],
-   [  ui:for schema:EducationalOrganization; ui:use :EducationalOrganizationForm ],
-   [  ui:for schema:ResearchOrganization; ui:use :ResearchOrganizationForm ],
-   [  ui:for :SportsOrganization; ui:use :SportsOrganizationForm ].
+   [ ui:for schema:Corporation; ui:use :CorporationForm ],
+   [ ui:for schema:GovernmentOrganization; ui:use :GovernmentOrganizationForm ],
+   [ ui:for schema:PerformingGroup; ui:use :PerformingGroupForm ],
+   [ ui:for schema:Project; ui:use :ProjectForm ],
+   [ ui:for schema:NGO; ui:use :NGOForm ],
+   [ ui:for schema:EducationalOrganization; ui:use :EducationalOrganizationForm ],
+   [ ui:for schema:ResearchOrganization; ui:use :ResearchOrganizationForm ],
+   [ ui:for :SportsOrganization; ui:use :SportsOrganizationForm ],
+   [ ui:for solid:OtherOrganization; ui:use :OtherOrganizationForm ].
 
-  :CorporationForm a ui:Group; ui:parts ( :CorporationPrompt :CorporationAutocomplete ) .
+
+  :CorporationForm a ui:Group; ui:weight 0; ui:parts ( :CorporationPrompt :CorporationAutocomplete ) .
 
       :CorporationPrompt a ui:Comment; ui:contents "Which corporation?".
 
@@ -226,9 +236,16 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
           ?subject wdt:P31 ?klass .
           ?subject rdfs:label ?name.
           FILTER regex(?name, "$(name)", "i")
-        } LIMIT $(limit) """ .
+        } LIMIT $(limit) """ ;
 
-  :GovernmentOrganizationForm a ui:Group; ui:parts ( :GovernmentOrganizationPrompt :GovernmentOrganizationAutocomplete ) .
+        # Note this form of the query is very experimental
+        ui:searchByName [   ui:construct { ?subject schema:name ?name } ;
+                            ui:where { ?klass wdt:P279 ?targetClass .
+                                       ?subject wdt:P31 ?klass; rdfs:label ?name .
+                                     };
+                        ].
+
+  :GovernmentOrganizationForm a ui:Group; ui:weight 0; ui:parts ( :GovernmentOrganizationPrompt :GovernmentOrganizationAutocomplete ) .
 
       :GovernmentOrganizationPrompt a ui:Comment; ui:contents "Which GovernmentOrganization?".
 
@@ -238,7 +255,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
            ui:targetClass  <http://www.wikidata.org/entity/Q327333>; # GovernmentOrganization
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-    :EducationalOrganizationForm a ui:Group; ui:parts ( :EducationalOrganizationPrompt :EducationalOrganizationAutocomplete ) .
+    :EducationalOrganizationForm a ui:Group; ui:weight 1; ui:parts ( :EducationalOrganizationPrompt :EducationalOrganizationAutocomplete ) .
 
         :EducationalOrganizationPrompt a ui:Comment; ui:contents "Which Educational Organization?".
 
@@ -249,7 +266,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
              ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
 
-    :ResearchOrganizationForm a ui:Group; ui:parts ( :ResearchOrganizationPrompt :ResearchOrganizationAutocomplete ) .
+    :ResearchOrganizationForm a ui:Group; ui:weight 0; ui:parts ( :ResearchOrganizationPrompt :ResearchOrganizationAutocomplete ) .
 
         :ResearchOrganizationPrompt a ui:Comment; ui:contents "Which Research Organization?".
 
@@ -260,7 +277,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
              ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
 
-  :NGOForm a ui:Group; ui:parts ( :NGOPrompt :NGOAutocomplete ) .
+  :NGOForm a ui:Group; ui:weight 0; ui:parts ( :NGOPrompt :NGOAutocomplete ) .
 
       :NGOPrompt a ui:Comment; ui:contents "Which NGO?".
 
@@ -270,7 +287,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
            ui:targetClass  <http://www.wikidata.org/entity/Q163740>; # Non-profit org
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-  :PerformingGroupForm a ui:Group; ui:parts ( :PerformingGroupPrompt :PerformingGroupAutocomplete ) .
+  :PerformingGroupForm a ui:Group; ui:weight 0; ui:parts ( :PerformingGroupPrompt :PerformingGroupAutocomplete ) .
 
       :PerformingGroupPrompt a ui:Comment; ui:contents "Which PerformingGroup?".
 
@@ -281,7 +298,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
 
-  :ProjectForm a ui:Group; ui:parts ( :ProjectPrompt  ) . #  :ProjectAutocomplete - no: supress, as not in WD
+  :ProjectForm a ui:Group; ui:weight 0; ui:parts ( :ProjectPrompt :ProjectAutocomplete ) . #  :ProjectAutocomplete - no: supress, as not in WD
 
       :ProjectPrompt a ui:Comment; ui:contents "Which Project?".
 
@@ -291,7 +308,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
            ui:targetClass  <http://www.wikidata.org/entity/Q170584>; # Project
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
-  :SportsOrganizationForm a ui:Group; ui:parts ( :SportsOrganizationPrompt :SportsOrganizationAutocomplete ) .
+  :SportsOrganizationForm a ui:Group; ui:weight 0; ui:parts ( :SportsOrganizationPrompt :SportsOrganizationAutocomplete ) .
 
       :SportsOrganizationPrompt a ui:Comment; ui:contents "Which Sports Organization?".
 
@@ -301,6 +318,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
            ui:targetClass  <http://www.wikidata.org/entity/Q4438121>; # SportsOrganization
            ui:property solid:publicId; ui:dataSource :WikidataInstancesByName.
 
+   :OtherOrganizationForm a ui:Group; ui:weight 0; ui:parts ( :OrganizationNameField :homePageURIField ) .
 
   #################### Skills
 
@@ -312,7 +330,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
       ui:ordered false; # Allow reader to order skills
       ui:part :SkillForm.
 
-  :SkillForm a ui:Group; ui:parts ( :escoSkillField ).
+  :SkillForm a ui:Group; ui:weight 1; ui:parts ( :escoSkillField ).
 
         # :skillNameField a ui:SingleLineTextField; ui:property vcard:role; ui:size 30 .
 
@@ -338,7 +356,7 @@ schema:ResearchOrganization a rdfs:Class; rdfs:label "Research Organization"@en,
     ui:ordered true; # Allow user to order languages most important first.
     ui:part :LanguageForm.
 
-:LanguageForm a ui:Group; ui:parts ( :WikidataLanguageField ).
+:LanguageForm a ui:Group; ui:weight 1; ui:parts ( :WikidataLanguageField ).
 
     :WikidataLanguageField a ui:AutocompleteField;
           ui:label "Language"; ui:size 30;
