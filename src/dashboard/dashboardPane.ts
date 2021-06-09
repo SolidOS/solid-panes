@@ -39,7 +39,7 @@ function buildPage (
   if (webId && webId.site().uri === subject.site().uri) {
     return buildDashboard(container, context)
   }
-  return buildHomePage(container, subject)
+  return buildHomePage(container, subject, context)
 }
 
 function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
@@ -50,7 +50,7 @@ function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
     .then((dashboard: HTMLElement) => container.appendChild(dashboard))
 }
 
-function buildHomePage (container: HTMLElement, subject: NamedNode) {
+function buildHomePage (container: HTMLElement, subject: NamedNode, context: DataBrowserContext) {
   const wrapper = document.createElement('div')
   container.appendChild(wrapper)
   const shadow = wrapper.attachShadow({ mode: 'open' })
@@ -61,6 +61,9 @@ function buildHomePage (container: HTMLElement, subject: NamedNode) {
   generateHomepage(subject, store, store.fetcher as Fetcher).then(homepage =>
     shadow.appendChild(homepage)
   )
+  const pane = context.session.paneRegistry.byName('folder')
+  const paneDiv = pane.render(subject, context) // , options
+  container.appendChild(paneDiv)
 }
 
 export default dashboardPane
