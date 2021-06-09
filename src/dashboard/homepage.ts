@@ -30,7 +30,7 @@ function createDataSection (name: string): HTMLElement {
 
   const publicDataLink = document.createElement('a')
   publicDataLink.classList.add('list-group-item')
-  publicDataLink.href = '/'
+  publicDataLink.href = '/public/'
   publicDataLink.innerText = `View ${name}'s files`
   listGroup.appendChild(publicDataLink)
 
