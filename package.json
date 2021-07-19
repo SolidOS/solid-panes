@@ -57,14 +57,14 @@
     "mime-types": "^2.1.31",
     "pane-registry": "^2.4.2",
     "profile-pane": "^1.0.1",
-    "rdflib": "^2.2.6",
+    "rdflib": "^2.2.7",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "solid-auth-cli": "^1.0.15",
     "solid-auth-client": "^2.5.6",
     "solid-namespace": "^0.5.1",
     "solid-ui": "^2.4.8",
-    "source-pane": "^2.2.10"
+    "source-pane": "^2.2.11"
   },
   "devDependencies": {
     "@babel/cli": "^7.14.5",
