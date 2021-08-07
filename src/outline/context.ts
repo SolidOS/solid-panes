@@ -1,6 +1,5 @@
 import { DataBrowserContext, LiveStore, PaneRegistry } from 'pane-registry'
 import { getOutliner } from '../index'
-import { solidLogicSingleton } from 'solid-ui'
 import { SolidLogic } from 'solid-logic'
 
 export function createContext (

@@ -66,7 +66,7 @@ module.exports = {
       return store
     }
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     const esc = UI.utils.escapeForXML
     div.setAttribute('class', 'attachPane')
     div.innerHTML =
@@ -238,7 +238,7 @@ module.exports = {
       }
     }
 
-    var linkClicked = function (x, event, inverse, refresh) {
+    const linkClicked = function (x, event, inverse, refresh) {
       let s, o
       if (inverse) {
         // Objectlist
@@ -292,7 +292,7 @@ module.exports = {
       div.appendChild(subjectList)
     }
 
-    var showObject = function (x, event, selected) {
+    const showObject = function (x, event, selected) {
       if (!selected) {
         deselectObject()
         preview.innerHTML = '' // Clean out what is there
@@ -367,7 +367,7 @@ module.exports = {
         }
       }
       let i, b
-      var buttons = []
+      const buttons = []
       for (i = 0; i < labels.length; i++) {
         b = buttons[i] = dom.createElement('td')
         b.textContent = labels[i]
@@ -409,7 +409,7 @@ module.exports = {
       )
     )
 
-    var objectList = UI.widgets.selectorPanel(
+    const objectList = UI.widgets.selectorPanel(
       dom,
       kb,
       objectType,
@@ -428,7 +428,7 @@ module.exports = {
 
     // objectList.insertBefore(head, objectList.firstChild)
 
-    var preview = dom.createElement('div')
+    const preview = dom.createElement('div')
     preview.setAttribute(
       'style',
       /* background-color: black; */ 'padding: 0em; margin: 0;  height: 100%; overflow:scroll;'
@@ -446,7 +446,7 @@ module.exports = {
       for (const storeURI in stores) {
         // var store = findStore(kb,subjects[subjectList.length-1])
         const store = kb.sym(storeURI)
-        var mintBox = dom.createElement('div')
+        const mintBox = dom.createElement('div')
         mintBox.setAttribute(
           'style',
           'clear: left; width: 20em; margin-top:2em; background-color:#ccc; border-radius: 1em; padding: 1em; font-weight: bold;'

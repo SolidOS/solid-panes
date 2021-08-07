@@ -509,6 +509,7 @@ module.exports = {
       }
       this.microblogPane = microblogPane
       const accounts = kb.each(s, FOAF('holdsAccount'))
+      let account
       for (const a in accounts) {
         if (
           kb.whether(accounts[a], RDF('type'), SIOC('User')) &&
@@ -518,7 +519,7 @@ module.exports = {
             SIOCt('Microblog')
           )
         ) {
-          var account = accounts[a]
+          account = accounts[a]
           break
         }
       }
@@ -596,7 +597,7 @@ module.exports = {
             that.notify('You ' + doFollow + username + '.')
           }
         }
-        var followMe = new UI.rdf.Statement(
+        const followMe = new UI.rdf.Statement(
           myUser,
           SIOC('follows'),
           that.creator.sym,
@@ -743,13 +744,13 @@ module.exports = {
           for (const word in words) {
             if (words[word].match(/@\w+/)) {
               const atUser = words[word].replace(/\W/g, '')
-              var recipient = myFollowList.selectUser(atUser)
+              const recipient = myFollowList.selectUser(atUser)
               if (recipient[0] === true) {
                 meta.recipients.push(recipient[1][0])
               } else if (recipient[1].length > 1) {
                 // if  multiple users allow the user to choose
-                var xrecipients = doc.createElement('select')
-                var xrecipientsSubmit = doc.createElement('input')
+                const xrecipients = doc.createElement('select')
+                const xrecipientsSubmit = doc.createElement('input')
                 xrecipientsSubmit.type = 'button'
                 xrecipientsSubmit.value = 'Continue'
                 xrecipientsSubmit.addEventListener(
@@ -806,7 +807,7 @@ module.exports = {
           notify('Please set your microblog first.')
         }
       }
-      var mbLetterCount = function () {
+      const mbLetterCount = function () {
         xupdateStatusCounter.innerHTML = charCount - xupdateStatus.value.length
         xupdateStatusCounter.style.color =
           charCount - xupdateStatus.value.length < 0 ? '#c33' : ''
@@ -834,24 +835,29 @@ module.exports = {
       xnotify.id = 'notify-container'
       xnotify.className = 'notify-container'
       this.xnotify = xnotify
-      var xupdateContainer = doc.createElement('form')
+      const xupdateContainer = doc.createElement('form')
       xupdateContainer.className = 'update-container'
       xupdateContainer.innerHTML = '<h3>What are you up to?</h3>'
+      let xinReplyToContainer
+      let xupdateStatus
+      let xupdateStatusCounter
+      let xupdateSubmit
+      let xcreateNewMB
       if (mb.getMyURI()) {
-        var xinReplyToContainer = doc.createElement('input')
+        xinReplyToContainer = doc.createElement('input')
         xinReplyToContainer.id = 'xinReplyToContainer'
         xinReplyToContainer.type = 'hidden'
 
-        var xupdateStatus = doc.createElement('textarea')
+        xupdateStatus = doc.createElement('textarea')
         xupdateStatus.id = 'xupdateStatus'
 
-        var xupdateStatusCounter = doc.createElement('span')
+        xupdateStatusCounter = doc.createElement('span')
         xupdateStatusCounter.appendChild(doc.createTextNode(charCount))
         xupdateStatus.cols = 30
         xupdateStatus.addEventListener('keyup', mbLetterCount, false)
         xupdateStatus.addEventListener('focus', mbLetterCount, false)
 
-        var xupdateSubmit = doc.createElement('input')
+        xupdateSubmit = doc.createElement('input')
         xupdateSubmit.id = 'xupdateSubmit'
         xupdateSubmit.type = 'submit'
         xupdateSubmit.value = 'Send'
@@ -866,7 +872,7 @@ module.exports = {
           "Hi, it looks like you don't have a microblog, " +
             ' would you like to create one? '
         )
-        var xcreateNewMB = doc.createElement('input')
+        xcreateNewMB = doc.createElement('input')
         xcreateNewMB.type = 'button'
         xcreateNewMB.value = 'Create a new Microblog'
         xcreateNewMB.addEventListener('click', lsCreateNewMB, false)
@@ -882,6 +888,7 @@ module.exports = {
       // user header
       // this.creator
       const creators = kb.each(s, FOAF('holdsAccount'))
+      let creator
       for (const c in creators) {
         if (
           kb.whether(creators[c], RDF('type'), SIOC('User')) &&
@@ -891,13 +898,14 @@ module.exports = {
             SIOCt('Microblog')
           )
         ) {
-          var creator = creators[c]
+          creator = creators[c]
           // var mb = kb.sym(creator.uri.split("#")[0]);
           // UI.store.fetcher.refresh(mb);
           break
           // TODO add support for more than one microblog in same foaf
         }
       }
+      let xfollowButton
       if (creator) {
         this.creator = mb.getUser(creator)
         // ---display avatar, if available ---
@@ -915,7 +923,7 @@ module.exports = {
         subheaderContainer.appendChild(userName)
         // ---display follow button---
         if (!this.thisIsMe && mb.getMyURI()) {
-          var xfollowButton = doc.createElement('input')
+          xfollowButton = doc.createElement('input')
           xfollowButton.setAttribute('type', 'button')
           const followButtonLabel = this.Ifollow ? 'Unfollow ' : 'Follow '
           xfollowButton.value = followButtonLabel + this.creator.name
@@ -1028,8 +1036,8 @@ module.exports = {
       // This has the potential to support a post that replies to many messages.
       const inReplyTo = kb.each(post, SIOC('reply_of'))
       const xreplyTo = doc.createElement('span')
+      let theReply
       for (const reply in inReplyTo) {
-        var theReply
         theReply = String(inReplyTo[reply]).replace(/<|>/g, '')
         const genReplyTo = function () {
           const reply = doc.createElement('a')
@@ -1059,6 +1067,7 @@ module.exports = {
         xinReplyToContainer.value = post.uri
         xupdateSubmit.value = 'Reply'
       }
+      let xconfirmDeletionDialog
       const mbDeletePost = function (evt) {
         const lsconfirmNo = function () {
           doc
@@ -1073,7 +1082,7 @@ module.exports = {
             .removeChild(xconfirmDeletionDialog)
         }
         evt.target.disabled = true
-        var xconfirmDeletionDialog = doc.createElement('li')
+        xconfirmDeletionDialog = doc.createElement('li')
         xconfirmDeletionDialog.className = 'notify conf'
         xconfirmDeletionDialog.innerHTML +=
           '<p>Are you sure you want to delete this post?</p>'
@@ -1103,7 +1112,7 @@ module.exports = {
           .appendChild(xconfirmDeletionDialog)
         confirmno.focus()
 
-        var reallyDelete = function () {
+        const reallyDelete = function () {
           // callback after deletion
           const mbconfirmDeletePost = function (a, success) {
             if (success) {
@@ -1150,18 +1159,21 @@ module.exports = {
           sparqlUpdater.batch_delete_statement(deleteMe, deleteContainerOf)
         }
       }
+      let themaker
+      let xreplyButton
+      let xdeleteButton
       if (mb.getMyURI()) {
         // If the microblog in question does not belong to the user,
         // display the delete post and reply to post buttons.
-        var themaker = kb.any(post, SIOC('has_creator'))
+        themaker = kb.any(post, SIOC('has_creator'))
         if (mb.getMyURI() !== themaker.uri) {
-          var xreplyButton = doc.createElement('input')
+          xreplyButton = doc.createElement('input')
           xreplyButton.type = 'button'
           xreplyButton.value = 'reply'
           xreplyButton.className = 'reply'
           xreplyButton.addEventListener('click', mbReplyTo, false)
         } else {
-          var xdeleteButton = doc.createElement('input')
+          xdeleteButton = doc.createElement('input')
           xdeleteButton.type = 'button'
           xdeleteButton.value = 'Delete'
           xdeleteButton.className = 'reply'
@@ -1187,7 +1199,7 @@ module.exports = {
           myFavorites.remove(favpost, cbFavorite)
         }
       }
-      var xfavorite = doc.createElement('a')
+      const xfavorite = doc.createElement('a')
       xfavorite.innerHTML = '&#9733;'
       xfavorite.addEventListener('click', mbFavorite, false)
       if (myFavorites.favorited(post.uri)) {

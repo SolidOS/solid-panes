@@ -196,11 +196,12 @@ function createApplicationEntry (
   }
 }
 
-function createElement<K extends keyof HTMLElementTagNameMap> (
+function createElement<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   attributes: { [name: string]: string } = {},
-  eventListeners: { [eventName: string]: EventListener } = {},
-  onCreated: null | ((createdElement: HTMLElementTagNameMap[K]) => void) = null
+  eventListeners: { [eventName: string]: globalThis.EventListener } = {},
+  // eslint-disable-next-line no-unused-vars
+  onCreated: null | ((createdElement: globalThis.HTMLElementTagNameMap[K]) => void) = null
 ) {
   const element = document.createElement(elementName)
   if (onCreated) {
@@ -215,7 +216,7 @@ function createElement<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-export function createContainer<K extends keyof HTMLElementTagNameMap> (
+export function createContainer<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   children: HTMLElement[],
   attributes = {},
@@ -232,7 +233,7 @@ export function createContainer<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-export function createText<K extends keyof HTMLElementTagNameMap> (
+export function createText<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   textContent: string | null,
   attributes = {},

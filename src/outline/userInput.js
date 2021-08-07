@@ -209,8 +209,8 @@ module.exports = function UserInput (outline) {
         }
         switch (fromCode) {
           case 'predicates':
-          case 'objects':
-            var allArray = outline.clipboard.all
+          case 'objects': {
+            const allArray = outline.clipboard.all
             for (let i = 0; true; i++) {
               if (term.sameTerm(allArray[i])) {
                 allArray.splice(i, 1)
@@ -218,6 +218,7 @@ module.exports = function UserInput (outline) {
               }
             }
             break
+          }
           case 'all':
             throw new Error(
               'hostorical code not understood - what is theCollection?'
@@ -243,12 +244,13 @@ module.exports = function UserInput (outline) {
           term = termFrom('objects')
           if (!term) return
           break
-        case 'selected': // header <TD>, undetermined generated
-          var returnArray = termFrom('all')
+        case 'selected': { // header <TD>, undetermined generated
+          const returnArray = termFrom('all')
           if (!returnArray) return
           term = returnArray[0]
           this.insertTermTo(selectedTd, term, returnArray[1])
           return
+        }
       }
       this.insertTermTo(selectedTd, term)
     },
@@ -316,16 +318,19 @@ module.exports = function UserInput (outline) {
       const target = selectedTd
       const about = this.getStatementAbout(target) // timbl - to avoid alert from random clicks
       if (!about) return
+      let obj
+      let trNode
       try {
-        var obj = UI.utils.getTerm(target)
-        var trNode = UI.utils.ancestor(target, 'TR')
+        obj = UI.utils.getTerm(target)
+        trNode = UI.utils.ancestor(target, 'TR')
       } catch (e) {
         UI.log.warn('userinput.js: ' + e + UI.utils.getAbout(kb, selectedTd))
         UI.log.error(target + ' getStatement Error:' + e)
       }
 
+      let tdNode
       try {
-        var tdNode = trNode.lastChild
+        tdNode = trNode.lastChild
       } catch (e) {
         UI.log.error(e + '@' + target)
       }
@@ -414,17 +419,23 @@ module.exports = function UserInput (outline) {
 
     /* goes here when either this is a literal or escape from menu and then input text */
     clearInputAndSave: function clearInputAndSave (e) {
+      let obj
       if (!this.lastModified) return
       if (!this.lastModified.isNew) {
         try {
-          var obj = this.getStatementAbout(this.lastModified).object
+          obj = this.getStatementAbout(this.lastModified).object
         } catch (e) {
           return
         }
       }
       let s = this.lastModifiedStat // when 'isNew' this is set at addNewObject()
 
+      let defaultpropview
+      let trNode
+      let reqTerm
+      let preStat
       if (this.lastModified.value !== this.lastModified.defaultValue) {
+        let trCache
         if (this.lastModified.value === '') {
           // ToDo: remove this
           this.lastModified.value = this.lastModified.defaultValue
@@ -438,8 +449,8 @@ module.exports = function UserInput (outline) {
             s.why
           )
           // TODO: DEFINE ERROR CALLBACK
-          var defaultpropview = this.views.defaults[s.predicate.uri]
-          var trCache = UI.utils.ancestor(this.lastModified, 'TR')
+          defaultpropview = this.views.defaults[s.predicate.uri]
+          trCache = UI.utils.ancestor(this.lastModified, 'TR')
           try {
             UI.store.updater.update([], [s], function (
               uri,
@@ -478,13 +489,13 @@ module.exports = function UserInput (outline) {
           }
           let s1, s2, s3
           switch (obj.termType) {
-            case 'Literal':
+            case 'Literal': {
               // generate path and nailing from current values
 
               // TODO: DEFINE ERROR CALLBACK
-              var valueCache = this.lastModified.value
+              const valueCache = this.lastModified.value
               trCache = UI.utils.ancestor(this.lastModified, 'TR')
-              var oldValue = this.lastModified.defaultValue
+              const oldValue = this.lastModified.defaultValue
               s2 = $rdf.st(
                 s.subject,
                 s.predicate,
@@ -517,9 +528,10 @@ module.exports = function UserInput (outline) {
               // obj.value=this.lastModified.value;
               // UserInputFormula.statements.push(s);
               break
-            case 'BlankNode': // a request refill with text
+            }
+            case 'BlankNode': { // a request refill with text
               // var newStat
-              var textTerm = kb.literal(this.lastModified.value, '')
+              const textTerm = kb.literal(this.lastModified.value, '')
               // <Feature about="labelChoice">
               if (s.predicate.termType === 'Collection') {
                 // case: add triple   ????????? Weird - tbl
@@ -602,15 +614,16 @@ module.exports = function UserInput (outline) {
                 return // The new Td is already generated by fillInRequest, so it's done.
               }
               break
+            }
           }
         }
       } else if (this.lastModified.isNew) {
         // generate 'Request', there is no way you can input ' (Please Input) '
-        var trNode = UI.utils.ancestor(this.lastModified, 'TR')
-        var reqTerm = this.generateRequest(
+        trNode = UI.utils.ancestor(this.lastModified, 'TR')
+        reqTerm = this.generateRequest(
           '(To be determined. Re-type of drag an object onto this field)'
         )
-        var preStat = trNode.previousSibling.AJAR_statement // the statement of the same predicate
+        preStat = trNode.previousSibling.AJAR_statement // the statement of the same predicate
         this.formUndetStat(
           trNode,
           preStat.subject,
@@ -760,10 +773,11 @@ module.exports = function UserInput (outline) {
           trIterator.childNodes.length === 1;
           trIterator = trIterator.previousSibling
         );
+        let predicateTd
         if (trIterator === removedTr) {
           const theNext = trIterator.nextSibling
           if (theNext.nextSibling && theNext.childNodes.length === 1) {
-            var predicateTd = trIterator.firstChild
+            predicateTd = trIterator.firstChild
             predicateTd.setAttribute(
               'rowspan',
               parseInt(predicateTd.getAttribute('rowspan')) - 1
@@ -836,9 +850,11 @@ module.exports = function UserInput (outline) {
     },
 
     insertTermTo: function insertTermTo (selectedTd, term, isObject) {
+      let defaultpropview
+      let preStat
       switch (selectedTd.className) {
         case 'undetermined selected':
-          var defaultpropview = this.views.defaults[
+          defaultpropview = this.views.defaults[
             selectedTd.parentNode.AJAR_statement.predicate.uri
           ]
           this.fillInRequest(
@@ -847,13 +863,13 @@ module.exports = function UserInput (outline) {
             term
           )
           break
-        case 'pred selected': // paste objects into this predicate
-          var insertTr = this.appendToPredicate(selectedTd)
-          var preStat = selectedTd.parentNode.AJAR_statement
+        case 'pred selected': { // paste objects into this predicate
+          const insertTr = this.appendToPredicate(selectedTd)
+          preStat = selectedTd.parentNode.AJAR_statement
           defaultpropview = this.views.defaults[preStat.predicate.uri]
           insertTr.appendChild(outline.outlineObjectTD(term, defaultpropview))
           // modify store and update here
-          var isInverse = selectedTd.parentNode.AJAR_inverse
+          const isInverse = selectedTd.parentNode.AJAR_inverse
           if (!isInverse) {
             insertTr.AJAR_statement = kb.add(
               preStat.subject,
@@ -897,10 +913,10 @@ module.exports = function UserInput (outline) {
           insertTr.AJAR_inverse = isInverse
           UserInputFormula.statements.push(insertTr.AJAR_statement)
           break
-
-        case 'selected': // header <TD>, undetermined generated
-          var paneDiv = UI.utils.ancestor(selectedTd, 'TABLE').lastChild
-          var newTr = paneDiv.insertBefore(
+        }
+        case 'selected': { // header <TD>, undetermined generated
+          const paneDiv = UI.utils.ancestor(selectedTd, 'TABLE').lastChild
+          const newTr = paneDiv.insertBefore(
             myDocument.createElement('tr'),
             paneDiv.lastChild
           )
@@ -945,6 +961,7 @@ module.exports = function UserInput (outline) {
             this.startFillInText(newTr.lastChild)
           }
           break
+        }
       }
     },
 
@@ -954,6 +971,9 @@ module.exports = function UserInput (outline) {
       let predicateQuery
       if (isPredicate) {
         // predicateTd
+        let subject
+        let subjectClass
+        let sparqlText
         if (selectedTd.nextSibling.className === 'undetermined') {
           /* Make set of proprties to propose for a predicate.
             The  naive approach is to take those which have a class
@@ -980,12 +1000,12 @@ module.exports = function UserInput (outline) {
                    ?pred rdfs:domain ?subjectClass.
                 }
             */
-          var subject = UI.utils.getAbout(
+          subject = UI.utils.getAbout(
             kb,
             UI.utils.ancestor(selectedTd, 'TABLE').parentNode
           )
-          var subjectClass = kb.any(subject, rdf('type'))
-          var sparqlText = []
+          subjectClass = kb.any(subject, rdf('type'))
+          sparqlText = []
           const endl = '.\n'
           sparqlText[0] =
             'SELECT ?pred WHERE{\n?pred ' +
@@ -1418,18 +1438,20 @@ module.exports = function UserInput (outline) {
       this.className = 'bottom-border-active'
       if (this._tabulatorMode === 1) {
         switch (UI.utils.getTarget(e).tagName) {
-          case 'TD':
-            var preTd = UI.utils.getTarget(e)
+          case 'TD': {
+            const preTd = UI.utils.getTarget(e)
             if (preTd.className === 'pred') preTd.style.cursor = 'copy'
             break
+          }
           // Uh...I think I might have to give up this
-          case 'DIV':
-            var border = UI.utils.getTarget(e)
+          case 'DIV': {
+            const border = UI.utils.getTarget(e)
             if (UI.utils.getTarget(e).className === 'bottom-border') {
               border.style.borderColor = 'rgb(100%,65%,0%)'
               border.style.cursor = 'copy'
             }
             break
+          }
           default:
         }
       }
@@ -1479,8 +1501,9 @@ module.exports = function UserInput (outline) {
       if (!trNode) {
         throw new Error('No ancestor TR for the TD we clicked on:' + something)
       }
+      let statement
       try {
-        var statement = trNode.AJAR_statement
+        statement = trNode.AJAR_statement
       } catch (e) {
         throw new Error(
           'No AJAR_statement!' +
@@ -1761,9 +1784,10 @@ module.exports = function UserInput (outline) {
       table.addEventListener('mouseover', highlightTr, false)
 
       // setting for action after selecting item
+      let selectItem
       switch (menuType) {
         case 'DidYouMeanDialog':
-          var selectItem = function selectItem (e) {
+          selectItem = function selectItem (e) {
             qp('DID YOU MEAN SELECT ITEM!!!!!')
             const target = UI.utils.ancestor(UI.utils.getTarget(e), 'TR')
             if (target.childNodes.length === 2 && target.nextSibling) {
@@ -1775,8 +1799,8 @@ module.exports = function UserInput (outline) {
             }
           }
           break
-        case 'LimitedPredicateChoice':
-          var clickedTd = extraInformation.clickedTd
+        case 'LimitedPredicateChoice': {
+          const clickedTd = extraInformation.clickedTd
           selectItem = function selectItem (e) {
             qp('LIMITED P SELECT ITEM!!!!')
             const selectedPredicate = UI.utils.getAbout(kb, UI.utils.getTarget(e))
@@ -1800,14 +1824,15 @@ module.exports = function UserInput (outline) {
             This.lastModified.select()
           }
           break
+        }
         case 'PredicateAutoComplete':
         case 'GeneralAutoComplete':
         case 'GeneralPredicateChoice':
         case 'JournalTitleAutoComplete': // hql
-        case 'TypeChoice':
+        case 'TypeChoice': {
           // Clickable menu
-          var isPredicate = extraInformation.isPredicate
-          var selectedTd = extraInformation.selectedTd
+          const isPredicate = extraInformation.isPredicate
+          const selectedTd = extraInformation.selectedTd
           selectItem = function selectItem (e) {
             qp('WOOHOO')
             const inputTerm = UI.utils.getAbout(kb, UI.utils.getTarget(e))
@@ -1837,6 +1862,7 @@ module.exports = function UserInput (outline) {
             }
           }
           break
+        }
         default:
           throw new Error('userinput: unexpected mode')
       }
@@ -1898,18 +1924,23 @@ module.exports = function UserInput (outline) {
         e.stopPropagation()
       }
       let inputText
+      let bnodeTerm
+      let IDpredicate
+      let IDterm
+      let tr
+      let th
       switch (menuType) {
-        case 'DidYouMeanDialog':
-          var dialogTerm = extraInformation.dialogTerm
-          var bnodeTerm = extraInformation.bnodeTerm
+        case 'DidYouMeanDialog': {
+          const dialogTerm = extraInformation.dialogTerm
+          bnodeTerm = extraInformation.bnodeTerm
           // have to do style instruction passing
           menu.style.width = 'auto'
 
-          var h1 = table.appendChild(myDocument.createElement('tr'))
-          var h1th = h1.appendChild(myDocument.createElement('th'))
+          const h1 = table.appendChild(myDocument.createElement('tr'))
+          const h1th = h1.appendChild(myDocument.createElement('th'))
           h1th.appendChild(myDocument.createTextNode('Did you mean...'))
-          var plist = kb.statementsMatching(dialogTerm)
-          var i
+          const plist = kb.statementsMatching(dialogTerm)
+          let i
           for (i = 0; i < plist.length; i++) {
             if (
               kb.whether(
@@ -1921,28 +1952,28 @@ module.exports = function UserInput (outline) {
               break
             }
           }
-          var IDpredicate = plist[i].predicate
-          var IDterm = kb.any(dialogTerm, plist[i].predicate)
-          var text =
+          const IDpredicate = plist[i].predicate
+          const IDterm = kb.any(dialogTerm, plist[i].predicate)
+          const text =
             UI.utils.label(dialogTerm) +
             ' who has ' +
             UI.utils.label(IDpredicate) +
             ' ' +
             IDterm +
             '?'
-          var h2 = table.appendChild(myDocument.createElement('tr'))
-          var h2th = h2.appendChild(myDocument.createElement('th'))
+          const h2 = table.appendChild(myDocument.createElement('tr'))
+          const h2th = h2.appendChild(myDocument.createElement('th'))
           h2th.appendChild(myDocument.createTextNode(text))
           h1th.setAttribute('colspan', '2')
           h2th.setAttribute('colspan', '2')
-          var ans1 = table.appendChild(myDocument.createElement('tr'))
+          const ans1 = table.appendChild(myDocument.createElement('tr'))
           ans1
             .appendChild(myDocument.createElement('th'))
             .appendChild(myDocument.createTextNode('Yes'))
           ans1
             .appendChild(myDocument.createElement('td'))
             .appendChild(myDocument.createTextNode('BOOLEAN'))
-          var ans2 = table.appendChild(myDocument.createElement('tr'))
+          const ans2 = table.appendChild(myDocument.createElement('tr'))
           ans2
             .appendChild(myDocument.createElement('th'))
             .appendChild(myDocument.createTextNode('No'))
@@ -1950,6 +1981,7 @@ module.exports = function UserInput (outline) {
             .appendChild(myDocument.createElement('td'))
             .appendChild(myDocument.createTextNode('BOOLEAN'))
           break
+        }
         case 'PredicateAutoComplete': // Prompt user  for possible relationships for new data
           inputText = extraInformation.inputText
           /*   The labeller functionality code ahs been lost or dropped -- reinstate this? */
@@ -1989,7 +2021,7 @@ module.exports = function UserInput (outline) {
             addMenuItem(entries[i][1])
           }
           break
-        case 'GeneralAutoComplete':
+        case 'GeneralAutoComplete': {
           inputText = extraInformation.inputText
           try {
             results = outline.labeller.search(inputText)
@@ -2003,7 +2035,7 @@ module.exports = function UserInput (outline) {
             )
           }
           entries = results[0] // [label, subject,priority]
-          var types = results[1]
+          const types = results[1]
           if (entries.length === 0) {
             console.log('cm length 0\n') // hq
             this.clearMenu()
@@ -2014,9 +2046,9 @@ module.exports = function UserInput (outline) {
             // console.log("\nGEN ENTRIES["+i+"] = "+entries[i]+"\n");//hq
             const thisNT = entries[i][1].toNT()
             // console.log("thisNT="+thisNT+"\n");
-            var tr = table.appendChild(myDocument.createElement('tr'))
+            tr = table.appendChild(myDocument.createElement('tr'))
             tr.setAttribute('about', thisNT)
-            var th = tr.appendChild(myDocument.createElement('th'))
+            th = tr.appendChild(myDocument.createElement('th'))
             th.appendChild(myDocument.createElement('div')).appendChild(
               myDocument.createTextNode(entries[i][0])
             )
@@ -2045,7 +2077,8 @@ module.exports = function UserInput (outline) {
                 }
                 */
           break
-        case 'JournalTitleAutoComplete': // hql
+        }
+        case 'JournalTitleAutoComplete': { // hql
           // HEART OF JOURNAL TITLE AUTOCOMPLETE
 
           // extraInformatin is from above getAutoCompleteHandler
@@ -2054,9 +2087,9 @@ module.exports = function UserInput (outline) {
           console.log('\n===start JournalTitleAutoComplete\n')
 
           // Gets all the URI's with type Journal in the knowledge base
-          var juris = kb.each(undefined, rdf('type'), bibo('Journal'))
+          const juris = kb.each(undefined, rdf('type'), bibo('Journal'))
 
-          var matchedtitle = [] // debugging display before inserts into menu
+          const matchedtitle = [] // debugging display before inserts into menu
 
           for (let i = 0; i < juris.length; i++) {
             const juri = juris[i]
@@ -2090,17 +2123,19 @@ module.exports = function UserInput (outline) {
 
           console.log("\\\\done showMenu's JTAutocomplete\n")
           break
-        case 'LimitedPredicateChoice':
-          var choiceTerm = UI.utils.getAbout(kb, extraInformation.clickedTd)
+        }
+        case 'LimitedPredicateChoice': {
+          const choiceTerm = UI.utils.getAbout(kb, extraInformation.clickedTd)
           // because getAbout relies on kb.fromNT, which does not deal with
           // the 'Collection' termType. This termType is ambiguous anyway.
           choiceTerm.termType = 'Collection'
-          var choices = kb.each(choiceTerm, UI.ns.link('element'))
+          const choices = kb.each(choiceTerm, UI.ns.link('element'))
           for (let i = 0; i < choices.length; i++) {
             addMenuItem(choices[i])
           }
           break
-        default:
+        }
+        default: {
           tr = table.appendChild(myDocument.createElement('tr'))
           tr.className = 'no-suggest'
           th = tr.appendChild(myDocument.createElement('th'))
@@ -2115,7 +2150,7 @@ module.exports = function UserInput (outline) {
           // var This = this
           tr.addEventListener('click', clearMenu, 'false')
 
-          var nullFetcher = function () {}
+          const nullFetcher = function () {}
           switch (inputQuery.constructor.name) {
             case 'Array':
               for (let i = 0; i < inputQuery.length; i++) {
@@ -2132,6 +2167,7 @@ module.exports = function UserInput (outline) {
             default:
               kb.query(inputQuery, addPredicateChoice(inputQuery), nullFetcher)
           }
+        }
       }
     }, // funciton showMenu
 

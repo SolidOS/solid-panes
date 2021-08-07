@@ -35,7 +35,7 @@ const paneDef: PaneDefinition = {
     const newInstance = (newPaneOptions.newInstance =
       newPaneOptions.newInstance ||
       store.sym(newPaneOptions.newBase + 'index.ttl#this'))
-    // var newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
+    // const newInstance = kb.sym(newBase + 'pad.ttl#thisPad');
     const newPadDoc = newInstance.doc()
 
     store.add(newInstance, ns.rdf('type'), ns.pad('Notepad'), newPadDoc)
@@ -94,7 +94,7 @@ const paneDef: PaneDefinition = {
 
     // Access control
 
-    // Two variations of ACL for this app, public read and public read/write
+    // Two constiations of ACL for this app, public read and public read/write
     // In all cases owner has read write control
     const genACLtext = function (
       docURI: string,
@@ -200,7 +200,7 @@ const paneDef: PaneDefinition = {
     }
 
     // Option of either using the workspace system or just typing in a URI
-    var showBootstrap = function showBootstrap (
+    const showBootstrap = function showBootstrap (
       thisInstance: any,
       container: HTMLElement,
       noun: string
@@ -243,7 +243,7 @@ const paneDef: PaneDefinition = {
     }
 
     //  Create new document files for new instance of app
-    var initializeNewInstanceInWorkspace = function (ws: NamedNode) {
+    const initializeNewInstanceInWorkspace = function (ws: NamedNode) {
       // @@ TODO Clean up type for newBase
       let newBase: any = store.any(ws, ns.space('uriPrefix'))
       if (!newBase) {
@@ -261,7 +261,7 @@ const paneDef: PaneDefinition = {
       initializeNewInstanceAtBase(thisInstance, newBase)
     }
 
-    var initializeNewInstanceAtBase = function (
+    const initializeNewInstanceAtBase = function (
       thisInstance: any,
       newBase: string
     ) {
@@ -498,20 +498,20 @@ const paneDef: PaneDefinition = {
     }
 
     //  Body of Pane
-    var appPathSegment = 'app-pad.timbl.com' // how to allocate this string and connect to
+    const appPathSegment = 'app-pad.timbl.com' // how to allocate this string and connect to
 
     const fetcher = store.fetcher
     const updater = store.updater
     let me: any
 
-    var PAD = Namespace('http://www.w3.org/ns/pim/pad#')
+    const PAD = Namespace('http://www.w3.org/ns/pim/pad#')
 
-    var thisInstance = subject
-    var padDoc = subject.doc()
+    const thisInstance = subject
+    const padDoc = subject.doc()
 
     let padEle
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
 
     //  Build the DOM
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
@@ -526,19 +526,19 @@ const paneDef: PaneDefinition = {
     naviLoginoutTR.appendChild(dom.createElement('td'))
 
     const naviTop = structure.appendChild(dom.createElement('tr')) // stuff
-    var naviMain = naviTop.appendChild(dom.createElement('td'))
+    const naviMain = naviTop.appendChild(dom.createElement('td'))
     naviMain.setAttribute('colspan', '3')
 
     const naviMiddle = structure.appendChild(dom.createElement('tr')) // controls
     const naviMiddle1 = naviMiddle.appendChild(dom.createElement('td'))
-    var naviMiddle2 = naviMiddle.appendChild(dom.createElement('td'))
-    var naviMiddle3 = naviMiddle.appendChild(dom.createElement('td'))
+    const naviMiddle2 = naviMiddle.appendChild(dom.createElement('td'))
+    const naviMiddle3 = naviMiddle.appendChild(dom.createElement('td'))
 
     const naviStatus = structure.appendChild(dom.createElement('tr')) // status etc
     const statusArea = naviStatus.appendChild(dom.createElement('div'))
 
     const naviSpawn = structure.appendChild(dom.createElement('tr')) // create new
-    var spawnArea = naviSpawn.appendChild(dom.createElement('div'))
+    const spawnArea = naviSpawn.appendChild(dom.createElement('div'))
 
     const naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.setAttribute('class', 'naviMenu')
@@ -547,7 +547,7 @@ const paneDef: PaneDefinition = {
     naviMenu.appendChild(dom.createElement('td'))
     naviMenu.appendChild(dom.createElement('td'))
 
-    var options: any = { statusArea: statusArea, timingArea: naviMiddle1 }
+    const options: any = { statusArea: statusArea, timingArea: naviMiddle1 }
 
     loadPadData()
 

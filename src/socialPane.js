@@ -158,8 +158,8 @@ module.exports = {
 
     // ////////// Body of render():
 
-    var outliner = context.getOutliner(dom)
-    var kb = context.session.store
+    const outliner = context.getOutliner(dom)
+    const kb = context.session.store
     const div = dom.createElement('div')
     div.setAttribute('class', 'socialPane')
     const foaf = UI.ns.foaf
@@ -182,7 +182,7 @@ module.exports = {
     tools.style.cssText = navBlockStyle
     const mainTable = middle.appendChild(dom.createElement('table'))
     mainTable.style.cssText = mainBlockStyle
-    var tips = right
+    const tips = right
     tips.style.cssText = navBlockStyle
 
     // Image top left
@@ -226,6 +226,8 @@ module.exports = {
     // Do I have a public profile document?
     let profile = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
     let editable = false
+    let incoming
+    let outgoing
     if (me) {
       // The definition of FAF personal profile document is ..
       const works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
@@ -273,8 +275,8 @@ module.exports = {
         tools.appendChild(h3)
 
         const cme = kb.canon(me)
-        var incoming = kb.whether(s, knows, cme)
-        var outgoing = false
+        incoming = kb.whether(s, knows, cme)
+        outgoing = false
         const outgoingSt = kb.statementsMatching(cme, knows, s)
         if (outgoingSt.length) {
           outgoing = true
@@ -427,7 +429,7 @@ module.exports = {
         }
         items.sort()
         let last = null
-        var fr
+        let fr
         for (let j7 = 0; j7 < items.length; j7++) {
           fr = items[j7][1]
           if (fr.sameTerm(last)) continue // unique
@@ -471,7 +473,7 @@ module.exports = {
         }
         uris.sort()
         let last2 = ''
-        var lab2
+        let lab2
         for (let k = 0; k < uris.length; k++) {
           const uri = uris[k]
           if (uri === last2) continue // uniques only

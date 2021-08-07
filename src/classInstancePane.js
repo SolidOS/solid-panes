@@ -34,7 +34,7 @@ module.exports = {
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
     }
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     div.setAttribute('class', 'instancePane')
     div.setAttribute(
       'style',

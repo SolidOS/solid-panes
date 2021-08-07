@@ -114,6 +114,7 @@ module.exports = {
       img.setAttribute('style', 'max-width: 560; max-height: 315;')
     }
 
+    let descDiv
     if (index) {
       const sl = kb.statementsMatching(
         null,
@@ -127,7 +128,7 @@ module.exports = {
       }
 
       index = parseInt(index.value, 10)
-      var descDiv = myDocument.createElement('div')
+      descDiv = myDocument.createElement('div')
 
       const pIndex =
         slots[(slots.indexOf(index) - 1 + slots.length) % slots.length]

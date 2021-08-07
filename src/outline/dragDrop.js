@@ -256,7 +256,7 @@ dragAndDrop.util.DDM = (function DDM () {
 // 2.Investigate into Gecko drag and drop
 // 3.Cross Tag Drag And Drop
 // 4.Firefox native rdf store
-var TabulatorOutlinerObserver = {
+const TabulatorOutlinerObserver = {
   onDrop: function (e, aXferData, _dragSession) {
     const selection = UI.utils.ancestor(
       UI.utils.ancestor(e.originalTarget, 'TABLE').parentNode,
@@ -291,8 +291,9 @@ var TabulatorOutlinerObserver = {
 
   onDragEnter: function (e, _dragSession) {
     // enter or exit something
+    let selection
     try {
-      var selection = UI.utils.ancestor(
+      selection = UI.utils.ancestor(
         UI.utils.ancestor(e.originalTarget, 'TABLE').parentNode,
         'TABLE'
       ).outline.selection

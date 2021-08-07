@@ -58,8 +58,9 @@ module.exports = {
     const t = kb.findTypeURIs(subject)
 
     let store = null
+    let docuri
     if (subject.uri) {
-      var docuri = $rdf.Util.uri.docpart(subject.uri)
+      docuri = $rdf.Util.uri.docpart(subject.uri)
       if (subject.uri !== docuri && kb.updater.editable(docuri)) {
         store = kb.sym($rdf.Util.uri.docpart(subject.uri))
       } // an editable ontology with hash

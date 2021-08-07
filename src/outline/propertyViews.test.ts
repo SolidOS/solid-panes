@@ -1,7 +1,6 @@
 /* eslint-env jest */
 import { sym } from 'rdflib'
 import propertyViews from './propertyViews'
-import viewAsImage from './viewAsImage'
 
 describe('property views', () => {
   it.each([
@@ -11,7 +10,6 @@ describe('property views', () => {
     'http://xmlns.com/foaf/0.1/logo',
     'http://schema.org/image'
   ])('renders %s as image', (property) => {
-    const asImage = viewAsImage(document)
     const views = propertyViews(document)
     const view = views.defaults[property]
     const result = view(sym('https://pod.example/img.jpg'))
@@ -22,7 +20,6 @@ describe('property views', () => {
   it.each([
     'http://xmlns.com/foaf/0.1/mbox'
   ])('renders %s as anchor', (property) => {
-    const asImage = viewAsImage(document)
     const views = propertyViews(document)
     const view = views.defaults[property]
     const result = view(sym('mailto:alice@mail.example'))

@@ -1614,6 +1614,7 @@ export default function (context) {
 
     if (UI.utils.getTarget(e).tagName === 'INPUT') return
 
+    let walk
     switch (e.keyCode) {
       case 46: // delete
       case 8: // backspace
@@ -1624,18 +1625,18 @@ export default function (context) {
           this.UserInput.Delete(selectedTd)
         }
         break
-      case 37: // left
+      case 37: { // left
         if (this.walk('left')) return
-        var titleTd = UI.utils.ancestor(selectedTd.parentNode, 'TD')
+        const titleTd = UI.utils.ancestor(selectedTd.parentNode, 'TD')
         outlineCollapse(selectedTd, UI.utils.getAbout(kb, titleTd))
         break
+      }
       case 39: // right
         // @@ TODO: Write away the need for exception on next line
         // eslint-disable-next-line no-case-declarations
         const obj = UI.utils.getAbout(kb, selectedTd)
         if (obj) {
-          var walk = this.walk
-
+          walk = this.walk
           if (selectedTd.nextSibling) {
             // when selectedTd is a predicate
             this.walk('right')
@@ -2084,7 +2085,7 @@ export default function (context) {
     }
 
     for (let i = 0; i < returnConditions.length; i++) {
-      var returnCode
+      let returnCode
       if (returnCode === returnConditions[i](subject)) {
         render()
         UI.log.debug('outline 1815')
@@ -2131,7 +2132,8 @@ export default function (context) {
   function outlineCollapse (p, subject) {
     let row = UI.utils.ancestor(p, 'TR')
     row = UI.utils.ancestor(row.parentNode, 'TR') // two levels up
-    if (row) var statement = row.AJAR_statement
+    let statement
+    if (row) statement = row.AJAR_statement
     let level // find level (the enclosing TD)
     for (
       level = p.parentNode;
@@ -2151,8 +2153,9 @@ export default function (context) {
       myview = views.defaults[statement.predicate.uri]
     }
     UI.log.debug('view= ' + myview)
+    let deleteNode
     if (level.parentNode.parentNode.id === 'outline') {
-      var deleteNode = level.parentNode
+      deleteNode = level.parentNode
     }
     thisOutline.replaceTD(
       thisOutline.outlineObjectTD(subject, myview, deleteNode, statement),
@@ -2285,7 +2288,7 @@ export default function (context) {
   //
   // / /////////////////////////////////////////////////////
 
-  var ns = UI.ns
+  const ns = UI.ns
 
   const views = propertyViews(dom)
 
