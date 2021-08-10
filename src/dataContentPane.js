@@ -177,7 +177,7 @@ module.exports = {
             .statementsAsTables(obj.statements, context)
           res.setAttribute('class', 'nestedFormula')
           return res
-        case 'constiable':
+        case 'Variable':
           res = myDocument.createTextNode('?' + obj.uri)
           return res
       }
