@@ -3,7 +3,7 @@ import { getOutliner } from '../src'
 const Pane = require('./pane').default
 const $rdf = require('rdflib')
 const UI = require('solid-ui')
-const SolidAuth = require('solid-auth-client')
+const ClientAuthn = require('@inrupt/solid-client-authn-browser')
 
 // FIXME:
 window.$rdf = $rdf

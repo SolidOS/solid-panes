@@ -12,7 +12,10 @@ module.exports = [{
     new HtmlWebpackPlugin({ template: './dev/index.html' })
   ],
   resolve: {
-    extensions: ['.mjs', '.js', '.ts']
+    extensions: ['.mjs', '.js', '.ts'],
+    fallback: {
+      path: require.resolve('path-browserify')
+    }
   },
   module: {
     rules: [
