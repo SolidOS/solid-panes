@@ -1,4 +1,3 @@
-import { SolidSession } from '../types'
 import { authn, icons, store } from 'solid-ui'
 import { Fetcher, NamedNode, sym } from 'rdflib'
 import { generateHomepage } from './homepage'
@@ -16,11 +15,20 @@ export const dashboardPane: PaneDefinition = {
   render: (subject, context) => {
     const dom = context.dom
     const container = dom.createElement('div')
-    authn.solidAuthClient.trackSession(async (session: SolidSession) => {
+    authn.authSession.onLogin(() => {
       container.innerHTML = ''
       buildPage(
         container,
-        session ? sym(session.webId) : null,
+        authn.authSession.info.webId ? sym(authn.authSession.info.webId) : null,
+        context,
+        subject
+      )
+    })
+    authn.authSession.onSessionRestore(() => {
+      container.innerHTML = ''
+      buildPage(
+        container,
+        authn.authSession.info.webId ? sym(authn.authSession.info.webId) : null,
         context,
         subject
       )

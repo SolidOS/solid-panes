@@ -3,7 +3,6 @@ import { getOutliner } from '../src'
 const Pane = require('./pane').default
 const $rdf = require('rdflib')
 const UI = require('solid-ui')
-const ClientAuthn = require('@inrupt/solid-client-authn-browser')
 
 // FIXME:
 window.$rdf = $rdf
@@ -57,8 +56,10 @@ window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
   paneRegistry.register(require('contacts-pane'))
-
-  const session = await ClientAuthn.getDefaultSession()
+  await UI.authn.authSession.handleIncomingRedirect({
+    restorePreviousSession: true
+  })
+  const session = await UI.authn.authSession
   if (!session.info.isLoggedIn) {
     console.log('The user is not logged in')
     document.getElementById('loginBanner').innerHTML =
@@ -73,14 +74,14 @@ window.onload = async () => {
   renderPane()
 }
 window.logout = () => {
-  SolidAuth.logout()
+  UI.authn.authSession.logout()
   window.location = ''
 }
 window.login = async function () {
-  const session = await ClientAuthn.getDefaultSession()
+  const session = await UI.authn.authSession
   if (!session.info.isLoggedIn) {
     const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
-    await ClientAuthn.login({
+    await UI.authn.authSession.login({
       oidcIssuer: issuer,
       redirectUrl: window.location.href,
       clientName: 'Solid Panes Dev Loader'
