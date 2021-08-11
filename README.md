@@ -57,7 +57,7 @@ git clone https://github.com/solid/solid-panes
 cd solid-panes
 npm install
 npm run build-version
-npx webpack-dev-server
+npx webpack serve
 ```
 2. open your browser at http://localhost:9000
 3. edit `dev/pane/index.ts` and change the color string constant at the end of line 61.

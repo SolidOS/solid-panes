@@ -53,35 +53,38 @@ document.addEventListener('DOMContentLoaded', () => {
   )
 })
 
-window.onload = () => {
+window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
   paneRegistry.register(require('contacts-pane'))
 
-  SolidAuth.trackSession((session) => {
-    if (!session) {
-      console.log('The user is not logged in')
-      document.getElementById('loginBanner').innerHTML =
-        '<button onclick="popupLogin()">Log in</button>'
-    } else {
-      console.log(`Logged in as ${session.webId}`)
+  const session = await ClientAuthn.getDefaultSession()
+  if (!session.info.isLoggedIn) {
+    console.log('The user is not logged in')
+    document.getElementById('loginBanner').innerHTML =
+      '<button onclick="login()">Log in</button>'
+  } else {
+    console.log(`Logged in as ${session.info.webId}`)
 
-      document.getElementById(
-        'loginBanner'
-      ).innerHTML = `Logged in as ${session.webId} <button onclick="logout()">Log out</button>`
-    }
-  })
+    document.getElementById(
+      'loginBanner'
+    ).innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`
+  }
   renderPane()
 }
 window.logout = () => {
   SolidAuth.logout()
   window.location = ''
 }
-window.popupLogin = async function () {
-  let session = await SolidAuth.currentSession()
-  const popupUri = 'https://solidcommunity.net/common/popup.html'
-  if (!session) {
-    session = await SolidAuth.popupLogin({ popupUri })
+window.login = async function () {
+  const session = await ClientAuthn.getDefaultSession()
+  if (!session.info.isLoggedIn) {
+    const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
+    await ClientAuthn.login({
+      oidcIssuer: issuer,
+      redirectUrl: window.location.href,
+      clientName: 'Solid Panes Dev Loader'
+    })
   }
 };
 (window as any).renderPane = renderPane
