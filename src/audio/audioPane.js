@@ -84,7 +84,7 @@ module.exports = {
       trackRow.textContent = decode(removeExtension(a[2]))
     }
 
-    var moveOn = function (current, level) {
+    const moveOn = function (current, level) {
       return new Promise(function (resolve) {
         level = level || 0
         if (!options.chain) return resolve(null)
@@ -132,7 +132,7 @@ module.exports = {
     const endedListener = function (event) {
       const current = kb.sym(event.target.getAttribute('src'))
       if (!options.chain) return
-      var tryNext = function (cur) {
+      const tryNext = function (cur) {
         const current = cur
         moveOn(current).then(function (next) {
           if (!next) {
@@ -153,7 +153,7 @@ module.exports = {
       tryNext(current)
     }
 
-    var audioControl = function (song, autoplay) {
+    const audioControl = function (song, autoplay) {
       const audio = dom.createElement('audio')
       audio.setAttribute('controls', 'yes')
       audio.setAttribute('src', song.uri)
@@ -167,13 +167,13 @@ module.exports = {
     const div = dom.createElement('div')
     const table = div.appendChild(dom.createElement('table'))
     const labelStyle = 'padding: 0.3em; color:white; background-color: black;'
-    var artistRow = table.appendChild(dom.createElement('tr'))
+    const artistRow = table.appendChild(dom.createElement('tr'))
     artistRow.style.cssText = labelStyle
-    var albumRow = table.appendChild(dom.createElement('tr'))
+    const albumRow = table.appendChild(dom.createElement('tr'))
     albumRow.style.cssText = labelStyle
-    var trackRow = table.appendChild(dom.createElement('tr'))
+    const trackRow = table.appendChild(dom.createElement('tr'))
     trackRow.style.cssText = labelStyle
-    var controlRow = table.appendChild(dom.createElement('tr'))
+    const controlRow = table.appendChild(dom.createElement('tr'))
     guessNames(subject)
     controlRow.appendChild(audioControl(subject, options.autoplay))
 

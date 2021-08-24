@@ -53,7 +53,7 @@ module.exports = {
 
       // ////////////////////// Accesss control
 
-      // Two variations of ACL for this app, public read and public read/write
+      // Two constiations of ACL for this app, public read and public read/write
       // In all cases owner has read write control
 
       const genACLtext = function (docURI, aclURI, allWrite) {
@@ -81,8 +81,8 @@ module.exports = {
       }
 
       /*
-          var setACL3 = function (docURI, allWrite, callbackFunction) {
-            var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+          const setACL3 = function (docURI, allWrite, callbackFunction) {
+            const aclText = genACLtext(docURI, aclDoc.uri, allWrite)
             return UI.acl.setACL(docURI, aclText, callbackFunction)
           }
           */
@@ -138,10 +138,10 @@ module.exports = {
       }
 
       // Body of mintNew
-      var fetcher = kb.fetcher
+      const fetcher = kb.fetcher
       const updater = kb.updater
 
-      var me = options.me || UI.authn.currentUser()
+      let me = options.me || UI.authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
@@ -333,7 +333,7 @@ module.exports = {
     const base = baseDir.uri
 
     const resultsDoc = $rdf.sym(base + 'results.ttl')
-    // var formsURI = base + 'forms.ttl'
+    // const formsURI = base + 'forms.ttl'
     // We can't in fact host stuff from there because of CORS
     const formsURI =
       'https://solid.github.io/solid-panes/schedule/formsForSchedule.ttl'
@@ -406,7 +406,7 @@ module.exports = {
 
     // ///////////////////////  Create new document files for new instance of app
 
-    var initializeNewInstanceInWorkspace = function (ws) {
+    const initializeNewInstanceInWorkspace = function (ws) {
       let newBase = kb.any(ws, ns.space('uriPrefix'))
       if (!newBase) {
         newBase = ws.uri.split('#')[0]
@@ -423,7 +423,7 @@ module.exports = {
       initializeNewInstanceAtBase(thisInstance, newBase)
     }
 
-    var initializeNewInstanceAtBase = function (thisInstance, newBase) {
+    const initializeNewInstanceAtBase = function (thisInstance, newBase) {
       const options = { thisInstance: thisInstance, newBase: newBase }
       this.mintNew(context, options)
         .then(function (options) {
@@ -462,7 +462,7 @@ module.exports = {
       */
     }
 
-    var getDetails = function () {
+    const getDetails = function () {
       console.log('getDetails()') // Looking for blank screen hang-up
       fetcher.nowOrWhenFetched(detailsDoc.uri, undefined, function (ok, body) {
         console.log('getDetails() ok? ' + ok)
@@ -471,7 +471,7 @@ module.exports = {
       })
     }
 
-    var showAppropriateDisplay = function showAppropriateDisplay () {
+    const showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
 
       UI.authn.checkUser().then(webId => {
@@ -502,7 +502,7 @@ module.exports = {
       })
     }
 
-    var showSignon = function showSignon () {
+    const showSignon = function showSignon () {
       clearElement(naviMain)
       const signonContext = { div: div, dom: dom }
       UI.authn.logIn(signonContext).then(context => {
@@ -512,7 +512,7 @@ module.exports = {
       })
     }
 
-    var showBootstrap = function showBootstrap () {
+    const showBootstrap = function showBootstrap () {
       const div = clearElement(naviMain)
       div.appendChild(
         UI.authn.newAppInstance(
@@ -552,7 +552,7 @@ module.exports = {
 
     const doneButton = dom.createElement('button')
 
-    var showForms = function () {
+    const showForms = function () {
       clearElement(naviCenter) // Remove refresh button if nec
       const div = naviMain
       const wizard = true
@@ -596,7 +596,7 @@ module.exports = {
             b2.removeAttribute('disabled')
           }
         }
-        var b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
+        const b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
         b1.setAttribute('style', inputStyle)
         b1.textContent = '<- go back'
         b1.addEventListener(
@@ -610,7 +610,7 @@ module.exports = {
           false
         )
 
-        var b2 = clearElement(naviRight).appendChild(
+        const b2 = clearElement(naviRight).appendChild(
           dom.createElement('button')
         )
         b2.setAttribute('style', inputStyle)
@@ -706,7 +706,7 @@ module.exports = {
         false
       )
 
-      var emailButton = dom.createElement('button')
+      const emailButton = dom.createElement('button')
       emailButton.setAttribute('style', inputStyle)
       const emailIcon = emailButton.appendChild(dom.createElement('img'))
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
@@ -745,13 +745,13 @@ module.exports = {
 
     // Ask for each day, what times .. @@ to be added some time
     /*
-    var setTimesOfDay = function () {
-      var i, j, x, y, slot, cell, day
-      var insertables = []
-      var possibleDays = kb.each(invitation, ns.sched('option'))
+    const setTimesOfDay = function () {
+      const i, j, x, y, slot, cell, day
+      const insertables = []
+      const possibleDays = kb.each(invitation, ns.sched('option'))
         .map(function (opt) {return kb.any(opt, ns.cal('dtstart'))})
-      var cellLookup = []
-      var slots = kb.each(invitation, ns.sched('slot'))
+      const cellLookup = []
+      const slots = kb.each(invitation, ns.sched('slot'))
       if (slots.length === 0) {
         for (i = 0; i < 2; i++) {
           slot = UI.widgets.newThing(detailsDoc)
@@ -769,32 +769,32 @@ module.exports = {
         }
       }
 
-      var query = new $rdf.Query('TimesOfDay')
-      var v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
-        query.vars.push(v[x] = $rdf.variable(x)) })
+      const query = new $rdf.Query('TimesOfDay')
+      const v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
+        query.consts.push(v[x] = $rdf.constiable(x)) })
       query.pat.add(invitation, ns.sched('slot'), v.slot)
       query.pat.add(v.slot, ns.rdfs('label'), v.label)
       query.pat.add(v.slot, ns.sched('cell'), v.cell)
       query.pat.add(v.cell, ns.sched('timeOfDay'), v.value)
       query.pat.add(v.cell, ns.sched('day'), v.day)
 
-      var options = {}
+      const options = {}
       options.set_x = kb.each(subject, ns.sched('slot')) // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.rdfs('label')) })
 
       options.set_y = kb.each(subject, ns.sched('option')); // @@@@@ option -> dtstart in future
       options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
-      var possibleTimes = kb.each(invitation, ns.sched('option'))
+      const possibleTimes = kb.each(invitation, ns.sched('option'))
         .map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
-      var displayTheMatrix = function () {
-        var matrix = div.appendChild(UI.matrix.matrixForQuery(
+      const displayTheMatrix = function () {
+        const matrix = div.appendChild(UI.matrix.matrixForQuery(
           dom, query, v.time, v.author, v.value, options, function () {}))
 
         matrix.setAttribute('class', 'matrix')
 
-        var refreshButton = dom.createElement('button')
+        const refreshButton = dom.createElement('button')
         refreshButton.setAttribute('style', inputStyle)
         refreshButton.textContent = 'refresh'
         refreshButton.addEventListener('click', function (e) {
@@ -813,21 +813,21 @@ module.exports = {
         naviCenter.appendChild(refreshButton)
       }
 
-      var dataPointForNT = []
+      const dataPointForNT = []
 
-      var doc = resultsDoc
+      const doc = resultsDoc
       options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me)) })
       options.set_y.push(me) // Put me on the end
 
       options.cellFunction = function (cell, x, y, value) {
-        // var point = cellLookup[x.toNT() + y.toNT()]
+        // const point = cellLookup[x.toNT() + y.toNT()]
 
         if (y.sameTerm(me)) {
-          var callbackFunction = function () { refreshCellColor(cell, value); }; //  @@ may need that
-          var selectOptions = {}
-          var predicate = ns.sched('timeOfDay')
-          var cellSubject = dataPointForNT[x.toNT()]
-          var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
+          const callbackFunction = function () { refreshCellColor(cell, value); }; //  @@ may need that
+          const selectOptions = {}
+          const predicate = ns.sched('timeOfDay')
+          const cellSubject = dataPointForNT[x.toNT()]
+          const selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
             possibleAvailabilities, selectOptions, resultsDoc, callbackFunction)
           cell.appendChild(selector)
         } else if (value !== null) {
@@ -836,29 +836,29 @@ module.exports = {
 
       }
 
-      var responses = kb.each(invitation, ns.sched('response'))
-      var myResponse = null
+      const responses = kb.each(invitation, ns.sched('response'))
+      const myResponse = null
       responses.map(function (r) {
         if (kb.holds(r, ns.dc('author'), me)) {
           myResponse = r
         }
       })
 
-      var id = UI.widgets.newThing(doc).uri
+      const id = UI.widgets.newThing(doc).uri
       if (myResponse === null) {
         myResponse = $rdf.sym(id + '_response')
         insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
         insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
       } else {
-        var dps = kb.each(myResponse, ns.sched('cell'))
+        const dps = kb.each(myResponse, ns.sched('cell'))
         dps.map(function (dataPoint) {
-          var time = kb.any(dataPoint, ns.cal('dtstart'))
+          const time = kb.any(dataPoint, ns.cal('dtstart'))
           dataPointForNT[time.toNT()] = dataPoint
         })
       }
       for (let j = 0; j < possibleTimes.length; j++) {
         if (dataPointForNT[possibleTimes[j].toNT()]) continue
-        var dataPoint = $rdf.sym(id + '_' + j)
+        const dataPoint = $rdf.sym(id + '_' + j)
         insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
         insertables.push($rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)) // @@
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
@@ -879,7 +879,7 @@ module.exports = {
     // end setTimesOfDay
 
     // Read or create empty results file
-    var getResults = function () {
+    const getResults = function () {
       fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
         if (!ok) {
           if (response.status === 404) {
@@ -921,13 +921,13 @@ module.exports = {
       })
     }
 
-    var showResults = function () {
+    const showResults = function () {
       //       Now the form for responsing to the poll
       //
 
       // div.appendChild(dom.createElement('hr'))
 
-      // var invitation = subject
+      // const invitation = subject
       const title = kb.any(invitation, ns.cal('summary'))
       const comment = kb.any(invitation, ns.cal('comment'))
       const location = kb.any(invitation, ns.cal('location'))
@@ -952,7 +952,7 @@ module.exports = {
       const v = {}
       const vs = ['time', 'author', 'value', 'resp', 'cell']
       vs.forEach(function (x) {
-        query.vars.push((v[x] = $rdf.variable(x)))
+        query.consts.push((v[x] = $rdf.constiable(x)))
       })
       query.pat.add(invitation, ns.sched('response'), v.resp)
       query.pat.add(v.resp, ns.dc('author'), v.author)
@@ -1022,9 +1022,9 @@ module.exports = {
       }
 
       // @@ Give other combos too-- see schedule ontology
-      // var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
+      // const possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      // var me = UI.authn.currentUser()
+      // const me = UI.authn.currentUser()
 
       const dataPointForNT = []
 
@@ -1152,7 +1152,7 @@ module.exports = {
       naviRight.appendChild(newInstanceButton())
     } // showResults
 
-    var div = dom.createElement('div')
+    const div = dom.createElement('div')
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.setAttribute(
       'style',
@@ -1164,9 +1164,9 @@ module.exports = {
     naviLoginoutTR.appendChild(dom.createElement('td'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
 
-    var logInOutButton = null
+    const logInOutButton = null
     /*
-    var logInOutButton = UI.authn.loginStatusBox(dom, setUser)
+    const logInOutButton = UI.authn.loginStatusBox(dom, setUser)
     // floating divs lead to a mess
     // logInOutButton.setAttribute('style', 'float: right') // float the beginning of the end
     naviLoginout3.appendChild(logInOutButton)
@@ -1174,7 +1174,7 @@ module.exports = {
     */
 
     const naviTop = structure.appendChild(dom.createElement('tr'))
-    var naviMain = naviTop.appendChild(dom.createElement('td'))
+    const naviMain = naviTop.appendChild(dom.createElement('td'))
     naviMain.setAttribute('colspan', '3')
 
     const naviMenu = structure.appendChild(dom.createElement('tr'))
@@ -1184,9 +1184,9 @@ module.exports = {
       ' text-align: middle; vertical-align: middle; padding-top: 4em; '
     )
     //    naviMenu.setAttribute('style', 'margin-top: 3em;')
-    var naviLeft = naviMenu.appendChild(dom.createElement('td'))
-    var naviCenter = naviMenu.appendChild(dom.createElement('td'))
-    var naviRight = naviMenu.appendChild(dom.createElement('td'))
+    const naviLeft = naviMenu.appendChild(dom.createElement('td'))
+    const naviCenter = naviMenu.appendChild(dom.createElement('td'))
+    const naviRight = naviMenu.appendChild(dom.createElement('td'))
 
     getForms()
 

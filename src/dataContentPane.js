@@ -43,7 +43,7 @@ module.exports = {
 */
   statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
     const myDocument = context.dom
-    // var outliner = context.getOutliner(myDocument)
+    // const outliner = context.getOutliner(myDocument)
     const rep = myDocument.createElement('table')
     const sz = UI.rdf.Serializer(context.session.store)
     const res = sz.rootSubjects(sts)
@@ -138,7 +138,7 @@ module.exports = {
           }
           return myDocument.createTextNode(obj.value) // placeholder - could be smarter,
 
-        case 'BlankNode':
+        case 'BlankNode': {
           if (obj.toNT() in doneBnodes) {
             // Break infinite recursion
             referencedBnodes[obj.toNT()] = true
@@ -149,7 +149,7 @@ module.exports = {
             return anchor
           }
           doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
-          var newTable = propertyTree(obj)
+          const newTable = propertyTree(obj)
           doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
           if (
             UI.utils.ancestor(newTable, 'TABLE') &&
@@ -161,7 +161,7 @@ module.exports = {
             newTable.style.backgroundColor = 'white'
           }
           return newTable
-
+        }
         case 'Collection':
           res = myDocument.createElement('table')
           res.setAttribute('class', 'collectionAsTables')
@@ -271,14 +271,14 @@ module.exports = {
       )
     }
 
-    var outliner = context.getOutliner(myDocument)
-    var kb = context.session.store
-    var div = myDocument.createElement('div')
+    const outliner = context.getOutliner(myDocument)
+    const kb = context.session.store
+    const div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')
     // Because of smushing etc, this will not be a copy of the original source
     // We could instead either fetch and re-parse the source,
     // or we could keep all the pre-smushed triples.
-    var sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
+    const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
 
     if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
       alternativeRendering()

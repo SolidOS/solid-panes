@@ -99,7 +99,7 @@ function makeQueryRow (q, tr, constraint) {
 
   // //////////////////////////////
 
-  var st = tr.AJAR_statement
+  const st = tr.AJAR_statement
 
   const constraintVar = tr.AJAR_inverse ? st.subject : st.object // this is only used for constraints
   let hasParent = true

@@ -48,11 +48,11 @@ module.exports = {
     // This in general needs a whole lot more thought
     // and it connects to the discoverbility through links
 
-    // var t = kb.findTypeURIs(subject)
+    // const t = kb.findTypeURIs(subject)
 
     const me = UI.authn.currentUser()
 
-    var box = dom.createElement('div')
+    const box = dom.createElement('div')
     box.setAttribute('class', 'formPane')
 
     if (!me) {
@@ -112,7 +112,7 @@ module.exports = {
 
           /*  Keep tis as a reminder to let a New one have its URI given by user
           mention("Where will this information be stored?")
-          var ele = dom.createElement('input');
+          const ele = dom.createElement('input');
           box.appendChild(ele);
           ele.setAttribute('type', 'text');
           ele.setAttribute('size', '72');
@@ -162,7 +162,7 @@ module.exports = {
         })
       for (const d in docs) docList.push(docs[d], d)
       docList.sort()
-      for (var i = 0; i < docList.length; i++) {
+      for (let i = 0; i < docList.length; i++) {
         const uri = docList[i][1]
         if (uri && store.updater.editable(uri)) {
           store = store.sym(uri)
@@ -173,7 +173,7 @@ module.exports = {
 
     // 3. In a workspace store
     // @@ TODO: Can probably remove _followeach (not done this time because the commit is a very safe refactor)
-    var _followeach = function (kb, subject, path) {
+    const _followeach = function (kb, subject, path) {
       if (path.length === 0) return [subject]
       const oo = kb.each(subject, path[0])
       let res = []
@@ -194,7 +194,7 @@ module.exports = {
         mention('Workspace selected OK: ' + ws)
 
         const activities = store.each(undefined, ns.space('workspace'), ws)
-        for (let j = 0; j < activities.length; i++) {
+        for (let j = 0; j < activities.length; j++) {
           const act = activities[j]
 
           const subjectDoc2 = store.any(ws, ns.space('store'))
