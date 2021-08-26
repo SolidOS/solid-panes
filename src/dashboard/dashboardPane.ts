@@ -18,9 +18,13 @@ export const dashboardPane: PaneDefinition = {
     const container = dom.createElement('div')
     const runBuildPage = () => {
       container.innerHTML = ''
+      let currentWebId = _solidUi.authn.authSession.info.webId;                 
+      let app = window.SolidAppContext;                                         
+      if( app.app && app.viewingNoAuthPage) currentWebId=app.webid;             
+      if( window.$SolidTestEnvironment && window.$SolidTestEnvironment.username) currentWebId=window.$SolidTestEnvironment.username;                           
       buildPage(
         container,
-        authn.authSession.info.webId ? sym(authn.authSession.info.webId) : null,
+        currentWebId ? sym(currentWebId) : null,
         context,
         subject
       )
