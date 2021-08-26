@@ -20,7 +20,7 @@ export const dashboardPane: PaneDefinition = {
       container.innerHTML = ''
       buildPage(
         container,
-        authn.authSession.info.webId ? sym(authn.authSession.info.webId) : null,
+        authn.currentUser() || null,
         context,
         subject
       )
