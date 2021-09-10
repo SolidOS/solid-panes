@@ -59,7 +59,7 @@
   <#NotllDayForm> a ui:IntegerForm;
     ui:property sched:durationInMinutes;
     ui:min 5;
-    ui:default 60 .
+    ui:default 55 .
 
 <#eventComment>
     a    ui:MultiLineTextField;
