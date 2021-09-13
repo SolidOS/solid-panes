@@ -952,7 +952,7 @@ module.exports = {
       const v = {}
       const vs = ['time', 'author', 'value', 'resp', 'cell']
       vs.forEach(function (x) {
-        query.consts.push((v[x] = $rdf.constiable(x)))
+        query.vars.push((v[x] = $rdf.constiable(x)))
       })
       query.pat.add(invitation, ns.sched('response'), v.resp)
       query.pat.add(v.resp, ns.dc('author'), v.author)
