@@ -8,6 +8,7 @@
 import { icons, ns, widgets } from 'solid-ui'
 import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+import { UI } from '..'
 
 const pane: PaneDefinition = {
   icon: icons.originalIconBase + 'tango/22-emblem-system.png',
@@ -121,6 +122,7 @@ const pane: PaneDefinition = {
               .then(() => {
                 const str = 'Deleted: ' + subject
                 console.log(str)
+                UI.widgets.refreshTree(div.closest('.instancePane'))
               })
               .catch((err: any) => {
                 const str = 'Unable to delete ' + subject + ': ' + err
