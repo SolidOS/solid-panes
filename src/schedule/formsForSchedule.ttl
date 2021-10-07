@@ -22,8 +22,12 @@
         <#eventTitle>
         <#eventLocation>
         <#eventType>
+        <#eventSwitch>
         <#eventComment>
         <#eventAuthor> ).
+
+<#form1header> a ui:Heading; ui:contents "Schedule an event" .
+
 <#eventTitle>
     a    ui:SingleLineTextField;
     ui:maxLength
@@ -48,16 +52,18 @@
 
 <#eventSwitch> a ui:Options;
   ui:dependingOn sched:allDay;
-  ui:case [ ui:for false; ui:use <#AllDayForm> ];
-  ui:case [ ui:for true; ui:use <#NotAllDayForm> ].
+  ui:case [ ui:for true; ui:use <#AllDayForm> ];
+  ui:case [ ui:for false; ui:use <#NotAllDayForm> ].
 
-  <#AllDayForm> a ui:IntegerForm;
+  <#AllDayForm> a ui:IntegerField ;
     ui:property sched:durationInDays;
+    ui:label "How many days?";
     ui:min 1;
     ui:default 1 .
 
-  <#NotllDayForm> a ui:IntegerForm;
+  <#NotAllDayForm> a ui:IntegerField ;
     ui:property sched:durationInMinutes;
+    ui:label "Duration (mins)";
     ui:min 5;
     ui:default 55 .
 
@@ -87,8 +93,8 @@
 
     <#possibleSwitch> a ui:Options;
       ui:dependingOn sched:allDay;
-      ui:case [ ui:for false; ui:use <#AllDayForm2> ];
-      ui:case [ ui:for true; ui:use <#NotAllDayForm2> ].
+      ui:case [ ui:for true; ui:use <#AllDayForm2> ];
+      ui:case [ ui:for false; ui:use <#NotAllDayForm2> ].
 
       <#AllDayForm2>
       a ui:Multiple; ui:min 2; ui:part <#posssibleDate>; ui:property sched:option.
@@ -104,7 +110,6 @@
 <#id1417314641301b>
    a ui:Multiple; ui:min 1; ui:part <#id1417314674292b>; ui:property sched:invitee.
    <#id1417314674292b> a ui:EmailField; ui:label "email"; ui:property foaf:mbox .
-   <#form1header> a ui:Heading; ui:contents "Schedule an event" .
    <#id1118132113135> a ui:Heading; ui:contents "Who to invite" .
 
 # ENDS
