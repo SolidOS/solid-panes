@@ -879,7 +879,7 @@ module.exports = {
     // end setTimesOfDay
 
     // Read or create empty results file
-    const getResults = function () {
+    function getResults () {
       fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
         if (!ok) {
           if (response.status === 404) {
@@ -921,7 +921,7 @@ module.exports = {
       })
     }
 
-    const showResults = function () {
+    function showResults () {
       //       Now the form for responsing to the poll
       //
 
@@ -952,7 +952,7 @@ module.exports = {
       const v = {}
       const vs = ['time', 'author', 'value', 'resp', 'cell']
       vs.forEach(function (x) {
-        query.vars.push((v[x] = $rdf.constiable(x)))
+        query.vars.push((v[x] = $rdf.variable(x)))
       })
       query.pat.add(invitation, ns.sched('response'), v.resp)
       query.pat.add(v.resp, ns.dc('author'), v.author)
