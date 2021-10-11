@@ -45,6 +45,7 @@ module.exports = function registerPanes (register) {
   register(require('./video/videoPane.js')) // Video clip player
   register(require('./audio/audioPane.js')) // Audio clip player
 
+  register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
   register(require('folder-pane')) // Should be above dataContentPane
   register(require('./classInstancePane.js')) // Should be above dataContentPane
   // register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
@@ -52,6 +53,7 @@ module.exports = function registerPanes (register) {
 
   register(require('./socialPane.js'))
 
+  register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
   register(require('./dataContentPane.js')) // Preferred for a data file
 
   register(require('source-pane')) // edit source
@@ -95,8 +97,6 @@ module.exports = function registerPanes (register) {
   register(require('./internal/internalPane'))
 
   register(require('./home/homePane'))
-  register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
-  register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
 
   // ENDS
 }
