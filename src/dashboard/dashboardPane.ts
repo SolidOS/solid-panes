@@ -1,4 +1,3 @@
-import { SolidSession } from '../types'
 import { authn, icons, store } from 'solid-ui'
 import { Fetcher, NamedNode, sym } from 'rdflib'
 import { generateHomepage } from './homepage'
@@ -14,17 +13,29 @@ export const dashboardPane: PaneDefinition = {
     return null
   },
   render: (subject, context) => {
+    console.log('Dashboard Pane Render')
     const dom = context.dom
     const container = dom.createElement('div')
-    authn.solidAuthClient.trackSession(async (session: SolidSession) => {
+    const runBuildPage = () => {
       container.innerHTML = ''
       buildPage(
         container,
-        session ? sym(session.webId) : null,
+        authn.currentUser() || null,
         context,
         subject
       )
+    }
+
+    authn.authSession.onLogin(() => {
+      console.log('On Login')
+      runBuildPage()
     })
+    authn.authSession.onSessionRestore(() => {
+      console.log('On Session Restore')
+      runBuildPage()
+    })
+    console.log('Initial Load')
+    runBuildPage()
 
     return container
   }
@@ -36,6 +47,7 @@ function buildPage (
   context: DataBrowserContext,
   subject: NamedNode
 ) {
+  console.log('build page')
   if (webId && webId.site().uri === subject.site().uri) {
     return buildDashboard(container, context)
   }
@@ -43,6 +55,7 @@ function buildPage (
 }
 
 function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
+  console.log('build dashboard')
   // @@ TODO get a proper type
   const outliner: any = context.getOutliner(context.dom)
   outliner
@@ -51,6 +64,7 @@ function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
 }
 
 function buildHomePage (container: HTMLElement, subject: NamedNode) {
+  console.log('build home page')
   const wrapper = document.createElement('div')
   container.appendChild(wrapper)
   const shadow = wrapper.attachShadow({ mode: 'open' })

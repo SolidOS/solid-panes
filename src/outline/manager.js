@@ -503,7 +503,7 @@ export default function (context) {
     })
 
     // close the dashboard if user log out
-    UI.authn.solidAuthClient.trackSession(closeDashboardIfLoggedOut)
+    UI.authn.authSession.onLogout(closeDashboard)
 
     // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
@@ -512,13 +512,6 @@ export default function (context) {
     function closeDashboard () {
       dashboardContainer.style.display = 'none'
       outlineContainer.style.display = 'inherit'
-    }
-
-    function closeDashboardIfLoggedOut (session) {
-      if (session) {
-        return
-      }
-      closeDashboard()
     }
   }
   this.showDashboard = showDashboard

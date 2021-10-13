@@ -3,7 +3,6 @@ import { getOutliner } from '../src'
 const Pane = require('./pane').default
 const $rdf = require('rdflib')
 const UI = require('solid-ui')
-const SolidAuth = require('solid-auth-client')
 
 // FIXME:
 window.$rdf = $rdf
@@ -53,35 +52,40 @@ document.addEventListener('DOMContentLoaded', () => {
   )
 })
 
-window.onload = () => {
+window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
   paneRegistry.register(require('contacts-pane'))
-
-  SolidAuth.trackSession((session) => {
-    if (!session) {
-      console.log('The user is not logged in')
-      document.getElementById('loginBanner').innerHTML =
-        '<button onclick="popupLogin()">Log in</button>'
-    } else {
-      console.log(`Logged in as ${session.webId}`)
-
-      document.getElementById(
-        'loginBanner'
-      ).innerHTML = `Logged in as ${session.webId} <button onclick="logout()">Log out</button>`
-    }
+  await UI.authn.authSession.handleIncomingRedirect({
+    restorePreviousSession: true
   })
+  const session = await UI.authn.authSession
+  if (!session.info.isLoggedIn) {
+    console.log('The user is not logged in')
+    document.getElementById('loginBanner').innerHTML =
+      '<button onclick="login()">Log in</button>'
+  } else {
+    console.log(`Logged in as ${session.info.webId}`)
+
+    document.getElementById(
+      'loginBanner'
+    ).innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`
+  }
   renderPane()
 }
 window.logout = () => {
-  SolidAuth.logout()
+  UI.authn.authSession.logout()
   window.location = ''
 }
-window.popupLogin = async function () {
-  let session = await SolidAuth.currentSession()
-  const popupUri = 'https://solidcommunity.net/common/popup.html'
-  if (!session) {
-    session = await SolidAuth.popupLogin({ popupUri })
+window.login = async function () {
+  const session = await UI.authn.authSession
+  if (!session.info.isLoggedIn) {
+    const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
+    await UI.authn.authSession.login({
+      oidcIssuer: issuer,
+      redirectUrl: window.location.href,
+      clientName: 'Solid Panes Dev Loader'
+    })
   }
 };
 (window as any).renderPane = renderPane
