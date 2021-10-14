@@ -27,14 +27,14 @@ export const dashboardPane: PaneDefinition = {
     }
 
     authn.authSession.onLogin(() => {
-      console.log('On Login')
+      // console.log('On Login')
       runBuildPage()
     })
     authn.authSession.onSessionRestore(() => {
-      console.log('On Session Restore')
+      // console.log('On Session Restore')
       runBuildPage()
     })
-    console.log('Initial Load')
+    // console.log('Initial Load')
     runBuildPage()
 
     return container
@@ -47,7 +47,7 @@ function buildPage (
   context: DataBrowserContext,
   subject: NamedNode
 ) {
-  console.log('build page')
+  // console.log('build page')
   if (webId && webId.site().uri === subject.site().uri) {
     return buildDashboard(container, context)
   }
@@ -55,7 +55,7 @@ function buildPage (
 }
 
 function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
-  console.log('build dashboard')
+  // console.log('build dashboard')
   // @@ TODO get a proper type
   const outliner: any = context.getOutliner(context.dom)
   outliner
@@ -64,7 +64,7 @@ function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
 }
 
 function buildHomePage (container: HTMLElement, subject: NamedNode) {
-  console.log('build home page')
+  // console.log('build home page')
   const wrapper = document.createElement('div')
   container.appendChild(wrapper)
   const shadow = wrapper.attachShadow({ mode: 'open' })
