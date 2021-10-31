@@ -428,12 +428,12 @@ export default function (context) {
       const storage = new URL(window.location.href)
       // check that storage.origin is not included in pods array
       if (!pods.some(pod => pod.uri.includes(location.origin))) {
-        // add location.origin or location.origin/<podName> with space:Storage
+        // add location.origin or location.origin/<podName> with space:storage
         async function addLocationPodRoot (pod) { // namedNode
           const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
           const podTurtle = response.responseText
           $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
-          if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod)) {
+          if (kb.holds(pod, ns.rdf('type'), ns.space('storage'), pod)) {
             pods = pods.push(pod)
             return true
           }
@@ -441,7 +441,7 @@ export default function (context) {
         }
         let podFromLocation = kb.sym(storage.origin + '/')
         if ((await addLocationPodRoot(podFromLocation)) === 'false') {
-          podFromLocation = kb.sym(`${storage.origin}/${storage.path.split('/')[1]}`)
+          podFromLocation = kb.sym(`${storage.origin}/${storage.pathName.split('/')[1]}`)
           await addLocationPodRoot(podFromLocation)
         }
       }
