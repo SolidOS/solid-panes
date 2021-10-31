@@ -422,7 +422,33 @@ export default function (context) {
         console.error('Unable to load profile', err)
         return []
       }
-      const pods = kb.each(me, ns.space('storage'), null, me.doc())
+      let pods = kb.each(me, ns.space('storage'), null, me.doc())
+
+      // add podRoot from window.location
+      const storage = new URL(window.location.href)
+      // check that storage.origin is not included in pods array
+      if (!pods.some(pod => pod.uri.includes(location.origin))) {
+        // add location.origin or location.origin/<podName> with space:Storage
+        async function addLocationPodRoot (pod) { // namedNode
+          const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
+          const podTurtle = response.responseText
+          $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
+          if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod)) {
+            pods = pods.push(pod)
+            return true
+          }
+          return false
+        }
+        let podFromLocation = kb.sym(storage.origin + '/')
+        if ((await addLocationPodRoot(podFromLocation)) === 'false') {
+          podFromLocation = kb.sym(`${storage.origin}/${storage.path.split('/')[1]}`)
+          await addLocationPodRoot(podFromLocation)
+        }
+      }
+      try {
+        await kb.fetcher.load(storage.origin + '/', { headers: { Accept: 'text/turtle' } })
+      } catch (err) {}
+
       try {
         // make sure container representation is loaded (when server returns index.html)
         pods.map(async pod => {
