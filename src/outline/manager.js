@@ -352,7 +352,7 @@ export default function (context) {
     const items = await getDashboardItems()
 
     function renderTab (div, item) {
-      div.dataset.name = item.tabName || item.paneName
+      div.dataset.globalPaneName = item.tabName || item.paneName
       div.textContent = item.label
       const me = UI.authn.currentUser()
       thisOutline.GotoSubject(
