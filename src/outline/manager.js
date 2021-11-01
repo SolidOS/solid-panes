@@ -415,6 +415,30 @@ export default function (context) {
       .concat(pods)
 
     async function getPods () {
+      async function loadContainerRepresentation (pod) { // namedNode
+        const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
+        const podTurtle = response.responseText
+        $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
+      }
+      async function addPodRoot (pod) { // namedNode
+        await loadContainerRepresentation(pod)
+        if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
+          pods.push(pod)
+          return true
+        }
+        return false
+      }
+      async function addPodRootFromUrl (url) {
+        const podStorage = new URL(url)
+        // check that origin is not included in pods array
+        if (!pods.some(pod => pod.uri.includes(podStorage.origin))) {
+          // check in order, location.origin/<podName> then location.origin containing space:Storage
+          if (podStorage.pathname === '/' || !(await addPodRoot(kb.sym(`${podStorage.origin}/${podStorage.pathname.split('/')[1]}/`)))) {
+            await addPodRoot(kb.sym(`${podStorage.origin}/`))
+          }
+        }
+      }
+
       try {
         // need to make sure that profile is loaded
         await kb.fetcher.load(me.doc())
@@ -422,42 +446,21 @@ export default function (context) {
         console.error('Unable to load profile', err)
         return []
       }
-      let pods = kb.each(me, ns.space('storage'), null, me.doc())
-
-      // add podRoot from window.location
-      const storage = new URL(window.location.href)
-      // check that storage.origin is not included in pods array
-      if (!pods.some(pod => pod.uri.includes(location.origin))) {
-        // add location.origin or location.origin/<podName> with space:storage
-        async function addLocationPodRoot (pod) { // namedNode
-          const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
-          const podTurtle = response.responseText
-          $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
-          if (kb.holds(pod, ns.rdf('type'), ns.space('storage'), pod)) {
-            pods = pods.push(pod)
-            return true
-          }
-          return false
-        }
-        let podFromLocation = kb.sym(storage.origin + '/')
-        if ((await addLocationPodRoot(podFromLocation)) === 'false') {
-          podFromLocation = kb.sym(`${storage.origin}/${storage.pathName.split('/')[1]}`)
-          await addLocationPodRoot(podFromLocation)
-        }
-      }
-      try {
-        await kb.fetcher.load(storage.origin + '/', { headers: { Accept: 'text/turtle' } })
-      } catch (err) {}
+      const pods = kb.each(me, ns.space('storage'), null, me.doc())
 
       try {
-        // make sure container representation is loaded (when server returns index.html)
-        pods.map(async pod => {
-          if (!kb.any(pod, ns.ldp('contains'), undefined, pod.doc())) {
-            const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
-            const podTurtle = response.responseText
-            $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
-          }
-        })
+        if (pods.length) {
+          // make sure container representation is loaded (when server returns index.html)
+          // TODO reorder to have 'me' in first position
+          pods.map(async pod => {
+            if (!kb.any(pod, ns.ldp('contains'), undefined, pod.doc())) {
+              await loadContainerRepresentation(pod)
+            }
+          })
+        } else { // try to find podRoot from url
+          await addPodRootFromUrl(me.uri)
+        }
+        await addPodRootFromUrl(window.location.href)
       } catch (err) {
         console.error('cannot load container', err)
         return []
