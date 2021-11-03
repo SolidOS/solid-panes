@@ -11,7 +11,7 @@ module.exports = {
   // https://github.com/gotwarlost/istanbul/blob/master/ignoring-code-for-coverage.md
   coverageThreshold: {
     global: {
-      branches: 21,
+      branches: 20,
       functions: 33,
       lines: 35,
       statements: 35
