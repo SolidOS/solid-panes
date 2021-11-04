@@ -354,14 +354,6 @@ export default function (context) {
     function renderTab (div, item) {
       div.dataset.globalPaneName = item.tabName || item.paneName
       div.textContent = item.label
-      const me = UI.authn.currentUser()
-      thisOutline.GotoSubject(
-        item.subject || me,
-        true,
-        item.tabName || item.paneName,
-        true,
-        undefined
-      )
     }
 
     function renderMain (containerDiv, item) {
