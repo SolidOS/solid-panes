@@ -415,13 +415,8 @@ export default function (context) {
       .concat(pods)
 
     async function getPods () {
-      async function loadContainerRepresentation (pod) { // namedNode
-        const response = await kb.fetcher.webOperation('GET', pod.uri, kb.fetcher.initFetchOptions(pod.uri, { headers: { accept: 'text/turtle' } }))
-        const podTurtle = response.responseText
-        $rdf.parse(podTurtle, kb, pod.uri, 'text/turtle')
-      }
       async function addPodRoot (pod) { // namedNode
-        await loadContainerRepresentation(pod)
+        await kb.fetcher.load(pod, { headers: { accept: 'text/turtle' } })
         if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
           pods.push(pod)
           return true
@@ -454,13 +449,13 @@ export default function (context) {
           // TODO reorder to have 'me' in first position
           pods.map(async pod => {
             if (!kb.any(pod, ns.ldp('contains'), undefined, pod.doc())) {
-              await loadContainerRepresentation(pod)
+              await kb.fetcher.load(pod, { headers: { accept: 'text/turtle' } })
             }
           })
         } else { // try to find podRoot from url
           await addPodRootFromUrl(me.uri)
         }
-        await addPodRootFromUrl(window.location.href)
+        await addPodRootFromUrl(window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1))
       } catch (err) {
         console.error('cannot load container', err)
         return []
