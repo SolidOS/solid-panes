@@ -1,5 +1,5 @@
 import { authn, icons, store } from 'solid-ui'
-import { Fetcher, NamedNode, sym } from 'rdflib'
+import { Fetcher, NamedNode } from 'rdflib'
 import { generateHomepage } from './homepage'
 import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 
