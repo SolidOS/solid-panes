@@ -416,7 +416,7 @@ export default function (context) {
 
     async function getPods () {
       async function addPodRoot (pod) { // namedNode
-        await kb.fetcher.load(pod, { headers: { accept: 'text/turtle' } })
+        await checkForContainerRepresentation(pod)
         if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
           pods.push(pod)
           return true
@@ -444,25 +444,14 @@ export default function (context) {
       const pods = kb.each(me, ns.space('storage'), null, me.doc())
 
       try {
-        if (pods.length) {
-          // make sure container representation is loaded (when server returns index.html)
-          // TODO reorder to have 'me' in first position
-          pods.map(async pod => {
-            if (!kb.any(pod, ns.ldp('contains'), undefined, pod.doc())) {
-              await kb.fetcher.load(pod, { headers: { accept: 'text/turtle' } })
-            }
-          })
-        } else { // try to find podRoot from url
-          await addPodRootFromUrl(me.uri)
-        }
         await addPodRootFromUrl(window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1))
       } catch (err) {
         console.error('cannot load container', err)
-        return []
       }
+      if (!pods.length) return []
       return pods.map((pod, index) => {
-        const label =
-          pods.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
+        function split (item) { return item.uri.split('//')[1].slice(0, -1) }
+        const label = split(me).startsWith(split(pod)) ? 'Your storage' : split(pod)
         return {
           paneName: 'folder',
           tabName: `folder-${index}`,
@@ -567,7 +556,18 @@ export default function (context) {
     )
   }
 
+  async function checkForContainerRepresentation (subject) {
+    // force reload for index.html with RDFa
+    if (!kb.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
+      const response = await kb.fetcher.webOperation('GET', subject.uri, kb.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
+      const containerTurtle = response.responseText
+      $rdf.parse(containerTurtle, kb, subject.uri, 'text/turtle')
+    }
+  }
+
   async function getRelevantPanes (subject, context) {
+    // make sure container representation is loaded (when server returns index.html)
+    if (subject.uri.endsWith('/')) { await checkForContainerRepresentation(subject) }
     const panes = context.session.paneRegistry
     const relevantPanes = panes.list.filter(
       pane => pane.label(subject, context) && !pane.global
