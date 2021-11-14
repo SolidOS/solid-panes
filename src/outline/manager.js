@@ -446,7 +446,7 @@ export default function (context) {
       try {
         // if uri then SolidOS is a browse.html web app
         const uri = (new URL(window.location.href)).searchParams.get('uri')
-        const podUrl = uri ? uri : window.location.href
+        const podUrl = uri || window.location.href
         await addPodRootFromUrl(podUrl.substring(0, podUrl.lastIndexOf('/') + 1))
       } catch (err) {
         console.error('cannot load container', err)
