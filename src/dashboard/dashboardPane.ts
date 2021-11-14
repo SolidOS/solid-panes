@@ -7,6 +7,7 @@ export const dashboardPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
   label: subject => {
+    console.log()
     if (subject.uri === subject.site().uri) {
       return 'Dashboard'
     }
@@ -47,8 +48,9 @@ function buildPage (
   context: DataBrowserContext,
   subject: NamedNode
 ) {
-  // console.log('build page')
-  if (webId && webId.site().uri === subject.site().uri) {
+  // if uri then SolidOS is a browse.html web app
+  const uri = (new URL(window.location.href)).searchParams.get('uri')
+  if (webId && (uri || webId.site().uri === subject.site().uri)) {
     return buildDashboard(container, context)
   }
   return buildHomePage(container, subject)
