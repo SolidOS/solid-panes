@@ -13,7 +13,6 @@ module.exports = function registerPanes (register) {
   register(require('issue-pane'))
   register(require('contacts-pane'))
   register(require('activitystreams-pane'))
-  register(require('markdown-pane').Pane)
 
   register(require('./pad/padPane'))
   // register(require('./argument/argumentPane.js')) // A position in an argument tree
@@ -54,8 +53,9 @@ module.exports = function registerPanes (register) {
   register(require('./socialPane.js'))
 
   register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
-  register(require('./dataContentPane.js')) // Preferred for a data file
+  register(require('markdown-pane').Pane)
 
+  register(require('./dataContentPane.js')) // Preferred for a data file
   register(require('source-pane')) // edit source
   register(require('./n3Pane.js'))
   register(require('./RDFXMLPane.js'))
