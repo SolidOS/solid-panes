@@ -3,23 +3,24 @@
  **  This outline pane contains the document contents for an HTML document
  **  This is for peeking at a page, because the user might not want to leave the data browser.
  */
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import { icons, ns } from 'solid-ui'
+import { Util } from 'rdflib'
+import { marked } from 'marked'
 
-module.exports = {
-  icon: UI.icons.originalIconBase + 'tango/22-text-x-generic.png',
+const humanReadablePane = {
+  icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
 
   name: 'humanReadable',
 
   label: function (subject, context) {
     const kb = context.session.store
-    const ns = UI.ns
 
     //   See also the source pane, which has lower precedence.
 
     const allowed = [
       'text/plain',
       'text/html',
+      'text/markdown',
       'application/xhtml+xml',
       'image/png',
       'image/jpeg',
@@ -45,7 +46,7 @@ module.exports = {
     const hasContentTypeIn2 = function (kb, x, displayables) {
       const t = kb.findTypeURIs(subject)
       for (let k = 0; k < displayables.length; k++) {
-        if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
+        if (Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
         }
       }
@@ -72,12 +73,6 @@ module.exports = {
     const div = myDocument.createElement('div')
     const kb = context.session.store
 
-    //  @@ When we can, use CSP to turn off scripts within the iframe
-    div.setAttribute('class', 'docView')
-    const iframe = myDocument.createElement('IFRAME')
-    iframe.setAttribute('src', subject.uri) // allow-same-origin
-    iframe.setAttribute('class', 'doc')
-
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     const ct = cts ? cts[0] : null
     if (ct) {
@@ -85,6 +80,28 @@ module.exports = {
     } else {
       console.log('humanReadablePane: unknown content-type?')
     }
+
+    //  @@ When we can, use CSP to turn off scripts within the iframe
+    div.setAttribute('class', 'docView')
+    const iframe = myDocument.createElement('IFRAME')
+    let dataUri
+
+    // render markdown to html
+    const markdownHtml = function () {
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const res = marked.parse(response.responseText)
+        dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(res)
+        iframe.setAttribute('src', dataUri) // allow-same-origin
+      })
+    }
+
+    if (ct === 'text/markdown') {
+      markdownHtml()
+    } else {
+      iframe.setAttribute('src', subject.uri) // allow-same-origin
+    }
+
+    iframe.setAttribute('class', 'doc')
 
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
@@ -103,4 +120,6 @@ module.exports = {
     return div
   }
 }
+
+export default humanReadablePane
 // ends
