@@ -444,7 +444,10 @@ export default function (context) {
       const pods = kb.each(me, ns.space('storage'), null, me.doc())
 
       try {
-        await addPodRootFromUrl(window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1))
+        // if uri then SolidOS is a browse.html web app
+        const uri = (new URL(window.location.href)).searchParams.get('uri')
+        const podUrl = uri || window.location.href
+        await addPodRootFromUrl(podUrl.substring(0, podUrl.lastIndexOf('/') + 1))
       } catch (err) {
         console.error('cannot load container', err)
       }
