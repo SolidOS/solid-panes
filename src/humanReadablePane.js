@@ -83,25 +83,32 @@ const humanReadablePane = {
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
-    const iframe = myDocument.createElement('IFRAME')
+    const element = ct === 'text/markdown' ? 'DIV' : 'IFRAME'
+    const frame = myDocument.createElement(element)
     let dataUri
 
     // render markdown to html
     const markdownHtml = function () {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const res = marked.parse(response.responseText)
-        dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(res)
-        iframe.setAttribute('src', dataUri) // allow-same-origin
+        const markdownText = response.responseText
+        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
+        const res = marked.parse(markdownText)
+        // dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(res)
+        // iframe.setAttribute('src', dataUri)
+        frame.innerHTML = res
+        frame.setAttribute('class', 'doc')
+        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
       })
     }
 
     if (ct === 'text/markdown') {
       markdownHtml()
     } else {
-      iframe.setAttribute('src', subject.uri) // allow-same-origin
+      frame.setAttribute('src', subject.uri) // allow-same-origin
+      frame.setAttribute('class', 'doc')
+      frame.setAttribute('style', 'resize = both; height:120em; width:80em;')
     }
 
-    iframe.setAttribute('class', 'doc')
 
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
@@ -111,11 +118,10 @@ const humanReadablePane = {
 
     // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
-    iframe.setAttribute('style', 'resize = both; height: 120em; width:80em;')
     //        iframe.setAttribute('height', '480')
     //        iframe.setAttribute('width', '640')
     const tr = myDocument.createElement('TR')
-    tr.appendChild(iframe)
+    tr.appendChild(frame)
     div.appendChild(tr)
     return div
   }
