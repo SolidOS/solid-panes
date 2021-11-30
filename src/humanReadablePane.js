@@ -85,7 +85,7 @@ const humanReadablePane = {
     div.setAttribute('class', 'docView')
     const element = ct === 'text/markdown' ? 'DIV' : 'IFRAME'
     const frame = myDocument.createElement(element)
-    let dataUri
+    // let dataUri
 
     // render markdown to html
     const markdownHtml = function () {
@@ -108,7 +108,6 @@ const humanReadablePane = {
       frame.setAttribute('class', 'doc')
       frame.setAttribute('style', 'resize = both; height:120em; width:80em;')
     }
-
 
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
