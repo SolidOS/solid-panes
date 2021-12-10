@@ -90,7 +90,7 @@ module.exports = {
           const heading = dom.createElement('h4')
           box.appendChild(heading)
           if (form.uri) {
-            const formStore = $rdf.Util.uri.document(form)
+            const formStore = $rdf.Util.uri.document(form.uri)
             if (formStore.uri !== form.uri) {
               // The form is a hash-type URI
               const e = box.appendChild(
