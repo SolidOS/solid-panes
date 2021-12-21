@@ -392,6 +392,7 @@ export default function (context) {
 
   async function getDashboardItems () {
     const me = UI.authn.currentUser()
+    if (!me) return []
     const div = dom.createElement('div')
     const [books, pods] = await Promise.all([getAddressBooks(), getPods()])
     return [
