@@ -35,10 +35,7 @@ function setHeaderOptions () {
 async function setUserMenu (outliner: any) {
   const showProfile = {
     label: SHOW_YOUR_PROFILE_MENU_ITEM,
-    onclick: () => {
-      outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
-      location.reload()
-    }
+    onclick: () => openUserProfile(outliner)
   }
 
   const logOut = {
@@ -54,6 +51,11 @@ async function setUserMenu (outliner: any) {
   userMenuList.push(logOut)
 
   return userMenuList
+}
+
+function openUserProfile (outliner: any) {
+  outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
+  location.reload()
 }
 
 async function getMenuItems (outliner: any) {

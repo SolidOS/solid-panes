@@ -12,10 +12,8 @@ export function createFooter (store: IndexedFormula) {
 }
 
 function setFooterOptions () {
-  return [
-    {
-      solidProjectUrl: SOLID_PROJECT_URL,
-      solidProjectName: SOLID_PROJECT_NAME
-    }
-  ]
+  return {
+    solidProjectUrl: SOLID_PROJECT_URL,
+    solidProjectName: SOLID_PROJECT_NAME
+  }
 }
