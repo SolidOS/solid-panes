@@ -25,6 +25,7 @@ import {
   LiveStore
 } from 'pane-registry'
 import { createContext } from './outline/context'
+import initMainPage from './mainPage'
 
 export function getOutliner (dom) {
   if (!dom.outlineManager) {
@@ -61,4 +62,4 @@ export {
 // where there are many occurrences of window and of window.document
 // But each DOM should have just one outline manager.
 
-export { OutlineManager, UI, versionInfo }
+export { OutlineManager, UI, versionInfo, initMainPage }
