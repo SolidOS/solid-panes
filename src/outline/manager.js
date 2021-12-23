@@ -524,6 +524,12 @@ export default function (context) {
     // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
     dashboardContainer.appendChild(dashboard)
+    const tab = dashboardContainer.querySelector(
+      `[data-global-pane-name="${options.pane}"]`
+    )
+    if (tab) {
+      tab.click()
+    }
 
     function closeDashboard () {
       dashboardContainer.style.display = 'none'
