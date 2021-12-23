@@ -49,7 +49,7 @@ to new users.
 Volunteers are always welcome!
 
 ## Documentation
-- [Visual Language](https://htmlpreview.github.io/?https://github.com/solid/solid-panes/Documentation/VisualLanguage.html)
+- [Visual Language](https://solid.github.io/solid-panes/Documentation/VisualLanguage.html)
 - [Conventions](./Documentation/conventions.md)
 
 ## Development
