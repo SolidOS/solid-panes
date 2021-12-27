@@ -16,7 +16,7 @@ const LOG_OUT_MENU_ITEM = 'Log out'
  * URLS
  */
 const USER_GUIDE_MENU_URL = 'https://solid.github.io/userguide/'
-const REPOT_A_PROBLE_MENU_URL = 'https://github.com/solid/solidos/issues'
+const REPORT_A_PROBLEM_MENU_URL = 'https://github.com/solid/solidos/issues'
 
 export async function createHeader (store, outliner) {
   initHeader(store, await setUserMenu(outliner), setHeaderOptions())
@@ -25,7 +25,7 @@ export async function createHeader (store, outliner) {
 function setHeaderOptions () {
   const helpMenuList = [
     { label: USER_GUIDE_MENU_ITEM, url: USER_GUIDE_MENU_URL, target: '_blank' },
-    { label: REPORT_A_PROBLEM_MENU_ITEM, url: REPOT_A_PROBLE_MENU_URL, target: '_blank' }
+    { label: REPORT_A_PROBLEM_MENU_ITEM, url: REPORT_A_PROBLEM_MENU_URL, target: '_blank' }
   ]
   const headerOptions = { logo: SOLID_ICON_URL, helpIcon: HELP_MENU_ICON, helpMenuList: helpMenuList }
 
