@@ -14,6 +14,7 @@
 // var UI = require('solid-ui') // Note we will add the panes register to this.
 import versionInfo from './versionInfo'
 import * as UI from 'solid-ui'
+import { LiveStore } from 'solid-logic'
 import OutlineManager from './outline/manager.js'
 import registerPanes from './registerPanes.js'
 import {
@@ -21,8 +22,7 @@ import {
   paneForIcon,
   paneForPredicate,
   register,
-  byName,
-  LiveStore
+  byName
 } from 'pane-registry'
 import { createContext } from './outline/context'
 import initMainPage from './mainPage'

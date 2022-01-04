@@ -1,6 +1,6 @@
-import { DataBrowserContext, LiveStore, PaneRegistry } from 'pane-registry'
+import { DataBrowserContext, PaneRegistry } from 'pane-registry'
 import { getOutliner } from '../index'
-import { SolidLogic } from 'solid-logic'
+import { SolidLogic, LiveStore } from 'solid-logic'
 
 export function createContext (
   dom: HTMLDocument,

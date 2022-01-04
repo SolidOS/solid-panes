@@ -48,6 +48,10 @@ to new users.
 
 Volunteers are always welcome!
 
+## Documentation
+- [Visual Language](https://solid.github.io/solid-panes/Documentation/VisualLanguage.html)
+- [Conventions](./Documentation/conventions.md)
+
 ## Development
 To get started, make sure you have Node.js installed (for instance
 through https://github.com/nvm-sh/nvm), and:

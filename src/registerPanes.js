@@ -53,7 +53,7 @@ module.exports = function registerPanes (register) {
   register(require('./socialPane.js'))
 
   register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
-  register(require('markdown-pane').Pane)
+  // register(require('markdown-pane').Pane) // replaced by markdown in humanReadablePane
 
   register(require('./dataContentPane.js')) // Preferred for a data file
   register(require('source-pane')) // edit source
