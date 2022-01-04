@@ -52,6 +52,7 @@
     "babel-preset-metalab": "^1.0.0",
     "chat-pane": "^2.4.13",
     "contacts-pane": "^2.5.6",
+    "eslint": "^7.32.0",
     "folder-pane": "^2.4.10",
     "issue-pane": "^2.4.8",
     "marked": "^4.0.8",
@@ -63,10 +64,10 @@
     "rdflib": "^2.2.15",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "solid-logic": "^1.3.12",
     "solid-namespace": "^0.5.2",
-    "solid-ui": "^2.4.14",
-    "source-pane": "^2.2.13",
-    "solid-logic": "^1.3.12"
+    "solid-ui": "^2.4.14-6a9e81a9",
+    "source-pane": "^2.2.13"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
@@ -81,7 +82,6 @@
     "@typescript-eslint/parser": "^5.8.0",
     "babel-loader": "^8.2.3",
     "babel-plugin-inline-import": "^3.0.0",
-    "eslint": "^7.32.0",
     "fork-ts-checker-webpack-plugin": "^6.5.0",
     "html-webpack-plugin": "^5.5.0",
     "husky": "^7.0.4",
