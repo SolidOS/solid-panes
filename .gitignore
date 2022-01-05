@@ -39,3 +39,6 @@ node_modules
 
 # files used by IDEs such as WebStorm
 .idea
+
+# history files in Visual Code
+.history
