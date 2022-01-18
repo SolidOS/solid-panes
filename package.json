@@ -57,7 +57,7 @@
     "marked": "^4.0.8",
     "meeting-pane": "^2.3.7",
     "mime-types": "^2.1.34",
-    "pane-registry": "^2.4.5",
+    "pane-registry": "^2.4.5-alpha",
     "path-browserify": "^1.0.1",
     "profile-pane": "^1.0.4",
     "rdflib": "^2.2.15",
@@ -65,7 +65,7 @@
     "react-dom": "^17.0.2",
     "solid-logic": "^1.3.12",
     "solid-namespace": "^0.5.2",
-    "solid-ui": "^2.4.14-6a9e81a9",
+    "solid-ui": "^2.4.14-alpha",
     "source-pane": "^2.2.13"
   },
   "devDependencies": {
