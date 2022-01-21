@@ -8,7 +8,8 @@
  **
  */
 
-import { authn, create, icons } from 'solid-ui'
+import { create, icons, login } from 'solid-ui'
+import { authn, authSession } from 'solid-logic'
 import { PaneDefinition } from 'pane-registry'
 import { CreateContext } from 'solid-ui/lib/create/types'
 import { NamedNode } from 'rdflib'
@@ -37,7 +38,7 @@ const HomePaneSource: PaneDefinition = {
             var loginStatusDiv = div.appendChild(context.dom.createElement('div'))
             // TODO: Find out what the actual type is:
             type UriType = unknown;
-            loginStatusDiv.appendChild(UI.authn.loginStatusBox(context.dom, () => {
+            loginStatusDiv.appendChild(UI.login.loginStatusBox(context.dom, () => {
               // Here we know new log in status
             }))
       */
@@ -50,20 +51,20 @@ const HomePaneSource: PaneDefinition = {
         statusArea: div,
         me: me
       }
-      const relevantPanes = await authn.filterAvailablePanes(
+      const relevantPanes = await login.filterAvailablePanes(
         context.session.paneRegistry.list
       )
       create.newThingUI(creationContext, context, relevantPanes) // newUI Have to pass panes down
 
       div.appendChild(dom.createElement('h4')).textContent = 'Private things'
       // TODO: Replace by a common, representative interface
-      authn
+      login
         .registrationList(homePaneContext, { private: true })
         .then(function (authContext) {
           div.appendChild(dom.createElement('h4')).textContent = 'Public things'
           div.appendChild(dom.createElement('p')).textContent =
             'Things in this list are visible to others.'
-          authn
+          login
             .registrationList(authContext, { public: true })
             .then(function () {
               // done

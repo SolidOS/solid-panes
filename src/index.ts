@@ -14,7 +14,7 @@
 // var UI = require('solid-ui') // Note we will add the panes register to this.
 import versionInfo from './versionInfo'
 import * as UI from 'solid-ui'
-import { LiveStore } from 'solid-logic'
+import { LiveStore, solidLogicSingleton, store } from 'solid-logic'
 import OutlineManager from './outline/manager.js'
 import registerPanes from './registerPanes.js'
 import {
@@ -32,8 +32,8 @@ export function getOutliner (dom) {
     const context = createContext(
       dom,
       { list, paneForIcon, paneForPredicate, register, byName },
-            UI.store as LiveStore,
-            UI.solidLogicSingleton
+            store as LiveStore,
+            solidLogicSingleton
     )
     dom.outlineManager = new OutlineManager(context)
   }

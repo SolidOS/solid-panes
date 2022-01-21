@@ -4,6 +4,7 @@
 */
 
 import * as UI from 'solid-ui'
+import { authn, authSession, store } from 'solid-logic'
 import * as panes from 'pane-registry'
 import * as $rdf from 'rdflib'
 import YAHOO from './dragDrop'
@@ -30,9 +31,9 @@ export default function (context) {
   this.selection = selection
   this.ancestor = UI.utils.ancestor // make available as outline.ancestor in callbacks
   this.sparql = UI.rdf.UpdateManager
-  this.kb = UI.store
-  const kb = UI.store
-  const sf = UI.store.fetcher
+  this.kb = store
+  const kb = store
+  const sf = store.fetcher
   dom.outline = this
   this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
@@ -344,7 +345,7 @@ export default function (context) {
   async function globalAppTabs (options = {}) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
-    const me = UI.authn.currentUser()
+    const me = authn.currentUser()
     if (!me) {
       alert('Must be logged in for this')
       throw new Error('Not logged in')
@@ -361,7 +362,7 @@ export default function (context) {
       const pane = panes.byName(item.paneName) // 20190701
       containerDiv.innerHTML = ''
       const table = containerDiv.appendChild(dom.createElement('table'))
-      const me = UI.authn.currentUser()
+      const me = authn.currentUser()
       thisOutline.GotoSubject(
         item.subject || me,
         true,
@@ -391,7 +392,7 @@ export default function (context) {
   this.getDashboard = globalAppTabs
 
   async function getDashboardItems () {
-    const me = UI.authn.currentUser()
+    const me = authn.currentUser()
     if (!me) return []
     const div = dom.createElement('div')
     const [books, pods] = await Promise.all([getAddressBooks(), getPods()])
@@ -468,7 +469,7 @@ export default function (context) {
 
     async function getAddressBooks () {
       try {
-        const context = await UI.authn.findAppInstances(
+        const context = await UI.login.findAppInstances(
           { me, div, dom },
           ns.vcard('AddressBook')
         )
@@ -520,7 +521,7 @@ export default function (context) {
     })
 
     // close the dashboard if user log out
-    UI.authn.authSession.onLogout(closeDashboard)
+    authSession.onLogout(closeDashboard)
 
     // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
@@ -586,7 +587,7 @@ export default function (context) {
       // there are no relevant panes, simply return default pane (which ironically is internalPane)
       return [panes.byName('internal')]
     }
-    const filteredPanes = await UI.authn.filterAvailablePanes(relevantPanes)
+    const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
       // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
       return [relevantPanes[0]]
@@ -1353,7 +1354,7 @@ export default function (context) {
     if (target.label) {
       window.content.location = target.label
       // The following alternative does not work in the extension.
-      // var s = UI.store.sym(target.label);
+      // var s = store.sym(target.label);
       // outline.GotoSubject(s, true);
     }
   }
@@ -1424,7 +1425,7 @@ export default function (context) {
         // don't do these for headers or base nodes
         const source = st.why
         // var target = st.why
-        const editable = UI.store.updater.editable(source.uri, kb)
+        const editable = store.updater.editable(source.uri, kb)
         if (!editable) {
           // let target = node.parentNode.AJAR_inverse ? st.object : st.subject
         } // left hand side
@@ -1595,7 +1596,7 @@ export default function (context) {
           // I don't know why 'HTML'
           const object = UI.utils.getAbout(kb, selectedTd)
           target = selectedTd.parentNode.AJAR_statement.why
-          editable = UI.store.updater.editable(target.uri, kb)
+          editable = store.updater.editable(target.uri, kb)
           if (object) {
             // <Feature about='enterToExpand'>
             outline.GotoSubject(object, true)
@@ -1646,7 +1647,7 @@ export default function (context) {
       case 46: // delete
       case 8: // backspace
         target = selectedTd.parentNode.AJAR_statement.why
-        editable = UI.store.updater.editable(target.uri, kb)
+        editable = store.updater.editable(target.uri, kb)
         if (editable) {
           e.preventDefault() // prevent from going back
           this.UserInput.Delete(selectedTd)
@@ -1888,7 +1889,7 @@ export default function (context) {
       const st = node.parentNode.AJAR_statement
       if (!st) return // For example in the title TD of an expanded pane
       const target = st.why
-      const editable = UI.store.updater.editable(target.uri, kb)
+      const editable = store.updater.editable(target.uri, kb)
       if (sel && editable) thisOutline.UserInput.Click(e, selection[0]) // was next 2 lines
       // var text='TabulatorMouseDown@Outline()';
       // HCIoptions['able to edit in Discovery Mode by mouse'].setupHere([sel,e,thisOutline,selection[0]],text);

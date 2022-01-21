@@ -351,7 +351,7 @@ module.exports = {
 
     // //////////////////////////////////////////////////////////////////////////////
 
-    // var me = UI.authn.currentUser()
+    // var me = authn.currentUser()
 
     //              Render a single Period
 

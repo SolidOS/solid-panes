@@ -3,13 +3,14 @@
  Charles McKenzie <charles2@mit.edu>
 */
 /* global alert */
-const UI = require('solid-ui')
+import { authn, store } from 'solid-logic'
+import * as UI from 'solid-ui'
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'microblog/microblog.png',
   name: 'microblogPane',
   label: function (subject) {
-    if (UI.store.whether(subject, UI.ns.rdf('type'), UI.ns.foaf('Person'))) {
+    if (store.whether(subject, UI.ns.rdf('type'), UI.ns.foaf('Person'))) {
       return 'Microblog'
     } else {
       return null
@@ -25,9 +26,9 @@ module.exports = {
     const terms = UI.rdf.Namespace('http://purl.org/dc/terms/')
     const RDF = UI.ns.rdf
 
-    const kb = UI.store
+    const kb = store
     const charCount = 140
-    const sf = UI.store.fetcher
+    const sf = store.fetcher
     //* **********************************************
     // BACK END
     //* **********************************************
@@ -134,7 +135,7 @@ module.exports = {
       // attempt to fetch user account from local preferences if just
       // in case the user's foaf was not writable. add it to the store
       // this will probably need to change.
-      const theUser = UI.authn.currentUser()
+      const theUser = authn.currentUser()
 
       if (theUser) {
         let theAccount = UI.preferences.get('acct')
@@ -304,7 +305,7 @@ module.exports = {
       })
     }
     Microblog.prototype.getMyURI = function () {
-      const me = UI.authn.currentUser()
+      const me = authn.currentUser()
       console.log(me)
       const myMicroblog = kb.any(kb.sym(me), FOAF('holdsAccount'))
       console.log('\n\n' + myMicroblog)
@@ -533,7 +534,7 @@ module.exports = {
       } else if (resourceType.uri === SIOC('User').uri) {
         this.thisIsMe = s.uri === mb.getMyURI()
       } else if (resourceType.uri === FOAF('Person').uri) {
-        const me = UI.authn.currentUser()
+        const me = authn.currentUser()
         const meUri = me && me.uri
         this.thisIsMe = s.uri === meUri
       } else {
@@ -900,7 +901,7 @@ module.exports = {
         ) {
           creator = creators[c]
           // var mb = kb.sym(creator.uri.split("#")[0]);
-          // UI.store.fetcher.refresh(mb);
+          // store.fetcher.refresh(mb);
           break
           // TODO add support for more than one microblog in same foaf
         }

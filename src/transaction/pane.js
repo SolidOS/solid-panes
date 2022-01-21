@@ -67,7 +67,7 @@ module.exports = {
 
     const t = kb.findTypeURIs(subject)
 
-    // var me = UI.authn.currentUser()
+    // var me = authn.currentUser()
     const predicateURIsDone = {}
     const donePredicate = function (pred) {
       predicateURIsDone[pred.uri] = true

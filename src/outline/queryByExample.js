@@ -31,7 +31,6 @@ function predParentOf (node) {
 }
 
 function makeQueryRow (q, tr, constraint) {
-  const kb = UI.store
   // predtr = predParentOf(tr)
   // var nodes = tr.childNodes
   // var n = tr.childNodes.length
@@ -87,7 +86,7 @@ function makeQueryRow (q, tr, constraint) {
     }
   }
   if (opt) {
-    const optForm = kb.formula()
+    const optForm = store.formula()
     optionalSubqueriesIndex.push(optForm)
     predtr.setAttribute(
       'optionalSubqueriesIndex',
@@ -115,7 +114,7 @@ function makeQueryRow (q, tr, constraint) {
   // UI.log.debug('Initial variable: '+tr.AJAR_variable)
   const v = tr.AJAR_variable
     ? tr.AJAR_variable
-    : kb.variable(UI.utils.newVariableName())
+    : store.variable(UI.utils.newVariableName())
   q.vars.push(v)
   v.label = hasParent ? parentVar.label : UI.utils.label(parentVar)
   v.label += ' ' + UI.utils.predicateLabelForXML(st.predicate, inverse)

@@ -60,7 +60,7 @@ module.exports = {
 
     const t = kb.findTypeURIs(subject)
 
-    // var me = UI.authn.currentUser()
+    // var me = authn.currentUser()
 
     //      Function: Render a single trip
 

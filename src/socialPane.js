@@ -198,11 +198,11 @@ module.exports = {
     let h3 = dom.createElement('H3')
     h3.appendChild(dom.createTextNode(name))
 
-    let me = UI.authn.currentUser()
+    let me = authn.currentUser()
     const meUri = me ? me.uri : null
 
     // @@ Add: event handler to redraw the stuff below when me changes.
-    const loginOutButton = UI.authn.loginStatusBox(dom, webIdUri => {
+    const loginOutButton = UI.login.loginStatusBox(dom, webIdUri => {
       me = kb.sym(webIdUri)
       // @@ To be written:   redraw as a function the new me
       // @@ refresh the sidebars

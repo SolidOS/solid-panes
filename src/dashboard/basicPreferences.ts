@@ -1,6 +1,6 @@
-import { authn, icons, ns, widgets } from 'solid-ui'
+import { icons, ns, widgets, login } from 'solid-ui'
+import { solidLogicSingleton } from 'solid-logic'
 import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
-
 import preferencesFormText from './preferencesFormText.ttl'
 import ontologyData from './ontologyData.ttl'
 import { PaneDefinition } from 'pane-registry'
@@ -46,7 +46,7 @@ export const basicPreferencesPane: PaneDefinition = {
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const renderContext = await authn.logInLoadPreferences({
+      const renderContext = await login.logInLoadPreferences({
         dom,
         div: container
       })

@@ -1,6 +1,6 @@
-import { authn, icons, store, widgets } from 'solid-ui'
+import { icons, store, widgets, login } from 'solid-ui'
 import { NamedNode } from 'rdflib'
-
+import { authn, solidLogicSingleton } from 'solid-logic'
 import { PaneDefinition } from 'pane-registry'
 import { createApplicationTable, createContainer, createText } from './trustedApplications.dom'
 
@@ -32,7 +32,7 @@ const trustedApplicationView: PaneDefinition = {
 }
 
 async function render (dom, main, statusArea): Promise<void> {
-  const authContext = await authn.logInLoadProfile({ dom: dom, div: main, statusArea: statusArea, me: null })
+  const authContext = await login.logInLoadProfile({ dom: dom, div: main, statusArea: statusArea, me: null })
   const subject = authContext.me as NamedNode
 
   const profile = subject.doc()

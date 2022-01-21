@@ -8,8 +8,8 @@
  * or standalone script adding onto existing mashlib.
  */
 
-import { authn, icons, ns, style, widgets } from 'solid-ui'
-
+import { icons, ns, style, widgets, login } from 'solid-ui'
+import { solidLogicSingleton } from 'solid-logic'
 import { NamedNode, parse, sym, Store } from 'rdflib'
 
 import profileFormText from './profileFormText.ttl'
@@ -86,7 +86,7 @@ const editProfileView: PaneDefinition = {
       statusArea: statusArea,
       me: null
     }
-    authn.logInLoadProfile(profileContext)
+    login.logInLoadProfile(profileContext)
       .then(loggedInContext => {
         const me = loggedInContext.me!
 
@@ -136,8 +136,7 @@ const editProfileView: PaneDefinition = {
         renderProfileForm(main, me)
 
         heading('Thank you for filling your profile.')
-      })
-      .catch(error => {
+      }).catch(error => {
         statusArea.appendChild(widgets.errorMessageBlock(dom, error, '#fee'))
       })
     return div

@@ -38,7 +38,7 @@ module.exports = {
   },
   /*
   shouldGetFocus: function(subject) {
-      return UI.store.whether(subject, UI.ns.rdf('type'), UI.ns.link('RDFDocument'))
+      return store.whether(subject, UI.ns.rdf('type'), UI.ns.link('RDFDocument'))
   },
 */
   statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
