@@ -1,9 +1,8 @@
-import { icons, ns, widgets, login } from 'solid-ui'
-import { solidLogicSingleton } from 'solid-logic'
-import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
-import preferencesFormText from './preferencesFormText.ttl'
-import ontologyData from './ontologyData.ttl'
 import { PaneDefinition } from 'pane-registry'
+import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
+import { icons, login, ns, widgets } from 'solid-ui'
+import ontologyData from './ontologyData.ttl'
+import preferencesFormText from './preferencesFormText.ttl'
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',

@@ -6,7 +6,8 @@
 // to find all other places which had the same pattern.
 // Fields could be optional by pressing th ewhite optoional button
 
-const UI = require('solid-ui')
+import { store } from 'solid-logic'
+import * as UI from 'solid-ui'
 
 module.exports = {
   makeQueryRow,

@@ -8,11 +8,11 @@
  **
  */
 
-import { create, icons, login } from 'solid-ui'
-import { authn, authSession } from 'solid-logic'
 import { PaneDefinition } from 'pane-registry'
-import { CreateContext } from 'solid-ui/lib/create/types'
 import { NamedNode } from 'rdflib'
+import { authn } from 'solid-logic'
+import { create, icons, login } from 'solid-ui'
+import { CreateContext } from 'solid-ui/lib/create/types'
 
 const HomePaneSource: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg', // noun_25830

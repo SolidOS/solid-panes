@@ -8,13 +8,11 @@
  * or standalone script adding onto existing mashlib.
  */
 
-import { icons, ns, style, widgets, login } from 'solid-ui'
-import { solidLogicSingleton } from 'solid-logic'
-import { NamedNode, parse, sym, Store } from 'rdflib'
-
-import profileFormText from './profileFormText.ttl'
 import { PaneDefinition } from 'pane-registry'
+import { NamedNode, parse, Store, sym } from 'rdflib'
+import { icons, login, ns, style, widgets } from 'solid-ui'
 import { paneDiv } from './profile.dom'
+import profileFormText from './profileFormText.ttl'
 
 const highlightColor = style.highlightColor || '#7C4DFF'
 

@@ -8,8 +8,9 @@
  **  -- todo: use common code to get username and load profile and set 'me'
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',

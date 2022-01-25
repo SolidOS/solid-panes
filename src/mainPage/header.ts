@@ -1,5 +1,5 @@
+import { authSession, authn } from 'solid-logic'
 import { icons, initHeader } from 'solid-ui'
-import * as solidLogicLib from 'solid-logic'
 /**
  * menu icons
 */
@@ -18,8 +18,6 @@ const LOG_OUT_MENU_ITEM = 'Log out'
  */
 const USER_GUIDE_MENU_URL = 'https://solid.github.io/userguide/'
 const REPORT_A_PROBLEM_MENU_URL = 'https://github.com/solid/solidos/issues'
-
-const singletonStore = solidLogicLib.solidLogicSingleton.store
 
 export async function createHeader (store, outliner) {
   initHeader(store, await setUserMenu(outliner), setHeaderOptions())
@@ -44,7 +42,7 @@ async function setUserMenu (outliner: any) {
   const logOut = {
     label: LOG_OUT_MENU_ITEM,
     onclick: () => {
-      solidLogicLib.authSession.logout()
+      authSession.logout()
     }
   }
 
@@ -57,7 +55,7 @@ async function setUserMenu (outliner: any) {
 }
 
 function openUserProfile (outliner: any) {
-  outliner.GotoSubject(solidLogicLib.authn.currentUser(), true, undefined, true, undefined)
+  outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
   location.reload()
 }
 

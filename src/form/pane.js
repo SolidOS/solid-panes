@@ -3,8 +3,9 @@
  **
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
 module.exports = {

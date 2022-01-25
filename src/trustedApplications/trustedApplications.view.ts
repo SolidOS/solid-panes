@@ -1,7 +1,7 @@
-import { icons, store, widgets, login } from 'solid-ui'
-import { NamedNode } from 'rdflib'
-import { authn, solidLogicSingleton } from 'solid-logic'
 import { PaneDefinition } from 'pane-registry'
+import { NamedNode } from 'rdflib'
+import { icons, login, widgets } from 'solid-ui'
+import { store } from 'solid-logic'
 import { createApplicationTable, createContainer, createText } from './trustedApplications.dom'
 
 const thisColor = '#418d99'
