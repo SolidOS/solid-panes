@@ -14,7 +14,7 @@
 // var UI = require('solid-ui') // Note we will add the panes register to this.
 import versionInfo from './versionInfo'
 import * as UI from 'solid-ui'
-import { LiveStore } from 'solid-logic'
+import { LiveStore } from 'rdflib'
 import OutlineManager from './outline/manager.js'
 import registerPanes from './registerPanes.js'
 import {
