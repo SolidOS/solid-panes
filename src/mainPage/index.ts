@@ -14,7 +14,7 @@ export default async function initMainPage (store: IndexedFormula, uri?: string|
   let subject = uri
   if (typeof uri === 'string') subject = store.sym(uri)
   outliner.GotoSubject(subject, true, undefined, true, undefined)
-  const header = createHeader(store, outliner)
+  const header = await createHeader(store, outliner)
   const footer = createFooter(store)
   return Promise.all([header, footer])
 }
