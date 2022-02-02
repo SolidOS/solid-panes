@@ -59,12 +59,12 @@
     "pane-registry": "^2.4.6",
     "path-browserify": "^1.0.1",
     "profile-pane": "file:../profile-pane",
+    "rdflib": "^2.2.17",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "solid-logic": "file:../solid-logic",
+    "solid-logic": "^1.3.13-2e3e7417",
     "solid-namespace": "^0.5.2",
     "solid-ui": "file:../solid-ui",
-    "rdflib": "^2.2.17",
     "source-pane": "^2.2.14"
   },
   "devDependencies": {
