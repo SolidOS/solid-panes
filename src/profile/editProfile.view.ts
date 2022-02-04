@@ -84,7 +84,7 @@ const editProfileView: PaneDefinition = {
       statusArea: statusArea,
       me: null
     }
-    login.logInLoadProfile(profileContext)
+    login.ensureLoadedProfile(profileContext)
       .then(loggedInContext => {
         const me = loggedInContext.me!
 

@@ -45,7 +45,7 @@ export const basicPreferencesPane: PaneDefinition = {
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const renderContext = await login.logInLoadPreferences({
+      const renderContext = await login.ensureLoadedPreferences({
         dom,
         div: container
       })

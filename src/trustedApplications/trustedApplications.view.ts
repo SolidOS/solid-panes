@@ -32,7 +32,7 @@ const trustedApplicationView: PaneDefinition = {
 }
 
 async function render (dom, main, statusArea): Promise<void> {
-  const authContext = await login.logInLoadProfile({ dom: dom, div: main, statusArea: statusArea, me: null })
+  const authContext = await login.ensureLoadedProfile({ dom: dom, div: main, statusArea: statusArea, me: null })
   const subject = authContext.me as NamedNode
 
   const profile = subject.doc()
