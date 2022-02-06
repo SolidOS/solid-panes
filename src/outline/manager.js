@@ -426,13 +426,13 @@ export default function (context) {
       }
       async function addPodStorageFromUrl (url) {
         const podStorage = new URL(url)
-        // check for predicate Storage up the tree
-        let list = podStorage.pathname
-        while (list.length) {
-          list = list.substring(0, list.lastIndexOf('/'))
-          if (await addPodStorage(kb.sym(`${podStorage.origin}${list}/`))) return
+        // check for predicate pim:Storage in containers up the path tree
+        let pathStorage = podStorage.pathname
+        while (pathStorage.length) {
+          pathStorage = pathStorage.substring(0, pathStorage.lastIndexOf('/'))
+          if (await addPodStorage(kb.sym(`${podStorage.origin}${pathStorage}/`))) return
         }
-        // TODO should url.origin be added to pods list when there are no Storage ???
+        // TODO should url.origin be added to pods list when there are no pim:Storage ???
       }
 
       try {
@@ -445,7 +445,8 @@ export default function (context) {
       // load pod's storages from profile
       let pods = kb.each(me, ns.space('storage'), null, me.doc())
       pods.map(async (pod) => {
-        await loadContainerRepresentation(pod) // TODO use addPodStorageFromUrl(pod.uri) to check for Storage triple
+        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
+        await loadContainerRepresentation(pod)
       })
 
       try {
