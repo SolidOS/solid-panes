@@ -466,8 +466,6 @@ export default function (context) {
         return uniqueNodes
       }
       pods = uniques(pods)
-      console.log('return pods')
-      console.log(pods)
       if (!pods.length) return []
       return pods.map((pod, index) => {
         function split (item) { return item.uri.split('//')[1].slice(0, -1) }
