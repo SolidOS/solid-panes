@@ -416,23 +416,23 @@ export default function (context) {
       .concat(pods)
 
     async function getPods () {
-      async function addPodRoot (pod) { // namedNode
-        await checkForContainerRepresentation(pod)
+      async function addPodStorage (pod) { // namedNode
+        await loadContainerRepresentation(pod)
         if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
           pods.push(pod)
           return true
         }
         return false
       }
-      async function addPodRootFromUrl (url) {
+      async function addPodStorageFromUrl (url) {
         const podStorage = new URL(url)
-        // check that origin is not included in pods array
-        if (!pods.some(pod => pod.uri.includes(podStorage.origin))) {
-          // check in order, location.origin/<podName> then location.origin containing space:Storage
-          if (podStorage.pathname === '/' || !(await addPodRoot(kb.sym(`${podStorage.origin}/${podStorage.pathname.split('/')[1]}/`)))) {
-            await addPodRoot(kb.sym(`${podStorage.origin}/`))
-          }
+        // check for predicate pim:Storage in containers up the path tree
+        let pathStorage = podStorage.pathname
+        while (pathStorage.length) {
+          pathStorage = pathStorage.substring(0, pathStorage.lastIndexOf('/'))
+          if (await addPodStorage(kb.sym(`${podStorage.origin}${pathStorage}/`))) return
         }
+        // TODO should url.origin be added to pods list when there are no pim:Storage ???
       }
 
       try {
@@ -442,16 +442,30 @@ export default function (context) {
         console.error('Unable to load profile', err)
         return []
       }
-      const pods = kb.each(me, ns.space('storage'), null, me.doc())
+      // load pod's storages from profile
+      let pods = kb.each(me, ns.space('storage'), null, me.doc())
+      pods.map(async (pod) => {
+        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
+        await loadContainerRepresentation(pod)
+      })
 
       try {
         // if uri then SolidOS is a browse.html web app
         const uri = (new URL(window.location.href)).searchParams.get('uri')
         const podUrl = uri || window.location.href
-        await addPodRootFromUrl(podUrl.substring(0, podUrl.lastIndexOf('/') + 1))
+        await addPodStorageFromUrl(podUrl)
       } catch (err) {
         console.error('cannot load container', err)
       }
+      // remove namedNodes duplicates
+      function uniques (nodes) {
+        const uniqueNodes = []
+        nodes.forEach(node => {
+          if (!uniqueNodes.find(uniqueNode => uniqueNode.equals(node))) uniqueNodes.push(node)
+        })
+        return uniqueNodes
+      }
+      pods = uniques(pods)
       if (!pods.length) return []
       return pods.map((pod, index) => {
         function split (item) { return item.uri.split('//')[1].slice(0, -1) }
@@ -566,7 +580,7 @@ export default function (context) {
     )
   }
 
-  async function checkForContainerRepresentation (subject) {
+  async function loadContainerRepresentation (subject) {
     // force reload for index.html with RDFa
     if (!kb.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
       const response = await kb.fetcher.webOperation('GET', subject.uri, kb.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
@@ -577,7 +591,7 @@ export default function (context) {
 
   async function getRelevantPanes (subject, context) {
     // make sure container representation is loaded (when server returns index.html)
-    if (subject.uri.endsWith('/')) { await checkForContainerRepresentation(subject) }
+    if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
     const panes = context.session.paneRegistry
     const relevantPanes = panes.list.filter(
       pane => pane.label(subject, context) && !pane.global
