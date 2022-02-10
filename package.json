@@ -46,7 +46,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "file:../activitystreams-pane",
+    "activitystreams-pane": "0.6.3-a5c8dbc2",
     "babel-preset-env": "^1.7.0",
     "babel-preset-metalab": "^1.0.0",
     "chat-pane": "2.4.15-f3d7a087",
