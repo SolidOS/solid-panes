@@ -45,7 +45,6 @@
   "homepage": "https://github.com/solid/solid-panes",
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
-    "@inrupt/solid-client-authn-browser": "^1.11.3",
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "0.6.3-72a90d59",
     "babel-preset-env": "^1.7.0",
