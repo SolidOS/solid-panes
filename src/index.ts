@@ -11,6 +11,7 @@
  */
 
 import versionInfo from './versionInfo'
+import * as UI from 'solid-ui'
 import { LiveStore } from 'rdflib'
 import { solidLogicSingleton, store } from 'solid-logic'
 import OutlineManager from './outline/manager.js'
@@ -52,7 +53,7 @@ registerPanes((cjsOrEsModule: any) => register(cjsOrEsModule.default || cjsOrEsM
 export {
   OutlineManager,
   getOutliner,
-  // UI,
+  UI,
   versionInfo,
   initMainPage,
   list, // from paneRegistry

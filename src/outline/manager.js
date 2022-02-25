@@ -5,7 +5,7 @@
 
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
-import * as panes from 'pane-registry'
+import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import YAHOO from './dragDrop'
 import outlineIcons from './outlineIcons'
@@ -359,7 +359,7 @@ export default function (context) {
 
     function renderMain (containerDiv, item) {
       // Items are pane names
-      const pane = panes.byName(item.paneName) // 20190701
+      const pane = paneRegistry.byName(item.paneName) // 20190701
       containerDiv.innerHTML = ''
       const table = containerDiv.appendChild(dom.createElement('table'))
       const me = authn.currentUser()
@@ -1689,7 +1689,7 @@ export default function (context) {
             sf.addCallback('done', setSelectedAfterward)
             sf.addCallback('fail', setSelectedAfterward)
             outlineExpand(selectedTd, obj, {
-              pane: panes.byName('defaultPane')
+              pane: paneRegistry.byName('defaultPane')
             })
           }
           setSelectedAfterward()
@@ -1792,7 +1792,7 @@ export default function (context) {
     const target = thisOutline.targetOf(e)
     const p = target.parentNode
     const subject = UI.utils.getAbout(kb, target)
-    const pane = e.altKey ? panes.byName('internal') : undefined // set later: was panes.defaultPane
+    const pane = e.altKey ? paneRegistry.byName('internal') : undefined // set later: was panes.defaultPane
 
     if (e.shiftKey) {
       // Shift forces a refocus - bring this to the top
@@ -1801,7 +1801,7 @@ export default function (context) {
       if (e.altKey) {
         // To investigate screw ups, dont wait show internals
         outlineExpand(p, subject, {
-          pane: panes.byName('internal'),
+          pane: paneRegistry.byName('internal'),
           immediate: true
         })
       } else {
@@ -1814,7 +1814,7 @@ export default function (context) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     const target = thisOutline.targetOf(e)
     const subject = UI.utils.getAbout(kb, target)
-    const pane = e.altKey ? panes.byName('internal') : undefined
+    const pane = e.altKey ? paneRegistry.byName('internal') : undefined
     const p = target.parentNode.parentNode
     outlineCollapse(p, subject, pane)
   }
@@ -2415,7 +2415,7 @@ export default function (context) {
         row.appendChild(thisOutline.outlineObjectTD(elt))
       }
     } else if (obj.termType === 'Graph') {
-      rep = panes
+      rep = paneRegistry
         .byName('dataContentPane')
         .statementsAsTables(obj.statements, context)
       rep.setAttribute('class', 'nestedFormula')
