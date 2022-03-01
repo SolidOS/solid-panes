@@ -51,7 +51,7 @@
     "babel-preset-metalab": "^1.0.0",
     "chat-pane": "^2.4.16",
     "contacts-pane": "^2.6.1",
-    "folder-pane": "^2.4.13",
+    "folder-pane": "^2.4.14",
     "issue-pane": "^2.4.10",
     "marked": "^4.0.12",
     "meeting-pane": "^2.3.9",
