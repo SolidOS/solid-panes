@@ -11,17 +11,17 @@
     request: 'from' 'to' 'message' 'Request'
 */
 
-const UI = require('solid-ui')
+import * as UI from 'solid-ui'
+import { store } from 'solid-logic'
+import * as panes from 'pane-registry'
+
 const $rdf = UI.rdf
-const panes = require('pane-registry')
 
 let UserInputFormula // Formula to store references of user's work
 let TempFormula // Formula to store incomplete triples (Requests),
 // temporarily disjoint with kb to avoid bugs
 
 module.exports = function UserInput (outline) {
-  const kb = UI.store
-
   const myDocument = outline.document // is this ok?
   // UI.log.warn("myDocument when it's set is "+myDocument.location);
   this.menuId = 'predicateMenu1'
@@ -59,18 +59,18 @@ module.exports = function UserInput (outline) {
 
   if (!UserInputFormula) {
     UserInputFormula = new UI.rdf.Formula()
-    UserInputFormula.superFormula = kb
+    UserInputFormula.superFormula = store
     // UserInputFormula.registerFormula("Your Work");
   }
   if (!TempFormula) TempFormula = new UI.rdf.IndexedFormula()
   // Use RDFIndexedFormula so add returns the statement
   TempFormula.name = 'TempFormula'
-  if (!UI.store.updater) UI.store.updater = new UI.rdf.UpdateManager(kb)
+  if (!store.updater) store.updater = new UI.rdf.UpdateManager(store)
 
   return {
     // updateService: updateService,
 
-    sparqler: UI.store.updater,
+    sparqler: store.updater,
     lastModified: null, // the last <input> being modified, .isNew indicates whether it's a new input
     lastModifiedStat: null, // the last statement being modified
     statIsInverse: false, // whether the statement is an inverse
@@ -122,10 +122,10 @@ module.exports = function UserInput (outline) {
       } else {
         // no previous row: write to the document defining the subject
         const subject = UI.utils.getAbout(
-          kb,
+          store,
           UI.utils.ancestor(target.parentNode.parentNode, 'TD')
         )
-        const doc = kb.sym(UI.rdf.Util.uri.docpart(subject.uri))
+        const doc = store.sym(UI.rdf.Util.uri.docpart(subject.uri))
         This.formUndetStat(insertTr, subject, reqTerm1, reqTerm2, doc, false)
       }
 
@@ -324,7 +324,7 @@ module.exports = function UserInput (outline) {
         obj = UI.utils.getTerm(target)
         trNode = UI.utils.ancestor(target, 'TR')
       } catch (e) {
-        UI.log.warn('userinput.js: ' + e + UI.utils.getAbout(kb, selectedTd))
+        UI.log.warn('userinput.js: ' + e + UI.utils.getAbout(store, selectedTd))
         UI.log.error(target + ' getStatement Error:' + e)
       }
 
@@ -445,14 +445,14 @@ module.exports = function UserInput (outline) {
           s = new UI.rdf.Statement(
             s.subject,
             s.predicate,
-            kb.literal(this.lastModified.value),
+            store.literal(this.lastModified.value),
             s.why
           )
           // TODO: DEFINE ERROR CALLBACK
           defaultpropview = this.views.defaults[s.predicate.uri]
           trCache = UI.utils.ancestor(this.lastModified, 'TR')
           try {
-            UI.store.updater.update([], [s], function (
+            store.updater.update([], [s], function (
               uri,
               success,
               errorBody
@@ -473,10 +473,10 @@ module.exports = function UserInput (outline) {
             UI.log.error('Error inserting fact ' + s + ':\n\t' + e + '\n')
             return
           }
-          s = kb.add(
+          s = store.add(
             s.subject,
             s.predicate,
-            kb.literal(this.lastModified.value),
+            store.literal(this.lastModified.value),
             s.why
           )
         } else {
@@ -499,11 +499,11 @@ module.exports = function UserInput (outline) {
               s2 = $rdf.st(
                 s.subject,
                 s.predicate,
-                kb.literal(this.lastModified.value),
+                store.literal(this.lastModified.value),
                 s.why
               )
               try {
-                UI.store.updater.update([s], [s2], function (
+                store.updater.update([s], [s2], function (
                   uri,
                   success,
                   errorBody
@@ -531,12 +531,12 @@ module.exports = function UserInput (outline) {
             }
             case 'BlankNode': { // a request refill with text
               // var newStat
-              const textTerm = kb.literal(this.lastModified.value, '')
+              const textTerm = store.literal(this.lastModified.value, '')
               // <Feature about="labelChoice">
               if (s.predicate.termType === 'Collection') {
                 // case: add triple   ????????? Weird - tbl
                 const selectedPredicate = s.predicate.elements[0] //    @@ TBL elements is a list on the predicate??
-                if (kb.any(undefined, selectedPredicate, textTerm)) {
+                if (store.any(undefined, selectedPredicate, textTerm)) {
                   if (!e) {
                     // keyboard
                     const tdNode = this.lastModified.parentNode
@@ -545,7 +545,7 @@ module.exports = function UserInput (outline) {
                     e.pageY = UI.utils.findPos(tdNode)[1] + tdNode.clientHeight
                   }
                   this.showMenu(e, 'DidYouMeanDialog', undefined, {
-                    dialogTerm: kb.any(undefined, selectedPredicate, textTerm),
+                    dialogTerm: store.any(undefined, selectedPredicate, textTerm),
                     bnodeTerm: s.subject
                   })
                 } else {
@@ -554,8 +554,8 @@ module.exports = function UserInput (outline) {
                     'TR'
                   ).AJAR_statement
                   s2 = $rdf.st(s.subject, selectedPredicate, textTerm, s.why)
-                  const type = kb.the(s.subject, rdf('type'))
-                  s3 = kb.anyStatementMatching(
+                  const type = store.the(s.subject, rdf('type'))
+                  s3 = store.anyStatementMatching(
                     s.subject,
                     rdf('type'),
                     type,
@@ -568,7 +568,7 @@ module.exports = function UserInput (outline) {
                     'TD'
                   ).parentNode
                   try {
-                    UI.store.updater.update([], [s1, s2, s3], function (
+                    store.updater.update([], [s1, s2, s3], function (
                       uri,
                       success,
                       errorBody
@@ -589,8 +589,8 @@ module.exports = function UserInput (outline) {
                     )
                     return
                   }
-                  kb.remove(s)
-                  kb.add(s.subject, selectedPredicate, textTerm, s.why) // was: newStat =
+                  store.remove(s)
+                  store.add(s.subject, selectedPredicate, textTerm, s.why) // was: newStat =
                   // a subtle bug occurs here, if foaf:nick hasn't been dereferneced,
                   // this add will cause a repainting
                 }
@@ -609,7 +609,7 @@ module.exports = function UserInput (outline) {
                 this.fillInRequest(
                   'object',
                   this.lastModified.parentNode,
-                  kb.literal(this.lastModified.value)
+                  store.literal(this.lastModified.value)
                 )
                 return // The new Td is already generated by fillInRequest, so it's done.
               }
@@ -638,7 +638,7 @@ module.exports = function UserInput (outline) {
         // UI.log.warn("test .isNew)");
         return
       } else if (s.predicate.termType === 'Collection') {
-        kb.removeMany(s.subject)
+        store.removeMany(s.subject)
         const upperTr = UI.utils.ancestor(
           UI.utils.ancestor(this.lastModified, 'TR').parentNode,
           'TR'
@@ -687,7 +687,7 @@ module.exports = function UserInput (outline) {
         // outline.replaceTD(outline.outlineObjectTD(s.object, defaultpropview),trNode.lastChild);
         outline.replaceTD(
           outline.outlineObjectTD(
-            kb.literal(this.lastModified.value),
+            store.literal(this.lastModified.value),
             defaultpropview
           ),
           trNode.lastChild
@@ -726,14 +726,14 @@ module.exports = function UserInput (outline) {
       const s = this.getStatementAbout(selectedTd)
       if (
         !isBackOut &&
-        !kb.whether(s.object, rdf('type'), UI.ns.link('Request')) &&
+        !store.whether(s.object, rdf('type'), UI.ns.link('Request')) &&
         // Better to check whether provenance is internal?
-        !kb.whether(s.predicate, rdf('type'), UI.ns.link('Request')) &&
-        !kb.whether(s.subject, rdf('type'), UI.ns.link('Request'))
+        !store.whether(s.predicate, rdf('type'), UI.ns.link('Request')) &&
+        !store.whether(s.subject, rdf('type'), UI.ns.link('Request'))
       ) {
         UI.log.debug('about to send SPARQLUpdate')
         try {
-          UI.store.updater.update([s], [], function (uri, success, errorBody) {
+          store.updater.update([s], [], function (uri, success, errorBody) {
             if (success) {
               removefromview()
             } else {
@@ -871,14 +871,14 @@ module.exports = function UserInput (outline) {
           // modify store and update here
           const isInverse = selectedTd.parentNode.AJAR_inverse
           if (!isInverse) {
-            insertTr.AJAR_statement = kb.add(
+            insertTr.AJAR_statement = store.add(
               preStat.subject,
               preStat.predicate,
               term,
               preStat.why
             )
           } else {
-            insertTr.AJAR_statemnet = kb.add(
+            insertTr.AJAR_statemnet = store.add(
               term,
               preStat.predicate,
               preStat.object,
@@ -887,7 +887,7 @@ module.exports = function UserInput (outline) {
           }
 
           try {
-            UI.store.updater.update([], [insertTr.AJAR_statement], function (
+            store.updater.update([], [insertTr.AJAR_statement], function (
               uri,
               success,
               errorBody
@@ -1001,10 +1001,10 @@ module.exports = function UserInput (outline) {
                 }
             */
           subject = UI.utils.getAbout(
-            kb,
+            store,
             UI.utils.ancestor(selectedTd, 'TABLE').parentNode
           )
-          subjectClass = kb.any(subject, rdf('type'))
+          subjectClass = store.any(subject, rdf('type'))
           sparqlText = []
           const endl = '.\n'
           sparqlText[0] =
@@ -1032,11 +1032,11 @@ module.exports = function UserInput (outline) {
             'SELECT ?pred WHERE{\n' +
             subject +
             rdf('type') +
-            kb.variable('subjectClass') +
+            store.variable('subjectClass') +
             endl +
-            kb.variable('pred') +
+            store.variable('pred') +
             UI.ns.rdfs('domain') +
-            kb.variable('subjectClass') +
+            store.variable('subjectClass') +
             endl +
             '}'
           predicateQuery = sparqlText.map($rdf.SPARQLToQuery)
@@ -1058,10 +1058,10 @@ module.exports = function UserInput (outline) {
                    ?pred rdfs:range ?objectClass.
             */
           subject = UI.utils.getAbout(
-            kb,
+            store,
             UI.utils.ancestor(selectedTd, 'TABLE').parentNode
           )
-          subjectClass = kb.any(subject, rdf('type'))
+          subjectClass = store.any(subject, rdf('type'))
           const object = selectedTd.parentNode.AJAR_statement.object
           // var objectClass = (object.termType === 'Literal') ? UI.ns.rdfs('Literal') : kb.any(object, rdf('type'))
           // var sparqlText="SELECT ?pred WHERE{\n?pred "+rdf('type')+rdf('Property')+".\n"+
@@ -1098,13 +1098,13 @@ module.exports = function UserInput (outline) {
         // objectTd
         const predicateTerm = selectedTd.parentNode.AJAR_statement.predicate
         if (
-          kb.whether(
+          store.whether(
             predicateTerm,
             rdf('type'),
             UI.ns.owl('DatatypeProperty')
           ) ||
           predicateTerm.termType === 'Collection' ||
-          kb.whether(predicateTerm, UI.ns.rdfs('range'), UI.ns.rdfs('Literal'))
+          store.whether(predicateTerm, UI.ns.rdfs('range'), UI.ns.rdfs('Literal'))
         ) {
           selectedTd.className = ''
           UI.utils.emptyNode(selectedTd)
@@ -1174,7 +1174,7 @@ module.exports = function UserInput (outline) {
           if (menu.lastHighlight) menu.lastHighlight.className = ''
           menu.lastHighlight = item
           menu.lastHighlight.className = 'activeItem'
-          outline.showURI(UI.utils.getAbout(kb, menu.lastHighlight))
+          outline.showURI(UI.utils.getAbout(store, menu.lastHighlight))
         }
         if (enterEvent) {
           // either the real event of the pseudo number passed by OutlineKeypressPanel
@@ -1240,7 +1240,7 @@ module.exports = function UserInput (outline) {
                     return 'asGivenTxt'
                   }
 
-                  const inputTerm = UI.utils.getAbout(kb, menu.lastHighlight)
+                  const inputTerm = UI.utils.getAbout(store, menu.lastHighlight)
                   const fillInType = mode === 'predicate' ? 'predicate' : 'object'
                   outline.UserInput.clearMenu()
                   outline.UserInput.fillInRequest(
@@ -1356,7 +1356,7 @@ module.exports = function UserInput (outline) {
           }
           qp('at end of handler\n^^^^^^^^^^^^^^^^^\n\n')
           setHighlightItem(menu.firstChild.firstChild)
-          outline.showURI(UI.utils.getAbout(kb, menu.lastHighlight))
+          outline.showURI(UI.utils.getAbout(store, menu.lastHighlight))
           return 'nothing to return'
         }
       } // end of return function
@@ -1477,17 +1477,17 @@ module.exports = function UserInput (outline) {
       const predicateTerm = this.getStatementAbout(selectedTd).predicate
       // var predicateTerm=selectedTd.parentNode.AJAR_statement.predicate;
       if (
-        kb.whether(
+        store.whether(
           predicateTerm,
           UI.ns.rdf('type'),
           UI.ns.owl('DatatypeProperty')
         ) ||
-        kb.whether(predicateTerm, UI.ns.rdfs('range'), UI.ns.rdfs('Literal')) ||
+        store.whether(predicateTerm, UI.ns.rdfs('range'), UI.ns.rdfs('Literal')) ||
         predicateTerm.termType === 'Collection'
       ) {
         return 'DatatypeProperty-like'
       } else if (
-        kb.whether(predicateTerm, rdf('type'), UI.ns.owl('ObjectProperty'))
+        store.whether(predicateTerm, rdf('type'), UI.ns.owl('ObjectProperty'))
       ) {
         return 'ObjectProperty-like'
       } else {
@@ -1549,7 +1549,7 @@ module.exports = function UserInput (outline) {
       outline.UserInput.clearMenu()
       const selectedTd = outline.getSelection()[0]
       const targetdoc = selectedTd.parentNode.AJAR_statement.why
-      const newTerm = kb.nextSymbol(targetdoc)
+      const newTerm = store.nextSymbol(targetdoc)
       outline.UserInput.fillInRequest('object', selectedTd, newTerm)
       // selection is changed
       outline.outlineExpand(outline.getSelection()[0], newTerm)
@@ -1571,7 +1571,7 @@ module.exports = function UserInput (outline) {
             // this is input box
             if (this.value !== tiptext) {
               const newuri = this.value // @@ Removed URI "fixup" code
-              This.fillInRequest('object', selectedTd, kb.sym(newuri))
+              This.fillInRequest('object', selectedTd, store.sym(newuri))
             }
         }
       }
@@ -1642,7 +1642,7 @@ module.exports = function UserInput (outline) {
     },
 
     bnode2symbol: function bnode2symbol (bnode, symbol) {
-      kb.copyTo(bnode, symbol, ['two-direction', 'delete'])
+      store.copyTo(bnode, symbol, ['two-direction', 'delete'])
     },
 
     generateRequest: function generateRequest (
@@ -1792,7 +1792,7 @@ module.exports = function UserInput (outline) {
             const target = UI.utils.ancestor(UI.utils.getTarget(e), 'TR')
             if (target.childNodes.length === 2 && target.nextSibling) {
               // Yes
-              kb.add(bnodeTerm, IDpredicate, IDterm) // used to connect the two
+              store.add(bnodeTerm, IDpredicate, IDterm) // used to connect the two
               outline.UserInput.clearMenu()
             } else if (target.childNodes.length === 2) {
               outline.UserInput.clearMenu()
@@ -1803,7 +1803,7 @@ module.exports = function UserInput (outline) {
           const clickedTd = extraInformation.clickedTd
           selectItem = function selectItem (e) {
             qp('LIMITED P SELECT ITEM!!!!')
-            const selectedPredicate = UI.utils.getAbout(kb, UI.utils.getTarget(e))
+            const selectedPredicate = UI.utils.getAbout(store, UI.utils.getTarget(e))
             const predicateChoices =
               clickedTd.parentNode.AJAR_statement.predicate.elements
             for (let i = 0; i < predicateChoices.length; i++) {
@@ -1835,7 +1835,7 @@ module.exports = function UserInput (outline) {
           const selectedTd = extraInformation.selectedTd
           selectItem = function selectItem (e) {
             qp('WOOHOO')
-            const inputTerm = UI.utils.getAbout(kb, UI.utils.getTarget(e))
+            const inputTerm = UI.utils.getAbout(store, UI.utils.getTarget(e))
             qp('GENERAL SELECT ITEM!!!!!!=' + inputTerm)
             qp('target=' + UI.utils.getTarget(e))
             if (isPredicate) {
@@ -1873,7 +1873,7 @@ module.exports = function UserInput (outline) {
       // build NameSpaces here from knowledge base
       const NameSpaces = {}
       // for each (ontology in ontologies)
-      kb.each(undefined, UI.ns.rdf('type'), UI.ns.owl('Ontology')).forEach(
+      store.each(undefined, UI.ns.rdf('type'), UI.ns.owl('Ontology')).forEach(
         function (ontology) {
           const label = UI.utils.label(ontology)
           if (!label) return
@@ -1939,11 +1939,11 @@ module.exports = function UserInput (outline) {
           const h1 = table.appendChild(myDocument.createElement('tr'))
           const h1th = h1.appendChild(myDocument.createElement('th'))
           h1th.appendChild(myDocument.createTextNode('Did you mean...'))
-          const plist = kb.statementsMatching(dialogTerm)
+          const plist = store.statementsMatching(dialogTerm)
           let i
           for (i = 0; i < plist.length; i++) {
             if (
-              kb.whether(
+              store.whether(
                 plist[i].predicate,
                 rdf('type'),
                 UI.ns.owl('InverseFunctionalProperty')
@@ -1953,7 +1953,7 @@ module.exports = function UserInput (outline) {
             }
           }
           const IDpredicate = plist[i].predicate
-          const IDterm = kb.any(dialogTerm, plist[i].predicate)
+          const IDterm = store.any(dialogTerm, plist[i].predicate)
           const text =
             UI.utils.label(dialogTerm) +
             ' who has ' +
@@ -2000,7 +2000,7 @@ module.exports = function UserInput (outline) {
             tempQuery.vars = []
             tempQuery.vars.push('Kenny')
             const tempBinding = {}
-            tempBinding.Kenny = kb.fromNT(predicates[i].NT)
+            tempBinding.Kenny = store.fromNT(predicates[i].NT)
             try {
               addPredicateChoice(tempQuery)(tempBinding)
             } catch (e) {
@@ -2087,13 +2087,13 @@ module.exports = function UserInput (outline) {
           console.log('\n===start JournalTitleAutoComplete\n')
 
           // Gets all the URI's with type Journal in the knowledge base
-          const juris = kb.each(undefined, rdf('type'), bibo('Journal'))
+          const juris = store.each(undefined, rdf('type'), bibo('Journal'))
 
           const matchedtitle = [] // debugging display before inserts into menu
 
           for (let i = 0; i < juris.length; i++) {
             const juri = juris[i]
-            const jtitle = kb.each(juri, dcelems('title'), undefined)
+            const jtitle = store.each(juri, dcelems('title'), undefined)
 
             const jtstr = jtitle + ''
 
@@ -2125,11 +2125,11 @@ module.exports = function UserInput (outline) {
           break
         }
         case 'LimitedPredicateChoice': {
-          const choiceTerm = UI.utils.getAbout(kb, extraInformation.clickedTd)
+          const choiceTerm = UI.utils.getAbout(store, extraInformation.clickedTd)
           // because getAbout relies on kb.fromNT, which does not deal with
           // the 'Collection' termType. This termType is ambiguous anyway.
           choiceTerm.termType = 'Collection'
-          const choices = kb.each(choiceTerm, UI.ns.link('element'))
+          const choices = store.each(choiceTerm, UI.ns.link('element'))
           for (let i = 0; i < choices.length; i++) {
             addMenuItem(choices[i])
           }
@@ -2154,7 +2154,7 @@ module.exports = function UserInput (outline) {
           switch (inputQuery.constructor.name) {
             case 'Array':
               for (let i = 0; i < inputQuery.length; i++) {
-                kb.query(
+                store.query(
                   inputQuery[i],
                   addPredicateChoice(inputQuery[i]),
                   nullFetcher
@@ -2165,7 +2165,7 @@ module.exports = function UserInput (outline) {
               throw new Error('addPredicateChoice: query is not defined')
             // break
             default:
-              kb.query(inputQuery, addPredicateChoice(inputQuery), nullFetcher)
+              store.query(inputQuery, addPredicateChoice(inputQuery), nullFetcher)
           }
         }
       }
@@ -2188,7 +2188,7 @@ module.exports = function UserInput (outline) {
       // RDF Event
 
       let eventhandler
-      if (kb.any(reqTerm, UI.ns.link('onfillin'))) {
+      if (store.any(reqTerm, UI.ns.link('onfillin'))) {
         /*    2017 -- Not sure what is supposed to happen here -- timbl @@@@
         eventhandler = function(subject) {
           return kb.any(reqTerm, UI.ns.link('onfillin')).value)
@@ -2208,13 +2208,13 @@ module.exports = function UserInput (outline) {
           )
 
           try {
-            UI.store.updater.update([], [s], function (
+            store.updater.update([], [s], function (
               uri,
               success,
               errorBody
             ) {
               if (success) {
-                newStat = kb.anyStatementMatching(
+                newStat = store.anyStatementMatching(
                   stat.subject,
                   inputTerm,
                   stat.object,
@@ -2284,7 +2284,7 @@ module.exports = function UserInput (outline) {
           }
 
           try {
-            UI.store.updater.update([], [s], function (
+            store.updater.update([], [s], function (
               uri,
               success,
               _errorBody
@@ -2300,14 +2300,14 @@ module.exports = function UserInput (outline) {
               if (success) {
                 newTd.className = newTd.className.replace(/ pendingedit/g, '') // User feedback
                 if (!isInverse) {
-                  newStats = kb.statementsMatching(
+                  newStats = store.statementsMatching(
                     stat.subject,
                     stat.predicate,
                     inputTerm,
                     stat.why
                   )
                 } else {
-                  newStats = kb.statementsMatching(
+                  newStats = store.statementsMatching(
                     inputTerm,
                     stat.predicate,
                     stat.object,

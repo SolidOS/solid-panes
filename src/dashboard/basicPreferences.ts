@@ -1,9 +1,8 @@
-import { authn, icons, ns, widgets } from 'solid-ui'
-import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
-
-import preferencesFormText from './preferencesFormText.ttl'
-import ontologyData from './ontologyData.ttl'
 import { PaneDefinition } from 'pane-registry'
+import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
+import { icons, login, ns, widgets } from 'solid-ui'
+import ontologyData from './ontologyData.ttl'
+import preferencesFormText from './preferencesFormText.ttl'
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
@@ -46,7 +45,7 @@ export const basicPreferencesPane: PaneDefinition = {
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const renderContext = await authn.logInLoadPreferences({
+      const renderContext = await login.ensureLoadedPreferences({
         dom,
         div: container
       })

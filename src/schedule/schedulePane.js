@@ -4,7 +4,8 @@
  */
 /* global alert */
 
-const UI = require('solid-ui')
+import * as UI from 'solid-ui'
+import { authn } from 'solid-logic'
 const $rdf = UI.rdf
 const ns = UI.ns
 
@@ -141,7 +142,7 @@ module.exports = {
       const fetcher = kb.fetcher
       const updater = kb.updater
 
-      let me = options.me || UI.authn.currentUser()
+      let me = options.me || authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
@@ -203,7 +204,7 @@ module.exports = {
                 newBase + item.local,
                 item.contentType
               )
-              .then(() => UI.authn.checkUser())
+              .then(() => authn.checkUser())
               .then(webId => {
                 me = webId
 
@@ -376,7 +377,7 @@ module.exports = {
 
     let me
 
-    UI.authn.checkUser().then(webId => {
+    authn.checkUser().then(webId => {
       me = webId
 
       if (logInOutButton) {
@@ -395,7 +396,7 @@ module.exports = {
     //
 
     const newInstanceButton = function () {
-      const b = UI.authn.newAppInstance(
+      const b = UI.login.newAppInstance(
         dom,
         { noun: 'scheduler' },
         initializeNewInstanceInWorkspace
@@ -474,7 +475,7 @@ module.exports = {
     const showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
 
-      UI.authn.checkUser().then(webId => {
+      authn.checkUser().then(webId => {
         if (!webId) {
           return showSignon()
         }
@@ -505,7 +506,7 @@ module.exports = {
     const showSignon = function showSignon () {
       clearElement(naviMain)
       const signonContext = { div: div, dom: dom }
-      UI.authn.logIn(signonContext).then(context => {
+      UI.login.loggedInContext(signonContext).then(context => {
         me = context.me
         waitingForLogin = false // untested
         showAppropriateDisplay()
@@ -515,7 +516,7 @@ module.exports = {
     const showBootstrap = function showBootstrap () {
       const div = clearElement(naviMain)
       div.appendChild(
-        UI.authn.newAppInstance(
+        UI.login.newAppInstance(
           dom,
           { noun: 'poll' },
           initializeNewInstanceInWorkspace
@@ -799,7 +800,7 @@ module.exports = {
         refreshButton.textContent = 'refresh'
         refreshButton.addEventListener('click', function (e) {
           refreshButton.disabled = true
-          UI.store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
+          store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
             if (!ok) {
               console.log('Cant refresh matrix' + body)
             } else {
@@ -864,7 +865,7 @@ module.exports = {
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
       }
       if (insertables.length) {
-        UI.store.updater.update([], insertables, function (uri, success, errorBody) {
+        store.updater.update([], insertables, function (uri, success, errorBody) {
           if (!success) {
             complainIfBad(success, errorBody)
           } else {
@@ -1024,12 +1025,12 @@ module.exports = {
       // @@ Give other combos too-- see schedule ontology
       // const possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      // const me = UI.authn.currentUser()
+      // const me = authn.currentUser()
 
       const dataPointForNT = []
 
       const loginContext = { div: naviCenter, dom: dom }
-      UI.authn.logIn(loginContext).then(context => {
+      UI.login.loggedInContext(loginContext).then(context => {
         const me = context.me
         const doc = resultsDoc
         options.set_y = options.set_y.filter(function (z) {
@@ -1166,7 +1167,7 @@ module.exports = {
 
     const logInOutButton = null
     /*
-    const logInOutButton = UI.authn.loginStatusBox(dom, setUser)
+    const logInOutButton = UI.login.loginStatusBox(dom, setUser)
     // floating divs lead to a mess
     // logInOutButton.setAttribute('style', 'float: right') // float the beginning of the end
     naviLoginout3.appendChild(logInOutButton)

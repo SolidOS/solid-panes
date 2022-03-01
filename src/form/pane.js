@@ -3,8 +3,9 @@
  **
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
 module.exports = {
@@ -50,7 +51,7 @@ module.exports = {
 
     // const t = kb.findTypeURIs(subject)
 
-    const me = UI.authn.currentUser()
+    const me = authn.currentUser()
 
     const box = dom.createElement('div')
     box.setAttribute('class', 'formPane')
@@ -190,7 +191,7 @@ module.exports = {
       renderFormsFor(store, subject)
     } else {
       complain('No suitable store is known, to edit <' + subject.uri + '>.')
-      const foobarbaz = UI.authn.selectWorkspace(dom, function (ws) {
+      const foobarbaz = UI.login.selectWorkspace(dom, function (ws) {
         mention('Workspace selected OK: ' + ws)
 
         const activities = store.each(undefined, ns.space('workspace'), ws)

@@ -3,6 +3,8 @@
 
 // tabulator.options becaome UI.licenseOptions
 // Possible future alternative directoons: Store licence preferences in a solid preferences file
+import * as UI from 'solid-ui'
+import { store } from 'solid-logic'
 
 const licenseURI = [
   'http://creativecommons.org/licenses/by-nc-nd/3.0/',
@@ -14,9 +16,6 @@ const licenseURI = [
 ]
 
 const names = ['BY-NC-ND', 'BY-NC-SA', 'BY-NC', 'BY-ND', 'BY-SA', 'BY']
-
-const UI = require('solid-ui')
-const kb = UI.store
 
 module.exports = function licenseOptions () {
   this.options = {}
@@ -83,9 +82,9 @@ module.exports = function licenseOptions () {
   }
 
   this.checkLicence = function checkLicense (statement) {
-    const licenses = kb.each(
+    const licenses = store.each(
       statement.why,
-      kb.sym('http://creativecommons.org/ns#license')
+      store.sym('http://creativecommons.org/ns#license')
     )
     UI.log.info('licenses:' + statement.why + ': ' + licenses)
     for (let i = 0; i < licenses.length; i++) {

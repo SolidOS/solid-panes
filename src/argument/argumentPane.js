@@ -6,9 +6,9 @@
 ** Should allow editing the data too
 
 */
-
-const UI = require('solid-ui')
-const panes = require('pane-registry')
+import { store } from 'solid-logic'
+import * as UI from 'solid-ui'
+import * as panes from 'pane-registry'
 
 // console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
 module.exports = {
@@ -17,7 +17,7 @@ module.exports = {
   name: 'argument',
 
   label: function (subject) {
-    const kb = UI.store
+    const kb = store
     const t = kb.findTypeURIs(subject)
 
     if (t[UI.ns.arg('Position').uri]) return 'Argument'
@@ -28,7 +28,7 @@ module.exports = {
   // View the data in a file in user-friendly way
   render: function (subject, dom) {
     const outliner = panes.getOutliner(dom)
-    const kb = UI.store
+    const kb = store
     const arg = UI.ns.arg
 
     subject = kb.canon(subject)

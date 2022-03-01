@@ -20,9 +20,10 @@ if (!tabulator_gBrowser) {
 */
 
 /* 2007: adapted from dragAndDrop UI Library */
+import { store } from 'solid-logic'
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
 const dragAndDrop = (module.exports = {})
 
 dragAndDrop.util = {}
@@ -270,7 +271,7 @@ const TabulatorOutlinerObserver = {
         const templateDoc = $rdf.sym(
           'chrome://tabulator/content/internalKnowledge.n3#defaultNew'
         )
-        UI.store.copyTo(templateDoc, $rdf.sym(url))
+        store.copyTo(templateDoc, $rdf.sym(url))
         /*
       function WriteToFileRepresentedBy (subject){
           var outputFormulaTerm=kb.any(subject,OWL('unionOf'))
@@ -333,7 +334,7 @@ const TabulatorOutlinerObserver = {
     const thisOutline = table.outline
     thisOutline.UserInput.insertTermTo(
       targetTd,
-      UI.utils.getAbout(UI.store, this.dragTarget)
+      UI.utils.getAbout(store, this.dragTarget)
     )
   },
   onDragStart: function (x, y, td) {

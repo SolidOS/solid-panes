@@ -8,8 +8,9 @@
  **  -- todo: use common code to get username and load profile and set 'me'
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -198,11 +199,11 @@ module.exports = {
     let h3 = dom.createElement('H3')
     h3.appendChild(dom.createTextNode(name))
 
-    let me = UI.authn.currentUser()
+    let me = authn.currentUser()
     const meUri = me ? me.uri : null
 
     // @@ Add: event handler to redraw the stuff below when me changes.
-    const loginOutButton = UI.authn.loginStatusBox(dom, webIdUri => {
+    const loginOutButton = UI.login.loginStatusBox(dom, webIdUri => {
       me = kb.sym(webIdUri)
       // @@ To be written:   redraw as a function the new me
       // @@ refresh the sidebars

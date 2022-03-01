@@ -1,5 +1,6 @@
 import { NamedNode, Statement, sym } from 'rdflib'
-import { ns, store } from 'solid-ui'
+import { ns } from 'solid-ui'
+import { store } from 'solid-logic'
 import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplications.utils'
 
 interface FormElements {

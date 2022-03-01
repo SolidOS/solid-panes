@@ -1,4 +1,5 @@
-import { icons, authn, initHeader } from 'solid-ui'
+import { authSession, authn } from 'solid-logic'
+import { icons, initHeader } from 'solid-ui'
 /**
  * menu icons
 */
@@ -41,7 +42,7 @@ async function setUserMenu (outliner: any) {
   const logOut = {
     label: LOG_OUT_MENU_ITEM,
     onclick: () => {
-      authn.authSession.logout()
+      authSession.logout()
     }
   }
 

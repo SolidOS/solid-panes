@@ -1,4 +1,5 @@
-import { authn, icons, store } from 'solid-ui'
+import { icons } from 'solid-ui'
+import { authn, authSession, store } from 'solid-logic'
 import { Fetcher, NamedNode } from 'rdflib'
 import { generateHomepage } from './homepage'
 import { DataBrowserContext, PaneDefinition } from 'pane-registry'
@@ -27,11 +28,11 @@ export const dashboardPane: PaneDefinition = {
       )
     }
 
-    authn.authSession.onLogin(() => {
+    authSession.onLogin(() => {
       // console.log('On Login')
       runBuildPage()
     })
-    authn.authSession.onSessionRestore(() => {
+    authSession.onSessionRestore(() => {
       // console.log('On Session Restore')
       runBuildPage()
     })

@@ -1,8 +1,8 @@
 import * as paneRegistry from 'pane-registry'
+import * as $rdf from 'rdflib'
+import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
-const Pane = require('./pane').default
-const $rdf = require('rdflib')
-const UI = require('solid-ui')
+import * as Pane from './pane'
 
 // FIXME:
 window.$rdf = $rdf
@@ -16,16 +16,16 @@ async function renderPane (uri: string) {
   const doc = subject.doc()
 
   await new Promise((resolve, reject) => {
-    UI.store.fetcher.load(doc).then(resolve, reject)
+    store.fetcher.load(doc).then(resolve, reject)
   })
   const context = {
     // see https://github.com/solid/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
     dom: document,
     getOutliner,
     session: {
-      store: UI.store,
+      store: store,
       paneRegistry,
-      logic: UI.solidLogicSingleton
+      logic: solidLogicSingleton
     }
   }
   const options = {}
@@ -56,10 +56,10 @@ window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
   paneRegistry.register(require('contacts-pane'))
-  await UI.authn.authSession.handleIncomingRedirect({
+  await authSession.handleIncomingRedirect({
     restorePreviousSession: true
   })
-  const session = await UI.authn.authSession
+  const session = await authSession
   if (!session.info.isLoggedIn) {
     console.log('The user is not logged in')
     document.getElementById('loginBanner').innerHTML =
@@ -74,14 +74,14 @@ window.onload = async () => {
   renderPane()
 }
 window.logout = () => {
-  UI.authn.authSession.logout()
+  authSession.logout()
   window.location = ''
 }
 window.login = async function () {
-  const session = await UI.authn.authSession
+  const session = await authSession
   if (!session.info.isLoggedIn) {
     const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
-    await UI.authn.authSession.login({
+    await authSession.login({
       oidcIssuer: issuer,
       redirectUrl: window.location.href,
       clientName: 'Solid Panes Dev Loader'
