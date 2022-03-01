@@ -46,31 +46,26 @@
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "0.6.3-72a90d59",
+    "activitystreams-pane": "0.6.3-e5f4e2cd",
     "babel-preset-env": "^1.7.0",
     "babel-preset-metalab": "^1.0.0",
-    "chat-pane": "2.4.15-0b692b2b",
-    "contacts-pane": "2.6.0-e4525047",
-    "folder-pane": "2.4.12-0b04d7bf",
-    "issue-pane": "2.4.9-84812d9e",
-    "marked": "^4.0.8",
-    "meeting-pane": "2.3.8-b1fe34e1",
+    "chat-pane": "2.4.15-b9ff3bf9",
+    "contacts-pane": "2.6.0-ec2b229f",
+    "folder-pane": "2.4.12-653b2953",
+    "issue-pane": "2.4.9-13506020",
+    "marked": "^4.0.12",
+    "meeting-pane": "2.3.8-9551d681",
     "mime-types": "^2.1.34",
-    "pane-registry": "2.4.6-0a456338",
+    "pane-registry": "2.4.6-989e87d4",
     "path-browserify": "^1.0.1",
-    "profile-pane": "1.0.7-ffd57bff",
+    "profile-pane": "1.0.7-0d1093a0",
     "rdflib": "^2.2.17",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "solid-logic": "1.3.13-e7843519",
+    "solid-logic": "1.3.13-53806f5e",
     "solid-namespace": "^0.5.2",
-<<<<<<< HEAD
-    "solid-ui": "2.4.18-ca7338a8",
-    "source-pane": "2.2.14-b3ae7094"
-=======
-    "solid-ui": "^2.4.18",
-    "source-pane": "^2.2.14"
->>>>>>> main
+    "solid-ui": "2.4.18-270aef4c",
+    "source-pane": "2.2.14-268356e2"
   },
   "devDependencies": {
     "@babel/cli": "^7.16.0",
