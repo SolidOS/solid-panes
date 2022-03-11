@@ -1,3 +1,13 @@
+export interface SolidSession {
+  authorization: SolidAuthorization
+  credentialType: string
+  idClaims: SolidClaim
+  idp: string
+  issuer: string
+  sessionKey: string
+  webId: string
+}
+
 interface SolidAuthorization {
   // eslint-disable-next-line camelcase
   access_token: string
@@ -21,14 +31,4 @@ interface SolidClaim {
   jti: string
   nonce: string
   sub: string
-}
-
-export interface SolidSession {
-  authorization: SolidAuthorization
-  credentialType: string
-  idClaims: SolidClaim
-  idp: string
-  issuer: string
-  sessionKey: string
-  webId: string
 }

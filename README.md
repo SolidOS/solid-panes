@@ -48,32 +48,6 @@ to new users.
 
 Volunteers are always welcome!
 
-## Documentation
-- [Visual Language](https://solid.github.io/solid-panes/Documentation/VisualLanguage.html)
-- [Conventions](./Documentation/conventions.md)
-
-## Development
-To get started, make sure you have Node.js installed (for instance
-through https://github.com/nvm-sh/nvm), and:
-1. run
-```sh
-git clone https://github.com/solid/solid-panes
-cd solid-panes
-npm install
-npm run build-version
-npx webpack serve
-```
-2. open your browser at http://localhost:9000
-3. edit `dev/pane/index.ts` and change the color string constant at the end of line 61.
-4. wait about 5 seconds
-5. you'll see the color of the box and heading change in your browser
-
-## Contributing panes
-When you created a pane, you can either add it as an npm dependency
-of this repo (for instance meeting-pane, issue-pane, chat-pane are all
-imported in src/registerPanes.js), or add it under the src/ tree of this repo.
-
-
 ## Eg. some RDF CLasses
 
 Here, just to show how it works, are how some RDF Classes map onto panes. Anything to do with

@@ -3,10 +3,10 @@
  **  This outline pane lists the members of a class
  */
 
-const UI = require('solid-ui')
+var UI = require('solid-ui')
 const $rdf = require('rdflib')
 
-const ns = UI.ns
+var ns = UI.ns
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
@@ -18,23 +18,23 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   label: function (subject, context) {
-    const kb = context.session.store
-    const n = kb.each(undefined, ns.rdf('type'), subject).length
+    var kb = context.session.store
+    var n = kb.each(undefined, ns.rdf('type'), subject).length
     if (n > 0) return 'List (' + n + ')' // Show how many in hover text
     return null // Suppress pane otherwise
   },
 
   render: function (subject, context) {
-    const dom = context.dom
-    const outliner = context.getOutliner(dom)
-    const kb = context.session.store
-    const complain = function complain (message, color) {
-      const pre = dom.createElement('pre')
+    var dom = context.dom
+    var outliner = context.getOutliner(dom)
+    var kb = context.session.store
+    var complain = function complain (message, color) {
+      var pre = dom.createElement('pre')
       pre.setAttribute('style', 'background-color: ' + color || '#eed' + ';')
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
     }
-    const div = dom.createElement('div')
+    var div = dom.createElement('div')
     div.setAttribute('class', 'instancePane')
     div.setAttribute(
       'style',
@@ -42,14 +42,14 @@ module.exports = {
     )
 
     // If this is a class, look for all both explicit and implicit
-    const sts = kb.statementsMatching(undefined, ns.rdf('type'), subject)
+    var sts = kb.statementsMatching(undefined, ns.rdf('type'), subject)
     if (sts.length > 0) {
-      const already = {}
-      const more = []
-      sts.forEach(st => {
+      var already = {}
+      var more = []
+      sts.map(st => {
         already[st.subject.toNT()] = st
       })
-      for (const nt in kb.findMembersNT(subject)) {
+      for (var nt in kb.findMembersNT(subject)) {
         if (!already[nt]) {
           more.push($rdf.st(kb.fromNT(nt), ns.rdf('type'), subject)) // @@ no provenance
         }
@@ -67,13 +67,13 @@ module.exports = {
       if (subject.sameTerm(ns.rdf('Property'))) {
         // / Do not find all properties used as properties .. unless look at kb index
       } else if (subject.sameTerm(ns.rdfs('Class'))) {
-        const uses = kb.statementsMatching(undefined, ns.rdf('type'), undefined)
-        const usedTypes = {}
-        uses.forEach(function (st) {
+        var uses = kb.statementsMatching(undefined, ns.rdf('type'), undefined)
+        var usedTypes = {}
+        uses.map(function (st) {
           usedTypes[st.object] = st
         }) // Get unique
-        const used = []
-        for (const i in usedTypes) {
+        var used = []
+        for (var i in usedTypes) {
           used.push($rdf.st($rdf.sym(i), ns.rdf('type'), ns.rdfs('Class')))
         }
         complain(
@@ -86,7 +86,7 @@ module.exports = {
       }
 
       if (sts.length > 10) {
-        const tr = dom.createElement('TR')
+        var tr = dom.createElement('TR')
         tr.appendChild(dom.createTextNode('' + sts.length))
         // tr.AJAR_statement=sts[i]
         div.appendChild(tr)

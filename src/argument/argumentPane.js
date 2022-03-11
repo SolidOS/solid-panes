@@ -6,9 +6,9 @@
 ** Should allow editing the data too
 
 */
-import { store } from 'solid-logic'
-import * as UI from 'solid-ui'
-import * as panes from 'pane-registry'
+
+const UI = require('solid-ui')
+var panes = require('pane-registry')
 
 // console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
 module.exports = {
@@ -17,8 +17,8 @@ module.exports = {
   name: 'argument',
 
   label: function (subject) {
-    const kb = store
-    const t = kb.findTypeURIs(subject)
+    var kb = UI.store
+    var t = kb.findTypeURIs(subject)
 
     if (t[UI.ns.arg('Position').uri]) return 'Argument'
 
@@ -27,21 +27,21 @@ module.exports = {
 
   // View the data in a file in user-friendly way
   render: function (subject, dom) {
-    const outliner = panes.getOutliner(dom)
-    const kb = store
-    const arg = UI.ns.arg
+    var outliner = panes.getOutliner(dom)
+    var kb = UI.store
+    var arg = UI.ns.arg
 
     subject = kb.canon(subject)
     // var types = kb.findTypeURIs(subject)
 
-    const div = dom.createElement('div')
+    var div = dom.createElement('div')
     div.setAttribute('class', 'argumentPane')
 
     // var title = kb.any(subject, UI.ns.dc('title'))
 
-    const comment = kb.any(subject, UI.ns.rdfs('comment'))
+    var comment = kb.any(subject, UI.ns.rdfs('comment'))
     if (comment) {
-      const para = dom.createElement('p')
+      var para = dom.createElement('p')
       para.setAttribute('style', 'margin-left: 2em; font-style: italic;')
       div.appendChild(para)
       para.textContent = comment.value
@@ -49,7 +49,7 @@ module.exports = {
 
     div.appendChild(dom.createElement('hr'))
 
-    let plist = kb.statementsMatching(subject, arg('support'))
+    var plist = kb.statementsMatching(subject, arg('support'))
     outliner.appendPropertyTRs(div, plist, false)
 
     div.appendChild(dom.createElement('hr'))

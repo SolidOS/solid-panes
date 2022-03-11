@@ -21,9 +21,9 @@ module.exports = {
   },
 
   render: function (subject, context) {
-    const dom = context.dom
+    var dom = context.dom
 
-    const filter = function (pred, inverse) {
+    var filter = function (pred, inverse) {
       if (
         typeof context.session.paneRegistry.byName('internal').predicates[
           pred.uri
@@ -40,16 +40,16 @@ module.exports = {
       return true
     }
 
-    const outliner = context.getOutliner(dom)
-    const kb = context.session.store
+    var outliner = context.getOutliner(dom)
+    var kb = context.session.store
     // var outline = outliner; // @@
     UI.log.info('@defaultPane.render, dom is now ' + dom.location)
     subject = kb.canon(subject)
-    const div = dom.createElement('div')
+    var div = dom.createElement('div')
     div.setAttribute('class', 'defaultPane')
     //        appendRemoveIcon(div, subject, div)
 
-    let plist = kb.statementsMatching(subject)
+    var plist = kb.statementsMatching(subject)
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = kb.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)
@@ -75,11 +75,11 @@ module.exports = {
       // check the document containing something about of the bnode @@ what about as object?
       /*  ! && HCIoptions["bottom insert highlights"].enabled  */
     ) {
-      const holdingTr = dom.createElement('tr') // these are to minimize required changes
-      const holdingTd = dom.createElement('td') // in userinput.js
+      var holdingTr = dom.createElement('tr') // these are to minimize required changes
+      var holdingTd = dom.createElement('td') // in userinput.js
       holdingTd.setAttribute('colspan', '2')
       holdingTd.setAttribute('notSelectable', 'true')
-      const img = dom.createElement('img')
+      var img = dom.createElement('img')
       img.src = UI.icons.originalIconBase + 'tango/22-list-add-new.png'
       img.addEventListener('click', function addNewTripleIconMouseDownListener (
         e

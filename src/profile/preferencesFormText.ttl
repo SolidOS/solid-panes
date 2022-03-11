@@ -1,0 +1,17 @@
+    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+    @prefix solid: <http://www.w3.org/ns/solid/terms#>.
+    @prefix ui: <http://www.w3.org/ns/ui#>.
+    @prefix : <#>.
+
+    :this
+      <http://purl.org/dc/elements/1.1/title> "Profile style form" ;
+      a ui:Form ;
+      ui:part :backgroundColor, :highlightColor;
+      ui:parts ( :backgroundColor :highlightColor ).
+
+  :backgroundColor a ui:ColorField; ui:property solid:profileBackgroundColor;
+    ui:label "Background color"; ui:default "#ffffff".
+    :highlightColor a ui:ColorField; ui:property solid:profileHighlightColor;
+      ui:label "Highlight color"; ui:default "#000000".
+
+  

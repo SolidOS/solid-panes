@@ -1,50 +1,47 @@
-/* istanbul ignore file */
 /* -*- coding: utf-8-dos -*-
    Outline Mode Manager
 */
+const panes = require('pane-registry')
+const $rdf = require('rdflib')
 
-import * as UI from 'solid-ui'
-import { authn, authSession, store } from 'solid-logic'
-import * as paneRegistry from 'pane-registry'
-import * as $rdf from 'rdflib'
-import outlineIcons from './outlineIcons'
-import * as UserInput from './userInput'
-import { QuerySource } from './queryByExample'
-import propertyViews from './propertyViews'
+const outlineIcons = require('./outlineIcons.js')
+const UserInput = require('./userInput.js')
+const UI = require('solid-ui')
+const queryByExample = require('./queryByExample.js')
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
 
 // const iconHeight = '24px'
 
-export default function (context) {
+module.exports = function (context) {
   const dom = context.dom
 
   this.document = context.dom
   this.outlineIcons = outlineIcons
   this.labeller = this.labeller || {}
   this.labeller.LanguagePreference = '' // for now
-  const outline = this // Kenny: do we need this?
-  const thisOutline = this
-  let selection = []
+  var outline = this // Kenny: do we need this?
+  var thisOutline = this
+  var selection = []
   this.selection = selection
   this.ancestor = UI.utils.ancestor // make available as outline.ancestor in callbacks
   this.sparql = UI.rdf.UpdateManager
-  this.kb = store
-  const kb = store
-  const sf = store.fetcher
+  this.kb = UI.store
+  var kb = UI.store
+  var sf = UI.store.fetcher
   dom.outline = this
-  this.qs = new QuerySource() // Track queries in queryByExample
+  this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
   // var selection = []  // Array of statements which have been selected
   // this.focusTd // the <td> that is being observed
   this.UserInput = new UserInput(this)
   this.clipboardAddress = 'tabulator:clipboard' // Weird
   this.UserInput.clipboardInit(this.clipboardAddress)
-  const outlineElement = this.outlineElement
+  var outlineElement = this.outlineElement
 
   this.init = function () {
-    const table = getOutlineContainer()
+    var table = getOutlineContainer()
     table.outline = this
   }
 
@@ -52,12 +49,12 @@ export default function (context) {
   benchmark.lastkbsize = 0
 
   function benchmark (f) {
-    const args = []
-    for (let i = arguments.length - 1; i > 0; i--) args[i - 1] = arguments[i]
+    var args = []
+    for (var i = arguments.length - 1; i > 0; i--) args[i - 1] = arguments[i]
     // UI.log.debug('BENCHMARK: args=' + args.join());
-    const begin = new Date().getTime()
-    const returnValue = f.apply(f, args)
-    const end = new Date().getTime()
+    var begin = new Date().getTime()
+    var returnValue = f.apply(f, args)
+    var end = new Date().getTime()
     UI.log.info(
       'BENCHMARK: kb delta: ' +
         (kb.statements.length - benchmark.lastkbsize) +
@@ -76,7 +73,7 @@ export default function (context) {
   //  Represent an object in summary form as a table cell
 
   function appendRemoveIcon (node, subject, removeNode) {
-    const image = UI.utils.AJARImage(
+    var image = UI.utils.AJARImage(
       outlineIcons.src.icon_remove_node,
       'remove',
       undefined,
@@ -95,10 +92,10 @@ export default function (context) {
 
   this.appendAccessIcons = function (kb, node, obj) {
     if (obj.termType !== 'NamedNode') return
-    const uris = kb.uris(obj)
+    var uris = kb.uris(obj)
     uris.sort()
-    let last = null
-    for (let i = 0; i < uris.length; i++) {
+    var last = null
+    for (var i = 0; i < uris.length; i++) {
       if (uris[i] === last) continue
       last = uris[i]
       thisOutline.appendAccessIcon(node, last)
@@ -107,10 +104,10 @@ export default function (context) {
 
   this.appendAccessIcon = function (node, uri) {
     if (!uri) return ''
-    const docuri = UI.rdf.uri.docpart(uri)
+    var docuri = UI.rdf.uri.docpart(uri)
     if (docuri.slice(0, 5) !== 'http:') return ''
-    const state = sf.getState(docuri)
-    let icon, alt, listener
+    var state = sf.getState(docuri)
+    var icon, alt, listener
     switch (state) {
       case 'unrequested':
         icon = outlineIcons.src.icon_unrequested
@@ -146,7 +143,7 @@ export default function (context) {
         UI.log.error('?? state = ' + state)
         break
     } // switch
-    const img = UI.utils.AJARImage(
+    var img = UI.utils.AJARImage(
       icon,
       alt,
       outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri),
@@ -170,13 +167,13 @@ export default function (context) {
     deleteNode,
     statement
   ) {
-    const td = dom.createElement('td')
+    var td = dom.createElement('td')
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
     )
     td.setAttribute('notSelectable', 'false')
-    let theClass = 'obj'
+    var theClass = 'obj'
 
     // check the IPR on the data.  Ok if there is any checked license which is one the document has.
     if (statement && statement.why) {
@@ -227,35 +224,8 @@ export default function (context) {
     td.tabulatorDeselect = function () {
       setSelected(this, false)
     }
+    // td.appendChild( iconBox.construct(document.createTextNode('bla')) );
 
-    // Create an inquiry icon if there is proof about this triple
-    if (statement) {
-      const oneStatementFormula = new UI.rdf.IndexedFormula()
-      oneStatementFormula.statements.push(statement) // st.asFormula()
-      // The following works because Formula.hashString works fine for
-      // one statement formula
-      const reasons = kb.each(
-        oneStatementFormula,
-        kb.sym('http://dig.csail.mit.edu/TAMI/2007/amord/tms#justification')
-      )
-      if (reasons.length) {
-        const inquirySpan = dom.createElement('span')
-        if (reasons.length > 1) {
-          inquirySpan.innerHTML = ' &times; ' + reasons.length
-        }
-        inquirySpan.setAttribute('class', 'inquiry')
-        inquirySpan.insertBefore(
-          UI.utils.AJARImage(
-            outlineIcons.src.icon_display_reasons,
-            'explain',
-            undefined,
-            dom
-          ),
-          inquirySpan.firstChild
-        )
-        td.appendChild(inquirySpan)
-      }
-    }
     td.addEventListener('click', selectableTDClickListener)
     return td
   } // outlineObjectTD
@@ -266,7 +236,7 @@ export default function (context) {
     inverse,
     internal
   ) {
-    const predicateTD = dom.createElement('TD')
+    var predicateTD = dom.createElement('TD')
     predicateTD.setAttribute('about', predicate.toNT())
     predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
 
@@ -284,7 +254,7 @@ export default function (context) {
     lab = lab.slice(0, 1).toUpperCase() + lab.slice(1)
     // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
 
-    const labelTD = dom.createElement('TD')
+    var labelTD = dom.createElement('TD')
     labelTD.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -294,7 +264,7 @@ export default function (context) {
     predicateTD.appendChild(labelTD)
     labelTD.style.width = '100%'
     predicateTD.appendChild(termWidget.construct(dom)) // termWidget is global???
-    for (const w in outlineIcons.termWidgets) {
+    for (var w in outlineIcons.termWidgets) {
       if (!newTr || !newTr.AJAR_statement) break // case for TBD as predicate
       // alert(Icon.termWidgets[w]+'   '+Icon.termWidgets[w].filter)
       if (
@@ -331,7 +301,7 @@ export default function (context) {
   async function globalAppTabs (options = {}) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
-    const me = authn.currentUser()
+    const me = UI.authn.currentUser()
     if (!me) {
       alert('Must be logged in for this')
       throw new Error('Not logged in')
@@ -345,10 +315,10 @@ export default function (context) {
 
     function renderMain (containerDiv, item) {
       // Items are pane names
-      const pane = paneRegistry.byName(item.paneName) // 20190701
+      const pane = panes.byName(item.paneName) // 20190701
       containerDiv.innerHTML = ''
       const table = containerDiv.appendChild(dom.createElement('table'))
-      const me = authn.currentUser()
+      const me = UI.authn.currentUser()
       thisOutline.GotoSubject(
         item.subject || me,
         true,
@@ -378,8 +348,7 @@ export default function (context) {
   this.getDashboard = globalAppTabs
 
   async function getDashboardItems () {
-    const me = authn.currentUser()
-    if (!me) return []
+    const me = UI.authn.currentUser()
     const div = dom.createElement('div')
     const [books, pods] = await Promise.all([getAddressBooks(), getPods()])
     return [
@@ -403,25 +372,6 @@ export default function (context) {
       .concat(pods)
 
     async function getPods () {
-      async function addPodStorage (pod) { // namedNode
-        await loadContainerRepresentation(pod)
-        if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
-          pods.push(pod)
-          return true
-        }
-        return false
-      }
-      async function addPodStorageFromUrl (url) {
-        const podStorage = new URL(url)
-        // check for predicate pim:Storage in containers up the path tree
-        let pathStorage = podStorage.pathname
-        while (pathStorage.length) {
-          pathStorage = pathStorage.substring(0, pathStorage.lastIndexOf('/'))
-          if (await addPodStorage(kb.sym(`${podStorage.origin}${pathStorage}/`))) return
-        }
-        // TODO should url.origin be added to pods list when there are no pim:Storage ???
-      }
-
       try {
         // need to make sure that profile is loaded
         await kb.fetcher.load(me.doc())
@@ -429,34 +379,10 @@ export default function (context) {
         console.error('Unable to load profile', err)
         return []
       }
-      // load pod's storages from profile
-      let pods = kb.each(me, ns.space('storage'), null, me.doc())
-      pods.map(async (pod) => {
-        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-        await loadContainerRepresentation(pod)
-      })
-
-      try {
-        // if uri then SolidOS is a browse.html web app
-        const uri = (new URL(window.location.href)).searchParams.get('uri')
-        const podUrl = uri || window.location.href
-        await addPodStorageFromUrl(podUrl)
-      } catch (err) {
-        console.error('cannot load container', err)
-      }
-      // remove namedNodes duplicates
-      function uniques (nodes) {
-        const uniqueNodes = []
-        nodes.forEach(node => {
-          if (!uniqueNodes.find(uniqueNode => uniqueNode.equals(node))) uniqueNodes.push(node)
-        })
-        return uniqueNodes
-      }
-      pods = uniques(pods)
-      if (!pods.length) return []
+      const pods = kb.each(me, ns.space('storage'), null, me.doc())
       return pods.map((pod, index) => {
-        function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-        const label = split(me).startsWith(split(pod)) ? 'Your storage' : split(pod)
+        const label =
+          pods.length > 1 ? pod.uri.split('//')[1].slice(0, -1) : 'Your storage'
         return {
           paneName: 'folder',
           tabName: `folder-${index}`,
@@ -469,7 +395,7 @@ export default function (context) {
 
     async function getAddressBooks () {
       try {
-        const context = await UI.login.findAppInstances(
+        const context = await UI.authn.findAppInstances(
           { me, div, dom },
           ns.vcard('AddressBook')
         )
@@ -521,21 +447,22 @@ export default function (context) {
     })
 
     // close the dashboard if user log out
-    authSession.onLogout(closeDashboard)
+    UI.authn.solidAuthClient.trackSession(closeDashboardIfLoggedOut)
 
     // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
     dashboardContainer.appendChild(dashboard)
-    const tab = dashboardContainer.querySelector(
-      `[data-global-pane-name="${options.pane}"]`
-    )
-    if (tab) {
-      tab.click()
-    }
 
     function closeDashboard () {
       dashboardContainer.style.display = 'none'
       outlineContainer.style.display = 'inherit'
+    }
+
+    function closeDashboardIfLoggedOut (session) {
+      if (session) {
+        return
+      }
+      closeDashboard()
     }
   }
   this.showDashboard = showDashboard
@@ -567,18 +494,7 @@ export default function (context) {
     )
   }
 
-  async function loadContainerRepresentation (subject) {
-    // force reload for index.html with RDFa
-    if (!kb.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
-      const response = await kb.fetcher.webOperation('GET', subject.uri, kb.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
-      const containerTurtle = response.responseText
-      $rdf.parse(containerTurtle, kb, subject.uri, 'text/turtle')
-    }
-  }
-
   async function getRelevantPanes (subject, context) {
-    // make sure container representation is loaded (when server returns index.html)
-    if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
     const panes = context.session.paneRegistry
     const relevantPanes = panes.list.filter(
       pane => pane.label(subject, context) && !pane.global
@@ -587,7 +503,7 @@ export default function (context) {
       // there are no relevant panes, simply return default pane (which ironically is internalPane)
       return [panes.byName('internal')]
     }
-    const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
+    const filteredPanes = await UI.authn.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
       // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
       return [relevantPanes[0]]
@@ -633,21 +549,20 @@ export default function (context) {
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
           // ico.style.width = iconHeight
           // ico.style.height = iconHeight
-          const listen = function (ico, pane) {
+          var listen = function (ico, pane) {
             // Freeze scope for event time
             ico.addEventListener(
               'click',
               function (event) {
-                let containingTable
                 // Find the containing table for this subject
-                for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-                  if (containingTable.nodeName === 'TABLE') break
+                for (var t = td; t.parentNode; t = t.parentNode) {
+                  if (t.nodeName === 'TABLE') break
                 }
-                if (containingTable.nodeName !== 'TABLE') {
+                if (t.nodeName !== 'TABLE') {
                   throw new Error('outline: internal error.')
                 }
-                const removePanes = function (specific) {
-                  for (let d = containingTable.firstChild; d; d = d.nextSibling) {
+                var removePanes = function (specific) {
+                  for (var d = t.firstChild; d; d = d.nextSibling) {
                     if (typeof d.pane !== 'undefined') {
                       if (!specific || d.pane === specific) {
                         if (d.paneButton) {
@@ -659,7 +574,7 @@ export default function (context) {
                         // state = 'paneHidden';
                         if (
                           d.pane.requireQueryButton &&
-                          containingTable.parentNode.className /* outer table */ &&
+                          t.parentNode.className /* outer table */ &&
                           numberOfPanesRequiringQueryButton === 1 &&
                           dom.getElementById('queryButton')
                         ) {
@@ -671,8 +586,8 @@ export default function (context) {
                     }
                   }
                 }
-                const renderPane = function (pane) {
-                  let paneDiv
+                var renderPane = function (pane) {
+                  var paneDiv
                   UI.log.info('outline: Rendering pane (2): ' + pane.name)
                   if (UI.no_catch_pane_errors) {
                     // for debugging
@@ -684,7 +599,7 @@ export default function (context) {
                       // Easier debugging for pane developers
                       paneDiv = dom.createElement('div')
                       paneDiv.setAttribute('class', 'exceptionPane')
-                      const pre = dom.createElement('pre')
+                      var pre = dom.createElement('pre')
                       paneDiv.appendChild(pre)
                       pre.appendChild(
                         dom.createTextNode(UI.utils.stackString(e))
@@ -697,16 +612,16 @@ export default function (context) {
                   ) {
                     dom.getElementById('queryButton').removeAttribute('style')
                   }
-                  const second = containingTable.firstChild.nextSibling
-                  const row = dom.createElement('tr')
-                  const cell = row.appendChild(dom.createElement('td'))
+                  var second = t.firstChild.nextSibling
+                  var row = dom.createElement('tr')
+                  var cell = row.appendChild(dom.createElement('td'))
                   cell.appendChild(paneDiv)
-                  if (second) containingTable.insertBefore(row, second)
-                  else containingTable.appendChild(row)
+                  if (second) t.insertBefore(row, second)
+                  else t.appendChild(row)
                   row.pane = pane
                   row.paneButton = ico
                 }
-                const state = ico.getAttribute('class')
+                var state = ico.getAttribute('class')
                 if (state === 'paneHidden') {
                   if (!event.shiftKey) {
                     // shift means multiple select
@@ -721,8 +636,8 @@ export default function (context) {
                   ico.style = paneHiddenStyle
                 }
 
-                let numberOfPanesRequiringQueryButton = 0
-                for (let d = containingTable.firstChild; d; d = d.nextSibling) {
+                var numberOfPanesRequiringQueryButton = 0
+                for (var d = t.firstChild; d; d = d.nextSibling) {
                   if (d.pane && d.pane.requireQueryButton) {
                     numberOfPanesRequiringQueryButton++
                   }
@@ -745,12 +660,12 @@ export default function (context) {
     } // renderPaneIconTray
 
     // Body of expandedHeaderTR
-    const tr = dom.createElement('tr')
+    var tr = dom.createElement('tr')
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
       tr.setAttribute('class', 'hoverControl')
     }
-    const td = tr.appendChild(dom.createElement('td'))
+    var td = tr.appendChild(dom.createElement('td'))
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;' +
@@ -768,7 +683,7 @@ export default function (context) {
     const showHeader = !!requiredPane
 
     if (!options.solo && !showHeader) {
-      const icon = header.appendChild(
+      var icon = header.appendChild(
         UI.utils.AJARImage(
           UI.icons.originalIconBase + 'tbl-collapse.png',
           'collapse',
@@ -778,7 +693,7 @@ export default function (context) {
       )
       icon.addEventListener('click', collapseMouseDownListener)
 
-      const strong = header.appendChild(dom.createElement('h1'))
+      var strong = header.appendChild(dom.createElement('h1'))
       strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
       strong.style =
         'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
@@ -827,16 +742,16 @@ export default function (context) {
   // Remove a node from the DOM so that Firefox refreshes the screen OK
   // Just deleting it cause whitespace to accumulate.
   function removeAndRefresh (d) {
-    const table = d.parentNode
-    const par = table.parentNode
-    const placeholder = dom.createElement('table')
+    var table = d.parentNode
+    var par = table.parentNode
+    var placeholder = dom.createElement('table')
     placeholder.setAttribute('style', 'width: 100%;')
     par.replaceChild(placeholder, table)
     table.removeChild(d)
     par.replaceChild(table, placeholder) // Attempt to
   }
 
-  const propertyTable = (this.propertyTable = function propertyTable (
+  var propertyTable = (this.propertyTable = function propertyTable (
     subject,
     table,
     pane,
@@ -854,7 +769,7 @@ export default function (context) {
         table.appendChild(tr1)
 
         if (tr1.firstPane) {
-          let paneDiv
+          var paneDiv
           try {
             UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
             paneDiv = tr1.firstPane.render(subject, context, options)
@@ -862,13 +777,13 @@ export default function (context) {
             // Easier debugging for pane developers
             paneDiv = dom.createElement('div')
             paneDiv.setAttribute('class', 'exceptionPane')
-            const pre = dom.createElement('pre')
+            var pre = dom.createElement('pre')
             paneDiv.appendChild(pre)
             pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
           }
 
-          const row = dom.createElement('tr')
-          const cell = row.appendChild(dom.createElement('td'))
+          var row = dom.createElement('tr')
+          var cell = row.appendChild(dom.createElement('td'))
           cell.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&
@@ -892,12 +807,12 @@ export default function (context) {
   }) /* propertyTable */
 
   function propertyTR (doc, st, inverse) {
-    const tr = doc.createElement('TR')
+    var tr = doc.createElement('TR')
     tr.AJAR_statement = st
     tr.AJAR_inverse = inverse
     // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
     tr.setAttribute('predTR', 'true')
-    const predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
+    var predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
     tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
     return tr
   }
@@ -911,7 +826,7 @@ export default function (context) {
     // UI.log.info('@appendPropertyTRs, dom is now ' + thisOutline.document.location);
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
-    let sel, j, k
+    var sel, j, k
     if (inverse) {
       sel = function (x) {
         return x.subject
@@ -924,26 +839,26 @@ export default function (context) {
       plist = plist.sort(UI.utils.RDFComparePredicateObject)
     }
 
-    const max = plist.length
+    var max = plist.length
     for (j = 0; j < max; j++) {
       // squishing together equivalent properties I think
-      let s = plist[j]
+      var s = plist[j]
       //      if (s.object == parentSubject) continue; // that we knew
 
       // Avoid predicates from other panes
       if (predicateFilter && !predicateFilter(s.predicate, inverse)) continue
 
-      const tr = propertyTR(dom, s, inverse)
+      var tr = propertyTR(dom, s, inverse)
       parent.appendChild(tr)
-      const predicateTD = tr.firstChild // we need to kludge the rowspan later
+      var predicateTD = tr.firstChild // we need to kludge the rowspan later
 
-      let defaultpropview = views.defaults[s.predicate.uri]
+      var defaultpropview = views.defaults[s.predicate.uri]
 
       //   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
 
-      let dups = 0 // How many rows have the same predicate, -1?
-      let langTagged = 0 // how many objects have language tags?
-      let myLang = 0 // Is there one I like?
+      var dups = 0 // How many rows have the same predicate, -1?
+      var langTagged = 0 // how many objects have language tags?
+      var myLang = 0 // Is there one I like?
 
       for (
         k = 0;
@@ -999,20 +914,20 @@ export default function (context) {
        */
 
       tr.showNobj = function (n) {
-        const predDups = k - dups
-        const show = 2 * n < predDups ? n : predDups
-        const showLaterArray = []
+        var predDups = k - dups
+        var show = 2 * n < predDups ? n : predDups
+        var showLaterArray = []
         if (predDups !== 1) {
           predicateTD.setAttribute(
             'rowspan',
             show === predDups ? predDups : n + 1
           )
-          let l
+          var l
           if (show < predDups && show === 1) {
             // what case is this...
             predicateTD.setAttribute('rowspan', 2)
           }
-          let displayed = 0 // The number of cells generated-1,
+          var displayed = 0 // The number of cells generated-1,
           // all duplicate thing removed
           for (l = 1; l < k; l++) {
             // This detects the same things
@@ -1024,7 +939,7 @@ export default function (context) {
               displayed++
               s = plist[j + l]
               defaultpropview = views.defaults[s.predicate.uri]
-              const trObj = dom.createElement('tr')
+              var trObj = dom.createElement('tr')
               trObj.style.colspan = '1'
               trObj.appendChild(
                 thisOutline.outlineObjectTD(
@@ -1054,8 +969,8 @@ export default function (context) {
 
         if (show < predDups) {
           // Add the x more <TR> here
-          const moreTR = dom.createElement('tr')
-          const moreTD = moreTR.appendChild(dom.createElement('td'))
+          var moreTR = dom.createElement('tr')
+          var moreTD = moreTR.appendChild(dom.createElement('td'))
           moreTD.setAttribute(
             'style',
             'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -1063,10 +978,10 @@ export default function (context) {
           moreTD.setAttribute('notSelectable', 'false')
           if (predDups > n) {
             // what is this for??
-            const small = dom.createElement('a')
+            var small = dom.createElement('a')
             moreTD.appendChild(small)
 
-            const predToggle = (function (f) {
+            var predToggle = (function (f) {
               return f(predicateTD, k, dups, n)
             })(function (predicateTD, k, dups, n) {
               return function (display) {
@@ -1095,14 +1010,14 @@ export default function (context) {
                   )
                   predicateTD.setAttribute('rowspan', predDups + 1)
                 }
-                for (let i = 0; i < showLaterArray.length; i++) {
-                  const trObj = showLaterArray[i]
+                for (var i = 0; i < showLaterArray.length; i++) {
+                  var trObj = showLaterArray[i]
                   trObj.style.display = display
                 }
               }
             }) // ???
-            let current = 'none'
-            const toggleObj = function (event) {
+            var current = 'none'
+            var toggleObj = function (event) {
               predToggle(current)
               current = current === 'none' ? '' : 'none'
               if (event) event.stopPropagation()
@@ -1130,11 +1045,11 @@ export default function (context) {
   /*   termWidget
    **
    */
-  const termWidget = {} // @@@@@@ global
+  var termWidget = {} // @@@@@@ global
   global.termWidget = termWidget
   termWidget.construct = function (dom) {
     dom = dom || document
-    const td = dom.createElement('TD')
+    var td = dom.createElement('TD')
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -1145,10 +1060,10 @@ export default function (context) {
     return td
   }
   termWidget.addIcon = function (td, icon, listener) {
-    const iconTD = td.childNodes[1]
+    var iconTD = td.childNodes[1]
     if (!iconTD) return
-    let width = iconTD.style.width
-    const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
+    var width = iconTD.style.width
+    var img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
     width = parseInt(width)
     width = width + icon.width
     iconTD.style.width = width + 'px'
@@ -1158,16 +1073,16 @@ export default function (context) {
     }
   }
   termWidget.removeIcon = function (td, icon) {
-    const iconTD = td.childNodes[1]
-    let baseURI
+    var iconTD = td.childNodes[1]
+    var baseURI
     if (!iconTD) return
-    let width = iconTD.style.width
+    var width = iconTD.style.width
     width = parseInt(width)
     width = width - icon.width
     iconTD.style.width = width + 'px'
-    for (let x = 0; x < iconTD.childNodes.length; x++) {
-      const elt = iconTD.childNodes[x]
-      const eltSrc = elt.src
+    for (var x = 0; x < iconTD.childNodes.length; x++) {
+      var elt = iconTD.childNodes[x]
+      var eltSrc = elt.src
 
       // ignore first '?' and everything after it //Kenny doesn't know what this is for
       try {
@@ -1176,7 +1091,7 @@ export default function (context) {
         console.log(e)
         baseURI = ''
       }
-      const relativeIconSrc = UI.rdf.uri.join(icon.src, baseURI)
+      var relativeIconSrc = UI.rdf.uri.join(icon.src, baseURI)
       if (eltSrc === relativeIconSrc) {
         iconTD.removeChild(elt)
       }
@@ -1211,7 +1126,7 @@ export default function (context) {
     // this.orderBy = []
   }
 
-  const queries = []
+  var queries = []
   queries[0] = new QueryObj()
   /*
   function querySave () {
@@ -1253,7 +1168,7 @@ export default function (context) {
 */
   function addButtonCallbacks (target, fireOn) {
     UI.log.debug('Button callbacks for ' + fireOn + ' added')
-    const makeIconCallback = function (icon) {
+    var makeIconCallback = function (icon) {
       return function IconCallback (req) {
         if (req.indexOf('#') >= 0) {
           console.log(
@@ -1282,7 +1197,7 @@ export default function (context) {
   //   Selection support
 
   function selected (node) {
-    const a = node.getAttribute('class')
+    var a = node.getAttribute('class')
     if (a && a.indexOf('selected') >= 0) return true
     return false
   }
@@ -1290,8 +1205,8 @@ export default function (context) {
   // These woulkd be simpler using closer variables below
   function optOnIconMouseDownListener (e) {
     // outlineIcons.src.icon_opton  needed?
-    const target = thisOutline.targetOf(e)
-    const p = target.parentNode
+    var target = thisOutline.targetOf(e)
+    var p = target.parentNode
     termWidget.replaceIcon(
       p.parentNode,
       outlineIcons.termWidgets.optOn,
@@ -1303,8 +1218,8 @@ export default function (context) {
 
   function optOffIconMouseDownListener (e) {
     // outlineIcons.src.icon_optoff needed?
-    const target = thisOutline.targetOf(e)
-    const p = target.parentNode
+    var target = thisOutline.targetOf(e)
+    var p = target.parentNode
     termWidget.replaceIcon(
       p.parentNode,
       outlineIcons.termWidgets.optOff,
@@ -1315,12 +1230,12 @@ export default function (context) {
   }
 
   function setSelectedParent (node, inc) {
-    const onIcon = outlineIcons.termWidgets.optOn
-    const offIcon = outlineIcons.termWidgets.optOff
-    for (let n = node; n.parentNode; n = n.parentNode) {
+    var onIcon = outlineIcons.termWidgets.optOn
+    var offIcon = outlineIcons.termWidgets.optOff
+    for (var n = node; n.parentNode; n = n.parentNode) {
       while (true) {
         if (n.getAttribute('predTR')) {
-          let num = n.getAttribute('parentOfSelected')
+          var num = n.getAttribute('parentOfSelected')
           if (!num) num = 0
           else num = parseInt(num)
           if (num === 0 && inc > 0) {
@@ -1350,11 +1265,11 @@ export default function (context) {
   }
 
   this.statusBarClick = function (event) {
-    const target = UI.utils.getTarget(event)
+    var target = UI.utils.getTarget(event)
     if (target.label) {
       window.content.location = target.label
       // The following alternative does not work in the extension.
-      // var s = store.sym(target.label);
+      // var s = UI.store.sym(target.label);
       // outline.GotoSubject(s, true);
     }
   }
@@ -1370,17 +1285,17 @@ export default function (context) {
     if (typeof sourceWidget === 'undefined') return
     // deselect all before going on, this is necessary because you would switch tab,
     // close tab or so on...
-    for (const uri in sourceWidget.sources) {
+    for (var uri in sourceWidget.sources) {
       sourceWidget.sources[uri].setAttribute('class', '')
     } // .class doesn't work. Be careful!
-    for (let i = 0; i < selection.length; i++) {
+    for (var i = 0; i < selection.length; i++) {
       if (!selection[i].parentNode) {
         console.log('showSource: EH? no parentNode? ' + selection[i] + '\n')
         continue
       }
-      const st = selection[i].parentNode.AJAR_statement
+      var st = selection[i].parentNode.AJAR_statement
       if (!st) continue // for root TD
-      const source = st.why
+      var source = st.why
       if (source && source.uri) {
         sourceWidget.highlight(source, true)
       }
@@ -1405,7 +1320,7 @@ export default function (context) {
       )
     }
     UI.log.debug('pass')
-    let cla = node.getAttribute('class')
+    var cla = node.getAttribute('class')
     if (!cla) cla = ''
     if (newValue) {
       cla += ' selected'
@@ -1415,17 +1330,17 @@ export default function (context) {
       selection.push(node)
       // UI.log.info('Selecting '+node.textContent)
 
-      const about = UI.utils.getTerm(node) // show uri for a newly selectedTd
+      var about = UI.utils.getTerm(node) // show uri for a newly selectedTd
       thisOutline.showURI(about)
 
-      let st = node.AJAR_statement // show blue cross when the why of that triple is editable
+      var st = node.AJAR_statement // show blue cross when the why of that triple is editable
       if (typeof st === 'undefined') st = node.parentNode.AJAR_statement
       // if (typeof st === 'undefined') return; // @@ Kludge?  Click in the middle of nowhere
       if (st) {
         // don't do these for headers or base nodes
-        const source = st.why
+        var source = st.why
         // var target = st.why
-        const editable = store.updater.editable(source.uri, kb)
+        var editable = UI.store.updater.editable(source.uri, kb)
         if (!editable) {
           // let target = node.parentNode.AJAR_inverse ? st.object : st.subject
         } // left hand side
@@ -1459,14 +1374,14 @@ export default function (context) {
   }
 
   function deselectAll () {
-    const n = selection.length
+    var n = selection.length
     for (let i = n - 1; i >= 0; i--) setSelected(selection[i], false)
     selection = []
   }
 
   /** Get the target of an event **/
   this.targetOf = function (e) {
-    let target
+    var target
     if (!e) e = window.event
     if (e.target) {
       target = e.target
@@ -1484,8 +1399,8 @@ export default function (context) {
   } // targetOf
 
   this.walk = function walk (directionCode, inputTd) {
-    const selectedTd = inputTd || selection[0]
-    let newSelTd
+    var selectedTd = inputTd || selection[0]
+    var newSelTd
     switch (directionCode) {
       case 'down':
         try {
@@ -1514,7 +1429,7 @@ export default function (context) {
         ) {
           setSelected(selectedTd.nextSibling, true)
         } else {
-          const newSelected = dom.evaluate(
+          var newSelected = dom.evaluate(
             'table/div/tr/td[2]',
             selectedTd,
             null,
@@ -1567,7 +1482,7 @@ export default function (context) {
       showURI(UI.utils.getAbout(kb, selection[0]))
       return true
     }
-    let target, editable
+    var target, editable
 
     if (UI.utils.getTarget(e).tagName === 'TEXTAREA') return
     if (UI.utils.getTarget(e).id === 'UserURI') return
@@ -1585,7 +1500,7 @@ export default function (context) {
       }
       return
     }
-    const selectedTd = selection[0]
+    var selectedTd = selection[0]
     // if not done, Have to deal with redraw...
     sf.removeCallback('done', 'setSelectedAfterward')
     sf.removeCallback('fail', 'setSelectedAfterward')
@@ -1594,9 +1509,9 @@ export default function (context) {
       case 13: // enter
         if (UI.utils.getTarget(e).tagName === 'HTML') {
           // I don't know why 'HTML'
-          const object = UI.utils.getAbout(kb, selectedTd)
+          var object = UI.utils.getAbout(kb, selectedTd)
           target = selectedTd.parentNode.AJAR_statement.why
-          editable = store.updater.editable(target.uri, kb)
+          editable = UI.store.updater.editable(target.uri, kb)
           if (object) {
             // <Feature about='enterToExpand'>
             outline.GotoSubject(object, true)
@@ -1642,29 +1557,28 @@ export default function (context) {
 
     if (UI.utils.getTarget(e).tagName === 'INPUT') return
 
-    let walk
     switch (e.keyCode) {
       case 46: // delete
       case 8: // backspace
         target = selectedTd.parentNode.AJAR_statement.why
-        editable = store.updater.editable(target.uri, kb)
+        editable = UI.store.updater.editable(target.uri, kb)
         if (editable) {
           e.preventDefault() // prevent from going back
           this.UserInput.Delete(selectedTd)
         }
         break
-      case 37: { // left
+      case 37: // left
         if (this.walk('left')) return
-        const titleTd = UI.utils.ancestor(selectedTd.parentNode, 'TD')
+        var titleTd = UI.utils.ancestor(selectedTd.parentNode, 'TD')
         outlineCollapse(selectedTd, UI.utils.getAbout(kb, titleTd))
         break
-      }
       case 39: // right
         // @@ TODO: Write away the need for exception on next line
         // eslint-disable-next-line no-case-declarations
         const obj = UI.utils.getAbout(kb, selectedTd)
         if (obj) {
-          walk = this.walk
+          var walk = this.walk
+
           if (selectedTd.nextSibling) {
             // when selectedTd is a predicate
             this.walk('right')
@@ -1675,7 +1589,7 @@ export default function (context) {
             sf.addCallback('done', setSelectedAfterward)
             sf.addCallback('fail', setSelectedAfterward)
             outlineExpand(selectedTd, obj, {
-              pane: paneRegistry.byName('defaultPane')
+              pane: panes.byName('defaultPane')
             })
           }
           setSelectedAfterward()
@@ -1737,7 +1651,7 @@ export default function (context) {
 
     // var thisHtml=selection[0].owner
     if (selection[0]) {
-      const PosY = UI.utils.findPos(selection[0])[1]
+      var PosY = UI.utils.findPos(selection[0])[1]
       if (
         PosY + selection[0].clientHeight >
         window.scrollY + window.innerHeight
@@ -1775,10 +1689,10 @@ export default function (context) {
 
   function expandMouseDownListener (e) {
     // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
-    const target = thisOutline.targetOf(e)
-    const p = target.parentNode
-    const subject = UI.utils.getAbout(kb, target)
-    const pane = e.altKey ? paneRegistry.byName('internal') : undefined // set later: was panes.defaultPane
+    var target = thisOutline.targetOf(e)
+    var p = target.parentNode
+    var subject = UI.utils.getAbout(kb, target)
+    var pane = e.altKey ? panes.byName('internal') : undefined // set later: was panes.defaultPane
 
     if (e.shiftKey) {
       // Shift forces a refocus - bring this to the top
@@ -1787,7 +1701,7 @@ export default function (context) {
       if (e.altKey) {
         // To investigate screw ups, dont wait show internals
         outlineExpand(p, subject, {
-          pane: paneRegistry.byName('internal'),
+          pane: panes.byName('internal'),
           immediate: true
         })
       } else {
@@ -1798,17 +1712,17 @@ export default function (context) {
 
   function collapseMouseDownListener (e) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
-    const target = thisOutline.targetOf(e)
-    const subject = UI.utils.getAbout(kb, target)
-    const pane = e.altKey ? paneRegistry.byName('internal') : undefined
-    const p = target.parentNode.parentNode
+    var target = thisOutline.targetOf(e)
+    var subject = UI.utils.getAbout(kb, target)
+    var pane = e.altKey ? panes.byName('internal') : undefined
+    var p = target.parentNode.parentNode
     outlineCollapse(p, subject, pane)
   }
 
   function failedIconMouseDownListener (e) {
     // outlineIcons.src.icon_failed
-    const target = thisOutline.targetOf(e)
-    const uri = target.getAttribute('uri') // Put on access buttons
+    var target = thisOutline.targetOf(e)
+    var uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
       sf.fetch(UI.rdf.uri.docpart(uri), {
         force: true
@@ -1820,8 +1734,8 @@ export default function (context) {
 
   function fetchedIconMouseDownListener (e) {
     // outlineIcons.src.icon_fetched
-    const target = thisOutline.targetOf(e)
-    const uri = target.getAttribute('uri') // Put on access buttons
+    var target = thisOutline.targetOf(e)
+    var uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
       sf.fetch(UI.rdf.uri.docpart(uri), {
         force: true
@@ -1832,15 +1746,15 @@ export default function (context) {
   }
 
   function unrequestedIconMouseDownListener (e) {
-    const target = thisOutline.targetOf(e)
-    const uri = target.getAttribute('uri') // Put on access buttons
+    var target = thisOutline.targetOf(e)
+    var uri = target.getAttribute('uri') // Put on access buttons
     sf.fetch(UI.rdf.uri.docpart(uri))
   }
 
   function removeNodeIconMouseDownListener (e) {
     // icon_remove_node
-    const target = thisOutline.targetOf(e)
-    let node = target.node
+    var target = thisOutline.targetOf(e)
+    var node = target.node
     if (node.childNodes.length > 1) node = target.parentNode // parallel outline view @@ Hack
     removeAndRefresh(node) // @@ update icons for pane?
   }
@@ -1851,22 +1765,20 @@ export default function (context) {
       return thisOutline.UserInput.Click(e)
     }
 
-    const target = thisOutline.targetOf(e)
+    var target = thisOutline.targetOf(e)
     // Originally this was set on the whole tree and could happen anywhere
     // var p = target.parentNode
-    let node
+    var node
     for (
       node = UI.utils.ancestor(target, 'TD');
       node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
       node = UI.utils.ancestor(node.parentNode, 'TD')
-    ) {
-      // ...
-    }
+    ) {}
     if (!node) return
 
     // var node = target;
 
-    const sel = selected(node)
+    var sel = selected(node)
     // var cla = node.getAttribute('class')
     UI.log.debug('Was node selected before: ' + sel)
     if (e.altKey) {
@@ -1886,10 +1798,10 @@ export default function (context) {
       }
       // if the node is already selected and the corresponding statement is editable,
       // go to UserInput
-      const st = node.parentNode.AJAR_statement
+      var st = node.parentNode.AJAR_statement
       if (!st) return // For example in the title TD of an expanded pane
       const target = st.why
-      const editable = store.updater.editable(target.uri, kb)
+      var editable = UI.store.updater.editable(target.uri, kb)
       if (sel && editable) thisOutline.UserInput.Click(e, selection[0]) // was next 2 lines
       // var text='TabulatorMouseDown@Outline()';
       // HCIoptions['able to edit in Discovery Mode by mouse'].setupHere([sel,e,thisOutline,selection[0]],text);
@@ -1913,9 +1825,9 @@ export default function (context) {
 
   function TabulatorMousedown (e) {
     UI.log.info('@TabulatorMousedown, dom.location is now ' + dom.location)
-    const target = thisOutline.targetOf(e)
+    var target = thisOutline.targetOf(e)
     if (!target) return
-    const tname = target.tagName
+    var tname = target.tagName
     // UI.log.debug('TabulatorMousedown: ' + tname + ' shift='+e.shiftKey+' alt='+e.altKey+' ctrl='+e.ctrlKey);
     // var p = target.parentNode
     // var about = UI.utils.getAbout(kb, target)
@@ -1971,23 +1883,23 @@ export default function (context) {
    */
   function outlineExpand (p, subject1, options) {
     options = options || {}
-    const pane = options.pane
-    let already = !!options.already
-    const immediate = options.immediate
+    var pane = options.pane
+    var already = !!options.already
+    var immediate = options.immediate
 
     UI.log.info('@outlineExpand, dom is now ' + dom.location)
     // remove callback to prevent unexpected repaint
     sf.removeCallback('done', 'expand')
     sf.removeCallback('fail', 'expand')
 
-    let subject = kb.canon(subject1)
+    var subject = kb.canon(subject1)
     // var requTerm = subject.uri ? kb.sym(UI.rdf.uri.docpart(subject.uri)) : subject
 
     function render () {
       subject = kb.canon(subject)
       if (!p || !p.parentNode || !p.parentNode.parentNode) return false
 
-      let newTable
+      var newTable
       UI.log.info('@@ REPAINTING ')
       if (!already) {
         // first expand
@@ -2019,8 +1931,8 @@ export default function (context) {
       // fetch seeAlso when render()
       // var seeAlsoStats = sf.store.statementsMatching(subject, UI.ns.rdfs('seeAlso'))
       // seeAlsoStats.map(function (x) {sf.lookUpThing(x.object, subject,false);})
-      const seeAlsoWhat = kb.each(subject, UI.ns.rdfs('seeAlso'))
-      for (let i = 0; i < seeAlsoWhat.length; i++) {
+      var seeAlsoWhat = kb.each(subject, UI.ns.rdfs('seeAlso'))
+      for (var i = 0; i < seeAlsoWhat.length; i++) {
         if (i === 25) {
           UI.log.warn(
             'expand: Warning: many (' +
@@ -2036,7 +1948,7 @@ export default function (context) {
 
     function expand (uri) {
       if (arguments[3]) return true // already fetched indicator
-      const cursubj = kb.canon(subject) // canonical identifier may have changed
+      var cursubj = kb.canon(subject) // canonical identifier may have changed
       UI.log.info(
         '@@ expand: relevant subject=' +
           cursubj +
@@ -2046,20 +1958,20 @@ export default function (context) {
           already
       )
       // var term = kb.sym(uri)
-      const docTerm = kb.sym(UI.rdf.uri.docpart(uri))
+      var docTerm = kb.sym(UI.rdf.uri.docpart(uri))
       if (uri.indexOf('#') >= 0) {
         throw new Error('Internal error: hash in ' + uri)
       }
 
-      const relevant = function () {
+      var relevant = function () {
         // Is the loading of this URI relevam to the display of subject?
         if (!cursubj.uri) return true // bnode should expand()
-        const as = kb.uris(cursubj)
+        var as = kb.uris(cursubj)
         if (!as) return false
-        for (let i = 0; i < as.length; i++) {
+        for (var i = 0; i < as.length; i++) {
           // canon'l uri or any alias
           for (
-            let rd = UI.rdf.uri.docpart(as[i]);
+            var rd = UI.rdf.uri.docpart(as[i]);
             rd;
             rd = kb.HTTPRedirects[rd]
           ) {
@@ -2092,12 +2004,12 @@ export default function (context) {
       setUrlBarAndTitle(subject)
     }
     UI.log.debug('outlineExpand: dereferencing ' + subject)
-    const status = dom.createElement('span')
+    var status = dom.createElement('span')
     p.appendChild(status)
     sf.addCallback('done', expand) // @@@@@@@ This can really mess up existing work
     sf.addCallback('fail', expand) // Need to do if there s one a gentle resync of page with store
 
-    const returnConditions = [] // this is quite a general way to do cut and paste programming
+    var returnConditions = [] // this is quite a general way to do cut and paste programming
     // I might make a class for this
     if (subject.uri && subject.uri.split(':')[0] === 'rdf') {
       // what is this? -tim
@@ -2105,8 +2017,8 @@ export default function (context) {
       return
     }
 
-    for (let i = 0; i < returnConditions.length; i++) {
-      let returnCode
+    for (var i = 0; i < returnConditions.length; i++) {
+      var returnCode
       if (returnCode === returnConditions[i](subject)) {
         render()
         UI.log.debug('outline 1815')
@@ -2137,7 +2049,7 @@ export default function (context) {
             setUrlBarAndTitle(subject)
           }
         } else {
-          const message = dom.createElement('pre')
+          var message = dom.createElement('pre')
           message.textContent = body
           message.setAttribute('style', 'background-color: #fee;')
           message.textContent =
@@ -2151,11 +2063,10 @@ export default function (context) {
   } // outlineExpand
 
   function outlineCollapse (p, subject) {
-    let row = UI.utils.ancestor(p, 'TR')
+    var row = UI.utils.ancestor(p, 'TR')
     row = UI.utils.ancestor(row.parentNode, 'TR') // two levels up
-    let statement
-    if (row) statement = row.AJAR_statement
-    let level // find level (the enclosing TD)
+    if (row) var statement = row.AJAR_statement
+    var level // find level (the enclosing TD)
     for (
       level = p.parentNode;
       level.tagName !== 'TD';
@@ -2168,15 +2079,14 @@ export default function (context) {
     }
 
     UI.log.debug('Collapsing subject ' + subject)
-    let myview
+    var myview
     if (statement) {
       UI.log.debug('looking up pred ' + statement.predicate.uri + 'in defaults')
       myview = views.defaults[statement.predicate.uri]
     }
     UI.log.debug('view= ' + myview)
-    let deleteNode
     if (level.parentNode.parentNode.id === 'outline') {
-      deleteNode = level.parentNode
+      var deleteNode = level.parentNode
     }
     thisOutline.replaceTD(
       thisOutline.outlineObjectTD(subject, myview, deleteNode, statement),
@@ -2185,13 +2095,13 @@ export default function (context) {
   } // outlineCollapse
 
   this.replaceTD = function replaceTD (newTd, replacedTd) {
-    let reselect
+    var reselect
     if (selected(replacedTd)) reselect = true
 
     // deselects everything being collapsed. This goes backwards because
     // deselecting an element decreases selection.length
-    for (let x = selection.length - 1; x > -1; x--) {
-      for (let elt = selection[x]; elt.parentNode; elt = elt.parentNode) {
+    for (var x = selection.length - 1; x > -1; x--) {
+      for (var elt = selection[x]; elt.parentNode; elt = elt.parentNode) {
         if (elt === replacedTd) {
           setSelected(selection[x], false)
         }
@@ -2204,8 +2114,8 @@ export default function (context) {
 
   function outlineRefocus (p, subject) {
     // Shift-expand or shift-collapse: Maximize
-    let outer = null
-    for (let level = p.parentNode; level; level = level.parentNode) {
+    var outer = null
+    for (var level = p.parentNode; level; level = level.parentNode) {
       UI.log.debug('level ' + level.tagName)
       if (level.tagName === 'TD') outer = level
     } // find outermost td
@@ -2234,11 +2144,11 @@ export default function (context) {
   }
 
   function GotoURI (uri) {
-    const subject = kb.sym(uri)
+    var subject = kb.sym(uri)
     this.GotoSubject(subject, true)
   }
   this.GotoURIinit = function (uri) {
-    const subject = kb.sym(uri)
+    var subject = kb.sym(uri)
     this.GotoSubject(subject)
   }
 
@@ -2259,15 +2169,15 @@ export default function (context) {
     }
 
     function GotoSubjectDefault () {
-      const tr = dom.createElement('TR')
+      var tr = dom.createElement('TR')
       tr.style.verticalAlign = 'top'
       table.appendChild(tr)
-      const td = thisOutline.outlineObjectTD(subject, undefined, tr)
+      var td = thisOutline.outlineObjectTD(subject, undefined, tr)
       tr.appendChild(td)
       return td
     }
 
-    const td = GotoSubjectDefault()
+    var td = GotoSubjectDefault()
 
     if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
@@ -2276,7 +2186,7 @@ export default function (context) {
         pane: pane,
         solo: solo
       })
-      const tr = td.parentNode
+      var tr = td.parentNode
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
 
@@ -2309,19 +2219,44 @@ export default function (context) {
   //
   // / /////////////////////////////////////////////////////
 
-  const ns = UI.ns
+  var views = {
+    properties: [],
+    defaults: [],
+    classes: []
+  } // views
 
-  const views = propertyViews(dom)
+  /** add a property view function **/
+  function viewsAddPropertyView (property, pviewfunc, isDefault) {
+    if (!views.properties[property]) {
+      views.properties[property] = []
+    }
+    views.properties[property].push(pviewfunc)
+    if (isDefault) {
+      // will override an existing default!
+      views.defaults[property] = pviewfunc
+    }
+  } // addPropertyView
+
+  var ns = UI.ns
+  // view that applies to items that are objects of certain properties.
+  // viewsAddPropertyView(property, viewjsfile, default?)
+  viewsAddPropertyView(ns.foaf('depiction').uri, viewAsImage, true)
+  viewsAddPropertyView(ns.foaf('img').uri, viewAsImage, true)
+  viewsAddPropertyView(ns.foaf('thumbnail').uri, viewAsImage, true)
+  viewsAddPropertyView(ns.foaf('logo').uri, viewAsImage, true)
+  viewsAddPropertyView(ns.foaf('mbox').uri, viewAsMbox, true)
+  // viewsAddPropertyView(ns.foaf('based_near').uri, VIEWAS_map, true);
+  // viewsAddPropertyView(ns.foaf('birthday').uri, VIEWAS_cal, true);
 
   // var thisOutline = this   dup
   /** some builtin simple views **/
 
   function viewAsBoringDefault (obj) {
     // UI.log.debug('entered viewAsBoringDefault...');
-    let rep // representation in html
+    var rep // representation in html
 
     if (obj.termType === 'Literal') {
-      const styles = {
+      var styles = {
         integer: 'text-align: right;',
         decimal: "text-align: '.';",
         double: "text-align: '.';"
@@ -2329,9 +2264,9 @@ export default function (context) {
       rep = dom.createElement('span')
       rep.textContent = obj.value
       // Newlines have effect and overlong lines wrapped automatically
-      let style = ''
+      var style = ''
       if (obj.datatype && obj.datatype.uri) {
-        const xsd = UI.ns.xsd('').uri
+        var xsd = UI.ns.xsd('').uri
         if (obj.datatype.uri.slice(0, xsd.length) === xsd) {
           style = styles[obj.datatype.uri.slice(xsd.length)]
         }
@@ -2344,8 +2279,8 @@ export default function (context) {
 
       if (obj.termType === 'NamedNode') {
         if (obj.uri.slice(0, 4) === 'tel:') {
-          const num = obj.uri.slice(4)
-          const anchor = dom.createElement('a')
+          var num = obj.uri.slice(4)
+          var anchor = dom.createElement('a')
           rep.appendChild(dom.createTextNode(num))
           anchor.setAttribute('href', obj.uri)
           anchor.appendChild(
@@ -2361,8 +2296,6 @@ export default function (context) {
         } else {
           // not tel:
           rep.appendChild(dom.createTextNode(UI.utils.label(obj)))
-          const anchor = UI.widgets.linkIcon(dom, obj)
-          rep.appendChild(anchor)
           UI.widgets.makeDraggable(rep, obj) // 2017
         }
       } else {
@@ -2380,10 +2313,10 @@ export default function (context) {
                 tr.appendChild(document.createTextNode(
                         obj.elements.length ? '(' + obj.elements.length+')' : '(none)'));
         */
-      for (let i = 0; i < obj.elements.length; i++) {
-        const elt = obj.elements[i]
-        const row = rep.appendChild(dom.createElement('tr'))
-        const numcell = row.appendChild(dom.createElement('td'))
+      for (var i = 0; i < obj.elements.length; i++) {
+        var elt = obj.elements[i]
+        var row = rep.appendChild(dom.createElement('tr'))
+        var numcell = row.appendChild(dom.createElement('td'))
         numcell.setAttribute(
           'style',
           'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -2394,7 +2327,7 @@ export default function (context) {
         row.appendChild(thisOutline.outlineObjectTD(elt))
       }
     } else if (obj.termType === 'Graph') {
-      rep = paneRegistry
+      rep = panes
         .byName('dataContentPane')
         .statementsAsTables(obj.statements, context)
       rep.setAttribute('class', 'nestedFormula')
@@ -2405,6 +2338,32 @@ export default function (context) {
     UI.log.debug('contents: ' + rep.innerHTML)
     return rep
   } // boring_default
+
+  function viewAsImage (obj) {
+    var img = UI.utils.AJARImage(
+      obj.uri,
+      UI.utils.label(obj),
+      UI.utils.label(obj),
+      dom
+    )
+    img.setAttribute('class', 'outlineImage')
+    return img
+  }
+
+  function viewAsMbox (obj) {
+    var anchor = dom.createElement('a')
+    // previous implementation assumed email address was Literal. fixed.
+
+    // FOAF mboxs must NOT be literals -- must be mailto: URIs.
+
+    var address = obj.termType === 'NamedNode' ? obj.uri : obj.value // this way for now
+    if (!address) return viewAsBoringDefault(obj)
+    var index = address.indexOf('mailto:')
+    address = index >= 0 ? address.slice(index + 7) : address
+    anchor.setAttribute('href', 'mailto:' + address)
+    anchor.appendChild(dom.createTextNode(address))
+    return anchor
+  }
 
   this.createTabURI = function () {
     dom.getElementById('UserURI').value =

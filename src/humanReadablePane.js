@@ -3,24 +3,23 @@
  **  This outline pane contains the document contents for an HTML document
  **  This is for peeking at a page, because the user might not want to leave the data browser.
  */
-import { icons, ns } from 'solid-ui'
-import { Util } from 'rdflib'
-import { marked } from 'marked'
+var UI = require('solid-ui')
+const $rdf = require('rdflib')
 
-const humanReadablePane = {
-  icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
+module.exports = {
+  icon: UI.icons.originalIconBase + 'tango/22-text-x-generic.png',
 
   name: 'humanReadable',
 
   label: function (subject, context) {
-    const kb = context.session.store
+    var kb = context.session.store
+    var ns = UI.ns
 
     //   See also the source pane, which has lower precedence.
 
-    const allowed = [
+    var allowed = [
       'text/plain',
       'text/html',
-      'text/markdown',
       'application/xhtml+xml',
       'image/png',
       'image/jpeg',
@@ -28,11 +27,11 @@ const humanReadablePane = {
       'video/mp4'
     ]
 
-    const hasContentTypeIn = function (kb, x, displayables) {
-      const cts = kb.fetcher.getHeader(x, 'content-type')
+    var hasContentTypeIn = function (kb, x, displayables) {
+      var cts = kb.fetcher.getHeader(x, 'content-type')
       if (cts) {
-        for (let j = 0; j < cts.length; j++) {
-          for (let k = 0; k < displayables.length; k++) {
+        for (var j = 0; j < cts.length; j++) {
+          for (var k = 0; k < displayables.length; k++) {
             if (cts[j].indexOf(displayables[k]) >= 0) {
               return true
             }
@@ -43,10 +42,10 @@ const humanReadablePane = {
     }
 
     // This data could come from a fetch OR from ldp container
-    const hasContentTypeIn2 = function (kb, x, displayables) {
-      const t = kb.findTypeURIs(subject)
-      for (let k = 0; k < displayables.length; k++) {
-        if (Util.mediaTypeClass(displayables[k]).uri in t) {
+    var hasContentTypeIn2 = function (kb, x, displayables) {
+      var t = kb.findTypeURIs(subject)
+      for (var k = 0; k < displayables.length; k++) {
+        if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
         }
       }
@@ -55,7 +54,7 @@ const humanReadablePane = {
 
     if (!subject.uri) return null // no bnodes
 
-    const t = kb.findTypeURIs(subject)
+    var t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 
     if (
@@ -69,44 +68,22 @@ const humanReadablePane = {
   },
 
   render: function (subject, context) {
-    const myDocument = context.dom
-    const div = myDocument.createElement('div')
-    const kb = context.session.store
+    var myDocument = context.dom
+    var div = myDocument.createElement('div')
+    var kb = context.session.store
 
-    const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    const ct = cts ? cts[0] : null
+    //  @@ When we can, use CSP to turn off scripts within the iframe
+    div.setAttribute('class', 'docView')
+    var iframe = myDocument.createElement('IFRAME')
+    iframe.setAttribute('src', subject.uri) // allow-same-origin
+    iframe.setAttribute('class', 'doc')
+
+    var cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+    var ct = cts ? cts[0] : null
     if (ct) {
       console.log('humanReadablePane: c-t:' + ct)
     } else {
       console.log('humanReadablePane: unknown content-type?')
-    }
-
-    //  @@ When we can, use CSP to turn off scripts within the iframe
-    div.setAttribute('class', 'docView')
-    const element = ct === 'text/markdown' ? 'DIV' : 'IFRAME'
-    const frame = myDocument.createElement(element)
-    // let dataUri
-
-    // render markdown to html
-    const markdownHtml = function () {
-      kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const markdownText = response.responseText
-        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
-        const res = marked.parse(markdownText)
-        // dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(res)
-        // iframe.setAttribute('src', dataUri)
-        frame.innerHTML = res
-        frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
-      })
-    }
-
-    if (ct === 'text/markdown') {
-      markdownHtml()
-    } else {
-      frame.setAttribute('src', subject.uri) // allow-same-origin
-      frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', 'resize = both; height:120em; width:80em;')
     }
 
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
@@ -117,14 +94,13 @@ const humanReadablePane = {
 
     // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
+    iframe.setAttribute('style', 'resize = both; height: 120em; width:80em;')
     //        iframe.setAttribute('height', '480')
     //        iframe.setAttribute('width', '640')
-    const tr = myDocument.createElement('TR')
-    tr.appendChild(frame)
+    var tr = myDocument.createElement('TR')
+    tr.appendChild(iframe)
     div.appendChild(tr)
     return div
   }
 }
-
-export default humanReadablePane
 // ends

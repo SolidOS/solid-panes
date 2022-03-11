@@ -6,7 +6,7 @@
 /* global alert confirm */
 
 import { icons, ns, widgets } from 'solid-ui'
-import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable, Store } from 'rdflib'
+import { IndexedFormula, literal, NamedNode, st, sym } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 
 const pane: PaneDefinition = {
@@ -14,14 +14,16 @@ const pane: PaneDefinition = {
 
   name: 'internal',
 
+  audience: [ns.solid('Developer')],
+
   label: function () {
     return 'under the hood' // There is often a URI even of no statements
   },
 
   render: function (subject, context) {
     const dom = context.dom
-    const store = context.session.store as Store
-    const canonizedSubject = store.canon(subject) as BlankNode | NamedNode | Variable
+    const store = context.session.store
+    const canonizedSubject = store.canon(subject)
     const types = store.findTypeURIs(canonizedSubject)
 
     function filter (pred: NamedNode) {
@@ -34,7 +36,7 @@ const pane: PaneDefinition = {
       )
     }
 
-    const div = dom.createElement('div')
+    var div = dom.createElement('div')
     div.setAttribute('class', 'internalPane')
     div.setAttribute(
       'style',
@@ -64,14 +66,14 @@ const pane: PaneDefinition = {
                 .webOperation('DELETE', folder.uri)
                 .then(() => {
                   console.log('Deleted Ok: ' + folder)
-                  resolve(undefined)
+                  resolve()
                 })
                 .catch((err: string) => {
-                  const str = 'Unable to delete ' + folder + ': ' + err
+                  var str = 'Unable to delete ' + folder + ': ' + err
                   console.log(str)
                   reject(new Error(str))
                 })
-              resolve(undefined)
+              resolve()
             },
             err => {
               alert(err)
@@ -96,7 +98,7 @@ const pane: PaneDefinition = {
       const noun = isFolder ? 'folder' : 'file'
       if (!isProtectedUri(subject)) {
         console.log(subject)
-        const deleteButton = widgets.deleteButtonWithCheck(
+        var deleteButton = widgets.deleteButtonWithCheck(
           dom,
           deleteCell,
           noun,
@@ -109,19 +111,16 @@ const pane: PaneDefinition = {
               return
             }
             // @@ TODO Remove casing of store.fetcher
-            if (!store.fetcher) {
-              throw new Error('Store has no fetcher')
-            }
-            const promise = isFolder
-              ? (deleteRecursive(store, subject) || Promise.resolve())
-              : store.fetcher.webOperation('DELETE', subject.uri) || Promise.resolve()
+            var promise = isFolder
+              ? deleteRecursive(store, subject)
+              : (store as any).fetcher.webOperation('DELETE', subject.uri) // @@ TODO remove casting
             promise
               .then(() => {
-                const str = 'Deleted: ' + subject
+                var str = 'Deleted: ' + subject
                 console.log(str)
               })
               .catch((err: any) => {
-                const str = 'Unable to delete ' + subject + ': ' + err
+                var str = 'Unable to delete ' + subject + ': ' + err
                 console.log(str)
                 alert(str)
               })
@@ -140,12 +139,11 @@ const pane: PaneDefinition = {
       )
       refreshCell.appendChild(refreshButton)
       refreshButton.addEventListener('click', () => {
-        if (!store.fetcher) {
-          throw new Error('Store has no fetcher')
-        }
-        store.fetcher.refresh(subject, function (
-          ok,
-          errm
+        // @@ TODO Remove casting of store.fetcher
+        ;(store as any).fetcher.refresh(subject, function (
+          // @@ TODO Remove casting
+          ok: boolean,
+          errm: string
         ) {
           let str
           if (ok) {
@@ -159,19 +157,15 @@ const pane: PaneDefinition = {
       })
     }
 
-    let plist = store.statementsMatching(subject)
-    let docURI = ''
-    if (!store.fetcher) {
-      throw new Error('Store has no fetcher')
-    }
-
+    var plist = store.statementsMatching(subject)
+    var docURI = ''
     if (subject.uri) {
       plist.push(
         st(
           subject,
           sym('http://www.w3.org/2007/ont/link#uri'),
-          subject.uri as any, // @@ TODO Remove casting
-          store.fetcher.appNode
+          subject.uri,
+          (store as any).fetcher.appNode // @@ TODO Remove casting
         )
       )
       if (subject.uri.indexOf('#') >= 0) {
@@ -180,8 +174,8 @@ const pane: PaneDefinition = {
           st(
             subject,
             sym('http://www.w3.org/2007/ont/link#documentURI'),
-            subject.uri.split('#')[0] as any, // @@ TODO Remove casting
-            store.fetcher.appNode
+            subject.uri.split('#')[0],
+            (store as any).fetcher.appNode // @@ TODO Remove casting
           )
         )
         plist.push(
@@ -189,7 +183,7 @@ const pane: PaneDefinition = {
             subject,
             sym('http://www.w3.org/2007/ont/link#document'),
             sym(subject.uri.split('#')[0]),
-            store.fetcher.appNode
+            (store as any).fetcher.appNode // @@ TODO Remove casting
           )
         )
       } else {
@@ -197,18 +191,16 @@ const pane: PaneDefinition = {
       }
     }
     if (docURI) {
-      if (!store.updater) {
-        throw new Error('Store has no updater')
-      }
-
-      const ed = store.updater.editable(docURI)
+      // @@ TODO Remove casting of store.updater.editable
+      var ed = (store.updater as any).editable(docURI)
       if (ed) {
+        // @@ TODO Remove casting of literal when rdflib exports proper types
         plist.push(
           st(
             subject,
             sym('http://www.w3.org/ns/rww#editable'),
-            literal(ed.toString()),
-            store.fetcher.appNode
+            (literal as any)(ed),
+            (store as any).fetcher.appNode // @@ TODO remove casting
           )
         )
       }

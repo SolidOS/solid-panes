@@ -16,9 +16,9 @@ module.exports = {
 
   // Does the subject deserve this pane?
   label: function (subject, context) {
-    const ns = UI.ns
-    const kb = context.session.store
-    const t = kb.findTypeURIs(subject)
+    var ns = UI.ns
+    var kb = context.session.store
+    var t = kb.findTypeURIs(subject)
     if (t[ns.rdfs('Class').uri]) return 'creation forms'
     // if (t[ns.rdf('Property').uri]) return "user interface";
     if (t[ns.ui('Form').uri]) return 'edit form'
@@ -27,26 +27,26 @@ module.exports = {
   },
 
   render: function (subject, context) {
-    const dom = context.dom
-    const kb = context.session.store
-    const ns = UI.ns
+    var dom = context.dom
+    var kb = context.session.store
+    var ns = UI.ns
 
-    const box = dom.createElement('div')
+    var box = dom.createElement('div')
     box.setAttribute('class', 'formPane') // Share styles
-    const label = UI.utils.label(subject)
+    var label = UI.utils.label(subject)
 
-    const mention = function complain (message, style) {
-      const pre = dom.createElement('p')
+    var mention = function complain (message, style) {
+      var pre = dom.createElement('p')
       pre.setAttribute('style', style || 'color: grey; background-color: white')
       box.appendChild(pre).textContent = message
       return pre
     }
 
-    const complain = function complain (message, style) {
+    var complain = function complain (message, style) {
       mention(message, 'style', style || 'color: grey; background-color: #fdd')
     }
 
-    const complainIfBad = function (ok, body) {
+    var complainIfBad = function (ok, body) {
       if (ok) {
         // setModifiedDate(store, kb, store);
         // rerender(box);   // Deleted forms at the moment
@@ -55,12 +55,11 @@ module.exports = {
 
     // //////////////////////////////////////////////////////////////////////////////
 
-    const t = kb.findTypeURIs(subject)
+    var t = kb.findTypeURIs(subject)
 
-    let store = null
-    let docuri
+    var store = null
     if (subject.uri) {
-      docuri = $rdf.Util.uri.docpart(subject.uri)
+      var docuri = $rdf.Util.uri.docpart(subject.uri)
       if (subject.uri !== docuri && kb.updater.editable(docuri)) {
         store = kb.sym($rdf.Util.uri.docpart(subject.uri))
       } // an editable ontology with hash
@@ -77,12 +76,12 @@ module.exports = {
 
     // A fallback which gives a different store page for each ontology would be good @@
 
-    let pred
+    var pred
     if (t[ns.rdfs('Class').uri]) {
       // Stuff we can do before we load the store
     }
 
-    const wait = mention('(Loading data from: ' + store + ')')
+    var wait = mention('(Loading data from: ' + store + ')')
 
     kb.fetcher.nowOrWhenFetched(store.uri, subject, function (ok, body) {
       if (!ok) {
@@ -95,17 +94,17 @@ module.exports = {
 
       if (t[ns.rdfs('Class').uri]) {
         // For each creation form, allow one to create a new object with it, and also to edit the form.
-        const displayFormsForRelation = function displayFormsForRelation (
+        var displayFormsForRelation = function displayFormsForRelation (
           pred,
           allowCreation
         ) {
-          const sts = kb.statementsMatching(subject, pred)
+          var sts = kb.statementsMatching(subject, pred)
           const outliner = context.getOutliner(dom)
           if (sts.length) {
-            for (let i = 0; i < sts.length; i++) {
+            for (var i = 0; i < sts.length; i++) {
               outliner.appendPropertyTRs(box, [sts[i]])
-              const form = sts[i].object
-              const cell = dom.createElement('td')
+              var form = sts[i].object
+              var cell = dom.createElement('td')
               box.lastChild.appendChild(cell)
               if (allowCreation) {
                 cell.appendChild(
@@ -128,7 +127,7 @@ module.exports = {
                   )
                 )
               }
-              let formdef = kb.statementsMatching(form, ns.rdf('type'))
+              var formdef = kb.statementsMatching(form, ns.rdf('type'))
               if (!formdef.length) formdef = kb.statementsMatching(form)
               if (!formdef.length) complain('No data about form')
               else {

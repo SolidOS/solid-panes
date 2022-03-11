@@ -15,7 +15,7 @@ module.exports = {
   audience: [ns.solid('PowerUser')],
 
   label: function (subject, context) {
-    const kb = context.session.store
+    var kb = context.session.store
 
     if (
       !kb.anyStatementMatching(
@@ -39,12 +39,12 @@ module.exports = {
         }
       }
 
-      const youtube = src.match(
+      var youtube = src.match(
         /\/\/(?:www\.)?youtu(?:\.be|be\.com)\/(?:watch\?v=|embed\/)?([a-z0-9\-_%]+)/i
       )
-      const vimeo = src.match(/\/\/(?:www\.)?vimeo.com\/([0-9a-z\-_]+)/i)
-      const dailymotion = src.match(/\/\/(?:www\.)?dai.ly\/([0-9a-z\-_]+)/i)
-      const vk = src.match(
+      var vimeo = src.match(/\/\/(?:www\.)?vimeo.com\/([0-9a-z\-_]+)/i)
+      var dailymotion = src.match(/\/\/(?:www\.)?dai.ly\/([0-9a-z\-_]+)/i)
+      var vk = src.match(
         /\/\/(?:www\.)?(?:vk\.com|vkontakte\.ru)\/(?:video_ext\.php\?)(.*)/i
       )
 
@@ -67,34 +67,34 @@ module.exports = {
       }
     }
 
-    const link = function (contents, uri) {
+    var link = function (contents, uri) {
       if (!uri) return contents
-      const a = myDocument.createElement('a')
+      var a = myDocument.createElement('a')
       a.setAttribute('href', uri)
       a.appendChild(contents)
       a.addEventListener('click', UI.widgets.openHrefInOutlineMode, true)
       return a
     }
 
-    const text = function (str) {
+    var text = function (str) {
       return myDocument.createTextNode(str)
     }
 
-    const kb = context.session.store
-    const obj = kb.any(
+    var kb = context.session.store
+    var obj = kb.any(
       subject,
       $rdf.sym('http://purl.org/ontology/pbo/core#playlist_item')
     )
-    let index = kb.any(
+    var index = kb.any(
       subject,
       $rdf.sym('http://purl.org/ontology/olo/core#index')
     )
 
-    let uri = obj.uri
-    const video = isVideo(uri)
+    var uri = obj.uri
+    var video = isVideo(uri)
 
-    const div = myDocument.createElement('div')
-    let img
+    var div = myDocument.createElement('div')
+    var img
     if (video && video.youtube) {
       uri = uri.replace('watch?v=', 'embed/')
       div.setAttribute('class', 'imageView')
@@ -114,41 +114,40 @@ module.exports = {
       img.setAttribute('style', 'max-width: 560; max-height: 315;')
     }
 
-    let descDiv
     if (index) {
-      const sl = kb.statementsMatching(
+      var sl = kb.statementsMatching(
         null,
         $rdf.sym('http://purl.org/ontology/olo/core#index')
       )
-      const slots = []
-      for (let i = 0; i < sl.length; i++) {
+      var slots = []
+      for (var i = 0; i < sl.length; i++) {
         if (sl[i]) {
           slots.push(parseInt(sl[i].object.value, 10))
         }
       }
 
       index = parseInt(index.value, 10)
-      descDiv = myDocument.createElement('div')
+      var descDiv = myDocument.createElement('div')
 
-      const pIndex =
+      var pIndex =
         slots[(slots.indexOf(index) - 1 + slots.length) % slots.length]
-      const nIndex =
+      var nIndex =
         slots[(slots.indexOf(index) + 1 + slots.length) % slots.length]
 
-      const prev = link(text('<<'), subject.uri.split('#')[0] + '#' + pIndex)
+      var prev = link(text('<<'), subject.uri.split('#')[0] + '#' + pIndex)
 
       descDiv.appendChild(prev)
 
-      const indexDiv = myDocument.createElement('span')
+      var indexDiv = myDocument.createElement('span')
       indexDiv.innerHTML = ' Playlist slot : ' + index + ' '
 
       descDiv.appendChild(indexDiv)
 
-      const next = link(text('>>'), subject.uri.split('#')[0] + '#' + nIndex)
+      var next = link(text('>>'), subject.uri.split('#')[0] + '#' + nIndex)
       descDiv.appendChild(next)
     }
 
-    const tr = myDocument.createElement('TR') // why need tr?
+    var tr = myDocument.createElement('TR') // why need tr?
     tr.appendChild(img)
     if (descDiv) {
       tr.appendChild(descDiv)

@@ -1,7 +1,7 @@
 /*   Single video play Pane
  **
  */
-const UI = require('solid-ui')
+var UI = require('solid-ui')
 const $rdf = require('rdflib')
 
 module.exports = {
@@ -11,10 +11,10 @@ module.exports = {
 
   // Does the subject deserve an slideshow pane?
   label: function (subject, context) {
-    const kb = context.session.store
-    const typeURIs = kb.findTypeURIs(subject)
-    const prefix = $rdf.Util.mediaTypeClass('video/*').uri.split('*')[0]
-    for (const t in typeURIs) {
+    var kb = context.session.store
+    var typeURIs = kb.findTypeURIs(subject)
+    var prefix = $rdf.Util.mediaTypeClass('video/*').uri.split('*')[0]
+    for (var t in typeURIs) {
       if (t.startsWith(prefix)) return 'Play video'
     }
 
@@ -23,8 +23,8 @@ module.exports = {
 
   render: function (subject, context) {
     const dom = context.dom
-    const div = dom.createElement('div')
-    const video = div.appendChild(dom.createElement('video'))
+    var div = dom.createElement('div')
+    var video = div.appendChild(dom.createElement('video'))
     video.setAttribute('controls', 'yes')
     video.setAttribute('src', subject.uri)
     video.setAttribute('width', '100%')

@@ -17,31 +17,31 @@ module.exports = {
 
   // Does the subject deserve this pane?
   label: function (subject, context) {
-    const kb = context.session.store
-    const t = kb.findTypeURIs(subject)
+    var kb = context.session.store
+    var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) return 'period'
     return null // No under other circumstances (while testing at least!)
   },
 
   render: function (subject, context) {
     const dom = context.dom
-    const kb = context.session.store
-    const ns = UI.ns
+    var kb = context.session.store
+    var ns = UI.ns
 
-    const div = dom.createElement('div')
+    var div = dom.createElement('div')
     div.setAttribute('class', 'periodPane')
 
-    const mention = function mention (message, style) {
+    var mention = function mention (message, style) {
       if (!style) style = 'color: grey;'
-      const pre = dom.createElement('pre')
+      var pre = dom.createElement('pre')
       pre.setAttribute('style', style)
       div.appendChild(pre)
       pre.appendChild(dom.createTextNode(message))
     }
-    const happy = function happy (message) {
+    var happy = function happy (message) {
       return mention('✓ ' + message, 'color: #010; background-color: #efe')
     }
-    const complain = function complain (message) {
+    var complain = function complain (message) {
       return mention(message, 'color: #100; background-color: #fee')
     }
     /*
@@ -51,8 +51,8 @@ module.exports = {
       parent.replaceChild(div2, div)
     }
 */
-    const renderPeriod = function () {
-      const dtstart = kb.any(subject, ns.cal('dtstart'))
+    var renderPeriod = function () {
+      var dtstart = kb.any(subject, ns.cal('dtstart'))
       if (dtstart === undefined) {
         complain(
           '(Error: There is no start date known for this period <' +
@@ -61,7 +61,7 @@ module.exports = {
         )
       }
 
-      const dtend = kb.any(subject, ns.cal('dtend'))
+      var dtend = kb.any(subject, ns.cal('dtend'))
       if (dtend === undefined) {
         complain(
           '(Error: There is no end date known for this period <' +
@@ -72,29 +72,29 @@ module.exports = {
 
       // var store = kb.any(subject, UI.ns.qu('annotationStore')) || null
 
-      const predicateURIsDone = {}
-      const donePredicate = function (pred) {
+      var predicateURIsDone = {}
+      var donePredicate = function (pred) {
         predicateURIsDone[pred.uri] = true
       }
       donePredicate(ns.rdf('type'))
 
-      const inPeriod = function (date) {
+      var inPeriod = function (date) {
         return !!(date && date >= dtstart && date < dtend)
       }
 
-      const d2 = function (n) {
-        const s = '' + n
+      var d2 = function (n) {
+        var s = '' + n
         if (s.indexOf('.') >= 0) {
           return s.split('.')[0] + '.' + (s.split('.')[1] + '00').slice(0, 2)
         }
         return s + '.00'
       }
 
-      const transactionInPeriod = function (x) {
+      var transactionInPeriod = function (x) {
         return inPeriod(kb.any(x, ns.qu('date')))
       }
 
-      const oderByDate = function (x, y) {
+      var oderByDate = function (x, y) {
         const dx = kb.any(x, ns.qu('date'))
         const dy = kb.any(y, ns.qu('date'))
         if (dx !== undefined && dy !== undefined) {
@@ -118,37 +118,37 @@ module.exports = {
       }
       // setPaneStyle();
 */
-      const h2 = div.appendChild(dom.createElement('h2'))
+      var h2 = div.appendChild(dom.createElement('h2'))
       h2.textContent =
         'Period ' +
         dtstart.value.slice(0, 10) +
         ' - ' +
         dtend.value.slice(0, 10)
 
-      const insertedPane = function (context, subject, paneName) {
-        const p = context.session.paneRegistry.byName(paneName)
-        const d = p.render(subject, context)
+      var insertedPane = function (context, subject, paneName) {
+        var p = context.session.paneRegistry.byName(paneName)
+        var d = p.render(subject, context)
         d.setAttribute('style', 'border: 0.1em solid green;')
         return d
       }
 
-      const expandAfterRow = function (dom, row, subject, paneName, solo) {
-        const siblings = row.parentNode.children
+      var expandAfterRow = function (dom, row, subject, paneName, solo) {
+        var siblings = row.parentNode.children
         if (solo) {
-          for (let j = siblings.length - 1; j >= 0; j--) {
+          for (var j = siblings.length - 1; j >= 0; j--) {
             if (siblings[j].expanded) {
               siblings[j].parentNode.removeChild(siblings[j].expanded)
               siblings[j].expanded = false
             }
           }
         }
-        const tr = dom.createElement('tr')
-        const td = tr.appendChild(dom.createElement('td'))
+        var tr = dom.createElement('tr')
+        var td = tr.appendChild(dom.createElement('td'))
         td.setAttribute(
           'style',
           'width: 98%; padding: 1em; border: 0.1em solid grey;'
         )
-        const cols = row.children.length
+        var cols = row.children.length
         if (row.nextSibling) {
           row.parentNode.insertBefore(tr, row.nextSibling)
         } else {
@@ -159,7 +159,7 @@ module.exports = {
         td.appendChild(insertedPane(context, subject, paneName))
       }
 
-      const expandAfterRowOrCollapse = function (
+      var expandAfterRowOrCollapse = function (
         dom,
         row,
         subject,
@@ -174,20 +174,20 @@ module.exports = {
         }
       }
 
-      const transactionTable = function (dom, list) {
-        const table = dom.createElement('table')
+      var transactionTable = function (dom, list) {
+        var table = dom.createElement('table')
         table.setAttribute(
           'style',
           'margin-left: 100; font-size: 9pt; width: 85%;'
         )
-        const transactionRow = function (dom, x) {
-          const tr = dom.createElement('tr')
+        var transactionRow = function (dom, x) {
+          var tr = dom.createElement('tr')
 
-          const setTRStyle = function (tr, account) {
+          var setTRStyle = function (tr, account) {
             // var mystyle = "padding: 0.5em 1.5em 1em 1.5em; ";
-            let mystyle = 'margin-left: 8em; padding-left: 5em;'
+            var mystyle = 'margin-left: 8em; padding-left: 5em;'
             if (account) {
-              const backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
+              var backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
               if (backgroundColor) {
                 mystyle += 'background-color: ' + backgroundColor.value + '; '
               }
@@ -195,24 +195,24 @@ module.exports = {
             tr.setAttribute('style', mystyle)
           }
 
-          const account = kb.any(x, ns.qu('toAccount'))
+          var account = kb.any(x, ns.qu('toAccount'))
           setTRStyle(tr, account)
 
-          const c0 = tr.appendChild(dom.createElement('td'))
-          const date = kb.any(x, ns.qu('date'))
+          var c0 = tr.appendChild(dom.createElement('td'))
+          var date = kb.any(x, ns.qu('date'))
           c0.textContent = date ? date.value.slice(0, 10) : '???'
           c0.setAttribute('style', 'width: 7em;')
 
-          const c1 = tr.appendChild(dom.createElement('td'))
+          var c1 = tr.appendChild(dom.createElement('td'))
           c1.setAttribute('style', 'width: 36em;')
-          const payee = kb.any(x, ns.qu('payee'))
+          var payee = kb.any(x, ns.qu('payee'))
           c1.textContent = payee ? payee.value : '???'
-          const a1 = c1.appendChild(dom.createElement('a'))
+          var a1 = c1.appendChild(dom.createElement('a'))
           a1.textContent = ' ➜'
           a1.setAttribute('href', x.uri)
 
-          const c3 = tr.appendChild(dom.createElement('td'))
-          const amount = kb.any(x, ns.qu('in_USD'))
+          var c3 = tr.appendChild(dom.createElement('td'))
+          var amount = kb.any(x, ns.qu('in_USD'))
           c3.textContent = amount ? d2(amount.value) : '???'
           c3.setAttribute('style', 'width: 6em; text-align: right; ') // @@ decimal alignment?
           tr.addEventListener(
@@ -227,10 +227,10 @@ module.exports = {
           return tr
         }
 
-        const list2 = list.filter(transactionInPeriod)
+        var list2 = list.filter(transactionInPeriod)
         list2.sort(oderByDate)
 
-        for (let i = 0; i < list2.length; i++) {
+        for (var i = 0; i < list2.length; i++) {
           table.appendChild(transactionRow(dom, list2[i]))
         }
         return table
@@ -238,24 +238,24 @@ module.exports = {
 
       // List unclassified transactions
 
-      const dummies = {
+      var dummies = {
         'http://www.w3.org/2000/10/swap/pim/qif#Transaction': true, // (we knew)
         'http://www.w3.org/2000/10/swap/pim/qif#Unclassified': true, // pseudo classifications we may phase out
         'http://www.w3.org/2000/10/swap/pim/qif#UnclassifiedOutgoing': true,
         'http://www.w3.org/2000/10/swap/pim/qif#UnclassifiedIncome': true
       }
-      const xURIs = kb.findMemberURIs(ns.qu('Transaction'))
-      const unclassifiedIn = []
-      const unclassifiedOut = []
-      let usd, z
-      for (const y in xURIs) {
+      var xURIs = kb.findMemberURIs(ns.qu('Transaction'))
+      var unclassifiedIn = []
+      var unclassifiedOut = []
+      var usd, z
+      for (var y in xURIs) {
         // For each thing which can be inferred to be a transaction
         // @@ TODO: Write away the need for exception on next line
         // eslint-disable-next-line no-prototype-builtins
         if (xURIs.hasOwnProperty(y)) {
           z = kb.sym(y)
           const tt = kb.each(z, ns.rdf('type')) // What EXPLICIT definitions
-          let classified = false
+          var classified = false
           for (let j = 0; j < tt.length; j++) {
             const t = tt[j]
             if (dummies[t.uri] === undefined) {
@@ -275,7 +275,7 @@ module.exports = {
           }
         }
       }
-      let tab, count
+      var tab, count
       if (unclassifiedIn.length) {
         tab = transactionTable(dom, unclassifiedIn)
         count = tab.children.length
@@ -297,9 +297,9 @@ module.exports = {
 
       // ///////////////  Check some categories of transaction for having given fields
 
-      const catSymbol = function (catTail) {
-        const cats = kb.findSubClassesNT(ns.qu('Transaction'))
-        for (const cat in cats) {
+      var catSymbol = function (catTail) {
+        var cats = kb.findSubClassesNT(ns.qu('Transaction'))
+        for (var cat in cats) {
           // @@ TODO: Write away the need for exception on next line
           // eslint-disable-next-line no-prototype-builtins
           if (cats.hasOwnProperty(cat)) {
@@ -311,17 +311,17 @@ module.exports = {
         return null
       }
 
-      const checkCatHasField = function (catTail, pred) {
-        const cat = catSymbol(catTail)
-        let tab
-        const guilty = []
-        let count = 0
+      var checkCatHasField = function (catTail, pred) {
+        var cat = catSymbol(catTail)
+        var tab
+        var guilty = []
+        var count = 0
         if (!cat) {
           complain('Error: No category correspnding to ' + catTail)
           return null
         }
-        const list = kb.each(undefined, ns.rdf('type'), cat)
-        for (let i = 0; i < list.length; i++) {
+        var list = kb.each(undefined, ns.rdf('type'), cat)
+        for (var i = 0; i < list.length; i++) {
           if (!kb.any(list[i], pred)) {
             guilty.push(list[i])
           }
@@ -351,13 +351,13 @@ module.exports = {
 
     // //////////////////////////////////////////////////////////////////////////////
 
-    // var me = authn.currentUser()
+    // var me = UI.authn.currentUser()
 
     //              Render a single Period
 
     // This works only if enough metadata about the properties can drive the RDFS
     // (or actual type statements whichtypically are NOT there on)
-    const t = kb.findTypeURIs(subject)
+    var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) {
       const needed = kb.each(subject, ns.rdfs('seeAlso'))
       console.log('Loading before render: ' + needed.length)

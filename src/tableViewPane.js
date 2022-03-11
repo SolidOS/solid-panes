@@ -15,7 +15,7 @@
 // ///////////////////////////////////////////////////////////////////
 
 // Table view pane  -- view of a class/
-const UI = require('solid-ui')
+var UI = require('solid-ui')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'table.png',
@@ -28,7 +28,7 @@ module.exports = {
     if (!store.any(undefined, UI.ns.rdf('type'), subject)) {
       return null
     }
-    const n = store.statementsMatching(undefined, UI.ns.rdf('type'), subject)
+    var n = store.statementsMatching(undefined, UI.ns.rdf('type'), subject)
       .length
     if (n === 0) {
       // None, suppress pane
@@ -43,7 +43,7 @@ module.exports = {
 
   render: function (subject, context) {
     const myDocument = context.dom
-    const div = myDocument.createElement('div')
+    var div = myDocument.createElement('div')
     div.setAttribute('class', 'tablePane')
     div.appendChild(UI.table(myDocument, { tableClass: subject }))
     return div

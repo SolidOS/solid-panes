@@ -4,8 +4,7 @@
  */
 /* global alert */
 
-import * as UI from 'solid-ui'
-import { authn } from 'solid-logic'
+const UI = require('solid-ui')
 const $rdf = UI.rdf
 const ns = UI.ns
 
@@ -25,8 +24,8 @@ module.exports = {
 
   // Does the subject deserve an Scheduler pane?
   label: function (subject, context) {
-    const kb = context.session.store
-    const t = kb.findTypeURIs(subject)
+    var kb = context.session.store
+    var t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) {
       return 'Scheduling poll'
     }
@@ -38,13 +37,13 @@ module.exports = {
 
   mintNew: function (context, options) {
     return new Promise(function (resolve, reject) {
-      const ns = UI.ns
-      const kb = context.session.store
-      let newBase = options.newBase
-      const thisInstance =
+      var ns = UI.ns
+      var kb = context.session.store
+      var newBase = options.newBase
+      var thisInstance =
         options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
-      const complainIfBad = function (ok, body) {
+      var complainIfBad = function (ok, body) {
         if (ok) return
         console.log(
           'Error in Schedule Pane: Error constructing new scheduler: ' + body
@@ -54,15 +53,15 @@ module.exports = {
 
       // ////////////////////// Accesss control
 
-      // Two constiations of ACL for this app, public read and public read/write
+      // Two variations of ACL for this app, public read and public read/write
       // In all cases owner has read write control
 
-      const genACLtext = function (docURI, aclURI, allWrite) {
-        const g = $rdf.graph()
-        const auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
-        let a = g.sym(aclURI + '#a1')
-        const acl = g.sym(aclURI)
-        const doc = g.sym(docURI)
+      var genACLtext = function (docURI, aclURI, allWrite) {
+        var g = $rdf.graph()
+        var auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
+        var a = g.sym(aclURI + '#a1')
+        var acl = g.sym(aclURI)
+        var doc = g.sym(docURI)
         g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
         g.add(a, auth('accessTo'), doc, acl)
         g.add(a, auth('agent'), me, acl)
@@ -82,21 +81,21 @@ module.exports = {
       }
 
       /*
-          const setACL3 = function (docURI, allWrite, callbackFunction) {
-            const aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+          var setACL3 = function (docURI, allWrite, callbackFunction) {
+            var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
             return UI.acl.setACL(docURI, aclText, callbackFunction)
           }
           */
 
-      const setACL2 = function setACL2 (docURI, allWrite, callbackFunction) {
-        const aclDoc = kb.any(
+      var setACL2 = function setACL2 (docURI, allWrite, callbackFunction) {
+        var aclDoc = kb.any(
           kb.sym(docURI),
           kb.sym('http://www.iana.org/assignments/link-relations/acl')
         ) // @@ check that this get set by web.js
 
         if (aclDoc) {
           // Great we already know where it is
-          const aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+          var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
           return fetcher
             .webOperation('PUT', aclDoc.uri, {
@@ -114,7 +113,7 @@ module.exports = {
               callbackFunction(false, 'Getting headers for ACL: ' + err)
             })
             .then(() => {
-              const aclDoc = kb.any(
+              var aclDoc = kb.any(
                 kb.sym(docURI),
                 kb.sym('http://www.iana.org/assignments/link-relations/acl')
               )
@@ -124,7 +123,7 @@ module.exports = {
                 throw new Error('No Link rel=ACL header for ' + docURI)
               }
 
-              const aclText = genACLtext(docURI, aclDoc.uri, allWrite)
+              var aclText = genACLtext(docURI, aclDoc.uri, allWrite)
 
               return fetcher.webOperation('PUT', aclDoc.uri, {
                 data: aclText,
@@ -139,18 +138,18 @@ module.exports = {
       }
 
       // Body of mintNew
-      const fetcher = kb.fetcher
-      const updater = kb.updater
+      var fetcher = kb.fetcher
+      var updater = kb.updater
 
-      let me = options.me || authn.currentUser()
+      var me = options.me || UI.authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
         return
       }
 
-      const base = thisInstance.dir().uri
-      let newDetailsDoc, newInstance // , newIndexDoc
+      var base = thisInstance.dir().uri
+      var newDetailsDoc, newInstance // , newIndexDoc
 
       if (options.useExisting) {
         newInstance = options.useExisting
@@ -168,23 +167,23 @@ module.exports = {
         newInstance = kb.sym(newDetailsDoc.uri + '#event')
       }
 
-      const newResultsDoc = kb.sym(newBase + 'results.ttl')
+      var newResultsDoc = kb.sym(newBase + 'results.ttl')
 
-      const toBeCopied = options.noIndexHTML
+      var toBeCopied = options.noIndexHTML
         ? {}
         : [{ local: 'index.html', contentType: 'text/html' }]
 
-      const agenda = []
+      var agenda = []
 
       //   @@ This needs some form of visible progress bar
-      for (let f = 0; f < toBeCopied.length; f++) {
-        const item = toBeCopied[f]
-        const fun = function copyItem (item) {
+      for (var f = 0; f < toBeCopied.length; f++) {
+        var item = toBeCopied[f]
+        var fun = function copyItem (item) {
           agenda.push(function () {
-            const newURI = newBase + item.local
+            var newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
 
-            const setThatACL = function () {
+            var setThatACL = function () {
               setACL2(newURI, false, function (ok, message) {
                 if (!ok) {
                   complainIfBad(
@@ -204,7 +203,7 @@ module.exports = {
                 newBase + item.local,
                 item.contentType
               )
-              .then(() => authn.checkUser())
+              .then(() => UI.authn.checkUser())
               .then(webId => {
                 me = webId
 
@@ -317,56 +316,56 @@ module.exports = {
   //  Render one meeting schedule poll
   render: function (subject, context) {
     const dom = context.dom
-    const kb = context.session.store
-    const ns = UI.ns
-    const invitation = subject
-    const appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
+    var kb = context.session.store
+    var ns = UI.ns
+    var invitation = subject
+    var appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     // ////////////////////////////////////////////
 
-    const fetcher = kb.fetcher
-    const updater = kb.updater
-    let waitingForLogin = false
+    var fetcher = kb.fetcher
+    var updater = kb.updater
+    var waitingForLogin = false
 
-    const thisInstance = subject
-    const detailsDoc = subject.doc()
-    const baseDir = detailsDoc.dir()
-    const base = baseDir.uri
+    var thisInstance = subject
+    var detailsDoc = subject.doc()
+    var baseDir = detailsDoc.dir()
+    var base = baseDir.uri
 
-    const resultsDoc = $rdf.sym(base + 'results.ttl')
-    // const formsURI = base + 'forms.ttl'
+    var resultsDoc = $rdf.sym(base + 'results.ttl')
+    // var formsURI = base + 'forms.ttl'
     // We can't in fact host stuff from there because of CORS
-    const formsURI =
+    var formsURI =
       'https://solid.github.io/solid-panes/schedule/formsForSchedule.ttl'
 
-    const form1 = kb.sym(formsURI + '#form1')
-    const form2 = kb.sym(formsURI + '#form2')
-    const form3 = kb.sym(formsURI + '#form3')
+    var form1 = kb.sym(formsURI + '#form1')
+    var form2 = kb.sym(formsURI + '#form2')
+    var form3 = kb.sym(formsURI + '#form3')
 
-    const formText = require('./formsForSchedule.js')
+    var formText = require('./formsForSchedule.js')
     $rdf.parse(formText, kb, formsURI, 'text/turtle') // Load forms directly
 
-    const inputStyle =
+    var inputStyle =
       'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 100%' //  font-size: 120%
-    const buttonIconStyle = 'width: 1.8em; height: 1.8em;'
+    var buttonIconStyle = 'width: 1.8em; height: 1.8em;'
 
     // Utility functions
 
-    const complainIfBad = function (ok, message) {
+    var complainIfBad = function (ok, message) {
       if (!ok) {
         div.appendChild(UI.widgets.errorMessageBlock(dom, message, 'pink'))
       }
     }
 
-    const clearElement = function (ele) {
+    var clearElement = function (ele) {
       while (ele.firstChild) {
         ele.removeChild(ele.firstChild)
       }
       return ele
     }
 
-    const refreshCellColor = function (cell, value) {
-      const bg = kb.any(value, UI.ns.ui('backgroundColor'))
+    var refreshCellColor = function (cell, value) {
+      var bg = kb.any(value, UI.ns.ui('backgroundColor'))
       if (bg) {
         cell.setAttribute(
           'style',
@@ -375,9 +374,9 @@ module.exports = {
       }
     }
 
-    let me
+    var me
 
-    authn.checkUser().then(webId => {
+    UI.authn.checkUser().then(webId => {
       me = webId
 
       if (logInOutButton) {
@@ -395,8 +394,8 @@ module.exports = {
     // Viral growth path: user of app decides to make another instance
     //
 
-    const newInstanceButton = function () {
-      const b = UI.login.newAppInstance(
+    var newInstanceButton = function () {
+      var b = UI.authn.newAppInstance(
         dom,
         { noun: 'scheduler' },
         initializeNewInstanceInWorkspace
@@ -407,8 +406,8 @@ module.exports = {
 
     // ///////////////////////  Create new document files for new instance of app
 
-    const initializeNewInstanceInWorkspace = function (ws) {
-      let newBase = kb.any(ws, ns.space('uriPrefix'))
+    var initializeNewInstanceInWorkspace = function (ws) {
+      var newBase = kb.any(ws, ns.space('uriPrefix'))
       if (!newBase) {
         newBase = ws.uri.split('#')[0]
       } else {
@@ -418,17 +417,17 @@ module.exports = {
         $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase) // @@ paramater?
         newBase = newBase + '/'
       }
-      const now = new Date()
+      var now = new Date()
       newBase += appPathSegment + '/id' + now.getTime() + '/' // unique id
 
       initializeNewInstanceAtBase(thisInstance, newBase)
     }
 
-    const initializeNewInstanceAtBase = function (thisInstance, newBase) {
-      const options = { thisInstance: thisInstance, newBase: newBase }
+    var initializeNewInstanceAtBase = function (thisInstance, newBase) {
+      var options = { thisInstance: thisInstance, newBase: newBase }
       this.mintNew(context, options)
         .then(function (options) {
-          const p = div.appendChild(dom.createElement('p'))
+          var p = div.appendChild(dom.createElement('p'))
           p.setAttribute('style', 'font-size: 140%;')
           p.innerHTML =
             "Your <a href='" +
@@ -451,7 +450,7 @@ module.exports = {
 
     // ///////////////////////
 
-    const getForms = function () {
+    var getForms = function () {
       console.log('getforms()')
       getDetails()
       /*
@@ -463,7 +462,7 @@ module.exports = {
       */
     }
 
-    const getDetails = function () {
+    var getDetails = function () {
       console.log('getDetails()') // Looking for blank screen hang-up
       fetcher.nowOrWhenFetched(detailsDoc.uri, undefined, function (ok, body) {
         console.log('getDetails() ok? ' + ok)
@@ -472,10 +471,10 @@ module.exports = {
       })
     }
 
-    const showAppropriateDisplay = function showAppropriateDisplay () {
+    var showAppropriateDisplay = function showAppropriateDisplay () {
       console.log('showAppropriateDisplay()')
 
-      authn.checkUser().then(webId => {
+      UI.authn.checkUser().then(webId => {
         if (!webId) {
           return showSignon()
         }
@@ -492,7 +491,7 @@ module.exports = {
           return
         }
 
-        const ready = kb.any(subject, ns.sched('ready'))
+        var ready = kb.any(subject, ns.sched('ready'))
 
         if (!ready) {
           showForms()
@@ -503,20 +502,20 @@ module.exports = {
       })
     }
 
-    const showSignon = function showSignon () {
+    var showSignon = function showSignon () {
       clearElement(naviMain)
       const signonContext = { div: div, dom: dom }
-      UI.login.loggedInContext(signonContext).then(context => {
+      UI.authn.logIn(signonContext).then(context => {
         me = context.me
         waitingForLogin = false // untested
         showAppropriateDisplay()
       })
     }
 
-    const showBootstrap = function showBootstrap () {
-      const div = clearElement(naviMain)
+    var showBootstrap = function showBootstrap () {
+      var div = clearElement(naviMain)
       div.appendChild(
-        UI.login.newAppInstance(
+        UI.authn.newAppInstance(
           dom,
           { noun: 'poll' },
           initializeNewInstanceInWorkspace
@@ -525,11 +524,11 @@ module.exports = {
 
       div.appendChild(dom.createElement('hr')) // @@
 
-      const p = div.appendChild(dom.createElement('p'))
+      var p = div.appendChild(dom.createElement('p'))
       p.textContent =
         'Where would you like to store the data for the poll?  ' +
         'Give the URL of the directory where you would like the data stored.'
-      const baseField = div.appendChild(dom.createElement('input'))
+      var baseField = div.appendChild(dom.createElement('input'))
       baseField.setAttribute('type', 'text')
       baseField.size = 80 // really a string
       baseField.label = 'base URL'
@@ -537,11 +536,11 @@ module.exports = {
 
       div.appendChild(dom.createElement('br')) // @@
 
-      const button = div.appendChild(dom.createElement('button'))
+      var button = div.appendChild(dom.createElement('button'))
       button.setAttribute('style', inputStyle)
       button.textContent = 'Start new poll at this URI'
       button.addEventListener('click', function (_e) {
-        let newBase = baseField.value
+        var newBase = baseField.value
         if (newBase.slice(-1) !== '/') {
           newBase += '/'
         }
@@ -551,19 +550,19 @@ module.exports = {
 
     // ///////////// The forms to configure the poll
 
-    const doneButton = dom.createElement('button')
+    var doneButton = dom.createElement('button')
 
-    const showForms = function () {
+    var showForms = function () {
       clearElement(naviCenter) // Remove refresh button if nec
-      const div = naviMain
-      const wizard = true
-      let currentSlide = 0
-      let gotDoneButton = false
+      var div = naviMain
+      var wizard = true
+      var currentSlide = 0
+      var gotDoneButton = false
       if (wizard) {
         const forms = [form1, form2, form3]
         const slides = []
         currentSlide = 0
-        for (let f = 0; f < forms.length; f++) {
+        for (var f = 0; f < forms.length; f++) {
           const slide = dom.createElement('div')
           UI.widgets.appendForm(
             document,
@@ -577,7 +576,7 @@ module.exports = {
           slides.push(slide)
         }
 
-        const refresh = function () {
+        var refresh = function () {
           clearElement(naviMain).appendChild(slides[currentSlide])
 
           if (currentSlide === 0) {
@@ -597,7 +596,7 @@ module.exports = {
             b2.removeAttribute('disabled')
           }
         }
-        const b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
+        var b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
         b1.setAttribute('style', inputStyle)
         b1.textContent = '<- go back'
         b1.addEventListener(
@@ -611,7 +610,7 @@ module.exports = {
           false
         )
 
-        const b2 = clearElement(naviRight).appendChild(
+        var b2 = clearElement(naviRight).appendChild(
           dom.createElement('button')
         )
         b2.setAttribute('style', inputStyle)
@@ -631,7 +630,7 @@ module.exports = {
       } else {
         // not wizard one big form
         // @@@ create the initial config doc if not exist
-        const table = div.appendChild(dom.createElement('table'))
+        var table = div.appendChild(dom.createElement('table'))
         UI.widgets.appendForm(
           document,
           table,
@@ -663,7 +662,7 @@ module.exports = {
       }
       // @@@  link config to results
 
-      const insertables = []
+      var insertables = []
       insertables.push(
         $rdf.st(
           subject,
@@ -707,7 +706,7 @@ module.exports = {
         false
       )
 
-      const emailButton = dom.createElement('button')
+      var emailButton = dom.createElement('button')
       emailButton.setAttribute('style', inputStyle)
       const emailIcon = emailButton.appendChild(dom.createElement('img'))
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
@@ -716,16 +715,16 @@ module.exports = {
       emailButton.addEventListener(
         'click',
         function (_e) {
-          const title =
+          var title =
             kb.anyValue(subject, ns.cal('summary')) ||
             kb.anyValue(subject, ns.dc('title')) ||
             ''
-          const mailto =
+          var mailto =
             'mailto:' +
             kb
               .each(subject, ns.sched('invitee'))
               .map(function (who) {
-                const mbox = kb.any(who, ns.foaf('mbox'))
+                var mbox = kb.any(who, ns.foaf('mbox'))
                 return mbox ? mbox.uri.replace('mailto:', '') : ''
               })
               .join(',') +
@@ -746,13 +745,13 @@ module.exports = {
 
     // Ask for each day, what times .. @@ to be added some time
     /*
-    const setTimesOfDay = function () {
-      const i, j, x, y, slot, cell, day
-      const insertables = []
-      const possibleDays = kb.each(invitation, ns.sched('option'))
+    var setTimesOfDay = function () {
+      var i, j, x, y, slot, cell, day
+      var insertables = []
+      var possibleDays = kb.each(invitation, ns.sched('option'))
         .map(function (opt) {return kb.any(opt, ns.cal('dtstart'))})
-      const cellLookup = []
-      const slots = kb.each(invitation, ns.sched('slot'))
+      var cellLookup = []
+      var slots = kb.each(invitation, ns.sched('slot'))
       if (slots.length === 0) {
         for (i = 0; i < 2; i++) {
           slot = UI.widgets.newThing(detailsDoc)
@@ -770,37 +769,37 @@ module.exports = {
         }
       }
 
-      const query = new $rdf.Query('TimesOfDay')
-      const v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
-        query.consts.push(v[x] = $rdf.constiable(x)) })
+      var query = new $rdf.Query('TimesOfDay')
+      var v = {}['day', 'label', 'value', 'slot', 'cell'].map(function (x) {
+        query.vars.push(v[x] = $rdf.variable(x)) })
       query.pat.add(invitation, ns.sched('slot'), v.slot)
       query.pat.add(v.slot, ns.rdfs('label'), v.label)
       query.pat.add(v.slot, ns.sched('cell'), v.cell)
       query.pat.add(v.cell, ns.sched('timeOfDay'), v.value)
       query.pat.add(v.cell, ns.sched('day'), v.day)
 
-      const options = {}
+      var options = {}
       options.set_x = kb.each(subject, ns.sched('slot')) // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) { return kb.any(opt, ns.rdfs('label')) })
 
       options.set_y = kb.each(subject, ns.sched('option')); // @@@@@ option -> dtstart in future
       options.set_y = options.set_y.map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
-      const possibleTimes = kb.each(invitation, ns.sched('option'))
+      var possibleTimes = kb.each(invitation, ns.sched('option'))
         .map(function (opt) { return kb.any(opt, ns.cal('dtstart')) })
 
-      const displayTheMatrix = function () {
-        const matrix = div.appendChild(UI.matrix.matrixForQuery(
+      var displayTheMatrix = function () {
+        var matrix = div.appendChild(UI.matrix.matrixForQuery(
           dom, query, v.time, v.author, v.value, options, function () {}))
 
         matrix.setAttribute('class', 'matrix')
 
-        const refreshButton = dom.createElement('button')
+        var refreshButton = dom.createElement('button')
         refreshButton.setAttribute('style', inputStyle)
         refreshButton.textContent = 'refresh'
         refreshButton.addEventListener('click', function (e) {
           refreshButton.disabled = true
-          store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
+          UI.store.fetcher.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
             if (!ok) {
               console.log('Cant refresh matrix' + body)
             } else {
@@ -814,21 +813,21 @@ module.exports = {
         naviCenter.appendChild(refreshButton)
       }
 
-      const dataPointForNT = []
+      var dataPointForNT = []
 
-      const doc = resultsDoc
+      var doc = resultsDoc
       options.set_y = options.set_y.filter(function (z) { return (! z.sameTerm(me)) })
       options.set_y.push(me) // Put me on the end
 
       options.cellFunction = function (cell, x, y, value) {
-        // const point = cellLookup[x.toNT() + y.toNT()]
+        // var point = cellLookup[x.toNT() + y.toNT()]
 
         if (y.sameTerm(me)) {
-          const callbackFunction = function () { refreshCellColor(cell, value); }; //  @@ may need that
-          const selectOptions = {}
-          const predicate = ns.sched('timeOfDay')
-          const cellSubject = dataPointForNT[x.toNT()]
-          const selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
+          var callbackFunction = function () { refreshCellColor(cell, value); }; //  @@ may need that
+          var selectOptions = {}
+          var predicate = ns.sched('timeOfDay')
+          var cellSubject = dataPointForNT[x.toNT()]
+          var selector = UI.widgets.makeSelectForOptions(dom, kb, cellSubject, predicate,
             possibleAvailabilities, selectOptions, resultsDoc, callbackFunction)
           cell.appendChild(selector)
         } else if (value !== null) {
@@ -837,35 +836,35 @@ module.exports = {
 
       }
 
-      const responses = kb.each(invitation, ns.sched('response'))
-      const myResponse = null
+      var responses = kb.each(invitation, ns.sched('response'))
+      var myResponse = null
       responses.map(function (r) {
         if (kb.holds(r, ns.dc('author'), me)) {
           myResponse = r
         }
       })
 
-      const id = UI.widgets.newThing(doc).uri
+      var id = UI.widgets.newThing(doc).uri
       if (myResponse === null) {
         myResponse = $rdf.sym(id + '_response')
         insertables.push($rdf.st(invitation, ns.sched('response'), myResponse, doc))
         insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
       } else {
-        const dps = kb.each(myResponse, ns.sched('cell'))
+        var dps = kb.each(myResponse, ns.sched('cell'))
         dps.map(function (dataPoint) {
-          const time = kb.any(dataPoint, ns.cal('dtstart'))
+          var time = kb.any(dataPoint, ns.cal('dtstart'))
           dataPointForNT[time.toNT()] = dataPoint
         })
       }
       for (let j = 0; j < possibleTimes.length; j++) {
         if (dataPointForNT[possibleTimes[j].toNT()]) continue
-        const dataPoint = $rdf.sym(id + '_' + j)
+        var dataPoint = $rdf.sym(id + '_' + j)
         insertables.push($rdf.st(myResponse, ns.sched('cell'), dataPoint, doc))
         insertables.push($rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)) // @@
         dataPointForNT[possibleTimes[j].toNT()] = dataPoint
       }
       if (insertables.length) {
-        store.updater.update([], insertables, function (uri, success, errorBody) {
+        UI.store.updater.update([], insertables, function (uri, success, errorBody) {
           if (!success) {
             complainIfBad(success, errorBody)
           } else {
@@ -880,7 +879,7 @@ module.exports = {
     // end setTimesOfDay
 
     // Read or create empty results file
-    function getResults () {
+    var getResults = function () {
       fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
         if (!ok) {
           if (response.status === 404) {
@@ -922,17 +921,17 @@ module.exports = {
       })
     }
 
-    function showResults () {
+    var showResults = function () {
       //       Now the form for responsing to the poll
       //
 
       // div.appendChild(dom.createElement('hr'))
 
-      // const invitation = subject
-      const title = kb.any(invitation, ns.cal('summary'))
-      const comment = kb.any(invitation, ns.cal('comment'))
-      const location = kb.any(invitation, ns.cal('location'))
-      const div = naviMain
+      // var invitation = subject
+      var title = kb.any(invitation, ns.cal('summary'))
+      var comment = kb.any(invitation, ns.cal('comment'))
+      var location = kb.any(invitation, ns.cal('location'))
+      var div = naviMain
       if (title) div.appendChild(dom.createElement('h3')).textContent = title
       if (location) {
         div.appendChild(dom.createElement('address')).textContent =
@@ -941,18 +940,18 @@ module.exports = {
       if (comment) {
         div.appendChild(dom.createElement('p')).textContent = comment.value
       }
-      const author = kb.any(invitation, ns.dc('author'))
+      var author = kb.any(invitation, ns.dc('author'))
       if (author) {
-        const authorName = kb.any(author, ns.foaf('name'))
+        var authorName = kb.any(author, ns.foaf('name'))
         if (authorName) {
           div.appendChild(dom.createElement('p')).textContent = authorName
         }
       }
 
-      const query = new $rdf.Query('Responses')
-      const v = {}
-      const vs = ['time', 'author', 'value', 'resp', 'cell']
-      vs.forEach(function (x) {
+      var query = new $rdf.Query('Responses')
+      var v = {}
+      var vs = ['time', 'author', 'value', 'resp', 'cell']
+      vs.map(function (x) {
         query.vars.push((v[x] = $rdf.variable(x)))
       })
       query.pat.add(invitation, ns.sched('response'), v.resp)
@@ -963,7 +962,7 @@ module.exports = {
 
       // Sort by by person @@@
 
-      const options = {}
+      var options = {}
       options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) {
         return kb.any(opt, ns.cal('dtstart'))
@@ -974,14 +973,14 @@ module.exports = {
         return kb.any(resp, ns.dc('author'))
       })
 
-      const possibleTimes = kb
+      var possibleTimes = kb
         .each(invitation, ns.sched('option'))
         .map(function (opt) {
           return kb.any(opt, ns.cal('dtstart'))
         })
 
-      const displayTheMatrix = function () {
-        const matrix = div.appendChild(
+      var displayTheMatrix = function () {
+        var matrix = div.appendChild(
           UI.matrix.matrixForQuery(
             dom,
             query,
@@ -995,7 +994,7 @@ module.exports = {
 
         matrix.setAttribute('class', 'matrix')
 
-        const refreshButton = dom.createElement('button')
+        var refreshButton = dom.createElement('button')
         refreshButton.setAttribute('style', inputStyle)
         // refreshButton.textContent = 'refresh' // noun_479395.svg
         const refreshIcon = dom.createElement('img')
@@ -1023,16 +1022,16 @@ module.exports = {
       }
 
       // @@ Give other combos too-- see schedule ontology
-      // const possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
+      // var possibleAvailabilities = [ SCHED('No'), SCHED('Maybe'), SCHED('Yes') ]
 
-      // const me = authn.currentUser()
+      // var me = UI.authn.currentUser()
 
-      const dataPointForNT = []
+      var dataPointForNT = []
 
-      const loginContext = { div: naviCenter, dom: dom }
-      UI.login.loggedInContext(loginContext).then(context => {
+      var loginContext = { div: naviCenter, dom: dom }
+      UI.authn.logIn(loginContext).then(context => {
         const me = context.me
-        const doc = resultsDoc
+        var doc = resultsDoc
         options.set_y = options.set_y.filter(function (z) {
           return !z.sameTerm(me)
         })
@@ -1049,13 +1048,13 @@ module.exports = {
             )
           }
           if (y.sameTerm(me)) {
-            const callbackFunction = function () {
+            var callbackFunction = function () {
               refreshCellColor(cell, value)
             } //  @@ may need that
-            const selectOptions = {}
-            const predicate = ns.sched('availabilty')
-            const cellSubject = dataPointForNT[x.toNT()]
-            const selector = UI.widgets.makeSelectForOptions(
+            var selectOptions = {}
+            var predicate = ns.sched('availabilty')
+            var cellSubject = dataPointForNT[x.toNT()]
+            var selector = UI.widgets.makeSelectForOptions(
               dom,
               kb,
               cellSubject,
@@ -1071,17 +1070,17 @@ module.exports = {
           }
         }
 
-        const responses = kb.each(invitation, ns.sched('response'))
-        let myResponse = null
-        responses.forEach(function (r) {
+        var responses = kb.each(invitation, ns.sched('response'))
+        var myResponse = null
+        responses.map(function (r) {
           if (kb.holds(r, ns.dc('author'), me)) {
             myResponse = r
           }
         })
 
-        const insertables = [] // list of statements to be stored
+        var insertables = [] // list of statements to be stored
 
-        const id = UI.widgets.newThing(doc).uri
+        var id = UI.widgets.newThing(doc).uri
         if (myResponse === null) {
           myResponse = $rdf.sym(id + '_response')
           insertables.push(
@@ -1089,15 +1088,15 @@ module.exports = {
           )
           insertables.push($rdf.st(myResponse, ns.dc('author'), me, doc))
         } else {
-          const dps = kb.each(myResponse, ns.sched('cell'))
-          dps.forEach(function (dataPoint) {
-            const time = kb.any(dataPoint, ns.cal('dtstart'))
+          var dps = kb.each(myResponse, ns.sched('cell'))
+          dps.map(function (dataPoint) {
+            var time = kb.any(dataPoint, ns.cal('dtstart'))
             dataPointForNT[time.toNT()] = dataPoint
           })
         }
-        for (let j = 0; j < possibleTimes.length; j++) {
+        for (var j = 0; j < possibleTimes.length; j++) {
           if (dataPointForNT[possibleTimes[j].toNT()]) continue
-          const dataPoint = $rdf.sym(id + '_' + j)
+          var dataPoint = $rdf.sym(id + '_' + j)
           insertables.push(
             $rdf.st(myResponse, ns.sched('cell'), dataPoint, doc)
           )
@@ -1126,9 +1125,9 @@ module.exports = {
 
       // If I made this in the first place, allow me to edit it.
       // @@ optionally -- allows others to if according to original
-      const instanceCreator = kb.any(subject, ns.foaf('maker')) // owner?
+      var instanceCreator = kb.any(subject, ns.foaf('maker')) // owner?
       if (!instanceCreator || instanceCreator.sameTerm(me)) {
-        const editButton = dom.createElement('button')
+        var editButton = dom.createElement('button')
         editButton.setAttribute('style', inputStyle)
         // editButton.textContent = '(Modify the poll)' // noun_344563.svg
         const editIcon = dom.createElement('img')
@@ -1153,41 +1152,41 @@ module.exports = {
       naviRight.appendChild(newInstanceButton())
     } // showResults
 
-    const div = dom.createElement('div')
-    const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
+    var div = dom.createElement('div')
+    var structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.setAttribute(
       'style',
       'background-color: white; min-width: 40em; min-height: 13em;'
     )
 
-    const naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
+    var naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
 
-    const logInOutButton = null
+    var logInOutButton = null
     /*
-    const logInOutButton = UI.login.loginStatusBox(dom, setUser)
+    var logInOutButton = UI.authn.loginStatusBox(dom, setUser)
     // floating divs lead to a mess
     // logInOutButton.setAttribute('style', 'float: right') // float the beginning of the end
     naviLoginout3.appendChild(logInOutButton)
     logInOutButton.setAttribute('style', 'margin-right: 0em;')
     */
 
-    const naviTop = structure.appendChild(dom.createElement('tr'))
-    const naviMain = naviTop.appendChild(dom.createElement('td'))
+    var naviTop = structure.appendChild(dom.createElement('tr'))
+    var naviMain = naviTop.appendChild(dom.createElement('td'))
     naviMain.setAttribute('colspan', '3')
 
-    const naviMenu = structure.appendChild(dom.createElement('tr'))
+    var naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.setAttribute('class', 'naviMenu')
     naviMenu.setAttribute(
       'style',
       ' text-align: middle; vertical-align: middle; padding-top: 4em; '
     )
     //    naviMenu.setAttribute('style', 'margin-top: 3em;')
-    const naviLeft = naviMenu.appendChild(dom.createElement('td'))
-    const naviCenter = naviMenu.appendChild(dom.createElement('td'))
-    const naviRight = naviMenu.appendChild(dom.createElement('td'))
+    var naviLeft = naviMenu.appendChild(dom.createElement('td'))
+    var naviCenter = naviMenu.appendChild(dom.createElement('td'))
+    var naviRight = naviMenu.appendChild(dom.createElement('td'))
 
     getForms()
 

@@ -1,4 +1,3 @@
-/* istanbul ignore file */
 // The query-by-example functionality in the tabulator
 // was the ability to expore a bit of the web in outline mode,
 // select a ceratain set of fields in the tree,
@@ -6,13 +5,18 @@
 // to find all other places which had the same pattern.
 // Fields could be optional by pressing th ewhite optoional button
 
-import { store } from 'solid-logic'
-import * as UI from 'solid-ui'
+var UI = require('solid-ui')
 
-const optionalSubqueriesIndex = []
+module.exports = {
+  makeQueryRow,
+  QuerySource,
+  viewAndSaveQuery // Main function to generate and use the query
+}
+
+var optionalSubqueriesIndex = []
 
 function predParentOf (node) {
-  let n = node
+  var n = node
   while (true) {
     if (n.getAttribute('predTR')) {
       return n
@@ -26,10 +30,11 @@ function predParentOf (node) {
 }
 
 function makeQueryRow (q, tr, constraint) {
+  var kb = UI.store
   // predtr = predParentOf(tr)
   // var nodes = tr.childNodes
   // var n = tr.childNodes.length
-  const inverse = tr.AJAR_inverse
+  var inverse = tr.AJAR_inverse
   // var hasVar = 0
   let parentVar, level, pat
 
@@ -41,7 +46,7 @@ function makeQueryRow (q, tr, constraint) {
     }
   }
 
-  let optionalSubqueryIndex = null
+  var optionalSubqueryIndex = null
 
   for (level = tr.parentNode; level; level = level.parentNode) {
     if (typeof level.AJAR_statement !== 'undefined') {
@@ -55,7 +60,7 @@ function makeQueryRow (q, tr, constraint) {
         makeQueryRow(q, level)
       }
       parentVar = level.AJAR_variable
-      const predLevel = predParentOf(level)
+      var predLevel = predParentOf(level)
       if (predLevel.getAttribute('optionalSubqueriesIndex')) {
         optionalSubqueryIndex = predLevel.getAttribute(
           'optionalSubqueriesIndex'
@@ -70,9 +75,9 @@ function makeQueryRow (q, tr, constraint) {
     pat = q.pat
   }
 
-  const predtr = predParentOf(tr)
+  var predtr = predParentOf(tr)
   // /////OPTIONAL KLUDGE///////////
-  const opt = predtr.getAttribute('optional')
+  var opt = predtr.getAttribute('optional')
   if (!opt) {
     if (optionalSubqueryIndex) {
       predtr.setAttribute('optionalSubqueriesIndex', optionalSubqueryIndex)
@@ -81,7 +86,7 @@ function makeQueryRow (q, tr, constraint) {
     }
   }
   if (opt) {
-    const optForm = store.formula()
+    var optForm = kb.formula()
     optionalSubqueriesIndex.push(optForm)
     predtr.setAttribute(
       'optionalSubqueriesIndex',
@@ -93,10 +98,10 @@ function makeQueryRow (q, tr, constraint) {
 
   // //////////////////////////////
 
-  const st = tr.AJAR_statement
+  var st = tr.AJAR_statement
 
-  const constraintVar = tr.AJAR_inverse ? st.subject : st.object // this is only used for constraints
-  let hasParent = true
+  var constraintVar = tr.AJAR_inverse ? st.subject : st.object // this is only used for constraints
+  var hasParent = true
   if (constraintVar.isBlank && constraint) {
     window.alert(
       'You cannot constrain a query with a blank node. No constraint will be added.'
@@ -109,7 +114,7 @@ function makeQueryRow (q, tr, constraint) {
   // UI.log.debug('Initial variable: '+tr.AJAR_variable)
   const v = tr.AJAR_variable
     ? tr.AJAR_variable
-    : store.variable(UI.utils.newVariableName())
+    : kb.variable(UI.utils.newVariableName())
   q.vars.push(v)
   v.label = hasParent ? parentVar.label : UI.utils.label(parentVar)
   v.label += ' ' + UI.utils.predicateLabelForXML(st.predicate, inverse)
@@ -145,9 +150,9 @@ function makeQueryRow (q, tr, constraint) {
 
 function saveQuery (selection, qs) {
   // var qs = outline.qs // @@
-  const q = new UI.rdf.Query()
-  const n = selection.length
-  let i, sel, st, tr
+  var q = new UI.rdf.Query()
+  var n = selection.length
+  var i, sel, st, tr
   for (i = 0; i < n; i++) {
     sel = selection[i]
     tr = sel.parentNode
@@ -165,8 +170,8 @@ function saveQuery (selection, qs) {
   qs.addQuery(q)
 
   function resetOutliner (pat) {
-    const n = pat.statements.length
-    let pattern, tr
+    var n = pat.statements.length
+    var pattern, tr
     for (let i = 0; i < n; i++) {
       pattern = pat.statements[i]
       tr = pattern.tr
@@ -188,9 +193,9 @@ function saveQuery (selection, qs) {
 // When the user asks for all list of all matching parts of the data
 //
 function viewAndSaveQuery (outline, selection) {
-  const qs = outline.qs
+  var qs = outline.qs
   UI.log.info('outline.doucment is now ' + outline.document.location)
-  const q = saveQuery(selection, qs)
+  var q = saveQuery(selection, qs)
   /*
   if (tabulator.isExtension) {
     // tabulator.drawInBestView(q)
@@ -231,7 +236,7 @@ function QuerySource () {
    * query to all of the listeners the QuerySource knows about.
    */
   this.addQuery = function (q) {
-    let i
+    var i
     if (q.name === null || q.name === '') {
       q.name = 'Query #' + (this.queries.length + 1)
     }
@@ -249,7 +254,7 @@ function QuerySource () {
    * remove the query.
    */
   this.removeQuery = function (q) {
-    let i
+    var i
     for (i = 0; i < this.listeners.length; i++) {
       if (this.listeners[i] !== null) {
         this.listeners[i].removeQuery(q)
@@ -267,7 +272,7 @@ function QuerySource () {
    * also puts all current queries into the listener to be used.
    */
   this.addListener = function (listener) {
-    let i
+    var i
     this.listeners.push(listener)
     for (i = 0; i < this.queries.length; i++) {
       if (this.queries[i] !== null) {
@@ -280,7 +285,7 @@ function QuerySource () {
    * all of the queries from this source out of the listener.
    */
   this.removeListener = function (listener) {
-    let i
+    var i
     for (i = 0; i < this.queries.length; i++) {
       if (this.queries[i] !== null) {
         listener.removeQuery(this.queries[i])
@@ -293,10 +298,4 @@ function QuerySource () {
       }
     }
   }
-}
-
-export {
-  makeQueryRow,
-  QuerySource,
-  viewAndSaveQuery // Main function to generate and use the query
 }

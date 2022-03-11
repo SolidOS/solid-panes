@@ -1,21 +1,16 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin')
 const path = require('path')
+const webpack = require('webpack')
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
-module.exports = [{
-  mode: 'development',
-  entry: './dev/loader.ts',
+module.exports = (env, args) => ({
+  entry: './src/index.ts',
   output: {
-    path: path.resolve(__dirname, 'dev/dist'),
-    filename: 'loader.bundle.js'
+    filename: args.mode === 'production' ? 'main.min.js' : 'main.js',
+    path: path.resolve(__dirname, 'dist'),
+    libraryTarget: 'commonjs2'
   },
-  plugins: [
-    new HtmlWebpackPlugin({ template: './dev/index.html' })
-  ],
   resolve: {
-    extensions: ['.mjs', '.js', '.ts'],
-    fallback: {
-      path: require.resolve('path-browserify')
-    }
+    extensions: ['.mjs', '.js', '.ts']
   },
   module: {
     rules: [
@@ -25,22 +20,24 @@ module.exports = [{
         use: {
           loader: 'babel-loader'
         }
+      },
+      {
+        test: /\.ttl$/i,
+        use: {
+          loader: 'raw-loader'
+        }
       }
     ]
   },
-  externals: {
-    fs: 'null',
-    'node-fetch': 'fetch',
-    'isomorphic-fetch': 'fetch',
-    xmldom: 'window',
-    'text-encoding': 'TextEncoder',
-    'whatwg-url': 'window',
-    '@trust/webcrypto': 'crypto'
-  },
-  devServer: {
-    static: path.join(__dirname, 'dist'),
-    compress: true,
-    port: 9000
+  plugins: [
+    new webpack.DefinePlugin({
+      // Prevent solid-auth-tls (used by solid-ui) from running Node code:
+      'global.IS_BROWSER': JSON.stringify(true)
+    }),
+    new ForkTsCheckerWebpackPlugin()
+  ],
+  node: {
+    fs: 'empty'
   },
   devtool: 'source-map'
-}]
+})

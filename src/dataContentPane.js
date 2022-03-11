@@ -27,7 +27,7 @@ module.exports = {
     ) {
       return null
     }
-    const n = context.session.store.statementsMatching(
+    var n = context.session.store.statementsMatching(
       undefined,
       undefined,
       undefined,
@@ -38,48 +38,48 @@ module.exports = {
   },
   /*
   shouldGetFocus: function(subject) {
-      return store.whether(subject, UI.ns.rdf('type'), UI.ns.link('RDFDocument'))
+      return UI.store.whether(subject, UI.ns.rdf('type'), UI.ns.link('RDFDocument'))
   },
 */
   statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
-    const myDocument = context.dom
-    // const outliner = context.getOutliner(myDocument)
-    const rep = myDocument.createElement('table')
-    const sz = UI.rdf.Serializer(context.session.store)
-    const res = sz.rootSubjects(sts)
-    let roots = res.roots
-    const subjects = res.subjects
-    const loopBreakers = res.loopBreakers
-    for (const x in loopBreakers) {
+    var myDocument = context.dom
+    // var outliner = context.getOutliner(myDocument)
+    var rep = myDocument.createElement('table')
+    var sz = UI.rdf.Serializer(context.session.store)
+    var res = sz.rootSubjects(sts)
+    var roots = res.roots
+    var subjects = res.subjects
+    var loopBreakers = res.loopBreakers
+    for (var x in loopBreakers) {
       console.log('\tdataContentPane: loopbreaker:' + x)
     }
-    const doneBnodes = {} // For preventing looping
-    const referencedBnodes = {} // Bnodes which need to be named alas
+    var doneBnodes = {} // For preventing looping
+    var referencedBnodes = {} // Bnodes which need to be named alas
 
     // The property tree for a single subject or anonymous node
     function propertyTree (subject) {
       // print('Proprty tree for '+subject)
-      const rep = myDocument.createElement('table')
-      let lastPred = null
-      const sts = subjects[sz.toStr(subject)] // relevant statements
+      var rep = myDocument.createElement('table')
+      var lastPred = null
+      var sts = subjects[sz.toStr(subject)] // relevant statements
       if (!sts) {
         // No statements in tree
         rep.appendChild(myDocument.createTextNode('...')) // just empty bnode as object
         return rep
       }
       sts.sort()
-      let same = 0
-      let predicateTD // The cell which holds the predicate
-      for (let i = 0; i < sts.length; i++) {
-        const st = sts[i]
-        const tr = myDocument.createElement('tr')
+      var same = 0
+      var predicateTD // The cell which holds the predicate
+      for (var i = 0; i < sts.length; i++) {
+        var st = sts[i]
+        var tr = myDocument.createElement('tr')
         if (st.predicate.uri !== lastPred) {
           if (lastPred && same > 1) {
             predicateTD.setAttribute('rowspan', '' + same)
           }
           predicateTD = myDocument.createElement('td')
           predicateTD.setAttribute('class', 'pred')
-          const anchor = myDocument.createElement('a')
+          var anchor = myDocument.createElement('a')
           anchor.setAttribute('href', st.predicate.uri)
           anchor.addEventListener(
             'click',
@@ -97,7 +97,7 @@ module.exports = {
           same = 0
         }
         same++
-        const objectTD = myDocument.createElement('td')
+        var objectTD = myDocument.createElement('td')
         objectTD.appendChild(objectTree(st.object))
         tr.appendChild(objectTD)
         rep.appendChild(tr)
@@ -108,7 +108,7 @@ module.exports = {
 
     // Convert a set of statements into a nested tree of tables
     function objectTree (obj) {
-      let res, anchor
+      var res, anchor
       switch (obj.termType) {
         case 'NamedNode':
           anchor = myDocument.createElement('a')
@@ -138,7 +138,7 @@ module.exports = {
           }
           return myDocument.createTextNode(obj.value) // placeholder - could be smarter,
 
-        case 'BlankNode': {
+        case 'BlankNode':
           if (obj.toNT() in doneBnodes) {
             // Break infinite recursion
             referencedBnodes[obj.toNT()] = true
@@ -149,7 +149,7 @@ module.exports = {
             return anchor
           }
           doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
-          const newTable = propertyTree(obj)
+          var newTable = propertyTree(obj)
           doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
           if (
             UI.utils.ancestor(newTable, 'TABLE') &&
@@ -161,12 +161,12 @@ module.exports = {
             newTable.style.backgroundColor = 'white'
           }
           return newTable
-        }
+
         case 'Collection':
           res = myDocument.createElement('table')
           res.setAttribute('class', 'collectionAsTables')
-          for (let i = 0; i < obj.elements.length; i++) {
-            const tr = myDocument.createElement('tr')
+          for (var i = 0; i < obj.elements.length; i++) {
+            var tr = myDocument.createElement('tr')
             res.appendChild(tr)
             tr.appendChild(objectTree(obj.elements[i]))
           }
@@ -189,7 +189,7 @@ module.exports = {
     if (initialRoots) {
       roots = initialRoots.concat(
         roots.filter(function (x) {
-          for (let i = 0; i < initialRoots.length; i++) {
+          for (var i = 0; i < initialRoots.length; i++) {
             // Max 2
             if (x.sameTerm(initialRoots[i])) return false
           }
@@ -197,14 +197,14 @@ module.exports = {
         })
       )
     }
-    for (let i = 0; i < roots.length; i++) {
-      const tr = myDocument.createElement('tr')
+    for (var i = 0; i < roots.length; i++) {
+      var tr = myDocument.createElement('tr')
       rep.appendChild(tr)
-      const subjectTD = myDocument.createElement('td')
+      var subjectTD = myDocument.createElement('td')
       tr.appendChild(subjectTD)
-      const TDTree = myDocument.createElement('td')
+      var TDTree = myDocument.createElement('td')
       tr.appendChild(TDTree)
-      const root = roots[i]
+      var root = roots[i]
       if (root.termType === 'BlankNode') {
         subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
       } else {
@@ -212,11 +212,11 @@ module.exports = {
       }
       TDTree.appendChild(propertyTree(root))
     }
-    for (const bNT in referencedBnodes) {
+    for (var bNT in referencedBnodes) {
       // Add number to refer to
       const table = doneBnodes[bNT]
       // let tr = myDocument.createElement('tr')
-      const anchor = myDocument.createElement('a')
+      var anchor = myDocument.createElement('a')
       anchor.setAttribute('id', bNT.slice(2))
       anchor.setAttribute('class', 'bnodeDef')
       anchor.textContent = bNT.slice(3) + ')'
@@ -226,17 +226,17 @@ module.exports = {
   }, // statementsAsTables
   // View the data in a file in user-friendly way
   render: function (subject, context) {
-    const myDocument = context.dom
+    var myDocument = context.dom
 
     function alternativeRendering () {
-      const sz = UI.rdf.Serializer(context.session.store)
-      const res = sz.rootSubjects(sts)
-      const roots = res.roots
-      const p = {}
+      var sz = UI.rdf.Serializer(context.session.store)
+      var res = sz.rootSubjects(sts)
+      var roots = res.roots
+      var p = {}
       p.render = function (s2) {
-        const div = myDocument.createElement('div')
+        var div = myDocument.createElement('div')
         div.setAttribute('class', 'withinDocumentPane')
-        const plist = kb.statementsMatching(s2, undefined, undefined, subject)
+        var plist = kb.statementsMatching(s2, undefined, undefined, subject)
         outliner.appendPropertyTRs(div, plist, false, function (
           _pred,
           _inverse
@@ -245,11 +245,11 @@ module.exports = {
         })
         return div
       }
-      for (let i = 0; i < roots.length; i++) {
-        const tr = myDocument.createElement('TR')
-        const root = roots[i]
+      for (var i = 0; i < roots.length; i++) {
+        var tr = myDocument.createElement('TR')
+        var root = roots[i]
         tr.style.verticalAlign = 'top'
-        const td = outliner.outlineObjectTD(root, undefined, tr)
+        var td = outliner.outlineObjectTD(root, undefined, tr)
         tr.appendChild(td)
         div.appendChild(tr)
         outliner.outlineExpand(td, root, { pane: p })
@@ -257,12 +257,12 @@ module.exports = {
     }
 
     function mainRendering () {
-      const initialRoots = [] // Ordering: start with stuff about this doc
+      var initialRoots = [] // Ordering: start with stuff about this doc
       if (kb.holds(subject, undefined, undefined, subject)) {
         initialRoots.push(subject)
       }
       // Then about the primary topic of the document if any
-      const ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
+      var ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
       if (ps) initialRoots.push(ps)
       div.appendChild(
         context.session.paneRegistry
@@ -271,14 +271,14 @@ module.exports = {
       )
     }
 
-    const outliner = context.getOutliner(myDocument)
-    const kb = context.session.store
-    const div = myDocument.createElement('div')
+    var outliner = context.getOutliner(myDocument)
+    var kb = context.session.store
+    var div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')
     // Because of smushing etc, this will not be a copy of the original source
     // We could instead either fetch and re-parse the source,
     // or we could keep all the pre-smushed triples.
-    const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
+    var sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
 
     if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
       alternativeRendering()
