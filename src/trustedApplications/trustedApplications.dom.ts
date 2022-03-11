@@ -1,5 +1,6 @@
 import { NamedNode, Statement, sym } from 'rdflib'
-import { ns, store } from 'solid-ui'
+import { ns } from 'solid-ui'
+import { store } from 'solid-logic'
 import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplications.utils'
 
 interface FormElements {
@@ -25,12 +26,12 @@ export function createApplicationTable (subject: NamedNode) {
   applicationsTable.appendChild(header);
 
   // creating rows
-  (store.each(subject, ns.acl('trustedApp'), undefined, undefined) as Statement[])
+  (store.each(subject, ns.acl('trustedApp'), undefined, undefined) as unknown as Statement[])
     .flatMap(app => store
-      .each(app, ns.acl('origin'), undefined, undefined)
+      .each(app as any, ns.acl('origin'), undefined, undefined)
       .map(origin => ({
-        appModes: store.each(app, ns.acl('mode'), undefined, undefined),
-        origin
+        appModes: store.each(app as any, ns.acl('mode'), undefined, undefined) as NamedNode[],
+        origin: origin as NamedNode
       })))
     .sort((a: any, b: any) => (a.origin.value < b.origin.value ? -1 : 1))
     .forEach(
@@ -108,28 +109,28 @@ function createApplicationEntry (
         'form',
         origin
           ? [
-            createText('button', 'Update', {
-              class: 'controlButton',
-              style: 'background: LightGreen;'
-            }),
-            createText(
-              'button',
-              'Delete',
-              {
+              createText('button', 'Update', {
                 class: 'controlButton',
-                style: 'background: LightCoral;'
-              },
-              {
-                click: removeApplication
-              }
-            )
-          ]
+                style: 'background: LightGreen;'
+              }),
+              createText(
+                'button',
+                'Delete',
+                {
+                  class: 'controlButton',
+                  style: 'background: LightCoral;'
+                },
+                {
+                  click: removeApplication
+                }
+              )
+            ]
           : [
-            createText('button', 'Add', {
-              class: 'controlButton',
-              style: 'background: LightGreen;'
-            })
-          ],
+              createText('button', 'Add', {
+                class: 'controlButton',
+                style: 'background: LightGreen;'
+              })
+            ],
         {},
         {
           submit: addOrEditApplication
@@ -163,8 +164,11 @@ function createApplicationEntry (
       modes,
       subject,
       ns
-    );
-    (store as any).updater.update(deletions, additions, handleUpdateResponse)
+    )
+    if (!store.updater) {
+      throw new Error('Store has no updater')
+    }
+    store.updater.update(deletions, additions, handleUpdateResponse)
   }
 
   function removeApplication (event: Event) {
@@ -179,7 +183,10 @@ function createApplicationEntry (
     }
 
     const deletions = getStatementsToDelete(origin, subject, store, ns)
-    ;(store as any).updater.update(deletions, [], handleUpdateResponse)
+    if (!store.updater) {
+      throw new Error('Store has no updater')
+    }
+    store.updater.update(deletions, [], handleUpdateResponse)
   }
 
   function handleUpdateResponse (uri: any, success: boolean, errorBody: any) {
@@ -190,11 +197,12 @@ function createApplicationEntry (
   }
 }
 
-function createElement<K extends keyof HTMLElementTagNameMap> (
+function createElement<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   attributes: { [name: string]: string } = {},
-  eventListeners: { [eventName: string]: EventListener } = {},
-  onCreated: null | ((createdElement: HTMLElementTagNameMap[K]) => void) = null
+  eventListeners: { [eventName: string]: globalThis.EventListener } = {},
+  // eslint-disable-next-line no-unused-vars
+  onCreated: null | ((createdElement: globalThis.HTMLElementTagNameMap[K]) => void) = null
 ) {
   const element = document.createElement(elementName)
   if (onCreated) {
@@ -209,7 +217,7 @@ function createElement<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-export function createContainer<K extends keyof HTMLElementTagNameMap> (
+export function createContainer<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   children: HTMLElement[],
   attributes = {},
@@ -226,7 +234,7 @@ export function createContainer<K extends keyof HTMLElementTagNameMap> (
   return element
 }
 
-export function createText<K extends keyof HTMLElementTagNameMap> (
+export function createText<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   textContent: string | null,
   attributes = {},

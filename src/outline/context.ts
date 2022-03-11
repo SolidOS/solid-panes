@@ -1,18 +1,21 @@
 import { DataBrowserContext, PaneRegistry } from 'pane-registry'
 import { getOutliner } from '../index'
-import { IndexedFormula } from 'rdflib'
+import { SolidLogic } from 'solid-logic'
+import { LiveStore } from 'rdflib'
 
 export function createContext (
   dom: HTMLDocument,
   paneRegistry: PaneRegistry,
-  store: IndexedFormula
+  store: LiveStore,
+  logic: SolidLogic
 ): DataBrowserContext {
   return {
     dom,
     getOutliner,
     session: {
       paneRegistry,
-      store
+      store,
+      logic
     }
   }
 }

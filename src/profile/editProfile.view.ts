@@ -8,13 +8,11 @@
  * or standalone script adding onto existing mashlib.
  */
 
-import { authn, icons, ns, style, widgets } from 'solid-ui'
-
-import { NamedNode, parse, sym } from 'rdflib'
-
-import preferencesFormText from './preferencesFormText.ttl'
 import { PaneDefinition } from 'pane-registry'
+import { NamedNode, parse, Store, sym } from 'rdflib'
+import { icons, login, ns, style, widgets } from 'solid-ui'
 import { paneDiv } from './profile.dom'
+import profileFormText from './profileFormText.ttl'
 
 const highlightColor = style.highlightColor || '#7C4DFF'
 
@@ -29,7 +27,7 @@ const editProfileView: PaneDefinition = {
 
   render: function (subject, context) {
     const dom = context.dom
-    const store = context.session.store
+    const store = context.session.store as Store
 
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
@@ -41,8 +39,7 @@ const editProfileView: PaneDefinition = {
       const preferencesFormDoc = preferencesForm.doc()
       if (!store.holds(undefined, undefined, undefined, preferencesFormDoc)) {
         // If not loaded already
-        // @@ TODO Remove casting (store as any)
-        parse(preferencesFormText, store as any, preferencesFormDoc.uri, 'text/turtle', () => null) // Load form directly
+        parse(profileFormText, store, preferencesFormDoc.uri, 'text/turtle', () => null) // Load form directly
       }
 
       widgets.appendForm(
@@ -87,18 +84,19 @@ const editProfileView: PaneDefinition = {
       statusArea: statusArea,
       me: null
     }
-    authn.logInLoadProfile(profileContext)
+    login.ensureLoadedProfile(profileContext)
       .then(loggedInContext => {
         const me = loggedInContext.me!
 
         heading('Edit your public profile')
 
         const profile = me.doc()
-        // @@ TODO Remove the casting (me as any)
-        if (store.any(me as any, ns.solid('editableProfile'))) {
+        if (!store.updater) {
+          throw new Error('Store has no updater')
+        }
+        if (store.any(me, ns.solid('editableProfile'))) {
           editableProfile = store.any(me as any, ns.solid('editableProfile')) as NamedNode
-          // @@ TODO Remove casting of store.updater
-        } else if ((store.updater as any).editable(profile.uri, store)) {
+        } else if (store.updater.editable(profile.uri, store)) {
           editableProfile = profile
         } else {
           statusArea.appendChild(widgets.errorMessageBlock(dom, `⚠️ Your profile ${profile} is not editable, so we cannot do much here.`, 'straw'))
@@ -132,12 +130,11 @@ const editProfileView: PaneDefinition = {
           noun: 'friend'
         })
 
-        heading('The style of your public profile')
+        // heading('The style of your public profile') headings are in form now
         renderProfileForm(main, me)
 
         heading('Thank you for filling your profile.')
-      })
-      .catch(error => {
+      }).catch(error => {
         statusArea.appendChild(widgets.errorMessageBlock(dom, error, '#fee'))
       })
     return div

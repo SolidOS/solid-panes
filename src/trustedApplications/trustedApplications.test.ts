@@ -22,7 +22,7 @@ describe('getStatementsToDelete', () => {
   })
 
   it('should return all statements for the given origin', () => {
-    const mockStore = $rdf.graph() as any // @@ TODO Remove casting
+    const mockStore = $rdf.graph()
     const mockApplication = $rdf.sym('https://app.example')
     const mockOrigin = $rdf.sym('https://origin.example')
     const mockProfile = $rdf.sym('https://profile.example#me')
@@ -40,7 +40,7 @@ describe('getStatementsToDelete', () => {
   })
 
   it('should not return statements for a different origin', () => {
-    const mockStore = $rdf.graph() as any // @@ TODO Remove casting
+    const mockStore = $rdf.graph()
     const mockApplication = $rdf.sym('https://app.example')
     const mockOrigin = $rdf.sym('https://origin.example')
     const mockProfile = $rdf.sym('https://profile.example#me')
@@ -49,7 +49,7 @@ describe('getStatementsToDelete', () => {
     mockStore.add(mockProfile, ns.acl('trustedApp'), mockApplication)
 
     const statementsToDelete = getStatementsToDelete(
-      ($rdf.lit as any)('A different origin'), // @@ TODO Remove casting
+      $rdf.lit('A different origin'), // @@ TODO Remove casting
       mockProfile,
       mockStore,
       ns

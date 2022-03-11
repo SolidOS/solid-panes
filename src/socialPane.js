@@ -8,8 +8,9 @@
  **  -- todo: use common code to get username and load profile and set 'me'
  */
 
-var UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -17,8 +18,8 @@ module.exports = {
   name: 'social',
 
   label: function (subject, context) {
-    var kb = context.session.store
-    var types = kb.findTypeURIs(subject)
+    const kb = context.session.store
+    const types = kb.findTypeURIs(subject)
     if (
       types[UI.ns.foaf('Person').uri] ||
       types[UI.ns.vcard('Individual').uri]
@@ -29,12 +30,12 @@ module.exports = {
   },
 
   render: function (s, context) {
-    var dom = context.dom
-    var common = function (x, y) {
+    const dom = context.dom
+    const common = function (x, y) {
       // Find common members of two lists
-      var both = []
-      for (var i = 0; i < x.length; i++) {
-        for (var j = 0; j < y.length; j++) {
+      const both = []
+      for (let i = 0; i < x.length; i++) {
+        for (let j = 0; j < y.length; j++) {
           if (y[j].sameTerm(x[i])) {
             both.push(y[j])
             break
@@ -44,40 +45,40 @@ module.exports = {
       return both
     }
 
-    var people = function (n) {
-      var res = ' '
+    const people = function (n) {
+      let res = ' '
       res += n || 'no'
       if (n === 1) return res + ' person'
       return res + ' people'
     }
-    var say = function (str) {
+    const say = function (str) {
       console.log(str)
-      var p = dom.createElement('p')
+      const p = dom.createElement('p')
       p.textContent = str
       tips.appendChild(p)
     }
 
-    var link = function (contents, uri) {
+    const link = function (contents, uri) {
       if (!uri) return contents
-      var a = dom.createElement('a')
+      const a = dom.createElement('a')
       a.setAttribute('href', uri)
       a.appendChild(contents)
       return a
     }
 
-    var text = function (str) {
+    const text = function (str) {
       return dom.createTextNode(str)
     }
 
-    var buildCheckboxForm = function (lab, statement, state) {
-      var f = dom.createElement('form')
-      var input = dom.createElement('input')
+    const buildCheckboxForm = function (lab, statement, state) {
+      const f = dom.createElement('form')
+      const input = dom.createElement('input')
       f.appendChild(input)
-      var tx = dom.createTextNode(lab)
+      const tx = dom.createTextNode(lab)
       tx.className = 'question'
       f.appendChild(tx)
       input.setAttribute('type', 'checkbox')
-      var boxHandler = function (_e) {
+      const boxHandler = function (_e) {
         tx.className = 'pendingedit'
         // alert('Should be greyed out')
         if (this.checked) {
@@ -152,15 +153,15 @@ module.exports = {
       return f
     }
 
-    var oneFriend = function (friend, _confirmed) {
+    const oneFriend = function (friend, _confirmed) {
       return UI.widgets.personTR(dom, UI.ns.foaf('knows'), friend, {})
     }
 
     // ////////// Body of render():
 
-    var outliner = context.getOutliner(dom)
-    var kb = context.session.store
-    var div = dom.createElement('div')
+    const outliner = context.getOutliner(dom)
+    const kb = context.session.store
+    const div = dom.createElement('div')
     div.setAttribute('class', 'socialPane')
     const foaf = UI.ns.foaf
     const vcard = UI.ns.vcard
@@ -172,37 +173,37 @@ module.exports = {
       'background-color: #fff; color: #000; width: 46%; margin: 0; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 0;'
     const foafPicStyle = ' width: 100% ; border: none; margin: 0; padding: 0;'
 
-    var structure = div.appendChild(dom.createElement('table'))
-    var tr = structure.appendChild(dom.createElement('tr'))
-    var left = tr.appendChild(dom.createElement('td'))
-    var middle = tr.appendChild(dom.createElement('td'))
-    var right = tr.appendChild(dom.createElement('td'))
+    const structure = div.appendChild(dom.createElement('table'))
+    const tr = structure.appendChild(dom.createElement('tr'))
+    const left = tr.appendChild(dom.createElement('td'))
+    const middle = tr.appendChild(dom.createElement('td'))
+    const right = tr.appendChild(dom.createElement('td'))
 
-    var tools = left
+    const tools = left
     tools.style.cssText = navBlockStyle
-    var mainTable = middle.appendChild(dom.createElement('table'))
+    const mainTable = middle.appendChild(dom.createElement('table'))
     mainTable.style.cssText = mainBlockStyle
-    var tips = right
+    const tips = right
     tips.style.cssText = navBlockStyle
 
     // Image top left
-    var src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
+    const src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
     if (src) {
-      var img = dom.createElement('IMG')
+      const img = dom.createElement('IMG')
       img.setAttribute('src', src.uri) // w640 h480
       // img.className = 'foafPic'
       img.style.cssText = foafPicStyle
       tools.appendChild(img)
     }
-    var name = kb.anyValue(s, foaf('name')) || '???'
-    var h3 = dom.createElement('H3')
+    const name = kb.anyValue(s, foaf('name')) || '???'
+    let h3 = dom.createElement('H3')
     h3.appendChild(dom.createTextNode(name))
 
-    var me = UI.authn.currentUser()
-    var meUri = me ? me.uri : null
+    let me = authn.currentUser()
+    const meUri = me ? me.uri : null
 
     // @@ Add: event handler to redraw the stuff below when me changes.
-    const loginOutButton = UI.authn.loginStatusBox(dom, webIdUri => {
+    const loginOutButton = UI.login.loginStatusBox(dom, webIdUri => {
       me = kb.sym(webIdUri)
       // @@ To be written:   redraw as a function the new me
       // @@ refresh the sidebars
@@ -211,26 +212,28 @@ module.exports = {
 
     tips.appendChild(loginOutButton)
 
-    var thisIsYou = me && kb.sameThings(me, s)
+    const thisIsYou = me && kb.sameThings(me, s)
 
-    var knows = foaf('knows')
+    const knows = foaf('knows')
     //        var givenName = kb.sym('http://www.w3.org/2000/10/swap/pim/contact#givenName')
-    var familiar =
+    const familiar =
       kb.anyValue(s, foaf('givenname')) ||
       kb.anyValue(s, foaf('firstName')) ||
       kb.anyValue(s, foaf('nick')) ||
       kb.anyValue(s, foaf('name')) ||
       kb.anyValue(s, vcard('fn'))
-    var friends = kb.each(s, knows)
+    const friends = kb.each(s, knows)
 
     // Do I have a public profile document?
-    var profile = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
-    var editable = false
+    let profile = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
+    let editable = false
+    let incoming
+    let outgoing
     if (me) {
       // The definition of FAF personal profile document is ..
-      var works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
-      var message = ''
-      for (var i = 0; i < works.length; i++) {
+      const works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
+      let message = ''
+      for (let i = 0; i < works.length; i++) {
         if (
           kb.whether(
             works[i],
@@ -272,10 +275,10 @@ module.exports = {
         h3.appendChild(dom.createTextNode('You and ' + familiar))
         tools.appendChild(h3)
 
-        var cme = kb.canon(me)
-        var incoming = kb.whether(s, knows, cme)
-        var outgoing = false
-        var outgoingSt = kb.statementsMatching(cme, knows, s)
+        const cme = kb.canon(me)
+        incoming = kb.whether(s, knows, cme)
+        outgoing = false
+        const outgoingSt = kb.statementsMatching(cme, knows, s)
         if (outgoingSt.length) {
           outgoing = true
           if (!profile) profile = outgoingSt[0].why
@@ -284,7 +287,7 @@ module.exports = {
         const tr = dom.createElement('tr')
         tools.appendChild(tr)
 
-        var youAndThem = function () {
+        const youAndThem = function () {
           tr.appendChild(link(text('You'), meUri))
           tr.appendChild(text(' and '))
           tr.appendChild(link(text(familiar), s.uri))
@@ -316,7 +319,7 @@ module.exports = {
         }
 
         if (editable) {
-          var f = buildCheckboxForm(
+          const f = buildCheckboxForm(
             'You know ' + familiar,
             new UI.rdf.Statement(me, knows, s, profile),
             outgoing
@@ -326,9 +329,9 @@ module.exports = {
 
         // //////////////// Mutual friends
         if (friends) {
-          var myFriends = kb.each(me, foaf('knows'))
+          const myFriends = kb.each(me, foaf('knows'))
           if (myFriends.length) {
-            var mutualFriends = common(friends, myFriends)
+            const mutualFriends = common(friends, myFriends)
             const tr = dom.createElement('tr')
             tools.appendChild(tr)
             tr.appendChild(
@@ -376,9 +379,9 @@ module.exports = {
     function triageFriends (s) {
       outgoing = kb.each(s, foaf('knows'))
       incoming = kb.each(undefined, foaf('knows'), s) // @@ have to load the friends
-      var confirmed = []
-      var unconfirmed = []
-      var requests = []
+      const confirmed = []
+      const unconfirmed = []
+      const requests = []
 
       for (let i = 0; i < outgoing.length; i++) {
         const friend = outgoing[i]
@@ -406,7 +409,7 @@ module.exports = {
         if (!found) requests.push(friend)
       } // incoming
 
-      var cases = [
+      const cases = [
         ['Acquaintances', outgoing],
         ['Mentioned as acquaintances by: ', requests]
       ]
@@ -421,14 +424,14 @@ module.exports = {
         htr.appendChild(h3)
         mainTable.appendChild(htr)
 
-        var items = []
-        for (var j9 = 0; j9 < friends.length; j9++) {
+        const items = []
+        for (let j9 = 0; j9 < friends.length; j9++) {
           items.push([UI.utils.label(friends[j9]), friends[j9]])
         }
         items.sort()
-        var last = null
-        var fr
-        for (var j7 = 0; j7 < items.length; j7++) {
+        let last = null
+        let fr
+        for (let j7 = 0; j7 < items.length; j7++) {
           fr = items[j7][1]
           if (fr.sameTerm(last)) continue // unique
           last = fr
@@ -452,47 +455,47 @@ module.exports = {
     // For each home page like thing make a label which will
     // make sense and add the domain (like "w3.org blog") if there are more than one of the same type
     //
-    var preds = [
+    const preds = [
       UI.ns.foaf('homepage'),
       UI.ns.foaf('weblog'),
       UI.ns.foaf('workplaceHomepage'),
       UI.ns.foaf('schoolHomepage')
     ]
-    for (var i6 = 0; i6 < preds.length; i6++) {
-      var pred = preds[i6]
-      var sts = kb.statementsMatching(s, pred)
+    for (let i6 = 0; i6 < preds.length; i6++) {
+      const pred = preds[i6]
+      const sts = kb.statementsMatching(s, pred)
       if (sts.length === 0) {
         // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
       } else {
-        var uris = []
-        for (var j5 = 0; j5 < sts.length; j5++) {
-          var st = sts[j5]
+        const uris = []
+        for (let j5 = 0; j5 < sts.length; j5++) {
+          const st = sts[j5]
           if (st.object.uri) uris.push(st.object.uri) // Ignore if not symbol
         }
         uris.sort()
-        var last2 = ''
-        var lab2
-        for (var k = 0; k < uris.length; k++) {
+        let last2 = ''
+        let lab2
+        for (let k = 0; k < uris.length; k++) {
           const uri = uris[k]
           if (uri === last2) continue // uniques only
           last2 = uri
-          var hostlabel = ''
+          let hostlabel = ''
           lab2 = UI.utils.label(pred)
           if (uris.length > 1) {
-            var l = uri.indexOf('//')
+            const l = uri.indexOf('//')
             if (l > 0) {
-              var r = uri.indexOf('/', l + 2)
-              var r2 = uri.lastIndexOf('.', r)
+              let r = uri.indexOf('/', l + 2)
+              const r2 = uri.lastIndexOf('.', r)
               if (r2 > 0) r = r2
               hostlabel = uri.slice(l + 2, r)
             }
           }
           if (hostlabel) lab2 = hostlabel + ' ' + lab2 // disambiguate
-          var t = dom.createTextNode(lab2)
-          var a = dom.createElement('a')
+          const t = dom.createTextNode(lab2)
+          const a = dom.createElement('a')
           a.appendChild(t)
           a.setAttribute('href', uri)
-          var d = dom.createElement('div')
+          const d = dom.createElement('div')
           // d.className = 'social_linkButton'
           d.style.cssText =
             'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
@@ -502,10 +505,10 @@ module.exports = {
       }
     }
 
-    var preds2 = [UI.ns.foaf('openid'), UI.ns.foaf('nick')]
-    for (var i2 = 0; i2 < preds2.length; i2++) {
+    const preds2 = [UI.ns.foaf('openid'), UI.ns.foaf('nick')]
+    for (let i2 = 0; i2 < preds2.length; i2++) {
       const pred = preds2[i2]
-      var sts2 = kb.statementsMatching(s, pred)
+      const sts2 = kb.statementsMatching(s, pred)
       if (sts2.length === 0) {
         // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
       } else {

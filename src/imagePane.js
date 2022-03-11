@@ -2,7 +2,7 @@
  **
  **  This outline pane contains the document contents for an Image document
  */
-var UI = require('solid-ui')
+const UI = require('solid-ui')
 
 module.exports = {
   icon: UI.icons.originalIconBase + 'tango/22-image-x-generic.png',
@@ -10,7 +10,7 @@ module.exports = {
   name: 'image',
 
   label: function (subject, context) {
-    var kb = context.session.store
+    const kb = context.session.store
     if (
       !kb.anyStatementMatching(
         subject,
@@ -24,11 +24,11 @@ module.exports = {
 
     //   See also the source pane, which has lower precedence.
 
-    var contentTypeMatch = function (kb, x, contentTypes) {
-      var cts = kb.fetcher.getHeader(x, 'content-type')
+    const contentTypeMatch = function (kb, x, contentTypes) {
+      const cts = kb.fetcher.getHeader(x, 'content-type')
       if (cts) {
-        for (var j = 0; j < cts.length; j++) {
-          for (var k = 0; k < contentTypes.length; k++) {
+        for (let j = 0; j < cts.length; j++) {
+          for (let k = 0; k < contentTypes.length; k++) {
             if (cts[j].indexOf(contentTypes[k]) >= 0) {
               return true
             }
@@ -38,7 +38,7 @@ module.exports = {
       return false
     }
 
-    var suppressed = ['application/pdf']
+    const suppressed = ['application/pdf']
     if (contentTypeMatch(kb, subject, suppressed)) {
       return null
     }
@@ -47,14 +47,14 @@ module.exports = {
 
   render: function (subject, context) {
     const myDocument = context.dom
-    var div = myDocument.createElement('div')
+    const div = myDocument.createElement('div')
     div.setAttribute('class', 'imageView')
-    var img = myDocument.createElement('IMG')
+    const img = myDocument.createElement('IMG')
     img.setAttribute('src', subject.uri) // w640 h480
     img.setAttribute('style', 'max-width: 100%; max-height: 100%;')
     //        div.style['max-width'] = '640'
     //        div.style['max-height'] = '480'
-    var tr = myDocument.createElement('TR') // why need tr?
+    const tr = myDocument.createElement('TR') // why need tr?
     tr.appendChild(img)
     div.appendChild(tr)
     return div

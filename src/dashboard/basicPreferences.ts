@@ -1,9 +1,8 @@
-import { authn, icons, ns, widgets } from 'solid-ui'
-import { IndexedFormula, NamedNode, parse } from 'rdflib'
-
-import preferencesFormText from './preferencesFormText.ttl'
-import ontologyData from './ontologyData.ttl'
 import { PaneDefinition } from 'pane-registry'
+import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
+import { icons, login, ns, widgets } from 'solid-ui'
+import ontologyData from './ontologyData.ttl'
+import preferencesFormText from './preferencesFormText.ttl'
 
 export const basicPreferencesPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
@@ -16,7 +15,7 @@ export const basicPreferencesPane: PaneDefinition = {
   // The subject should be the logged in user.
   render: (subject, context) => {
     const dom = context.dom
-    const store = context.session.store
+    const store = context.session.store as Store
 
     function complainIfBad (ok: Boolean, mess: any) {
       if (ok) return
@@ -46,7 +45,7 @@ export const basicPreferencesPane: PaneDefinition = {
     loadData(ontologyExtra, ontologyData)
 
     async function doRender () {
-      const renderContext = await authn.logInLoadPreferences({
+      const renderContext = await login.ensureLoadedPreferences({
         dom,
         div: container
       })
@@ -75,7 +74,7 @@ export const basicPreferencesPane: PaneDefinition = {
       }
 
       // @@ TODO Remove need for casting as any and bang (!) syntax
-      addDeleteSection(container, store as any, renderContext.me!, dom)
+      addDeleteSection(container, store, renderContext.me!, dom)
     }
 
     doRender()
@@ -114,8 +113,7 @@ function addDeleteSection (
 ): void {
   const section = createSection(container, dom, 'Delete account')
 
-  // @@ TODO remove need for casting
-  const podServerNodes = store.each(profile as any, ns.space('storage'), null, profile.doc() as any)
+  const podServerNodes = store.each(profile, ns.space('storage'), null, profile.doc())
   const podServers = podServerNodes.map(node => node.value)
 
   const list = section.appendChild(dom.createElement('ul'))

@@ -12,11 +12,11 @@ module.exports = {
 
   // Does the subject deserve an audio play pane?
   label: function (subject, context) {
-    var kb = context.session.store
-    var typeURIs = kb.findTypeURIs(subject)
+    const kb = context.session.store
+    const typeURIs = kb.findTypeURIs(subject)
 
-    var prefix = $rdf.Util.mediaTypeClass('audio/*').uri.split('*')[0]
-    for (var t in typeURIs) {
+    const prefix = $rdf.Util.mediaTypeClass('audio/*').uri.split('*')[0]
+    for (const t in typeURIs) {
       if (t.startsWith(prefix)) return 'Play audio'
     }
     return null
@@ -25,17 +25,17 @@ module.exports = {
   render: function (subject, context) {
     const kb = context.session.store
     const dom = context.dom
-    var options = {
+    const options = {
       autoplay: false,
       chain: true,
       chainAlbums: true,
       loop: false
     }
 
-    var removeExtension = function (str) {
-      var dot = str.lastIndexOf('.')
+    const removeExtension = function (str) {
+      const dot = str.lastIndexOf('.')
       if (dot < 0) return str // if any
-      var slash = str.lastIndexOf('/')
+      const slash = str.lastIndexOf('/')
       if (dot < slash) return str
       return str.slice(0, dot)
     }
@@ -43,14 +43,14 @@ module.exports = {
     // True if there is another file like song.mp3 when this is "song 1.mp3"
     // or this is song.m4a
     //
-    var looksRedundant = function (x) {
-      var folder = kb.any(undefined, ns.ldp('contains'), x)
+    const looksRedundant = function (x) {
+      const folder = kb.any(undefined, ns.ldp('contains'), x)
       if (!folder) return false
-      var contents = kb.each(folder, ns.ldp('contains'))
+      const contents = kb.each(folder, ns.ldp('contains'))
       if (contents.length < 2) return false
-      var thisName = x.uri
-      for (var k = 0; k < contents.length; k++) {
-        var otherName = contents[k].uri
+      const thisName = x.uri
+      for (let k = 0; k < contents.length; k++) {
+        const otherName = contents[k].uri
         if (
           thisName.length > otherName.length &&
           thisName.startsWith(removeExtension(otherName))
@@ -70,9 +70,9 @@ module.exports = {
 
     // Alternative methods could include:
     // Accesing metadata in the audio contol, or paring the audio file
-    var guessNames = function (x) {
-      var a = x.uri.split('/').slice(-3) // Hope artist, album, track
-      var decode = function (str) {
+    const guessNames = function (x) {
+      const a = x.uri.split('/').slice(-3) // Hope artist, album, track
+      const decode = function (str) {
         try {
           return decodeURIComponent(str)
         } catch (e) {
@@ -84,20 +84,20 @@ module.exports = {
       trackRow.textContent = decode(removeExtension(a[2]))
     }
 
-    var moveOn = function (current, level) {
+    const moveOn = function (current, level) {
       return new Promise(function (resolve) {
         level = level || 0
         if (!options.chain) return resolve(null)
         // Ideally navigate graph else cheat with URI munging:
-        var folder =
+        const folder =
           kb.any(undefined, ns.ldp('contains'), current) || current.dir()
         if (!folder) return resolve(null)
         kb.fetcher.load(folder).then(function (_xhr) {
-          var contents = kb.each(folder, ns.ldp('contains')) // @@ load if not loaded
+          const contents = kb.each(folder, ns.ldp('contains')) // @@ load if not loaded
           // if (contents.length < 2) return resolve(null)   NO might move on from 1-track album
-          var j
+          let j
           contents.sort() // sort by URI which hopefully will get tracks in order
-          for (var i = 0; i < contents.length; i++) {
+          for (let i = 0; i < contents.length; i++) {
             if (current.uri === contents[i].uri) {
               j = (i + 1) % contents.length
               if (j === 0) {
@@ -112,7 +112,7 @@ module.exports = {
                   moveOn(folder, level + 1).then(function (folder2) {
                     if (folder2) {
                       kb.fetcher.load(folder2).then(function (_xhr) {
-                        var contents = kb.each(folder2, ns.ldp('contains'))
+                        const contents = kb.each(folder2, ns.ldp('contains'))
                         if (contents.length === 0) return resolve(null)
                         contents.sort()
                         console.log('New Album: ' + folder2)
@@ -129,11 +129,11 @@ module.exports = {
         })
       })
     }
-    var endedListener = function (event) {
-      var current = kb.sym(event.target.getAttribute('src'))
+    const endedListener = function (event) {
+      const current = kb.sym(event.target.getAttribute('src'))
       if (!options.chain) return
-      var tryNext = function (cur) {
-        var current = cur
+      const tryNext = function (cur) {
+        const current = cur
         moveOn(current).then(function (next) {
           if (!next) {
             console.log('No successor to ' + current)
@@ -153,8 +153,8 @@ module.exports = {
       tryNext(current)
     }
 
-    var audioControl = function (song, autoplay) {
-      var audio = dom.createElement('audio')
+    const audioControl = function (song, autoplay) {
+      const audio = dom.createElement('audio')
       audio.setAttribute('controls', 'yes')
       audio.setAttribute('src', song.uri)
       if (autoplay) {
@@ -164,16 +164,16 @@ module.exports = {
       return audio
     }
 
-    var div = dom.createElement('div')
-    var table = div.appendChild(dom.createElement('table'))
-    var labelStyle = 'padding: 0.3em; color:white; background-color: black;'
-    var artistRow = table.appendChild(dom.createElement('tr'))
+    const div = dom.createElement('div')
+    const table = div.appendChild(dom.createElement('table'))
+    const labelStyle = 'padding: 0.3em; color:white; background-color: black;'
+    const artistRow = table.appendChild(dom.createElement('tr'))
     artistRow.style.cssText = labelStyle
-    var albumRow = table.appendChild(dom.createElement('tr'))
+    const albumRow = table.appendChild(dom.createElement('tr'))
     albumRow.style.cssText = labelStyle
-    var trackRow = table.appendChild(dom.createElement('tr'))
+    const trackRow = table.appendChild(dom.createElement('tr'))
     trackRow.style.cssText = labelStyle
-    var controlRow = table.appendChild(dom.createElement('tr'))
+    const controlRow = table.appendChild(dom.createElement('tr'))
     guessNames(subject)
     controlRow.appendChild(audioControl(subject, options.autoplay))
 
