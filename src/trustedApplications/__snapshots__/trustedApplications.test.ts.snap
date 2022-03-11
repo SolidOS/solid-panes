@@ -3,79 +3,99 @@
 exports[`getStatementsToAdd should return all required statements to add the given permissions for a given origin 1`] = `
 Array [
   Statement {
+    "graph": NamedNode {
+      "classOrder": 5,
+      "termType": "NamedNode",
+      "value": "https://profile.example",
+    },
     "object": BlankNode {
-      "id": "bn_mock_app_id",
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#trustedApp",
     },
     "subject": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://profile.example#me",
     },
-    "why": NamedNode {
+  },
+  Statement {
+    "graph": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://profile.example",
     },
-  },
-  Statement {
     "object": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://origin.example",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#origin",
     },
     "subject": BlankNode {
-      "id": "bn_mock_app_id",
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
     },
-    "why": NamedNode {
+  },
+  Statement {
+    "graph": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://profile.example",
     },
-  },
-  Statement {
     "object": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#Read",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#mode",
     },
     "subject": BlankNode {
-      "id": "bn_mock_app_id",
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
     },
-    "why": NamedNode {
+  },
+  Statement {
+    "graph": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://profile.example",
     },
-  },
-  Statement {
     "object": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#Write",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#mode",
     },
     "subject": BlankNode {
-      "id": "bn_mock_app_id",
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
       "termType": "BlankNode",
       "value": "bn_mock_app_id",
-    },
-    "why": NamedNode {
-      "termType": "NamedNode",
-      "value": "https://profile.example",
     },
   },
 ]
@@ -84,57 +104,72 @@ Array [
 exports[`getStatementsToDelete should return all statements for the given origin 1`] = `
 Array [
   Statement {
+    "graph": DefaultGraph {
+      "classOrder": undefined,
+      "termType": "DefaultGraph",
+      "uri": "chrome:theSession",
+      "value": "",
+    },
     "object": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://app.example",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#trustedApp",
     },
     "subject": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://profile.example#me",
     },
-    "why": NamedNode {
-      "termType": "NamedNode",
-      "value": "chrome:theSession",
-    },
   },
   Statement {
+    "graph": DefaultGraph {
+      "classOrder": undefined,
+      "termType": "DefaultGraph",
+      "uri": "chrome:theSession",
+      "value": "",
+    },
     "object": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://origin.example",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#origin",
     },
     "subject": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://app.example",
     },
-    "why": NamedNode {
-      "termType": "NamedNode",
-      "value": "chrome:theSession",
-    },
   },
   Statement {
+    "graph": DefaultGraph {
+      "classOrder": undefined,
+      "termType": "DefaultGraph",
+      "uri": "chrome:theSession",
+      "value": "",
+    },
     "object": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#Read",
     },
     "predicate": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#mode",
     },
     "subject": NamedNode {
+      "classOrder": 5,
       "termType": "NamedNode",
       "value": "https://app.example",
-    },
-    "why": NamedNode {
-      "termType": "NamedNode",
-      "value": "chrome:theSession",
     },
   },
 ]

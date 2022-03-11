@@ -1,7 +1,7 @@
-import { authn, icons, store, widgets } from 'solid-ui'
-import { NamedNode } from 'rdflib'
-
 import { PaneDefinition } from 'pane-registry'
+import { NamedNode } from 'rdflib'
+import { icons, login, widgets } from 'solid-ui'
+import { store } from 'solid-logic'
 import { createApplicationTable, createContainer, createText } from './trustedApplications.dom'
 
 const thisColor = '#418d99'
@@ -32,10 +32,13 @@ const trustedApplicationView: PaneDefinition = {
 }
 
 async function render (dom, main, statusArea): Promise<void> {
-  const authContext = await authn.logInLoadProfile({ dom: dom, div: main, statusArea: statusArea, me: null })
+  const authContext = await login.ensureLoadedProfile({ dom: dom, div: main, statusArea: statusArea, me: null })
   const subject = authContext.me as NamedNode
 
   const profile = subject.doc()
+  if (!store.updater) {
+    throw new Error('Store has no updater')
+  }
   const editable = store.updater.editable(profile.uri, store)
 
   main.appendChild(createText('h3', 'Manage your trusted applications'))

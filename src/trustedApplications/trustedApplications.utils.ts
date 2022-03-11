@@ -1,20 +1,16 @@
-import { BlankNode, IndexedFormula, NamedNode, st, Statement, sym } from 'rdflib'
+import { BlankNode, IndexedFormula, NamedNode, st, Literal, sym, Statement } from 'rdflib'
 import { Namespaces } from 'solid-namespace'
 
 export function getStatementsToDelete (
-  origin: NamedNode,
+  origin: NamedNode | Literal,
   person: NamedNode,
   kb: IndexedFormula,
   ns: Namespaces
-) {
-  // `as any` is used because the rdflib typings incorrectly require a Node to be passed,
-  // even though null is also valid:
+): any {
   const applicationStatements = kb.statementsMatching(
-    null as any,
+    null,
     ns.acl('origin'),
-    origin,
-    null as any,
-    null as any
+    origin
   )
   const statementsToDelete = applicationStatements.reduce(
     (memo, st) => {
@@ -23,22 +19,12 @@ export function getStatementsToDelete (
           kb.statementsMatching(
             person,
             ns.acl('trustedApp'),
-            st.subject,
-            null as any,
-            false
+            st.subject as NamedNode
           )
         )
-        .concat(
-          kb.statementsMatching(
-            st.subject,
-            null as any,
-            null as any,
-            null as any,
-            false
-          )
-        )
+        .concat(kb.statementsMatching(st.subject))
     },
-    [] as Statement[]
+    [] as Array<Statement>
   )
   return statementsToDelete
 }
@@ -49,8 +35,8 @@ export function getStatementsToAdd (
   modes: string[],
   person: NamedNode,
   ns: Namespaces
-) {
-  var application = new BlankNode(`bn_${nodeName}`)
+): any {
+  const application = new BlankNode(`bn_${nodeName}`)
   return [
     st(person, ns.acl('trustedApp'), application, person.doc()),
     st(application, ns.acl('origin'), origin, person.doc()),

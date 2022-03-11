@@ -1,7 +1,7 @@
 // This is a system of tracking tooltip phrases used by the tabulator outliner
 
-var outlineIcons = (module.exports = {}) // was tabulator.Icon
-var UI = require('solid-ui')
+const outlineIcons = (module.exports = {}) // was tabulator.Icon
+const UI = require('solid-ui')
 
 outlineIcons.src = [] // collect the URIs of the icon filterColumns
 outlineIcons.tooltips = [] // look up tool tips from URL

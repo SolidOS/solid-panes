@@ -24,7 +24,7 @@ module.exports = {
       return null
     }
 
-    var n = store.statementsMatching(undefined, undefined, undefined, subject)
+    const n = store.statementsMatching(undefined, undefined, undefined, subject)
       .length
     if (n === 0) return null
     return 'As RDF/XML (' + n + ')'
@@ -32,13 +32,13 @@ module.exports = {
 
   render: function (subject, context) {
     const myDocument = context.dom
-    var kb = context.session.store
-    var div = myDocument.createElement('div')
+    const kb = context.session.store
+    const div = myDocument.createElement('div')
     div.setAttribute('class', 'RDFXMLPane')
     // Because of smushing etc, this will not be a copy of the original source
     // We could instead either fetch and re-parse the source,
     // or we could keep all the pre-smushed triples.
-    var sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
+    const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
     /*
     var kludge = kb.formula([]) // No features
     for (var i=0; i< sts.length; i++) {
@@ -46,11 +46,11 @@ module.exports = {
         kludge.add(s.subject, s.predicate, s.object)
     }
     */
-    var sz = UI.rdf.Serializer(kb)
+    const sz = UI.rdf.Serializer(kb)
     sz.suggestNamespaces(kb.namespaces)
     sz.setBase(subject.uri)
-    var str = sz.statementsToXML(sts)
-    var pre = myDocument.createElement('PRE')
+    const str = sz.statementsToXML(sts)
+    const pre = myDocument.createElement('PRE')
     pre.appendChild(myDocument.createTextNode(str))
     div.appendChild(pre)
     return div

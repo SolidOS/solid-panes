@@ -21,9 +21,9 @@ module.exports = {
   mintClass: UI.ns.solid('DokieliDocument'), // @@ A better class?
 
   label: function (subject, context) {
-    var kb = context.session.store
-    var ns = UI.ns
-    var allowed = [
+    const kb = context.session.store
+    const ns = UI.ns
+    const allowed = [
       // 'text/plain',
       'text/html',
       'application/xhtml+xml'
@@ -31,11 +31,11 @@ module.exports = {
       // 'video/mp4'
     ]
 
-    var hasContentTypeIn = function (kb, x, displayables) {
-      var cts = kb.fetcher.getHeader(x, 'content-type')
+    const hasContentTypeIn = function (kb, x, displayables) {
+      const cts = kb.fetcher.getHeader(x, 'content-type')
       if (cts) {
-        for (var j = 0; j < cts.length; j++) {
-          for (var k = 0; k < displayables.length; k++) {
+        for (let j = 0; j < cts.length; j++) {
+          for (let k = 0; k < displayables.length; k++) {
             if (cts[j].indexOf(displayables[k]) >= 0) {
               return true
             }
@@ -46,9 +46,9 @@ module.exports = {
     }
 
     // This data coul d come from a fetch OR from ldp comtaimner
-    var hasContentTypeIn2 = function (kb, x, displayables) {
-      var t = kb.findTypeURIs(subject)
-      for (var k = 0; k < displayables.length; k++) {
+    const hasContentTypeIn2 = function (kb, x, displayables) {
+      const t = kb.findTypeURIs(subject)
+      for (let k = 0; k < displayables.length; k++) {
         if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
         }
@@ -58,7 +58,7 @@ module.exports = {
 
     if (!subject.uri) return null // no bnodes
 
-    var t = kb.findTypeURIs(subject)
+    const t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 
     if (
@@ -73,8 +73,8 @@ module.exports = {
 
   // Create a new folder in a Solid system, with a dokieli editable document in it
   mintNew: function (context, newPaneOptions) {
-    var kb = context.session.store
-    var newInstance = newPaneOptions.newInstance
+    const kb = context.session.store
+    let newInstance = newPaneOptions.newInstance
     if (!newInstance) {
       let uri = newPaneOptions.newBase
       if (uri.endsWith('/')) {
@@ -84,7 +84,7 @@ module.exports = {
       newInstance = kb.sym(uri)
     }
 
-    var contentType = mime.lookup(newInstance.uri)
+    const contentType = mime.lookup(newInstance.uri)
     if (!contentType || !contentType.includes('html')) {
       newInstance = $rdf.sym(newInstance.uri + '.html')
     }
@@ -92,8 +92,8 @@ module.exports = {
 
     console.log('New dokieli will make: ' + newInstance)
 
-    var htmlContents = DOKIELI_TEMPLATE
-    var filename = newInstance.uri.split('/').slice(-1)[0]
+    let htmlContents = DOKIELI_TEMPLATE
+    let filename = newInstance.uri.split('/').slice(-1)[0]
     filename = decodeURIComponent(filename.split('.')[0])
     const encodedTitle = filename
       .replace(/&/g, '&amp;')
@@ -131,17 +131,17 @@ module.exports = {
   // Derived from: humanReadablePane .. share code?
   render: function (subject, context) {
     const myDocument = context.dom
-    var div = myDocument.createElement('div')
-    var kb = context.session.store
+    const div = myDocument.createElement('div')
+    const kb = context.session.store
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
-    var iframe = myDocument.createElement('IFRAME')
+    const iframe = myDocument.createElement('IFRAME')
     iframe.setAttribute('src', subject.uri) // allow-same-origin
     iframe.setAttribute('class', 'doc')
 
-    var cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    var ct = cts ? cts[0] : null
+    const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+    const ct = cts ? cts[0] : null
     if (ct) {
       console.log('dokieliPane: c-t:' + ct)
     } else {
@@ -159,7 +159,7 @@ module.exports = {
     iframe.setAttribute('style', 'resize = both; height: 40em; width:40em;') // @@ improve guess
     //        iframe.setAttribute('height', '480')
     //        iframe.setAttribute('width', '640')
-    var tr = myDocument.createElement('tr')
+    const tr = myDocument.createElement('tr')
     tr.appendChild(iframe)
     div.appendChild(tr)
     return div

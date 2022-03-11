@@ -14,8 +14,7 @@ export function paneDiv (
   }
   const viewContainer = view.render(subject, context)
   viewContainer.setAttribute(
-    'style',
-    'border: 0.3em solid #444; border-radius: 0.5em'
+    'style', 'border: 0.3em solid #444; border-radius: 0.5em'
   )
   return viewContainer
 }
