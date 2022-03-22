@@ -1,21 +1,14 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const path = require('path')
 
 module.exports = [{
   mode: 'development',
   entry: './dev/loader.ts',
-  output: {
-    path: path.resolve(__dirname, 'dev/dist'),
-    filename: 'loader.bundle.js'
-  },
   plugins: [
     new HtmlWebpackPlugin({ template: './dev/index.html' })
   ],
   resolve: {
     extensions: ['.mjs', '.js', '.ts'],
-    fallback: {
-      path: require.resolve('path-browserify')
-    }
+    fallback: { "path": false }
   },
   module: {
     rules: [
@@ -38,7 +31,7 @@ module.exports = [{
     '@trust/webcrypto': 'crypto'
   },
   devServer: {
-    static: path.join(__dirname, 'dist'),
+    static: './dist',
     compress: true,
     port: 9000
   },
