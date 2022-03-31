@@ -11,10 +11,10 @@ module.exports = {
   // https://github.com/gotwarlost/istanbul/blob/master/ignoring-code-for-coverage.md
   coverageThreshold: {
     global: {
-      branches: 20,
-      functions: 33,
-      lines: 35,
-      statements: 35
+      branches: 10,
+      functions: 25,
+      lines: 20,
+      statements: 20
     }
   },
   setupFilesAfterEnv: ['./jest.setup.ts']
