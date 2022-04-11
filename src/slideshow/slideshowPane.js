@@ -53,16 +53,20 @@ module.exports = {
     const images = store.each(subject, predicate) // @@ random order?
     // @@ Ideally: sort by embedded time of image
     images.sort() // Sort for now by URI
-    async function imageData (image) { // string
-      const res = await store.fetcher.webOperation('GET', image)
-      const blob = await res.blob()
-      return URL.createObjectURL(blob)
-    }
     for (let i = 0; i < images.length; i++) {
       if (!UI.widgets.isImage(images[i])) continue
       const figure = div.appendChild(dom.createElement('figure'))
       const img = figure.appendChild(dom.createElement('img'))
-      img.setAttribute('src', imageData(images[i].uri))
+
+      // get image with authenticated fetch
+      store.fetcher._fetch(images[i].uri)
+        .then(function(response) {
+          return response.blob()
+        })
+        .then(function(myBlob) {
+          const objectURL = URL.createObjectURL(myBlob)
+          img.setAttribute('src', objectURL) // w640 h480 //
+        })
       img.setAttribute('width', '100%')
       figure.appendChild(dom.createElement('figcaption'))
     }

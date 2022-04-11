@@ -46,17 +46,22 @@ module.exports = {
   },
 
   render: function (subject, context) {
-    async function imageData (image) { // string
-      const res = await store.fetcher.webOperation('GET', image)
-      const blob = await res.blob()
-      return URL.createObjectURL(blob)
-    }
     const myDocument = context.dom
     const store = context.session.store
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'imageView')
     const img = myDocument.createElement('IMG')
-    img.setAttribute('src', imageData(subject.uri)) // w640 h480 // alain
+
+    // get image with authenticated fetch
+    store.fetcher._fetch(subject.uri)
+      .then(function(response) {
+        return response.blob()
+      })
+      .then(function(myBlob) {
+        const objectURL = URL.createObjectURL(myBlob)
+        img.setAttribute('src', objectURL) // w640 h480 //
+      })
+
     img.setAttribute('style', 'max-width: 100%; max-height: 100%;')
     //        div.style['max-width'] = '640'
     //        div.style['max-height'] = '480'
