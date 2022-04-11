@@ -52,6 +52,7 @@ module.exports = {
       return URL.createObjectURL(blob)
     }
     const myDocument = context.dom
+    const store = context.session.store
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'imageView')
     const img = myDocument.createElement('IMG')
