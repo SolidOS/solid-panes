@@ -10,12 +10,12 @@ module.exports = {
   name: 'image',
 
   label: function (subject, context) {
-    const kb = context.session.store
+    const store = context.session.store
     if (
-      !kb.anyStatementMatching(
+      !store.anyStatementMatching(
         subject,
         UI.ns.rdf('type'),
-        kb.sym('http://purl.org/dc/terms/Image')
+        store.sym('http://purl.org/dc/terms/Image')
       )
     ) {
       // NB: Not dc: namespace!
@@ -24,8 +24,8 @@ module.exports = {
 
     //   See also the source pane, which has lower precedence.
 
-    const contentTypeMatch = function (kb, x, contentTypes) {
-      const cts = kb.fetcher.getHeader(x, 'content-type')
+    const contentTypeMatch = function (store, x, contentTypes) {
+      const cts = store.fetcher.getHeader(x, 'content-type')
       if (cts) {
         for (let j = 0; j < cts.length; j++) {
           for (let k = 0; k < contentTypes.length; k++) {
@@ -39,18 +39,23 @@ module.exports = {
     }
 
     const suppressed = ['application/pdf']
-    if (contentTypeMatch(kb, subject, suppressed)) {
+    if (contentTypeMatch(store, subject, suppressed)) {
       return null
     }
     return 'view'
   },
 
   render: function (subject, context) {
+    async function imageData (image) { // string
+      const res = await store.fetcher.webOperation('GET', image)
+      const blob = await res.blob()
+      return URL.createObjectURL(blob)
+    }
     const myDocument = context.dom
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'imageView')
     const img = myDocument.createElement('IMG')
-    img.setAttribute('src', subject.uri) // w640 h480
+    img.setAttribute('src', imageData(subject.uri)) // w640 h480 // alain
     img.setAttribute('style', 'max-width: 100%; max-height: 100%;')
     //        div.style['max-width'] = '640'
     //        div.style['max-height'] = '480'
