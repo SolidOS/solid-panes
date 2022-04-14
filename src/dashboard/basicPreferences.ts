@@ -93,7 +93,7 @@ function setupUserTypesSection (
   description.innerText = 'Here you can self-assign user types to help the data browser know which views you would like to access.'
 
   const userTypesLink = formContainer.appendChild(dom.createElement('a'))
-  userTypesLink.href = 'https://github.com/solid/userguide/#role'
+  userTypesLink.href = 'https://github.com/solidos/userguide/#role'
   userTypesLink.innerText = 'Read more'
 
   const formArea = formContainer.appendChild(dom.createElement('div'))
@@ -146,7 +146,7 @@ async function generateDeletionLink (
  *
  * This function infers the deletion link by assuming the URL structure of Node Solid server.
  * In the future, Solid will hopefully provide a standardised way of discovering the deletion link:
- * https://github.com/solid/data-interoperability-panel/issues/18
+ * https://github.com/solidos/data-interoperability-panel/issues/18
  *
  * If NSS is in multi-user mode (the case on inrupt.net and solid.community), the deletion URL for
  * vincent.dev.inrupt.net would be at dev.inrupt.net/account/delete. In single-user mode, the

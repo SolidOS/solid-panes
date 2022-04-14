@@ -337,7 +337,7 @@ module.exports = {
     // const formsURI = base + 'forms.ttl'
     // We can't in fact host stuff from there because of CORS
     const formsURI =
-      'https://solid.github.io/solid-panes/schedule/formsForSchedule.ttl'
+      'https://solidos.github.io/solid-panes/schedule/formsForSchedule.ttl'
 
     const form1 = kb.sym(formsURI + '#form1')
     const form2 = kb.sym(formsURI + '#form2')

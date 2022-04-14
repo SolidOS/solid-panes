@@ -33,7 +33,7 @@ Currently the panes available include:
 The solid-app-set panes are built using a set of widgets and utilities in
 [https://github.com/linkeddata/solid-ui](https://github.com/linkeddata/solid-ui)
 
-To help onboarding, we're using [roles](https://github.com/solid/userguide/#role) to limit the number of panes presented
+To help onboarding, we're using [roles](https://github.com/solidos/userguide/#role) to limit the number of panes presented
 to new users.
 
 ## Goals
@@ -49,7 +49,7 @@ to new users.
 Volunteers are always welcome!
 
 ## Documentation
-- [Visual Language](https://solid.github.io/solid-panes/Documentation/VisualLanguage.html)
+- [Visual Language](https://solidos.github.io/solid-panes/Documentation/VisualLanguage.html)
 - [Conventions](./Documentation/conventions.md)
 
 ## Development
@@ -57,7 +57,7 @@ To get started, make sure you have Node.js installed (for instance
 through https://github.com/nvm-sh/nvm), and:
 1. run
 ```sh
-git clone https://github.com/solid/solid-panes
+git clone https://github.com/solidos/solid-panes
 cd solid-panes
 npm install
 npm run build-version
@@ -80,4 +80,4 @@ Here, just to show how it works, are how some RDF Classes map onto panes. Anythi
 contacts (A VCARD Address Book, Group, Individual, Organization) can be handled by the one contact
 pane. Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
-![Mapping many classes on the L to panes on the R](https://solid.github.io/solid-panes/doc/images/panes-for-classes.svg)
+![Mapping many classes on the L to panes on the R](https://solidos.github.io/solid-panes/doc/images/panes-for-classes.svg)

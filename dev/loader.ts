@@ -19,7 +19,7 @@ async function renderPane (uri: string) {
     store.fetcher.load(doc).then(resolve, reject)
   })
   const context = {
-    // see https://github.com/solid/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
+    // see https://github.com/solidos/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
     dom: document,
     getOutliner,
     session: {
