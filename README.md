@@ -33,7 +33,7 @@ Currently the panes available include:
 The solid-app-set panes are built using a set of widgets and utilities in
 [https://github.com/linkeddata/solid-ui](https://github.com/linkeddata/solid-ui)
 
-To help onboarding, we're using [roles](https://github.com/solid/userguide/#role) to limit the number of panes presented
+To help onboarding, we're using [roles](https://github.com/solidos/userguide/#role) to limit the number of panes presented
 to new users.
 
 ## Goals
@@ -57,7 +57,7 @@ To get started, make sure you have Node.js installed (for instance
 through https://github.com/nvm-sh/nvm), and:
 1. run
 ```sh
-git clone https://github.com/solid/solid-panes
+git clone https://github.com/solidos/solid-panes
 cd solid-panes
 npm install
 npm run build-version

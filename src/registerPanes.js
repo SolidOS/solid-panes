@@ -21,7 +21,7 @@ module.exports = function registerPanes (register) {
   register(require('./transaction/period.js'))
 
   const chatPanes = require('chat-pane')
-  // FIXME: https://github.com/solid/chat-pane/issues/40
+  // FIXME: https://github.com/solidos/chat-pane/issues/40
   if (chatPanes.longChatPane) {
     register(chatPanes.longChatPane) // Long pane must have prio in case short pane tries to do a long pane
     register(chatPanes.shortChatPane) // was './chat/chatPane.js'

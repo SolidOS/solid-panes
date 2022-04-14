@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/solid/solid-panes"
+    "url": "https://github.com/solidos/solid-panes"
   },
   "keywords": [
     "solid",
@@ -40,9 +40,9 @@
   "author": "Tim Berners-Lee <timbl@mit.edu>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/solid/solid-panes/issues"
+    "url": "https://github.com/solidos/solid-panes/issues"
   },
-  "homepage": "https://github.com/solid/solid-panes",
+  "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "^0.6.5",
