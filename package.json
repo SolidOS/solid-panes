@@ -58,7 +58,7 @@
     "rdflib": "^2.2.19",
     "solid-logic": "^1.3.16",
     "solid-namespace": "^0.5.2",
-    "solid-ui": "^2.4.21",
+    "solid-ui": "2.4.21-d3d317b2",
     "source-pane": "^2.2.16"
   },
   "devDependencies": {
