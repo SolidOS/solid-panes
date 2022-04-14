@@ -47,7 +47,7 @@ describe('manager', () => {
       it('shows an expand icon', () => {
         const img = result.firstChild
         expect(img.nodeName).toBe('IMG')
-        expect(img).toHaveAttribute('src', 'https://solid.github.io/solid-ui/src/originalIcons/tbl-expand-trans.png')
+        expect(img).toHaveAttribute('src', 'https://solidos.github.io/solid-ui/src/originalIcons/tbl-expand-trans.png')
       })
       it('shows the node label', () => {
         expect(result).toHaveTextContent('namednode.example')
@@ -101,7 +101,7 @@ describe('manager', () => {
       it('shows an expand icon', () => {
         const img = result.firstChild
         expect(img.nodeName).toBe('IMG')
-        expect(img).toHaveAttribute('src', 'https://solid.github.io/solid-ui/src/originalIcons/tbl-expand-trans.png')
+        expect(img).toHaveAttribute('src', 'https://solidos.github.io/solid-ui/src/originalIcons/tbl-expand-trans.png')
       })
       it('shows the phone number', () => {
         expect(result).toHaveTextContent('+1-201-555-0123')
@@ -119,7 +119,7 @@ describe('manager', () => {
         it('is represented by phone icon', () => {
           const phoneIcon = phoneLink.lastChild
           expect(phoneIcon.nodeName).toBe('IMG')
-          expect(phoneIcon).toHaveAttribute('src', 'https://solid.github.io/solid-ui/src/originalIcons/silk/telephone.png')
+          expect(phoneIcon).toHaveAttribute('src', 'https://solidos.github.io/solid-ui/src/originalIcons/silk/telephone.png')
         })
       })
     })

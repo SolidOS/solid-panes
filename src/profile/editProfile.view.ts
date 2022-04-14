@@ -35,7 +35,7 @@ const editProfileView: PaneDefinition = {
     }
 
     function renderProfileForm (div: HTMLElement, subject: NamedNode) {
-      const preferencesForm = sym('https://solid.github.io/solid-panes/dashboard/profileStyle.ttl#this')
+      const preferencesForm = sym('https://solidos.github.io/solid-panes/dashboard/profileStyle.ttl#this')
       const preferencesFormDoc = preferencesForm.doc()
       if (!store.holds(undefined, undefined, undefined, preferencesFormDoc)) {
         // If not loaded already

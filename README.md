@@ -49,7 +49,7 @@ to new users.
 Volunteers are always welcome!
 
 ## Documentation
-- [Visual Language](https://solid.github.io/solid-panes/Documentation/VisualLanguage.html)
+- [Visual Language](https://solidos.github.io/solid-panes/Documentation/VisualLanguage.html)
 - [Conventions](./Documentation/conventions.md)
 
 ## Development
@@ -80,4 +80,4 @@ Here, just to show how it works, are how some RDF Classes map onto panes. Anythi
 contacts (A VCARD Address Book, Group, Individual, Organization) can be handled by the one contact
 pane. Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
-![Mapping many classes on the L to panes on the R](https://solid.github.io/solid-panes/doc/images/panes-for-classes.svg)
+![Mapping many classes on the L to panes on the R](https://solidos.github.io/solid-panes/doc/images/panes-for-classes.svg)

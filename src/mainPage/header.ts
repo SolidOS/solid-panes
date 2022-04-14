@@ -16,7 +16,7 @@ const LOG_OUT_MENU_ITEM = 'Log out'
 /**
  * URLS
  */
-const USER_GUIDE_MENU_URL = 'https://solid.github.io/userguide/'
+const USER_GUIDE_MENU_URL = 'https://solidos.github.io/userguide/'
 const REPORT_A_PROBLEM_MENU_URL = 'https://github.com/solidos/solidos/issues'
 
 export async function createHeader (store, outliner) {
