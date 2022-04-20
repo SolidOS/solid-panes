@@ -1391,7 +1391,7 @@ export default function (context) {
       thisOutline.showURI(about)
 
       let st = node.AJAR_statement // show blue cross when the why of that triple is editable
-      if (typeof st === 'undefined') st = node.parentNode.AJAR_statement
+      if (typeof st === 'undefined' && node.parentNode) st = node.parentNode.AJAR_statement
       // if (typeof st === 'undefined') return; // @@ Kludge?  Click in the middle of nowhere
       if (st) {
         // don't do these for headers or base nodes
@@ -1858,7 +1858,8 @@ export default function (context) {
       }
       // if the node is already selected and the corresponding statement is editable,
       // go to UserInput
-      const st = node.parentNode.AJAR_statement
+      let st
+      if (node.parentNode) st = node.parentNode.AJAR_statement
       if (!st) return // For example in the title TD of an expanded pane
       const target = st.why
       const editable = store.updater.editable(target.uri, kb)
