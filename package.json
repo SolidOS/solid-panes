@@ -18,7 +18,8 @@
     "test": "npm run lint && jest",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "prepublishOnly": "npm test && npm run build",
-    "postversion": "git push origin main --follow-tags"
+    "postversion": "git push origin main --follow-tags",
+    "start": "npm install && npm run build-version && npx webpack serve --open"
   },
   "repository": {
     "type": "git",
