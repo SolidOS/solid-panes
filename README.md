@@ -60,10 +60,9 @@ through https://github.com/nvm-sh/nvm), and:
 git clone https://github.com/solidos/solid-panes
 cd solid-panes
 npm install
-npm run build-version
-npx webpack serve
+npm run start
 ```
-2. open your browser at http://localhost:9000
+2. a browser window should automatically open at http://localhost:9000, if for some reason it doesn't go ahead and manually navigate there.
 3. edit `dev/pane/index.ts` and change the color string constant at the end of line 61.
 4. wait about 5 seconds
 5. you'll see the color of the box and heading change in your browser
