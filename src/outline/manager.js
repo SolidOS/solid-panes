@@ -2093,7 +2093,7 @@ export default function (context) {
       !UI.widgets.isVideo(subject)
     ) {
       // Wait till at least the main URI is loaded before expanding:
-      sf.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) { // alain should use authenticated fetch
+      sf.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
         if (ok) {
           sf.lookUpThing(subject)
           render() // inital open, or else full if re-open
