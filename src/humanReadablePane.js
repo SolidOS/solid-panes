@@ -117,7 +117,7 @@ const humanReadablePane = {
     }
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-    // You can;'t have any sandbox and allow plugins.
+    // You can't have any sandbox and allow plugins.
     // We could sandbox only HTML files I suppose.
     // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
 
