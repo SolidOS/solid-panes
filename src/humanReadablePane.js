@@ -85,7 +85,6 @@ const humanReadablePane = {
     div.setAttribute('class', 'docView')
     const element = ct === 'text/markdown' ? 'DIV' : 'IFRAME'
     const frame = myDocument.createElement(element)
-    // let dataUri
 
     // render markdown to html
     const markdownHtml = function () {
@@ -93,8 +92,6 @@ const humanReadablePane = {
         const markdownText = response.responseText
         const lines = Math.min(30, markdownText.split(/\n/).length + 5)
         const res = marked.parse(markdownText)
-        // dataUri = 'data:text/html;charset=utf-8,' + encodeURIComponent(res)
-        // iframe.setAttribute('src', dataUri)
         frame.innerHTML = res
         frame.setAttribute('class', 'doc')
         frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
@@ -104,14 +101,23 @@ const humanReadablePane = {
     if (ct === 'text/markdown') {
       markdownHtml()
     } else {
-      frame.setAttribute('src', subject.uri) // allow-same-origin
-      frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', 'resize = both; height:120em; width:80em;')
+      // get with authenticated fetch
+      console.log(`humanReadablePane: ${ct}`)
+      kb.fetcher._fetch(subject.uri)
+        .then(function(response) {
+          return response.arrayBuffer()
+        })
+        .then(function(resp) {
+          const myBlob = new Blob([resp], {type: ct})
+          const objectURL = URL.createObjectURL(myBlob)
+          frame.setAttribute('src', objectURL) // w640 h480 //
+          frame.setAttribute('class', 'doc')
+          frame.setAttribute('style', `border: 1px solid; padding: 1em; height:120em; width:80em; resize: both; overflow: auto;`)
+        })
     }
-
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-    // You can;'t have any sandbox and allow plugins.
+    // You can't have any sandbox and allow plugins.
     // We could sandbox only HTML files I suppose.
     // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
 

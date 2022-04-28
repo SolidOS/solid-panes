@@ -2091,14 +2091,8 @@ export default function (context) {
       subject.uri &&
       !immediate &&
       !UI.widgets.isAudio(subject) &&
-      !UI.widgets.isVideo(subject) && // Never parse videos as data
-      !kb.holds(
-        subject,
-        UI.ns.rdf('type'),
-        $rdf.Util.mediaTypeClass('application/pdf')
-      )
+      !UI.widgets.isVideo(subject)
     ) {
-      // or PDF
       // Wait till at least the main URI is loaded before expanding:
       sf.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
         if (ok) {
