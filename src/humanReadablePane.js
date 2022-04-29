@@ -100,20 +100,22 @@ const humanReadablePane = {
 
     if (ct === 'text/markdown') {
       markdownHtml()
-    } else {
+    } else if (ct !== 'text/html') {
       // get with authenticated fetch
-      console.log(`humanReadablePane: ${ct}`)
       kb.fetcher._fetch(subject.uri)
         .then(function(response) {
-          return response.arrayBuffer()
+          return response.blob()
         })
-        .then(function(resp) {
-          const myBlob = new Blob([resp], {type: ct})
-          const objectURL = URL.createObjectURL(myBlob)
+        .then(function(blob) {
+          const objectURL = URL.createObjectURL(blob)
           frame.setAttribute('src', objectURL) // w640 h480 //
           frame.setAttribute('class', 'doc')
           frame.setAttribute('style', `border: 1px solid; padding: 1em; height:120em; width:80em; resize: both; overflow: auto;`)
         })
+    } else {
+      frame.setAttribute('src', subject.uri) // allow-same-origin
+      frame.setAttribute('class', 'doc')
+      frame.setAttribute('style', 'resize = both; height:120em; width:80em;')
     }
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
