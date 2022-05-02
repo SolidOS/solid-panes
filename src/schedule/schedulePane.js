@@ -506,7 +506,7 @@ module.exports = {
     const showSignon = function showSignon () {
       clearElement(naviMain)
       const signonContext = { div: div, dom: dom }
-      UI.login.loggedInContext(signonContext).then(context => {
+      UI.login.ensureLoggedIn(signonContext).then(context => {
         me = context.me
         waitingForLogin = false // untested
         showAppropriateDisplay()
@@ -1030,7 +1030,7 @@ module.exports = {
       const dataPointForNT = []
 
       const loginContext = { div: naviCenter, dom: dom }
-      UI.login.loggedInContext(loginContext).then(context => {
+      UI.login.ensureLoggedIn(loginContext).then(context => {
         const me = context.me
         const doc = resultsDoc
         options.set_y = options.set_y.filter(function (z) {
@@ -1122,7 +1122,7 @@ module.exports = {
           // no insertables
           displayTheMatrix()
         }
-      })
+      }) // @@@@ end of .then
 
       // If I made this in the first place, allow me to edit it.
       // @@ optionally -- allows others to if according to original

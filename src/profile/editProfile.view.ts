@@ -85,8 +85,8 @@ const editProfileView: PaneDefinition = {
       me: null
     }
     login.ensureLoadedProfile(profileContext)
-      .then(loggedInContext => {
-        const me = loggedInContext.me!
+      .then(theContext => {
+        const me = theContext.me!
 
         heading('Edit your public profile')
 
