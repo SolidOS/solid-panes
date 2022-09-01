@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "3.5.26",
+  "version": "3.5.27",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
