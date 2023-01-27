@@ -7,7 +7,7 @@ import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
 import propertyViews from './propertyViews'
-import * as license from './licenseOptions'
+import * as licenseOptions from './licenseOptions'
 
 const outlineIcons = require('./outlineIcons.js')
 const UserInput = require('./userInput.js')
