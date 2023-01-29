@@ -443,9 +443,9 @@ module.exports = {
         }
       }
     }
-    if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
+    /* if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
       triageFriends(s)
-    }
+    } */
     // //////////////////////////////////// Basic info on left
 
     h3 = dom.createElement('h3')

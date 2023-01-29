@@ -7,6 +7,7 @@ import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
 import propertyViews from './propertyViews'
+import * as licenseOptions from './licenseOptions'
 
 const outlineIcons = require('./outlineIcons.js')
 const UserInput = require('./userInput.js')
@@ -180,7 +181,7 @@ export default function (context) {
 
     // check the IPR on the data.  Ok if there is any checked license which is one the document has.
     if (statement && statement.why) {
-      if (UI.licenceOptions && UI.licenceOptions.checkLicence()) {
+      if (licenseOptions && licenseOptions.checkLicence()) {
         theClass += ' licOkay' // flag as light green etc .licOkay {background-color: #dfd}
       }
     }
