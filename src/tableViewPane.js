@@ -14,10 +14,8 @@
 
 // ///////////////////////////////////////////////////////////////////
 
-// Table view pane  -- view of a class/
+// Table view pane  -- view of a class asa table of properties of class members
 import * as UI from 'solid-ui'
-import * as $rdf from 'rdflib'
-
 
 export const tableViewPane =  {
   icon: UI.icons.originalIconBase + 'table.png',

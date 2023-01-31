@@ -71,14 +71,14 @@ export function registerPanes (register) {
 
   // register(publicationPane)  // Suppress for now
 
-  // register(schedulePane)   // @@ fix
+  register(schedulePane)   // doodle poll
 
   register(tripPane)
   // register(require('./airPane.js'))
 
   // Content views
 
-  // register(imagePane) // Basic image view
+  register(imagePane) // Basic image view
   register(playListPane) // Basic playlist view
 
   register(videoPane) // Video clip player

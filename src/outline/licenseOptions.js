@@ -3,7 +3,6 @@
 
 // tabulator.options becaome UI.licenseOptions
 // Possible future alternative directoons: Store license preferences in a solid preferences file
-import * as UI from 'solid-ui'
 import { store } from 'solid-logic'
 
 export const licenseURI = [

@@ -6,7 +6,6 @@
  */
 
 import * as UI from 'solid-ui'
-import * as $rdf from 'rdflib'
 const ns = UI.ns
 
 export default {
