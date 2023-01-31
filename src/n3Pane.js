@@ -4,10 +4,11 @@
  ** or at least the RDF semantics we attribute to that resource,
  ** in generated N3 syntax.
  */
-const UI = require('solid-ui')
+ import * as UI from 'solid-ui'
+ import * as $rdf from 'rdflib'
 const ns = UI.ns
 
-module.exports = {
+export const n3Pane =  {
   icon: UI.icons.originalIconBase + 'w3c/n3_smaller.png',
 
   name: 'n3',

@@ -6,12 +6,12 @@ import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
-import propertyViews from './propertyViews'
-import * as licenseOptions from './licenseOptions'
+import { propertyViews } from './propertyViews'
+import { licenseOptions } from './licenseOptions'
 
-const outlineIcons = require('./outlineIcons.js')
-const UserInput = require('./userInput.js')
-const queryByExample = require('./queryByExample.js')
+import { outlineIcons } from './outlineIcons.js' // @@ chec
+import { UserInput } from './userInput.js'
+import * as queryByExample from './queryByExample.js'
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -181,7 +181,7 @@ export default function (context) {
 
     // check the IPR on the data.  Ok if there is any checked license which is one the document has.
     if (statement && statement.why) {
-      if (licenseOptions && licenseOptions.checkLicence()) {
+      if (licenseOptions && licenseOptions.checklicense()) {
         theClass += ' licOkay' // flag as light green etc .licOkay {background-color: #dfd}
       }
     }
@@ -647,23 +647,20 @@ export default function (context) {
                 const renderPane = function (pane) {
                   let paneDiv
                   UI.log.info('outline: Rendering pane (2): ' + pane.name)
-                  if (UI.no_catch_pane_errors) {
-                    // for debugging
+
+                  try {
                     paneDiv = pane.render(subject, context, options)
-                  } else {
-                    try {
-                      paneDiv = pane.render(subject, context, options)
-                    } catch (e) {
-                      // Easier debugging for pane developers
-                      paneDiv = dom.createElement('div')
-                      paneDiv.setAttribute('class', 'exceptionPane')
-                      const pre = dom.createElement('pre')
-                      paneDiv.appendChild(pre)
-                      pre.appendChild(
-                        dom.createTextNode(UI.utils.stackString(e))
-                      )
-                    }
+                  } catch (e) {
+                    // Easier debugging for pane developers
+                    paneDiv = dom.createElement('div')
+                    paneDiv.setAttribute('class', 'exceptionPane')
+                    const pre = dom.createElement('pre')
+                    paneDiv.appendChild(pre)
+                    pre.appendChild(
+                      dom.createTextNode(UI.utils.stackString(e))
+                    )
                   }
+
                   if (
                     pane.requireQueryButton &&
                     dom.getElementById('queryButton')

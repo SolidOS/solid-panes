@@ -1,4 +1,4 @@
-module.exports = `
+export default `
 @prefix dc: <http://purl.org/dc/elements/1.1/>.
 @prefix foaf: <http://xmlns.com/foaf/0.1/>.
 @prefix cal: <http://www.w3.org/2002/12/cal/ical#>.

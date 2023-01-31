@@ -6,7 +6,7 @@
 import { authn, store } from 'solid-logic'
 import * as UI from 'solid-ui'
 
-module.exports = {
+export default {
   icon: UI.icons.originalIconBase + 'microblog/microblog.png',
   name: 'microblogPane',
   label: function (subject) {

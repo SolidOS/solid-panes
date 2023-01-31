@@ -3,12 +3,12 @@
  **  This outline pane lists the members of a class
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 
 const ns = UI.ns
 
-module.exports = {
+export const classInstancePane =  {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
 
   name: 'classInstance',

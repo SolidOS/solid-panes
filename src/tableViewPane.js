@@ -15,9 +15,11 @@
 // ///////////////////////////////////////////////////////////////////
 
 // Table view pane  -- view of a class/
-const UI = require('solid-ui')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 
-module.exports = {
+
+export const tableViewPane =  {
   icon: UI.icons.originalIconBase + 'table.png',
 
   name: 'tableOfClass',

@@ -8,11 +8,11 @@
  **  trips, etc
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
-module.exports = {
+export default {
   icon: UI.icons.iconBase + 'noun_62007.svg',
 
   name: 'travel expenses',

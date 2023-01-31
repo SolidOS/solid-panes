@@ -9,11 +9,11 @@
 //         - Expand automatically all the way down
 //         - original source view?  Use ffox view source
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
-module.exports = {
+export const dataContentPane = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
 
   name: 'dataContents',
@@ -280,7 +280,7 @@ module.exports = {
     // or we could keep all the pre-smushed triples.
     const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
 
-    if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
+    if (false) { // keep code
       alternativeRendering()
     } else {
       mainRendering()

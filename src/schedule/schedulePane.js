@@ -9,6 +9,11 @@ import { authn } from 'solid-logic'
 const $rdf = UI.rdf
 const ns = UI.ns
 
+import formText from './formsForSchedule.js'
+
+
+
+
 // @@ Give other combos too-- see schedule ontology
 const possibleAvailabilities = [
   ns.sched('No'),
@@ -16,7 +21,7 @@ const possibleAvailabilities = [
   ns.sched('Yes')
 ]
 
-module.exports = {
+export const schedulePane = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
   name: 'schedule',
@@ -343,7 +348,6 @@ module.exports = {
     const form2 = kb.sym(formsURI + '#form2')
     const form3 = kb.sym(formsURI + '#form3')
 
-    const formText = require('./formsForSchedule.js')
     $rdf.parse(formText, kb, formsURI, 'text/turtle') // Load forms directly
 
     const inputStyle =

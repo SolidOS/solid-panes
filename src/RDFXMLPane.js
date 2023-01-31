@@ -5,10 +5,10 @@
  ** in generated N3 syntax.
  */
 
-const UI = require('solid-ui')
+import * as UI from 'solid-ui'
 const ns = UI.ns
 
-module.exports = {
+export const RDFXMLPane =  {
   icon: UI.icons.originalIconBase + '22-text-xml4.png',
 
   name: 'RDFXML',

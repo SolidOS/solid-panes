@@ -5,11 +5,11 @@
  ** trips, etc
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
-module.exports = {
+export default {
   // icon:  (module.__dirname || __dirname) + '22-pixel-068010-3d-transparent-glass-icon-alphanumeric-dollar-sign.png',
   icon: UI.icons.iconBase + 'noun_106746.svg',
 

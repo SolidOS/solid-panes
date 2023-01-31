@@ -12,7 +12,7 @@ import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
 
-module.exports = {
+export const socialPane =  {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
 
   name: 'social',

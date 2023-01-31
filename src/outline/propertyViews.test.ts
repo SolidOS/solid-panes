@@ -1,6 +1,12 @@
 /* eslint-env jest */
+
+import { TextEncoder, TextDecoder } from 'util'
+global.TextEncoder = TextEncoder as any
+global.TextDecoder = TextDecoder as any
+
+
 import { sym } from 'rdflib'
-import propertyViews from './propertyViews'
+import { propertyViews } from './propertyViews'
 
 describe('property views', () => {
   it.each([
