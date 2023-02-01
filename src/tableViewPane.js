@@ -14,7 +14,7 @@
 
 // ///////////////////////////////////////////////////////////////////
 
-// Table view pane  -- view of a class asa table of properties of class members
+// Table view pane  -- view of a class as a table of properties of class members
 import * as UI from 'solid-ui'
 
 export const tableViewPane =  {
