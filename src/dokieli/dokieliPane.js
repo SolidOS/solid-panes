@@ -5,15 +5,15 @@
  ** review.   It does not use turtle, but RDF/a
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
-const mime = require('mime-types')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
+import * as mime from 'mime-types'
 
 // const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
 
-const DOKIELI_TEMPLATE = require('./new.js') // Distributed with this library
+import * as  DOKIELI_TEMPLATE from './new.js' // Distributed with this library
 
-module.exports = {
+export default {
   icon: UI.icons.iconBase + 'dokieli-logo.png', // @@ improve? more like doccument?
 
   name: 'Dokieli',

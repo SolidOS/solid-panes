@@ -1,76 +1,116 @@
-module.exports = function registerPanes (register) {
+import profilePane from 'profile-pane'
+import editProfileView from './profile/editProfile.view'
+import trustedApplications from './trustedApplications/trustedApplications.view'
+import dashboardPane from './dashboard/dashboardPane'
+import basicPreferences from './dashboard/basicPreferences'
+import issuePane from 'issue-pane'
+import contactsPane from 'contacts-pane'
+import activityStreamsPane from 'activitystreams-pane'
+import padPane from './pad/padPane'
+// import argumentPane from './argument/argumentPane.js'
+import transactionPane from './transaction/pane.js'
+import financialPeriodPane from './transaction/period.js'
+import meetingPane from 'meeting-pane'
+import tabbedPane from './tabbed/tabbedPane'
+import { longChatPane, shortChatPane } from 'chat-pane'
+import { schedulePane } from './schedule/schedulePane.js'
+// import publicationPane from './publication/publicationPane.js'
+import tripPane from './trip/tripPane.js'
+import { imagePane } from './imagePane.js'
+import playListPane from './playlist/playlistPane.js'
+import videoPane from './video/videoPane.js'
+import audioPane from './audio/audioPane.js'
+import dokieliPane from './dokieli/dokieliPane.js'
+import folderPane from 'folder-pane'
+import { classInstancePane } from './classInstancePane.js'
+import { slideshowPane }  from './slideshow/slideshowPane.js'
+import { socialPane } from './socialPane.js'
+import humanReadablePane from './humanReadablePane.js'
+
+import { dataContentPane } from './dataContentPane.js'
+import sourcePane from 'source-pane'
+import { n3Pane } from './n3Pane.js'
+import { RDFXMLPane } from './RDFXMLPane.js'
+import { formPane } from './form/pane.js'
+import { tableViewPane } from './tableViewPane.js'
+import { defaultPane } from './defaultPane.js'
+import uiPane from './ui/pane.js'
+
+import sharingPane from './sharing/sharingPane'
+import internalPane from './internal/internalPane'
+
+import homePane from './home/homePane'
+
+export function registerPanes (register) {
   /*  Note that the earliest panes have priority. So the most specific ones are first.
    **
    */
   // Developer designed:
 
-  register(require('profile-pane')) // View someone's public profile - dominates all other panes.
+  register(profilePane) // View someone's public profile - dominates all other panes.
+  register(editProfileView) // Edit my profile. App. 201900802
 
-  register(require('./profile/editProfile.view')) // Edit my profile. App. 201900802
-  register(require('./trustedApplications/trustedApplications.view')) // must be registered before basicPreferences
-  register(require('./dashboard/dashboardPane'))
-  register(require('./dashboard/basicPreferences')) // 20190702
-  register(require('issue-pane'))
-  register(require('contacts-pane'))
-  register(require('activitystreams-pane'))
+  register(trustedApplications) // must be registered before basicPreferences
+  register(dashboardPane)
+  register(basicPreferences)
+  register(issuePane)
+  register(contactsPane)
+  register(activityStreamsPane)
 
-  register(require('./pad/padPane'))
-  // register(require('./argument/argumentPane.js')) // A position in an argument tree
+  register(padPane)
+  // register(argumentPane) // A position in an argument tree
 
-  register(require('./transaction/pane.js'))
-  register(require('./transaction/period.js'))
+  register(transactionPane)
+  register(financialPeriodPane)
 
-  const chatPanes = require('chat-pane')
-  // FIXME: https://github.com/solidos/chat-pane/issues/40
-  if (chatPanes.longChatPane) {
-    register(chatPanes.longChatPane) // Long pane must have prio in case short pane tries to do a long pane
-    register(chatPanes.shortChatPane) // was './chat/chatPane.js'
-  } else {
-    register(chatPanes)
-  }
-  // register(require('./publication/publicationPane.js'))
-  register(require('meeting-pane'))
-  register(require('./tabbed/tabbedPane'))
-  register(require('./schedule/schedulePane.js'))
+  register(meetingPane)
+  register(tabbedPane)
 
-  register(require('./trip/tripPane.js'))
+  register(longChatPane) // Long pane must have prio in case short pane tries to do a long pane
+  register(shortChatPane) // was './chat/chatPane.js'
+
+  // register(publicationPane)  // Suppress for now
+
+  register(schedulePane)   // doodle poll
+
+  register(tripPane)
   // register(require('./airPane.js'))
 
   // Content views
 
-  register(require('./imagePane.js')) // Basic image view
-  register(require('./playlist/playlistPane.js')) // Basic playlist view
+  register(imagePane) // Basic image view
+  register(playListPane) // Basic playlist view
 
-  register(require('./video/videoPane.js')) // Video clip player
-  register(require('./audio/audioPane.js')) // Audio clip player
+  register(videoPane) // Video clip player
+  register(audioPane) // Audio clip player
 
-  register(require('./dokieli/dokieliPane.js')) // Should be above dataContentPane
-  register(require('folder-pane')) // Should be above dataContentPane
-  register(require('./classInstancePane.js')) // Should be above dataContentPane
+  register(dokieliPane) // Should be above dataContentPane
+  register(folderPane) // Should be above dataContentPane
+  register(classInstancePane) // Should be above dataContentPane
   // register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
-  register(require('./slideshow/slideshowPane.js'))
+  register(slideshowPane)
 
-  register(require('./socialPane.js'))
+  register(socialPane)
 
-  register(require('./humanReadablePane.js')) // A web page as a web page -- how to escape to tabr?
+  register(humanReadablePane) // A web page as a web page -- how to escape to tabr?
   // register(require('markdown-pane').Pane) // replaced by markdown in humanReadablePane
 
-  register(require('./dataContentPane.js')) // Preferred for a data file
-  register(require('source-pane')) // edit source
-  register(require('./n3Pane.js'))
-  register(require('./RDFXMLPane.js'))
+  register(dataContentPane) // Preferred for a data file
+  register(sourcePane) // edit source
+  register(n3Pane)
+  register(RDFXMLPane)
 
   // User configured - data driven
-  register(require('./form/pane.js'))
+  register(formPane)
 
   // Generic:
 
-  register(require('./tableViewPane.js'))
+  register(tableViewPane)
 
   // Fallback totally generic:
-  register(require('./defaultPane.js'))
+  register(defaultPane)
 
-  register(require('./ui/pane.js'))
+  register(uiPane)
 
   // register(require("categoryPane.js"))  // Not useful enough
   // register(require("pubsPane.js")) // not finished
@@ -91,12 +131,12 @@ module.exports = function registerPanes (register) {
   // register(require("photoImportPane.js"))
 
   // The sharing pane is fairly generic and administrative  201
-  register(require('./sharing/sharingPane'))
+  register(sharingPane)
 
   // The internals pane is always (almost?) the last as it is the least user-friendly
-  register(require('./internal/internalPane'))
+  register(internalPane)
 
-  register(require('./home/homePane'))
+  register(homePane) // This is a global pane
 
   // ENDS
 }

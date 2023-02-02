@@ -1,12 +1,11 @@
 // This was a student project to
-// allow the user to chose favoite CC licence terms and have them highlighted
+// allow the user to chose favoite CC license terms and have them highlighted
 
 // tabulator.options becaome UI.licenseOptions
-// Possible future alternative directoons: Store licence preferences in a solid preferences file
-import * as UI from 'solid-ui'
+// Possible future alternative directoons: Store license preferences in a solid preferences file
 import { store } from 'solid-logic'
 
-const licenseURI = [
+export const licenseURI = [
   'http://creativecommons.org/licenses/by-nc-nd/3.0/',
   'http://creativecommons.org/licenses/by-nc-sa/3.0/',
   'http://creativecommons.org/licenses/by-nc/3.0/',
@@ -17,7 +16,7 @@ const licenseURI = [
 
 const names = ['BY-NC-ND', 'BY-NC-SA', 'BY-NC', 'BY-ND', 'BY-SA', 'BY']
 
-module.exports = function licenseOptions () {
+export function licenseOptions () {
   this.options = {}
   this.references = []
   this.checkedLicenses = []
@@ -81,12 +80,14 @@ module.exports = function licenseOptions () {
     }
   }
 
-  this.checkLicence = function checkLicense (statement) {
+  this.checkLicense = function checkLicense (statement) {
     const licenses = store.each(
       statement.why,
-      store.sym('http://creativecommons.org/ns#license')
+      store.sym('http://creativecommons.org/ns#license'),
+      null,
+      statement.why
     )
-    UI.log.info('licenses:' + statement.why + ': ' + licenses)
+    // UI.log.info('licenses:' + statement.why + ': ' + licenses)
     for (let i = 0; i < licenses.length; i++) {
       for (let j = 0; j < this.checkedLicenses.length; j++) {
         if (this.checkedLicenses[j] && licenses[i].uri === licenseURI[j]) {

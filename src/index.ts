@@ -15,7 +15,7 @@ import * as UI from 'solid-ui'
 import { LiveStore } from 'rdflib'
 import { solidLogicSingleton, store } from 'solid-logic'
 import OutlineManager from './outline/manager.js'
-import registerPanes from './registerPanes.js'
+import { registerPanes } from './registerPanes.js'
 import {
   list,
   paneForIcon,

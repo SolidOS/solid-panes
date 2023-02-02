@@ -15,7 +15,7 @@
     "clean": "rm -rf dist lib",
     "lint": "eslint 'src/**/*.js' 'src/**/*.ts'",
     "lint-fix": "eslint 'src/**/*.js' 'src/**/*.ts' --fix",
-    "test": "npm run lint && jest",
+    "test": "npm run lint && jest src/**/*test*",
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "prepublishOnly": "npm test && npm run build",
     "postversion": "git push origin main --follow-tags",

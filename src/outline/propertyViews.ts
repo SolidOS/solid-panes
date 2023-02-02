@@ -4,7 +4,7 @@ import viewAsMbox from './viewAsMbox'
 
 /** some builtin simple views **/
 
-export default (dom) => {
+export function propertyViews (dom) {
   // view that applies to items that are objects of certain properties.
   const views = {
     properties: [],
@@ -25,7 +25,7 @@ export default (dom) => {
 }
 
 /** add a property view function **/
-function viewsAddPropertyView (views, property, pviewfunc, isDefault) {
+export function viewsAddPropertyView (views, property, pviewfunc, isDefault) {
   if (!views.properties[property]) {
     views.properties[property] = []
   }
@@ -34,4 +34,4 @@ function viewsAddPropertyView (views, property, pviewfunc, isDefault) {
     // will override an existing default!
     views.defaults[property] = pviewfunc
   }
-} // addPropertyView
+} // viewsAddPropertyView

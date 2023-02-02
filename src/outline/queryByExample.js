@@ -9,12 +9,6 @@
 import { store } from 'solid-logic'
 import * as UI from 'solid-ui'
 
-module.exports = {
-  makeQueryRow,
-  QuerySource,
-  viewAndSaveQuery // Main function to generate and use the query
-}
-
 const optionalSubqueriesIndex = []
 
 function predParentOf (node) {
@@ -31,7 +25,7 @@ function predParentOf (node) {
   }
 }
 
-function makeQueryRow (q, tr, constraint) {
+export function makeQueryRow (q, tr, constraint) {
   // predtr = predParentOf(tr)
   // var nodes = tr.childNodes
   // var n = tr.childNodes.length
@@ -193,7 +187,7 @@ function saveQuery (selection, qs) {
 
 // When the user asks for all list of all matching parts of the data
 //
-function viewAndSaveQuery (outline, selection) {
+export function viewAndSaveQuery (outline, selection) {
   const qs = outline.qs
   UI.log.info('outline.doucment is now ' + outline.document.location)
   const q = saveQuery(selection, qs)
@@ -219,7 +213,7 @@ function viewAndSaveQuery (outline, selection) {
  * @author jambo
  */
 
-function QuerySource () {
+export function QuerySource () {
   /**
    * stores all of the queries currently held by this source,
    * indexed by ID number.

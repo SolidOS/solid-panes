@@ -14,10 +14,10 @@
 
 // ///////////////////////////////////////////////////////////////////
 
-// Table view pane  -- view of a class/
-const UI = require('solid-ui')
+// Table view pane  -- view of a class as a table of properties of class members
+import * as UI from 'solid-ui'
 
-module.exports = {
+export const tableViewPane =  {
   icon: UI.icons.originalIconBase + 'table.png',
 
   name: 'tableOfClass',

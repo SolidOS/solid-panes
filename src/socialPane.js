@@ -10,9 +10,8 @@
 
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
-import * as $rdf from 'rdflib'
 
-module.exports = {
+export const socialPane =  {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
 
   name: 'social',
@@ -376,7 +375,7 @@ module.exports = {
     // @@ Does not look up profiles
     // Does distinguish reciprocated from unreciprocated friendships
     //
-    function triageFriends (s) {
+    function _triageFriends (s) {
       outgoing = kb.each(s, foaf('knows'))
       incoming = kb.each(undefined, foaf('knows'), s) // @@ have to load the friends
       const confirmed = []

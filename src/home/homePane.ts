@@ -56,20 +56,7 @@ const HomePaneSource: PaneDefinition = {
       )
       create.newThingUI(creationContext, context, relevantPanes) // newUI Have to pass panes down
 
-      div.appendChild(dom.createElement('h4')).textContent = 'Private things'
-      // TODO: Replace by a common, representative interface
-      login
-        .registrationList(homePaneContext, { private: true })
-        .then(function (authContext) {
-          div.appendChild(dom.createElement('h4')).textContent = 'Public things'
-          div.appendChild(dom.createElement('p')).textContent =
-            'Things in this list are visible to others.'
-          login
-            .registrationList(authContext, { public: true })
-            .then(function () {
-              // done
-            })
-        })
+      login.registrationList(homePaneContext, {}).then(function () {})
     }
 
     const div = dom.createElement('div')

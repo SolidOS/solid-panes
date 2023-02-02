@@ -110,6 +110,7 @@ const editProfileView: PaneDefinition = {
 
         main.appendChild(paneDiv(context, me, 'contact'))
 
+
         heading('People you know who have WebIDs')
 
         comment(`This is your public social network.
@@ -128,6 +129,25 @@ const editProfileView: PaneDefinition = {
           modify: !!editableProfile,
           predicate: ns.foaf('knows'),
           noun: 'friend'
+        })
+
+        heading('Communities you participate in')
+
+        comment(`These are organizations and projects (etc) whose stuff you share`)
+
+        // TODO: would be useful to explain what it means to "drag organizations"
+        //       what is it that is being dragged?
+        //       is there a way to search for people (or things to drag) on this page?
+        //  Also provide a way of using cut and paste
+        if (editableProfile) {
+          comment('Drag organizations onto the target below to add organizations.')
+        }
+
+        widgets.attachmentList(dom, me, main, {
+          doc: profile,
+          modify: !!editableProfile,
+          predicate: ns.solid('community'),
+          noun: 'community'
         })
 
         // heading('The style of your public profile') headings are in form now

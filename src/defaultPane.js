@@ -5,11 +5,11 @@
  ** This pane hides the ones considered too low-level for the normal user.
  */
 
-const UI = require('solid-ui')
-const $rdf = require('rdflib')
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
-module.exports = {
+export const defaultPane =  {
   icon: UI.icons.originalIconBase + 'about.png',
 
   name: 'default',

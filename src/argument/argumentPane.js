@@ -11,7 +11,7 @@ import * as UI from 'solid-ui'
 import * as panes from 'pane-registry'
 
 // console.log('@@@ argument pane icon at ' + (module.__dirname || __dirname) + '/icon_argument.png')
-module.exports = {
+export default {
   icon: (module.__dirname || __dirname) + '/icon_argument.png', // @@ fix fro mashlib version
 
   name: 'argument',

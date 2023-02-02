@@ -1,15 +1,12 @@
 /*   slideshow Pane
  **
  */
-const UI = require('solid-ui')
+import * as UI from 'solid-ui'
 const ns = UI.ns
 
-// tabulator.loadScript("js/panes/slideshow/better-simple-slideshow/js/better-simple-slideshow.js")
+import makeBSS from '@solid/better-simple-slideshow'
 
-const makeBSS = require('@solid/better-simple-slideshow')
-// load also js/panes/slideshow/better-simple-slideshow/css/simple-slideshow-styles.css
-
-module.exports = {
+export const slideshowPane = {
   icon: UI.icons.iconBase + 'noun_138712.svg',
 
   name: 'slideshow',

@@ -21,7 +21,7 @@ let UserInputFormula // Formula to store references of user's work
 let TempFormula // Formula to store incomplete triples (Requests),
 // temporarily disjoint with kb to avoid bugs
 
-module.exports = function UserInput (outline) {
+export function UserInput (outline) {
   const myDocument = outline.document // is this ok?
   // UI.log.warn("myDocument when it's set is "+myDocument.location);
   this.menuId = 'predicateMenu1'

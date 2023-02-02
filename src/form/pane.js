@@ -1,5 +1,5 @@
 /*
- **                 Pane for running existing forms for any object
+ **             Pane for running existing forms for any object
  **
  */
 
@@ -8,7 +8,7 @@ import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
 const ns = UI.ns
 
-module.exports = {
+export const formPane = {
   icon: UI.icons.iconBase + 'noun_122196.svg',
 
   name: 'form',
