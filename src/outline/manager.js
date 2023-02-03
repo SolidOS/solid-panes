@@ -181,7 +181,7 @@ export default function (context) {
 
     // check the IPR on the data.  Ok if there is any checked license which is one the document has.
     if (statement && statement.why) {
-      if (licenseOptions && licenseOptions.checklicense()) {
+      if (licenseOptions && licenseOptions.checklicense && licenseOptions.checklicense()) {
         theClass += ' licOkay' // flag as light green etc .licOkay {background-color: #dfd}
       }
     }
