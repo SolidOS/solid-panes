@@ -57,7 +57,7 @@
     "profile-pane": "^1.0.15",
     "solid-namespace": "^0.5.2",
     "solid-ui": "2.4.25",
-    "source-pane": "2.2.20"
+    "source-pane": "^2.2.21"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.7",
