@@ -47,7 +47,7 @@
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "0.6.10",
-    "chat-pane": "2.4.22",
+    "chat-pane": "^2.4.22-c209a67a",
     "contacts-pane": "^2.6.9",
     "dompurify": "^3.0.1",
     "folder-pane": "^2.4.24",
@@ -57,7 +57,7 @@
     "mime-types": "^2.1.35",
     "profile-pane": "^1.0.16",
     "solid-namespace": "^0.5.2",
-    "solid-ui": "2.4.26",
+    "solid-ui": "^2.4.26-029ae1f9",
     "source-pane": "^2.2.23"
   },
   "devDependencies": {
