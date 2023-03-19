@@ -156,7 +156,16 @@ export default {
     const audioControl = function (song, autoplay) {
       const audio = dom.createElement('audio')
       audio.setAttribute('controls', 'yes')
-      audio.setAttribute('src', song.uri)
+      // get audio with authenticated fetch
+      kb.fetcher._fetch(song.uri)
+        .then(function(response) {
+          return response.blob()
+        })
+        .then(function(myBlob) {
+          const objectURL = URL.createObjectURL(myBlob)
+          audio.setAttribute('src', objectURL) // w640 h480 //
+        })
+
       if (autoplay) {
         audio.setAttribute('autoplay', 'autoplay') // Make this a personal preference
       }
