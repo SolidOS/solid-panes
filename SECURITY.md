@@ -17,22 +17,22 @@ These repositories contribute to the frontend you see on each solidcommunity.net
 
 Please report any security vulnerabilities through the public GitHub issues of each repository you find the vulnerability in. In case of vulnerabilities which span multiple repos, please report them on [the SolidOS repo](https://github.com/SolidOS/solidos/issues/new) itself.
 
-Please mention in your vulnerability issue the following:
+Please include the following in your vulnerability report:
 
-### Impact
+* **Impact**
 _What kind of vulnerability is it? Who is impacted?_
 
-### Patches
+* **Patches**
 _Has the problem been patched? What versions should users upgrade to?_
 
-### Workarounds
+* **Workarounds**
 _Is there a way for users to fix or remediate the vulnerability without upgrading?_
 
-### References
+* **References**
 _Are there any links users can visit to find out more?_
 
-### Proposed solution
-_Any suggested fix in the form of text or a PR are more than welcome_
+* **Proposed solution**
+_Any suggested fix in the form of text or a PR is more than welcome_
 
 As a volunteer-based organization, we especially appreciate any PR which helps fix any vulnerability.
 
