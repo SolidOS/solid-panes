@@ -6,12 +6,12 @@ If you believe you have found a security vulnerability in any SolidOS repository
 
 ## About this repository
 
-These repositories contribute to the frontend you see on each solidcommunity.net Pod. The repositories have different purposes and offer with different features.
+These repositories contribute to the frontend you see on each solidcommunity.net Pod. The repositories have different purposes and offer different features.
 
 - [**solid-logic**](https://github.com/solidos/solid-logic) — core business logic of SolidOS
-- [**mashlib**](https://github.com/solidos/mashlib/) — a solid-compatible code library of application-level functionality for the world of Solid
-- [**solid-panes**](https://github.com/solidos/solid-panes) — a set of core solid-compatible panes based on solid-ui
-- [**solid-ui**](https://github.com/solidos/solid-ui) — User Interface widgets and utilities for Solid. Building blocks for solid-based apps
+- [**mashlib**](https://github.com/solidos/mashlib/) — a Solid-compatible code library of application-level functionality for the world of Solid
+- [**solid-panes**](https://github.com/solidos/solid-panes) — a set of core Solid-compatible panes based on [solid-ui](https://github.com/solidos/solid-ui)
+- [**solid-ui**](https://github.com/solidos/solid-ui) — User Interface widgets and utilities for Solid providing building blocks for Solid-based apps
 
 ## Reporting a vulnerability
 
