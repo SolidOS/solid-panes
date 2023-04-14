@@ -34,7 +34,7 @@ _Are there any links users can visit to find out more?_
 ### Proposed solution
 _Any suggested fix in the form of text or a PR are more than welcome_
 
-As a volunteer based organization we appreciate any PR which also helps fix any vulnerability.
+As a volunteer-based organization, we especially appreciate any PR which helps fix any vulnerability.
 
 ## Preferred Languages
 
