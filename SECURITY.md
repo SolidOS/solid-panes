@@ -1,6 +1,6 @@
 # Security policy
 
-SolidOS is taking the security of our repositories seriously. This includes all source code repositories managed through our [GitHub organization](https://github.com/solidos). This being said, each member's contribution is on a volunteer basis and the skills we have at hand fluctuate with each member.
+SolidOS takes the security of our repositories seriously. This includes all source code repositories managed through our [GitHub organization](https://github.com/solidos). That said, members contribute on a volunteer basis, and the skills we have at hand fluctuate with each member.
 
 If you believe you have found a security vulnerability in any SolidOS repository, please report it to us as described below.
 
