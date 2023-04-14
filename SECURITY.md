@@ -15,7 +15,7 @@ These repositories contribute to the frontend you see on each solidcommunity.net
 
 ## Reporting a vulnerability
 
-Please report any security vulnerabilities through the public GitHub issues of each repository you find the vulnerability in. In case of vulnerabilities which span multiple repos, please report them on [the SolidOS repo](https://github.com/SolidOS/solidos/issues/new) itself.
+Please report any security vulnerabilities through the public GitHub issues of the repository where you find the vulnerability. If a vulnerability spans multiple repos, please report it on [the SolidOS repo](https://github.com/SolidOS/solidos/issues/new) itself.
 
 Please include the following in your vulnerability report:
 
