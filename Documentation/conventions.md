@@ -20,6 +20,7 @@ For short-hand, we will use the following namespace prefixes here:
 @prefix    pim: <http://www.w3.org/ns/pim/space#> .
 @prefix    rdf: <http://www.w3.org/2000/01/rdf-schema#> .
 @prefix schema: <http://schema.org/> .
+@prefix    sec: <https://w3id.org/security#>.
 @prefix   sioc: <http://rdfs.org/sioc/ns#> .
 @prefix  solid: <http://www.w3.org/ns/solid/terms#> .
 @prefix   stat: <http://www.w3.org/ns/posix/stat#> .
@@ -58,8 +59,8 @@ Now say your name is "John Doe", then add these triples to your profile document
 Say your pod is at `/pod`, with the LDN inbox at `/pod/inbox/`, to link from your identity to your pod:
 
 ```turtle
-</profile/card#me> solid:account </pod> .
-</profile/card#me> pim:storage   </pod> .
+</profile/card#me> solid:oidcIssuer </pod> . # WebID identity provider : this is a MUST
+</profile/card#me> pim:storage   </pod> .    # you can have more than one
 </profile/card#me> ldp:inbox     </pod/inbox/> .
 ```
 
@@ -71,6 +72,15 @@ To publish some of your generic preferences to apps, use:
 </profile/card#me> pim:preferencesFile    </settings/prefs.ttl> .
 </profile/card#me> solid:publicTypeIndex  </settings/publicTypeIndex.ttl> .
 </profile/card#me> solid:privateTypeIndex </settings/privateTypeIndex.ttl> .
+```
+
+### Your stuff
+
+Optional this will display Pods on which you want to link Chats, Contacts, Issues ....
+These are then displayed in `Your Stuff` on your profile-pane and on your dashboard
+
+```turtle
+</profile/card#me> solid:community <linkPod1>, <linkPod2> .
 ```
 
 ## Address Book
@@ -216,8 +226,10 @@ Note that for historical reasons, for the chat conversation as a whole, we use `
 
 ### Long Chat
 
-LongChat is similar to Chat, except that it uses LDP containers to discover the triples that describe the chat conversation,
-instead of having all the triples in one `chat.ttl` doc.
+LongChat is similar to Chat, except that it uses LDP containers to discover the triples that describe the chat conversation, instead of having all the triples in one `chat.ttl` doc.
+`chat.ttl` document is an Append only docu
+
+LongChat generate an ECDSA `signature` to secure each message content.
 To create a chat conversation, pick a timestamp, e.g., `1555491215455`, create an LDP container, for instance `/long-chat/`, and in there, create an index document, e.g., `/long-chat/index.ttl`. To the index document, add the following triples:
 
 ```turtle
@@ -238,7 +250,24 @@ To add a message in the LongChat conversation, for instance where you say "hi", 
 </long-chat/2019/04/17/chat.ttl#Msg1555487418787> dct:created  "2019-04-17T07:50:18Z"^^XML:dateTime .
 </long-chat/2019/04/17/chat.ttl#Msg1555487418787> sioc:content "hi" .
 </long-chat/2019/04/17/chat.ttl#Msg1555487418787> foaf:maker   </profile/card#me> .
-</long-chat/index.ttl#this>                       flow:message </long-chat/2019/04/17/chat.ttl#Msg1555487418787> .
+</long-chat/index.ttl#this> flow:message </long-chat/2019/04/17/chat.ttl#Msg1555487418787> .
+</long-chat/2019/04/17/chat.ttl#Msg1555487418787> sec:proofValue
+    "9f34f15067d7500fd831dd9f408f93ff6ae806fb03d851b344ac5e6cb04ea33c45a6e1b97812705de0e58388dfd7a86429e8bac8fb98d1976a9e5ac401c60dcc".
+
+```
+
+To edit a message a link triple to the replacement message is added
+
+```
+:Msg1555487418787 dct:isReplacedBy :Msg1702901805314;
+```
+
+To delete a message, you link to a replacement message, that contains the following triples
+
+```
+:Msg1702901805314    sioc:content "(message deleted)";
+:Msg1702901805314    schema:dateDeleted "2023-12-18T12:16:45Z"^^xsd:dateTime;
+
 ```
 
 Note that there is no need to make `/long-chat/2019/04/17/chat.ttl` discoverable from `/long-chat/index.ttl`, since it can be discovered by following the LDP Container member listings for `/long-chat/`, `/long-chat/2019/`, `/long-chat/2019/04/`, and `/2019/04/17/`.
