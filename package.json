@@ -10,7 +10,7 @@
     "build-lib": "npm run build-form && babel src -d lib --source-maps --extensions '.ts,.js'",
     "build-dev": "webpack --progress --mode=development",
     "build-types": "tsc --emitDeclarationOnly",
-    "build-version": "./timestamp.sh > src/versionInfo.ts  && eslint 'src/versionInfo.ts' --fix",
+    "build-version": "eslint --fix",
     "watch": "npm run build-version && babel src -d lib --source-maps --extensions '.ts,.js' --watch",
     "clean": "rm -rf dist lib",
     "lint": "eslint 'src/**/*.js' 'src/**/*.ts'",
