@@ -6,6 +6,7 @@
 import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
+import * as DOMPurify from 'dompurify'
 
 const humanReadablePane = {
   icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
@@ -76,7 +77,7 @@ const humanReadablePane = {
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     const ct = cts ? cts[0] : null
     if (ct) {
-      console.log('humanReadablePane: c-t:' + ct)
+      // console.log('humanReadablePane: c-t:' + ct)
     } else {
       console.log('humanReadablePane: unknown content-type?')
     }
@@ -92,7 +93,8 @@ const humanReadablePane = {
         const markdownText = response.responseText
         const lines = Math.min(30, markdownText.split(/\n/).length + 5)
         const res = marked.parse(markdownText)
-        frame.innerHTML = res
+        const clean = DOMPurify.sanitize(res)
+        frame.innerHTML = clean
         frame.setAttribute('class', 'doc')
         frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
       })

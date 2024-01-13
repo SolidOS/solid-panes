@@ -22,11 +22,21 @@ export default {
   },
 
   render: function (subject, context) {
+    const kb = context.session.store
     const dom = context.dom
     const div = dom.createElement('div')
     const video = div.appendChild(dom.createElement('video'))
     video.setAttribute('controls', 'yes')
-    video.setAttribute('src', subject.uri)
+    // get video with authenticated fetch
+    kb.fetcher._fetch(subject.uri)
+      .then(function(response) {
+        return response.blob()
+      })
+      .then(function(myBlob) {
+        const objectURL = URL.createObjectURL(myBlob)
+        video.setAttribute('src', objectURL) // w640 h480 //
+      })
+
     video.setAttribute('width', '100%')
     return div
   }

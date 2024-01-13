@@ -1,6 +1,9 @@
 module.exports = {
   preset: 'ts-jest/presets/js-with-babel',
   testEnvironment: 'jsdom',
+  testEnvironmentOptions: {
+    customExportConditions: ['node']
+  },
   collectCoverage: true,
   // For some reason Jest is not measuring coverage without the below option.
   // Unfortunately, despite `!(.test)`, it still measures coverage of test files as well:
