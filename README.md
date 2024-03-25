@@ -77,4 +77,7 @@ Here, just to show how it works, are how some RDF Classes map onto panes. Anythi
 contacts (A VCARD Address Book, Group, Individual, Organization) can be handled by the one contact
 pane. Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
+If you have trouble seeing syntax highlighting for SPARQL, Turtle, TriG, N-Triples, N-Quads, etc...
+Try installing an extension! For VSCode, there are many, but a great one is RDFox Syntax Highlighting. 
+
 ![Mapping many classes on the L to panes on the R](https://solidos.github.io/solid-panes/doc/images/panes-for-classes.svg)
