@@ -46,19 +46,19 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "^0.6.13-beta",
-    "chat-pane": "^2.4.26-beta",
-    "contacts-pane": "^2.6.12-beta",
+    "activitystreams-pane": "^0.6.13-beta4",
+    "chat-pane": "^2.4.26-beta4",
+    "contacts-pane": "^2.6.12-beta4",
     "dompurify": "^3.0.11",
-    "folder-pane": "^2.4.27-beta",
-    "issue-pane": "^2.4.19-beta",
+    "folder-pane": "^2.4.27-beta4",
+    "issue-pane": "^2.4.19-beta4",
     "marked": "^11.2.0",
-    "meeting-pane": "^2.3.19-beta",
+    "meeting-pane": "^2.4.19-beta4",
     "mime-types": "^2.1.35",
-    "profile-pane": "^1.0.19-beta",
+    "profile-pane": "^1.0.19-beta4",
     "solid-namespace": "^0.5.3",
-    "solid-ui": "^2.4.33-beta",
-    "source-pane": "^2.2.27-beta1"
+    "solid-ui": "^2.4.33-beta4",
+    "source-pane": "^2.2.27-beta4"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.1",
