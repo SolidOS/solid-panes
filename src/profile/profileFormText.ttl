@@ -7,7 +7,6 @@
 @prefix ui: <http://www.w3.org/ns/ui#>.
 @prefix schema: <http://schema.org/>.
 @prefix vcard: <http://www.w3.org/2006/vcard/ns#>.
-
 @prefix org: <http://www.w3.org/ns/org#>.
 @prefix esco: <http://data.europa.eu/esco/model#>.
 @prefix wd: <http://www.wikidata.org/entity/>.
@@ -28,12 +27,18 @@
       :SkillsPrompt :SkillsForm
       ).
 
-:styleGroup a ui:Group; ui:weight 0; ui:parts ( :styleHeading :backgroundColor :highlightColor ).
+:styleGroup a ui:Group; ui:weight 0; ui:parts ( :styleHeading :backgroundColor :highlightColor :cornerSquareColor :cornerDotColor ).
     :styleHeading a ui:Heading; ui:contents "The style of your public profile.".
     :backgroundColor a ui:ColorField; ui:property solid:profileBackgroundColor;
       ui:label "Background color"; ui:default "#ffffff".
     :highlightColor a ui:ColorField; ui:property solid:profileHighlightColor;
       ui:label "Highlight color"; ui:default "#000000".
+    :cornerSquareColor a ui:ColorField; ui:property solid:cornerSquareColor;
+      ui:label "Corner Square Color"; ui:default "#000000".
+    :cornerDotColor a ui:ColorField; ui:property solid:cornerDotColor;
+      ui:label "Corner dot color"; ui:default "#000000".
+    
+
 
 # Nickname
 
