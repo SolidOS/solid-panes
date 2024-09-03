@@ -46,6 +46,7 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
+    "@types/jest": "^29.5.12",
     "activitystreams-pane": "^0.6.13",
     "chat-pane": "^2.4.26",
     "contacts-pane": "^2.6.12",
@@ -68,7 +69,6 @@
     "@babel/preset-typescript": "^7.24.1",
     "@testing-library/dom": "^9.3.4",
     "@testing-library/jest-dom": "^6.4.2",
-    "@types/jest": "^29.5.12",
     "@types/webpack-env": "^1.18.4",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
