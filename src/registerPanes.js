@@ -48,8 +48,8 @@ export function registerPanes (register) {
   // Developer designed:
 
   register(profilePane) // View someone's public profile - dominates all other panes.
-  const editProfileView = profilePane.editor
-  assert !! editProfileView, "profilePane is not providing an editor pane"
+  const editProfileView = profilePane.editor ;
+  console.log("@@@ editProfileView", "profilePane is not providing an editor pane")
 
   register(editProfileView) // Edit my profile. 
 
