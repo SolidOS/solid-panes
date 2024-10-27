@@ -35,7 +35,7 @@ jobs:
       - run: npm run build --if-present
       - name: Save build
         if: matrix.node-version == '16.x'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: build
           path: |
@@ -47,7 +47,7 @@ jobs:
       needs: build
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/download-artifact@v2
+        - uses: actions/download-artifact@v4
           with:
             name: build
         - uses: actions/setup-node@v1
@@ -68,7 +68,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
           name: build
       - uses: actions/setup-node@v1
