@@ -56,7 +56,7 @@
     "marked": "^11.2.0",
     "meeting-pane": "^2.4.19",
     "mime-types": "^2.1.35",
-    "profile-pane": "^1.0.19",
+    "profile-pane": "^1.1.0",
     "rdflib": "^2.2.34",
     "solid-namespace": "^0.5.3",
     "solid-ui": "^2.5.0",
