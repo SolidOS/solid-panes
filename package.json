@@ -59,7 +59,7 @@
     "profile-pane": "^1.0.19",
     "rdflib": "^2.2.34",
     "solid-namespace": "^0.5.3",
-    "solid-ui": "^2.4.33",
+    "solid-ui": "^2.5.0",
     "source-pane": "^2.2.27"
   },
   "devDependencies": {

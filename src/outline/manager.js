@@ -358,8 +358,13 @@ export default function (context) {
         icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
       },
       {
+        paneName: 'profile',
+        label: 'Your Profile',
+        icon: UI.icons.iconBase + 'noun_15059.svg'
+      },
+      {
         paneName: 'editProfile',
-        label: 'Edit your profile',
+        label: 'Edit your Profile',
         icon: UI.icons.iconBase + 'noun_492246.svg'
       }
     ]
