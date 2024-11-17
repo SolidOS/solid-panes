@@ -47,13 +47,14 @@ async function setUserMenu (outliner: any) {
   }
 
   // the order of the menu is important here, show profile first and logout last
-  let userMenuList = [showProfile]
+  let userMenuList = [] // was [showProfile] 
   userMenuList = userMenuList.concat(await getMenuItems(outliner))
   userMenuList.push(logOut)
 
   return userMenuList
 }
 
+// Does not work to jump to user profile, 
 function openUserProfile (outliner: any) {
   outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
   location.reload()
