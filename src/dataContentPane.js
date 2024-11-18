@@ -153,7 +153,7 @@ export const dataContentPane = {
           if (
             UI.utils.ancestor(newTable, 'TABLE') &&
             UI.utils.ancestor(newTable, 'TABLE').style.backgroundColor ===
-              'white'
+            'white'
           ) {
             newTable.style.backgroundColor = '#eee'
           } else {
@@ -198,6 +198,7 @@ export const dataContentPane = {
     }
     for (let i = 0; i < roots.length; i++) {
       const tr = myDocument.createElement('tr')
+      tr.setAttribute('style', `background-color: ${i % 2 === 0 ? '#f0f0f0' : 'white'};`)
       rep.appendChild(tr)
       const subjectTD = myDocument.createElement('td')
       tr.appendChild(subjectTD)
