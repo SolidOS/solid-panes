@@ -36,7 +36,7 @@ export function getStatementsToAdd (
   person: NamedNode,
   ns: Namespaces
 ): any {
-  const application = new BlankNode(`bn_${nodeName}`)
+  const application = new NamedNode(nodeName)
   return [
     st(person, ns.acl('trustedApp'), application, person.doc()),
     st(application, ns.acl('origin'), origin, person.doc()),
