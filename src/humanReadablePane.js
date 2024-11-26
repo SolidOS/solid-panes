@@ -6,7 +6,7 @@
 import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
-import * as DOMPurify from 'dompurify'
+import DOMPurify from 'dompurify';
 
 const humanReadablePane = {
   icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
