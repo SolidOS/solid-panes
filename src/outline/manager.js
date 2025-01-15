@@ -7,8 +7,6 @@ import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
-import { licenseOptions } from './licenseOptions'
-
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
@@ -178,13 +176,6 @@ export default function (context) {
     )
     td.setAttribute('notSelectable', 'false')
     let theClass = 'obj'
-
-    // check the IPR on the data.  Ok if there is any checked license which is one the document has.
-    if (statement && statement.why) {
-      if (licenseOptions && licenseOptions.checklicense && licenseOptions.checklicense()) {
-        theClass += ' licOkay' // flag as light green etc .licOkay {background-color: #dfd}
-      }
-    }
 
     // set about and put 'expand' icon
     if (
@@ -367,8 +358,13 @@ export default function (context) {
         icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
       },
       {
+        paneName: 'profile',
+        label: 'Your Profile',
+        icon: UI.icons.iconBase + 'noun_15059.svg'
+      },
+      {
         paneName: 'editProfile',
-        label: 'Edit your profile',
+        label: 'Edit your Profile',
         icon: UI.icons.iconBase + 'noun_492246.svg'
       }
     ]

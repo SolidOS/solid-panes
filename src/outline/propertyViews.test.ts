@@ -30,6 +30,7 @@ describe('property views', () => {
     const view = views.defaults[property]
     const result = view(sym('mailto:alice@mail.example'))
     expect(result).toBeInstanceOf(HTMLAnchorElement)
-    expect(result).toHaveAttribute('href', 'mailto:alice@mail.example')
+    expect(result).toHaveAttribute('href', 'mailto:alice@mail.example');
+    expect(result).toHaveTextContent('alice@mail.example');
   })
 })

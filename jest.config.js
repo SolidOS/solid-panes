@@ -4,6 +4,9 @@ module.exports = {
   testEnvironmentOptions: {
     customExportConditions: ['node']
   },
+  moduleNameMapper: {
+    '^[./a-zA-Z0-9$_-]+\\.ttl$': '<rootDir>/__mocks__/fileMock.js',    // '\\.ttl$'
+  },
   collectCoverage: true,
   // For some reason Jest is not measuring coverage without the below option.
   // Unfortunately, despite `!(.test)`, it still measures coverage of test files as well:

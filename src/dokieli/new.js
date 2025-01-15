@@ -17,5 +17,6 @@ module.exports = `
       </article>
     </main>
   </body>
-</html>
-`
+</html>`
+
+export default DOKIELI_TEMPLATE
