@@ -102,7 +102,7 @@ const humanReadablePane = {
 
     if (ct === 'text/markdown') {
       markdownHtml()
-    } else if (ct !== 'text/html') {
+    } else {
       // get with authenticated fetch
       kb.fetcher._fetch(subject.uri)
         .then(function(response) {
@@ -110,15 +110,18 @@ const humanReadablePane = {
         })
         .then(function(blob) {
           const objectURL = URL.createObjectURL(blob)
-          frame.setAttribute('src', objectURL) // w640 h480 //
+          frame.setAttribute('src', objectURL)
+          frame.setAttribute('type', blob.type)
           frame.setAttribute('class', 'doc')
-          frame.setAttribute('style', `border: 1px solid; padding: 1em; height:120em; width:80em; resize: both; overflow: auto;`)
+          return blob.type.startsWith('text') ? blob.text() : ''
         })
-    } else {
-      frame.setAttribute('src', subject.uri) // allow-same-origin
-      frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', 'resize = both; height:120em; width:80em;')
+        .then(function(blobText) {
+          const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
+          const lines = Math.min(30, blobText.split(/\n/).length + newLines)
+          frame.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
+        })
     }
+
     // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
     // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
     // You can't have any sandbox and allow plugins.
@@ -127,8 +130,6 @@ const humanReadablePane = {
 
     // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
-    //        iframe.setAttribute('height', '480')
-    //        iframe.setAttribute('width', '640')
     const tr = myDocument.createElement('TR')
     tr.appendChild(frame)
     div.appendChild(tr)

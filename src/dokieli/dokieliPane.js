@@ -11,7 +11,7 @@ import * as mime from 'mime-types'
 
 // const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
 
-import DOKIELI_TEMPLATE from './new.js' // Distributed with this library
+import * as DOKIELI_TEMPLATE from './new.js' // Distributed with this library
 
 export default {
   icon: UI.icons.iconBase + 'dokieli-logo.png', // @@ improve? more like doccument?
@@ -90,7 +90,7 @@ export default {
     }
     newPaneOptions.newInstance = newInstance // Save for creation system
 
-    console.log('New dokieli will make: ' + newInstance)
+    // console.log('New dokieli will make: ' + newInstance)
 
     let htmlContents = DOKIELI_TEMPLATE
     let filename = newInstance.uri.split('/').slice(-1)[0]
@@ -104,7 +104,7 @@ export default {
       '</article>',
       '<h1>' + encodedTitle + '</h1></article>'
     )
-    console.log('@@ New HTML for Dok:' + htmlContents)
+    // console.log('@@ New HTML for Dok:' + htmlContents)
     return new Promise(function (resolve) {
       kb.fetcher
         .webOperation('PUT', newInstance.uri, {
@@ -119,7 +119,7 @@ export default {
         })
         .catch(function (err) {
           console.log(
-            'Error creating dokelili dok at ' +
+            'Error creating dokieli doc at ' +
               newPaneOptions.newInstance +
               ': ' +
               err
@@ -137,8 +137,25 @@ export default {
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
     const iframe = myDocument.createElement('IFRAME')
-    iframe.setAttribute('src', subject.uri) // allow-same-origin
-    iframe.setAttribute('class', 'doc')
+
+    // get with authenticated fetch
+    kb.fetcher._fetch(subject.uri)
+      .then(function(response) {
+        return response.blob()
+      })
+      .then(function(blob) {
+        const objectURL = URL.createObjectURL(blob)
+        iframe.setAttribute('src', objectURL) // w640 h480 //
+        iframe.setAttribute('type', blob.type)
+        iframe.setAttribute('class', 'doc')
+        return blob.text()
+      })
+      .then(function(blobText) {
+        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
+        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
+        iframe.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
+    })
+      .catch(err => { console.log(err) })
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     const ct = cts ? cts[0] : null
@@ -156,10 +173,7 @@ export default {
 
     // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
-    iframe.setAttribute('style', 'resize = both; height: 40em; width:40em;') // @@ improve guess
-    //        iframe.setAttribute('height', '480')
-    //        iframe.setAttribute('width', '640')
-    const tr = myDocument.createElement('tr')
+   const tr = myDocument.createElement('tr')
     tr.appendChild(iframe)
     div.appendChild(tr)
     return div
