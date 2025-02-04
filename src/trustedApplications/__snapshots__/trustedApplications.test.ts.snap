@@ -8,10 +8,12 @@ exports[`getStatementsToAdd should return all required statements to add the giv
       "termType": "NamedNode",
       "value": "https://profile.example",
     },
-    "object": NamedNode {
-      "classOrder": 5,
-      "termType": "NamedNode",
-      "value": "https://profile.example#mock_app_id",
+    "object": BlankNode {
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
     },
     "predicate": NamedNode {
       "classOrder": 5,
@@ -40,10 +42,12 @@ exports[`getStatementsToAdd should return all required statements to add the giv
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#origin",
     },
-    "subject": NamedNode {
-      "classOrder": 5,
-      "termType": "NamedNode",
-      "value": "https://profile.example#mock_app_id",
+    "subject": BlankNode {
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
     },
   },
   Statement {
@@ -62,10 +66,12 @@ exports[`getStatementsToAdd should return all required statements to add the giv
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#mode",
     },
-    "subject": NamedNode {
-      "classOrder": 5,
-      "termType": "NamedNode",
-      "value": "https://profile.example#mock_app_id",
+    "subject": BlankNode {
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
     },
   },
   Statement {
@@ -84,10 +90,12 @@ exports[`getStatementsToAdd should return all required statements to add the giv
       "termType": "NamedNode",
       "value": "http://www.w3.org/ns/auth/acl#mode",
     },
-    "subject": NamedNode {
-      "classOrder": 5,
-      "termType": "NamedNode",
-      "value": "https://profile.example#mock_app_id",
+    "subject": BlankNode {
+      "classOrder": 6,
+      "isBlank": 1,
+      "isVar": 1,
+      "termType": "BlankNode",
+      "value": "bn_mock_app_id",
     },
   },
 ]
