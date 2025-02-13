@@ -174,7 +174,7 @@ export default {
       })
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    const ct = cts ? cts[0] : null
+    const ct = cts ? cts[0].split(';', 1)[0].trim() : null
     if (ct) {
       console.log('dokieliPane: c-t:' + ct)
     } else {

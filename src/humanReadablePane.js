@@ -75,7 +75,7 @@ const humanReadablePane = {
     const kb = context.session.store
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    const ct = cts ? cts[0] : null // remove content-type parameters
+    const ct = cts ? cts[0].split(';', 1)[0].trim() : null // remove content-type parameters
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
     } else {
