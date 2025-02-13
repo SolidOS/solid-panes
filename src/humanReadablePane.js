@@ -45,7 +45,7 @@ const humanReadablePane = {
 
     // This data could come from a fetch OR from ldp container
     const hasContentTypeIn2 = function (kb, x, displayables) {
-      const t = kb.findTypeURIs(subject)
+      const t = kb.findTypeURIs(x)
       for (let k = 0; k < displayables.length; k++) {
         if (Util.mediaTypeClass(displayables[k]).uri in t) {
           return true

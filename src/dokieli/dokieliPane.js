@@ -47,7 +47,7 @@ export default {
 
     // This data coul d come from a fetch OR from ldp comtaimner
     const hasContentTypeIn2 = function (kb, x, displayables) {
-      const t = kb.findTypeURIs(subject)
+      const t = kb.findTypeURIs(x)
       for (let k = 0; k < displayables.length; k++) {
         if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
