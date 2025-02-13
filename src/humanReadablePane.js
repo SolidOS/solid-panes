@@ -45,7 +45,7 @@ const humanReadablePane = {
 
     // This data could come from a fetch OR from ldp container
     const hasContentTypeIn2 = function (kb, x, displayables) {
-      const t = kb.findTypeURIs(subject)
+      const t = kb.findTypeURIs(x)
       for (let k = 0; k < displayables.length; k++) {
         if (Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
@@ -75,7 +75,7 @@ const humanReadablePane = {
     const kb = context.session.store
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    const ct = cts ? cts[0] : null
+    const ct = cts ? cts[0] : null // remove content-type parameters
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
     } else {
@@ -87,48 +87,64 @@ const humanReadablePane = {
     const element = ct === 'text/markdown' ? 'DIV' : 'IFRAME'
     const frame = myDocument.createElement(element)
 
-    // render markdown to html
-    const markdownHtml = function () {
-      kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const markdownText = response.responseText
-        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
-        const res = marked.parse(markdownText)
-        const clean = DOMPurify.sanitize(res)
-        frame.innerHTML = clean
-        frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
-      })
-    }
+    const setIframeAttributes = (frame, blob, lines) => {
+      frame.setAttribute('src', URL.createObjectURL(blob));
+      frame.setAttribute('type', blob.type);
+      frame.setAttribute('class', 'doc');
+      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 100%; max-width: 800px; resize: both; overflow: auto;`);
+
+      // Apply sandbox attribute only for HTML files
+      // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
+      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
+      // You can't have any sandbox and allow plugins.
+      // We could sandbox only HTML files I suppose.
+      if (blob.type === 'text/html' || blob.type === 'application/xhtml+xml') {
+        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+      }
+    };
+
+    const processMarkdown = (frame, markdownText) => {
+      const lines = Math.min(30, markdownText.split(/\n/).length + 5);
+      const res = marked.parse(markdownText);
+      const clean = DOMPurify.sanitize(res);
+      frame.innerHTML = clean;
+      frame.setAttribute('class', 'doc');
+      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 100%; max-width: 800px; resize: both; overflow: auto;`);
+    };
+
+    const fetchAndProcessBlob = (kb, subject, frame) => {
+      kb.fetcher._fetch(subject.uri)
+        .then(response => response.blob())
+        .then(blob => {
+          const lines = blob.type.startsWith('text') ? Math.min(30, blob.text().split(/\n/).length + 5) : 5;
+          setIframeAttributes(frame, blob, lines);
+          return blob.type.startsWith('text') ? blob.text() : '';
+        })
+        .then(blobText => {
+          if (blobText) {
+            const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5;
+            const lines = Math.min(30, blobText.split(/\n/).length + newLines);
+            frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 100%; max-width: 800px; resize: both; overflow: auto;`);
+          }
+        })
+        .catch(error => {
+          console.error('Error processing blob:', error);
+          frame.setAttribute('style', 'border: 1px solid; padding: 1em; height: 5em; width: 100%; max-width: 800px; resize: both; overflow: auto;');
+          frame.textContent = 'Error loading content';
+        });
+    };
 
     if (ct === 'text/markdown') {
-      markdownHtml()
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const markdownText = response.responseText
+        processMarkdown(frame, markdownText);
+      }).catch(error => {
+        console.error('Error fetching markdown content:', error)
+        frame.innerHTML = '<p>Error loading content</p>'
+      })
     } else {
-      // get with authenticated fetch
-      kb.fetcher._fetch(subject.uri)
-        .then(function(response) {
-          return response.blob()
-        })
-        .then(function(blob) {
-          const objectURL = URL.createObjectURL(blob)
-          frame.setAttribute('src', objectURL)
-          frame.setAttribute('type', blob.type)
-          frame.setAttribute('class', 'doc')
-          return blob.type.startsWith('text') ? blob.text() : ''
-        })
-        .then(function(blobText) {
-          const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
-          const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-          frame.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
-        })
+      fetchAndProcessBlob(kb, subject, frame);
     }
-
-    // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
-    // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-    // You can't have any sandbox and allow plugins.
-    // We could sandbox only HTML files I suppose.
-    // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
-
-    // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
     const tr = myDocument.createElement('TR')
     tr.appendChild(frame)
