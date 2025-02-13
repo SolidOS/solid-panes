@@ -47,7 +47,7 @@ export default {
 
     // This data coul d come from a fetch OR from ldp comtaimner
     const hasContentTypeIn2 = function (kb, x, displayables) {
-      const t = kb.findTypeURIs(subject)
+      const t = kb.findTypeURIs(x)
       for (let k = 0; k < displayables.length; k++) {
         if ($rdf.Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
@@ -138,40 +138,48 @@ export default {
     div.setAttribute('class', 'docView')
     const iframe = myDocument.createElement('IFRAME')
 
-    // get with authenticated fetch
+    // Function to set iframe attributes
+    const setIframeAttributes = (iframe, blob, lines) => {
+      const objectURL = URL.createObjectURL(blob)
+      iframe.setAttribute('src', objectURL)
+      iframe.setAttribute('type', blob.type)
+      iframe.setAttribute('class', 'doc')
+      iframe.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
+
+      // Apply sandbox attribute only for HTML files
+      // @@ NOte beflow - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
+      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
+      // You can;'t have any sandbox and allow plugins.
+      // We could sandbox only HTML files I suppose.
+      // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
+      if (blob.type === 'text/html' || blob.type === 'application/xhtml+xml') {
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin')
+      }
+    }
+
+    // Fetch and process the blob
     kb.fetcher._fetch(subject.uri)
-      .then(function(response) {
-        return response.blob()
+      .then(response => response.blob())
+      .then(blob => {
+        const blobTextPromise = blob.type.startsWith('text') ? blob.text() : Promise.resolve('')
+        return blobTextPromise.then(blobText => ({ blob, blobText }))
       })
-      .then(function(blob) {
-        const objectURL = URL.createObjectURL(blob)
-        iframe.setAttribute('src', objectURL) // w640 h480 //
-        iframe.setAttribute('type', blob.type)
-        iframe.setAttribute('class', 'doc')
-        return blob.text()
-      })
-      .then(function(blobText) {
+      .then(({ blob, blobText }) => {
         const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
         const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-        iframe.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
-    })
-      .catch(err => { console.log(err) })
+        setIframeAttributes(iframe, blob, lines)
+      })
+      .catch(err => {
+        console.log('Error fetching or processing blob:', err)
+      })
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    const ct = cts ? cts[0] : null
+    const ct = cts ? cts[0].split(';', 1)[0].trim() : null
     if (ct) {
       console.log('dokieliPane: c-t:' + ct)
     } else {
       console.log('dokieliPane: unknown content-type?')
     }
-
-    // @@ NOte beflow - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
-    // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-    // You can;'t have any sandbox and allow plugins.
-    // We could sandbox only HTML files I suppose.
-    // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
-
-    // iframe.setAttribute('sandbox', 'allow-same-origin allow-forms'); // allow-scripts ?? no documents should be static
 
    const tr = myDocument.createElement('tr')
     tr.appendChild(iframe)
