@@ -45,7 +45,7 @@ const humanReadablePane = {
 
     // This data could come from a fetch OR from ldp container
     const hasContentTypeIn2 = function (kb, x, displayables) {
-      const t = kb.findTypeURIs(x)
+      const t = kb.findTypeURIs(subject)
       for (let k = 0; k < displayables.length; k++) {
         if (Util.mediaTypeClass(displayables[k]).uri in t) {
           return true
@@ -91,7 +91,7 @@ const humanReadablePane = {
       frame.setAttribute('src', URL.createObjectURL(blob));
       frame.setAttribute('type', blob.type);
       frame.setAttribute('class', 'doc');
-      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 100%; max-width: 800px; resize: both; overflow: auto;`);
+      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`);
 
       // Apply sandbox attribute only for HTML files
       // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
@@ -103,47 +103,40 @@ const humanReadablePane = {
       }
     };
 
-    const processMarkdown = (frame, markdownText) => {
-      const lines = Math.min(30, markdownText.split(/\n/).length + 5);
-      const res = marked.parse(markdownText);
-      const clean = DOMPurify.sanitize(res);
-      frame.innerHTML = clean;
-      frame.setAttribute('class', 'doc');
-      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 100%; max-width: 800px; resize: both; overflow: auto;`);
-    };
-
-    const fetchAndProcessBlob = (kb, subject, frame) => {
-      kb.fetcher._fetch(subject.uri)
-        .then(response => response.blob())
-        .then(blob => {
-          const lines = blob.type.startsWith('text') ? Math.min(30, blob.text().split(/\n/).length + 5) : 5;
-          setIframeAttributes(frame, blob, lines);
-          return blob.type.startsWith('text') ? blob.text() : '';
-        })
-        .then(blobText => {
-          if (blobText) {
-            const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5;
-            const lines = Math.min(30, blobText.split(/\n/).length + newLines);
-            frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 100%; max-width: 800px; resize: both; overflow: auto;`);
-          }
-        })
-        .catch(error => {
-          console.error('Error processing blob:', error);
-          frame.setAttribute('style', 'border: 1px solid; padding: 1em; height: 5em; width: 100%; max-width: 800px; resize: both; overflow: auto;');
-          frame.textContent = 'Error loading content';
-        });
-    };
-
-    if (ct === 'text/markdown') {
+    // render markdown to html
+    const markdownHtml = function () {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
         const markdownText = response.responseText
-        processMarkdown(frame, markdownText);
+        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
+        const res = marked.parse(markdownText)
+        const clean = DOMPurify.sanitize(res)
+        frame.innerHTML = clean
+        frame.setAttribute('class', 'doc')
+        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'
       })
+    }
+
+    if (ct === 'text/markdown') {
+      markdownHtml()
     } else {
-      fetchAndProcessBlob(kb, subject, frame);
+    // Fetch and process the blob
+    kb.fetcher._fetch(subject.uri)
+      .then(response => response.blob())
+      .then(blob => {
+        const blobTextPromise = blob.type.startsWith('text') ? blob.text() : Promise.resolve('')
+        return blobTextPromise.then(blobText => ({ blob, blobText }))
+      })
+      .then(({ blob, blobText }) => {
+        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
+        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
+        setIframeAttributes(frame, blob, lines)
+      })
+      .catch(err => {
+        console.log('Error fetching or processing blob:', err)
+      })
     }
 
     const tr = myDocument.createElement('TR')
