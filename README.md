@@ -50,6 +50,10 @@ Volunteers are always welcome!
 - [Visual Language](https://solidos.github.io/solid-panes/Documentation/VisualLanguage.html)
 - [Conventions](./Documentation/conventions.md)
 
+## Caution
+Due to the recent implementation of pivot for solidcommunity.net users, some panes and their login portals may not allow you to login correctly when switching between panes for development. 
+As of recent, the editProfile pane may not redirect you at all to the proper destination. In the meantime, the dashboardPane is a working substitute for development purposes.
+
 ## Development
 To get started, make sure you have Node.js installed (for instance
 through https://github.com/nvm-sh/nvm), and:
