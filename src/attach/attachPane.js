@@ -117,7 +117,7 @@ export default {
       const subjects = []
       for (u in uriHash) {
         // @@ TODO: Write away the need for exception on next line
-        // eslint-disable-next-line no-prototype-builtins
+         
         if (uriHash.hasOwnProperty(u)) {
           x = kb.sym(u)
           if (sortBy) {

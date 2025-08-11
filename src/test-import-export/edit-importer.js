@@ -13,7 +13,7 @@
 // import UI from 'solid-ui'
 // import solidUi, { SolidUi } from 'solid-ui'
 // @@ TODO: Write away the need for exception on next line
-// eslint-disable-next-line camelcase
+ 
 
 const thisPane = { foo: 'bar' }
 export default thisPane
