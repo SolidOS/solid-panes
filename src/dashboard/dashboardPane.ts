@@ -28,11 +28,11 @@ export const dashboardPane: PaneDefinition = {
       )
     }
 
-    authSession.onLogin(() => {
+    authSession.events.on("login", () => {
       // console.log('On Login')
       runBuildPage()
     })
-    authSession.onSessionRestore(() => {
+    authSession.events.on("sessionRestore", () => {
       // console.log('On Session Restore')
       runBuildPage()
     })
