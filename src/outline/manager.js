@@ -1627,7 +1627,7 @@ export default function (context) {
       }
       case 39: // right
         // @@ TODO: Write away the need for exception on next line
-        // eslint-disable-next-line no-case-declarations
+         
         const obj = UI.utils.getAbout(kb, selectedTd)
         if (obj) {
           walk = this.walk

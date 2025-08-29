@@ -541,7 +541,7 @@ export default {
 
             for (const y in yearCategoryTotal) {
               // @@ TODO: Write away the need for exception on next line
-              // eslint-disable-next-line no-prototype-builtins
+               
               if (yearCategoryTotal.hasOwnProperty(y)) {
                 years.push(y)
               }
@@ -567,7 +567,7 @@ export default {
 
             for (const uri in total) {
               // @@ TODO: Write away the need for exception on next line
-              // eslint-disable-next-line no-prototype-builtins
+               
               if (total.hasOwnProperty(uri)) {
                 types.push(uri)
                 grandTotal += total[uri]
