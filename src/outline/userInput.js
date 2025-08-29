@@ -763,7 +763,7 @@ export function UserInput (outline) {
 
       UI.log.debug('removed')
       outline.walk('up')
-      // eslint-disable-next-line prefer-const
+       
       removedTr = selectedTd.parentNode
       // afterTr = removedTr.nextSibling
       function removefromview () {
@@ -1986,14 +1986,14 @@ export function UserInput (outline) {
           inputText = extraInformation.inputText
           /*   The labeller functionality code ahs been lost or dropped -- reinstate this? */
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-case-declarations
+           
           const predicates = outline.labeller.searchAdv(
             inputText,
             undefined,
             'predicate'
           )
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-case-declarations
+           
           let results = [] // @@ fixme
           for (let i = 0; i < predicates.length; i++) {
             const tempQuery = {}
@@ -2009,7 +2009,7 @@ export function UserInput (outline) {
           }
 
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-case-declarations
+           
           let entries = results[0]
           if (entries.length === 0) {
             console.log('cm length 0\n') // hq
@@ -2176,9 +2176,9 @@ export function UserInput (outline) {
       const tr = selectedTd.parentNode
       let stat
       let isInverse
-      // eslint-disable-next-line prefer-const
+       
       stat = tr.AJAR_statement
-      // eslint-disable-next-line prefer-const
+       
       isInverse = tr.AJAR_inverse
 
       const reqTerm = type === 'object' ? stat.object : stat.predicate

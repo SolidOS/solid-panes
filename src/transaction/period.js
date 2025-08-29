@@ -251,7 +251,7 @@ export default {
       for (const y in xURIs) {
         // For each thing which can be inferred to be a transaction
         // @@ TODO: Write away the need for exception on next line
-        // eslint-disable-next-line no-prototype-builtins
+         
         if (xURIs.hasOwnProperty(y)) {
           z = kb.sym(y)
           const tt = kb.each(z, ns.rdf('type')) // What EXPLICIT definitions
@@ -301,7 +301,7 @@ export default {
         const cats = kb.findSubClassesNT(ns.qu('Transaction'))
         for (const cat in cats) {
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-prototype-builtins
+           
           if (cats.hasOwnProperty(cat)) {
             if (cat.slice(1, -1).split('#')[1] === catTail) {
               return kb.sym(cat.slice(1, -1))
