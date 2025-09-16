@@ -1,6 +1,16 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
+const externalsBase = {
+  'fs': 'null',
+  'node-fetch': 'fetch',
+  'isomorphic-fetch': 'fetch',
+  'xmldom': 'window',
+  'text-encoding': 'TextEncoder',
+  'whatwg-url': 'window',
+  '@trust/webcrypto': 'crypto'
+}
+
 module.exports = [{
   mode: 'development',
   entry: './dev/loader.ts',
