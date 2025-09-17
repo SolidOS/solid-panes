@@ -13,7 +13,6 @@ export default [
         type: 'umd'
       },
       globalObject: 'this',
-      iife: true,
       clean: true
     },
     plugins: [
