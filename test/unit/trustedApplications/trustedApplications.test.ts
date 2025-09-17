@@ -1,11 +1,7 @@
 /* eslint-env jest */
-import { TextEncoder, TextDecoder } from 'util'
-
 import * as $rdf from 'rdflib'
 import solidNamespace from 'solid-namespace'
-import { generateRandomString, getStatementsToDelete, getStatementsToAdd } from './trustedApplications.utils'
-global.TextEncoder = TextEncoder as any
-global.TextDecoder = TextDecoder as any
+import { generateRandomString, getStatementsToDelete, getStatementsToAdd } from '../../../src/trustedApplications/trustedApplications.utils'
 
 const ns = solidNamespace($rdf)
 

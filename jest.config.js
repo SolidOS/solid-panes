@@ -13,7 +13,7 @@ export default {
   transformIgnorePatterns: ['/node_modules/(?!lit-html).+\\.js'],
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
-  roots: ['<rootDir>/src', '<rootDir>/test', '<rootDir>/__mocks__'],
+  roots: ['<rootDir>/src', '<rootDir>/test'],
   // For some reason Jest is not measuring coverage without the below option.
   // Unfortunately, despite `!(.test)`, it still measures coverage of test files as well:
   // forceCoverageMatch: ['./src/**/*!(.test).ts'],
