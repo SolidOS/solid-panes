@@ -8,15 +8,31 @@ export default [
   {
     ignores: [
       'dist/**',
-      'test/**',
       'docs/**',
       'node_modules/**',
       'dev/**',
+      'dev-dist/**',
       'coverage/**',
     ],
   },
   {
-    files: ['src/**/*.js', 'src/**/*.ts', 'src/**/*.cjs', 'src/**/*.mjs'],
+    files: ['src/**/*.js', 'src/**/*.cjs', 'src/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        Atomics: 'readonly',
+        SharedArrayBuffer: 'readonly',
+      }
+    },
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-unused-vars': 'off', // handled by TS
+    }
+  },
+  {
+    files: ['src/**/*.ts'],
     plugins: {
       '@typescript-eslint': tseslintPlugin,
     },
@@ -29,15 +45,47 @@ export default [
         SharedArrayBuffer: 'readonly',
       },
       parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.json']
+      },
     },
     rules: {
       semi: ['error', 'never'],
       quotes: ['error', 'single'],
-      'no-unused-vars': 'off', // handled by TS
+      'no-console': 'warn',
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': ['warn', {
         argsIgnorePattern: '^_',
         varsIgnorePattern: '^_',
-      }]
+      }],
+      // '@typescript-eslint/no-explicit-any': 'warn', - codebase not ready for this
+    },
+  },
+  {
+    files: ['test/**/*.ts'],
+    plugins: {
+      '@typescript-eslint': tseslintPlugin,
+    },
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.test.json'],
+      },
+    },
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'off', // Allow console in tests
+      'no-undef': 'off', // Tests may define globals
+    }
+  },
+  {
+    files: ['test/**/**/*.js', 'test/**/*.js'],
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'off', // Allow console in tests
+      'no-undef': 'off', // Tests may define globals
     }
   }
 ]

@@ -193,7 +193,7 @@ function createApplicationEntry (
     if (success) {
       return updateTable()
     }
-    console.error(uri, errorBody)
+    // console.error(uri, errorBody)
   }
 }
 
