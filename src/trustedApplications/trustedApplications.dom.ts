@@ -201,7 +201,7 @@ function createElement<K extends keyof globalThis.HTMLElementTagNameMap> (
   elementName: K,
   attributes: { [name: string]: string } = {},
   eventListeners: { [eventName: string]: globalThis.EventListener } = {},
-  // eslint-disable-next-line no-unused-vars
+
   onCreated: null | ((createdElement: globalThis.HTMLElementTagNameMap[K]) => void) = null
 ) {
   const element = document.createElement(elementName)

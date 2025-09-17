@@ -280,6 +280,7 @@ export const dataContentPane = {
     // or we could keep all the pre-smushed triples.
     const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
 
+    // eslint-disable-next-line no-constant-condition
     if (false) { // keep code
       alternativeRendering()
     } else {

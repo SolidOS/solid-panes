@@ -11,7 +11,7 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 
-export const socialPane =  {
+export const socialPane = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
 
   name: 'social',
@@ -255,7 +255,7 @@ export const socialPane =  {
 
       if (!profile) {
         say(
-          message + "\nI couldn't find your editable personal profile document."
+          message + '\nI couldn\'t find your editable personal profile document.'
         )
       } else {
         say('Editing your profile ' + profile + '.')

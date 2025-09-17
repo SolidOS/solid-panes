@@ -1,14 +1,13 @@
 /* eslint-env jest */
 
 import { TextEncoder, TextDecoder } from 'util'
-global.TextEncoder = TextEncoder as any
-global.TextDecoder = TextDecoder as any
-
 
 import OutlineManager from './manager'
 
 import { lit, NamedNode, sym, blankNode } from 'rdflib'
 import { findByText, getByText } from '@testing-library/dom'
+global.TextEncoder = TextEncoder as any
+global.TextDecoder = TextDecoder as any
 
 const MockPane = {
   render: (subject: NamedNode) => {

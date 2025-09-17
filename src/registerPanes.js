@@ -23,7 +23,7 @@ import audioPane from './audio/audioPane.js'
 import dokieliPane from './dokieli/dokieliPane.js'
 import folderPane from 'folder-pane'
 import { classInstancePane } from './classInstancePane.js'
-import { slideshowPane }  from './slideshow/slideshowPane.js'
+import { slideshowPane } from './slideshow/slideshowPane.js'
 import { socialPane } from './socialPane.js'
 import humanReadablePane from './humanReadablePane.js'
 
@@ -48,12 +48,12 @@ export function registerPanes (register) {
   // Developer designed:
 
   register(profilePane) // View someone's public profile - dominates all other panes.
-  const editProfileView = profilePane.editor ;
+  const editProfileView = profilePane.editor
   if (!editProfileView) {
-    console.log("@@@ editProfileView", "profilePane is not providing an editor pane")
+    console.log('@@@ editProfileView', 'profilePane is not providing an editor pane')
   }
 
-  register(editProfileView) // Edit my profile. 
+  register(editProfileView) // Edit my profile.
 
   register(trustedApplications) // must be registered before basicPreferences
   register(dashboardPane)
