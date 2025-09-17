@@ -1,6 +1,6 @@
 # Built code
 dist
-lib
+dist-dev
 src/versionInfo.ts
 
 # Logs
