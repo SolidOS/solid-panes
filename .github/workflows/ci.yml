@@ -24,9 +24,9 @@ jobs:
           - 22.x
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -47,10 +47,10 @@ jobs:
       needs: build
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/download-artifact@v4
+        - uses: actions/download-artifact@v5
           with:
             name: build
-        - uses: actions/setup-node@v4
+        - uses: actions/setup-node@v5
           with:
             node-version: 20.x
         - uses: rlespinasse/github-slug-action@v3.x
@@ -58,7 +58,7 @@ jobs:
           run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
         - name: Disable pre- and post-publish actions
           run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-        - uses: JS-DevTools/npm-publish@v2
+        - uses: JS-DevTools/npm-publish@v4
           if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
           with:
             token: ${{ secrets.NPM_TOKEN }}
@@ -69,15 +69,15 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: build
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 20.x
       - name: Disable pre- and post-publish actions
         run: 'sed -i -E "s/\"((pre|post)publish)/\"ignore:\1/" package.json'
-      - uses: JS-DevTools/npm-publish@v2
+      - uses: JS-DevTools/npm-publish@v4
         if: github.actor != 'dependabot[bot]' && github.actor != 'dependabot-preview[bot]'
         with:
           token: ${{ secrets.NPM_TOKEN }}
