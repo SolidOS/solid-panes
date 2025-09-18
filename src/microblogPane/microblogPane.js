@@ -487,7 +487,7 @@ export default {
           false
         )
 
-        this.tablist[id] = { view: view.id, tab: tab }
+        this.tablist[id] = { view: view.id, tab }
         this.tabView.appendChild(tab)
       }
       TabManager.prototype.getTabView = function () {
@@ -870,7 +870,7 @@ export default {
         xupdateContainer.addEventListener('submit', mbSubmitPost, false)
       } else {
         const xnewUser = doc.createTextNode(
-          "Hi, it looks like you don't have a microblog, " +
+          'Hi, it looks like you don\'t have a microblog, ' +
             ' would you like to create one? '
         )
         xcreateNewMB = doc.createElement('input')

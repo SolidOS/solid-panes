@@ -1,12 +1,6 @@
 /* eslint-env jest */
-
-import { TextEncoder, TextDecoder } from 'util'
-global.TextEncoder = TextEncoder as any
-global.TextDecoder = TextDecoder as any
-
-
 import { sym } from 'rdflib'
-import { propertyViews } from './propertyViews'
+import { propertyViews } from '../../../src/outline/propertyViews'
 
 describe('property views', () => {
   it.each([
@@ -30,7 +24,7 @@ describe('property views', () => {
     const view = views.defaults[property]
     const result = view(sym('mailto:alice@mail.example'))
     expect(result).toBeInstanceOf(HTMLAnchorElement)
-    expect(result).toHaveAttribute('href', 'mailto:alice@mail.example');
-    expect(result).toHaveTextContent('alice@mail.example');
+    expect(result).toHaveAttribute('href', 'mailto:alice@mail.example')
+    expect(result).toHaveTextContent('alice@mail.example')
   })
 })

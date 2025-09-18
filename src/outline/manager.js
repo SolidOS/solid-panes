@@ -175,7 +175,7 @@ export default function (context) {
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
     )
     td.setAttribute('notSelectable', 'false')
-    let theClass = 'obj'
+    const theClass = 'obj'
 
     // set about and put 'expand' icon
     if (
@@ -1439,7 +1439,7 @@ export default function (context) {
     } else if (e.srcElement) {
       target = e.srcElement
     } else {
-      UI.log.error("can't get target for event " + e)
+      UI.log.error('can\'t get target for event ' + e)
       return false
     } // fail
     if (target.nodeType === 3) {
@@ -1627,24 +1627,25 @@ export default function (context) {
       }
       case 39: // right
         // @@ TODO: Write away the need for exception on next line
-         
-        const obj = UI.utils.getAbout(kb, selectedTd)
-        if (obj) {
-          walk = this.walk
-          if (selectedTd.nextSibling) {
-            // when selectedTd is a predicate
-            this.walk('right')
-            return
+        {
+          const obj = UI.utils.getAbout(kb, selectedTd)
+          if (obj) {
+            walk = this.walk
+            if (selectedTd.nextSibling) {
+              // when selectedTd is a predicate
+              this.walk('right')
+              return
+            }
+            if (selectedTd.firstChild.tagName !== 'TABLE') {
+              // not expanded
+              sf.addCallback('done', setSelectedAfterward)
+              sf.addCallback('fail', setSelectedAfterward)
+              outlineExpand(selectedTd, obj, {
+                pane: paneRegistry.byName('defaultPane')
+              })
+            }
+            setSelectedAfterward()
           }
-          if (selectedTd.firstChild.tagName !== 'TABLE') {
-            // not expanded
-            sf.addCallback('done', setSelectedAfterward)
-            sf.addCallback('fail', setSelectedAfterward)
-            outlineExpand(selectedTd, obj, {
-              pane: paneRegistry.byName('defaultPane')
-            })
-          }
-          setSelectedAfterward()
         }
         break
       case 38: // up
@@ -2234,8 +2235,8 @@ export default function (context) {
 
     if (expand) {
       outlineExpand(td, subject, {
-        pane: pane,
-        solo: solo
+        pane,
+        solo
       })
       const tr = td.parentNode
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
@@ -2284,8 +2285,8 @@ export default function (context) {
     if (obj.termType === 'Literal') {
       const styles = {
         integer: 'text-align: right;',
-        decimal: "text-align: '.';",
-        double: "text-align: '.';"
+        decimal: 'text-align: \'.\';',
+        double: 'text-align: \'.\';'
       }
       rep = dom.createElement('span')
       rep.textContent = obj.value

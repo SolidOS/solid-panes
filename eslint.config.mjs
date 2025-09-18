@@ -1,34 +1,91 @@
-import typescriptEslint from "@typescript-eslint/eslint-plugin";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
+import tseslintPlugin from '@typescript-eslint/eslint-plugin'
+import globals from 'globals'
+import tsParser from '@typescript-eslint/parser'
+import neostandard from 'neostandard'
 
-export default [{
-    ignores: ["**/dist", "**/lib", "typings/rdflib"],
-}, {
+export default [
+  ...neostandard(),
+  {
+    ignores: [
+      'dist/**',
+      'docs/**',
+      'node_modules/**',
+      'dev/**',
+      'dev-dist/**',
+      'coverage/**',
+    ],
+  },
+  {
+    files: ['src/**/*.js', 'src/**/*.cjs', 'src/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        Atomics: 'readonly',
+        SharedArrayBuffer: 'readonly',
+      }
+    },
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-unused-vars': 'off', // handled by TS
+    }
+  },
+  {
+    files: ['src/**/*.ts'],
     plugins: {
-        "@typescript-eslint": typescriptEslint,
+      '@typescript-eslint': tseslintPlugin,
     },
 
     languageOptions: {
-        globals: {
-            ...globals.browser,
-            ...globals.node,
-            Atomics: "readonly",
-            SharedArrayBuffer: "readonly",
-        },
-
-        parser: tsParser,
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+        Atomics: 'readonly',
+        SharedArrayBuffer: 'readonly',
+      },
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.json']
+      },
     },
-    files: ["src/**/*.js", "src/**/*.ts", "src/**/*.cjs", "src/**/*.mjs"],
     rules: {
-        "no-unused-vars": ["warn", {
-            argsIgnorePattern: "^_",
-            varsIgnorePattern: "^_",
-        }],
-
-        "@typescript-eslint/no-unused-vars": ["warn", {
-            argsIgnorePattern: "^_",
-            varsIgnorePattern: "^_",
-        }],
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'warn',
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['warn', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+      }],
+      // '@typescript-eslint/no-explicit-any': 'warn', - codebase not ready for this
     },
-}];
+  },
+  {
+    files: ['test/**/*.ts'],
+    plugins: {
+      '@typescript-eslint': tseslintPlugin,
+    },
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        project: ['./tsconfig.test.json'],
+      },
+    },
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'off', // Allow console in tests
+      'no-undef': 'off', // Tests may define globals
+    }
+  },
+  {
+    files: ['test/**/**/*.js', 'test/**/*.js'],
+    rules: {
+      semi: ['error', 'never'],
+      quotes: ['error', 'single'],
+      'no-console': 'off', // Allow console in tests
+      'no-undef': 'off', // Tests may define globals
+    }
+  }
+]

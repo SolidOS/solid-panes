@@ -6,13 +6,10 @@
 
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
-const $rdf = UI.rdf
-const ns = UI.ns
 
 import formText from './formsForSchedule.js'
-
-
-
+const $rdf = UI.rdf
+const ns = UI.ns
 
 // @@ Give other combos too-- see schedule ontology
 const possibleAvailabilities = [
@@ -429,18 +426,18 @@ export const schedulePane = {
     }
 
     const initializeNewInstanceAtBase = function (thisInstance, newBase) {
-      const options = { thisInstance: thisInstance, newBase: newBase }
+      const options = { thisInstance, newBase }
       this.mintNew(context, options)
         .then(function (options) {
           const p = div.appendChild(dom.createElement('p'))
           p.setAttribute('style', 'font-size: 140%;')
           p.innerHTML =
-            "Your <a href='" +
+            'Your <a href=\'' +
             options.newInstance.uri +
-            "'><b>new scheduler</b></a> is ready to be set up. " +
-            "<br/><br/><a href='" +
+            '\'><b>new scheduler</b></a> is ready to be set up. ' +
+            '<br/><br/><a href=\'' +
             options.newInstance.uri +
-            "'>Say when you what days work for you.</a>"
+            '\'>Say when you what days work for you.</a>'
         })
         .catch(function (error) {
           complainIfBad(
@@ -509,7 +506,7 @@ export const schedulePane = {
 
     const showSignon = function showSignon () {
       clearElement(naviMain)
-      const signonContext = { div: div, dom: dom }
+      const signonContext = { div, dom }
       UI.login.ensureLoggedIn(signonContext).then(context => {
         me = context.me
         waitingForLogin = false // untested
@@ -1033,7 +1030,7 @@ export const schedulePane = {
 
       const dataPointForNT = []
 
-      const loginContext = { div: naviCenter, dom: dom }
+      const loginContext = { div: naviCenter, dom }
       UI.login.ensureLoggedIn(loginContext).then(context => {
         const me = context.me
         const doc = resultsDoc
