@@ -14,7 +14,7 @@ const REPORT_A_PROBLEM_MENU_ITEM = 'Report a problem'
 const SHOW_YOUR_PROFILE_MENU_ITEM = 'Show your profile'
 const LOG_OUT_MENU_ITEM = 'Log out'
 
-type UserMenuItem = { label: string; onclick: () => void } ;
+type UserMenuItem = { label: string; onclick: () => void }
 /**
  * URLS
  */
@@ -30,7 +30,7 @@ function setHeaderOptions () {
     { label: USER_GUIDE_MENU_ITEM, url: USER_GUIDE_MENU_URL, target: '_blank' },
     { label: REPORT_A_PROBLEM_MENU_ITEM, url: REPORT_A_PROBLEM_MENU_URL, target: '_blank' }
   ]
-  const headerOptions = { logo: SOLID_ICON_URL, helpIcon: HELP_MENU_ICON, helpMenuList: helpMenuList }
+  const headerOptions = { logo: SOLID_ICON_URL, helpIcon: HELP_MENU_ICON, helpMenuList }
 
   return headerOptions
 }
@@ -49,14 +49,14 @@ async function setUserMenu (outliner: any) {
   }
 
   // the order of the menu is important here, show profile first and logout last
-  let userMenuList:UserMenuItem[] = [] // was [showProfile] 
-  userMenuList = userMenuList.concat(await getMenuItems(outliner));
+  let userMenuList:UserMenuItem[] = [] // was [showProfile]
+  userMenuList = userMenuList.concat(await getMenuItems(outliner))
   userMenuList.push(logOut)
 
   return userMenuList
 }
 
-// Does not work to jump to user profile, 
+// Does not work to jump to user profile,
 function openUserProfile (outliner: any) {
   outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
   location.reload()

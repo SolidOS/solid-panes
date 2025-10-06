@@ -3,8 +3,8 @@
  **  This pane allows playlists and playlists slots to be viewed
  **  seeAlso: http://smiy.sourceforge.net/pbo/spec/playbackontology.html
  */
- import * as UI from 'solid-ui'
- import * as $rdf from 'rdflib'
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
 export default {
@@ -50,19 +50,19 @@ export default {
 
       if (youtube) {
         return {
-          youtube: youtube
+          youtube
         }
       } else if (vimeo) {
         return {
-          vimeo: vimeo
+          vimeo
         }
       } else if (dailymotion) {
         return {
-          dailymotion: dailymotion
+          dailymotion
         }
       } else if (vk) {
         return {
-          vk: vk
+          vk
         }
       }
     }

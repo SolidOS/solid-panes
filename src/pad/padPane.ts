@@ -392,12 +392,12 @@ const paneDef: PaneDefinition = {
         const p = div.appendChild(dom.createElement('p'))
         p.setAttribute('style', 'font-size: 140%;')
         p.innerHTML =
-          "Your <a href='" +
+          'Your <a href=\'' +
           newIndexDoc.uri +
-          "'><b>new notepad</b></a> is ready. " +
-          "<br/><br/><a href='" +
+          '\'><b>new notepad</b></a> is ready. ' +
+          '<br/><br/><a href=\'' +
           newIndexDoc.uri +
-          "'>Go to new pad</a>"
+          '\'>Go to new pad</a>'
       })
 
       agenda.shift()!()
@@ -547,7 +547,7 @@ const paneDef: PaneDefinition = {
     naviMenu.appendChild(dom.createElement('td'))
     naviMenu.appendChild(dom.createElement('td'))
 
-    const options: any = { statusArea: statusArea, timingArea: naviMiddle1 }
+    const options: any = { statusArea, timingArea: naviMiddle1 }
 
     loadPadData()
 

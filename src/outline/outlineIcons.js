@@ -2,7 +2,6 @@
 
 import * as UI from 'solid-ui'
 
-
 export const outlineIcons = {}
 
 outlineIcons.src = [] // collect the URIs of the icon filterColumns

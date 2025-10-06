@@ -8,7 +8,7 @@ import { getOutliner } from '../index'
 import { createHeader } from './header'
 import { createFooter } from './footer'
 
-export default async function initMainPage (store: LiveStore, uri?: string|NamedNode|null) {
+export default async function initMainPage (store: LiveStore, uri?: string | NamedNode | null) {
   const outliner = getOutliner(document)
   uri = uri || window.location.href
   let subject = uri
