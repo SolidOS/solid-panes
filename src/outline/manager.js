@@ -490,7 +490,7 @@ export default function (context) {
     })
 
     // close the dashboard if user log out
-    authSession.events.on("logout", closeDashboard)
+    authSession.events.on('logout', closeDashboard)
 
     // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
