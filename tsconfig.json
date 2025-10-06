@@ -53,7 +53,8 @@
     "typeRoots": [
       "node_modules/@types",
       "node_modules/@testing-library",
-      "./typings"
+      "typings",
+      "/src/types.ts"
     ] /* List of folders to include type definitions from. */,
     // "types": [],                           /* Type declaration files to be included in compilation. */
     // "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
@@ -70,6 +71,9 @@
     // "experimentalDecorators": true,        /* Enables experimental support for ES7 decorators. */
     // "emitDecoratorMetadata": true,         /* Enables experimental support for emitting type metadata for decorators. */
   },
-  "include": ["src/**/*"],
+  "include": [
+    "src/**/*",
+    "/typings/**/*"
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -7,7 +7,7 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 
-import formText from './formsForSchedule.js'
+import formText from './formsForSchedule.ttl'
 const $rdf = UI.rdf
 const ns = UI.ns
 

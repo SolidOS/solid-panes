@@ -8,6 +8,7 @@ export default [
   {
     ignores: [
       'dist/**',
+      'lib/**',
       'docs/**',
       'node_modules/**',
       'dev/**',
