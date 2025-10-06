@@ -1,14 +1,14 @@
 interface SolidAuthorization {
-   
+
   access_token: string
-   
+
   client_id: string
-   
+
   id_token: string
 }
 
 interface SolidClaim {
-   
+
   at_hash: string
   aud: string
   azp: string

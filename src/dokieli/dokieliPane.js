@@ -181,7 +181,7 @@ export default {
       console.log('dokieliPane: unknown content-type?')
     }
 
-   const tr = myDocument.createElement('tr')
+    const tr = myDocument.createElement('tr')
     tr.appendChild(iframe)
     div.appendChild(tr)
     return div

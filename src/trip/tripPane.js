@@ -122,7 +122,7 @@ export default {
         }
       }
       const tableDiv = UI.table(myDocument, {
-        query: query,
+        query,
         onDone: calculations
       })
       thisDiv.appendChild(tableDiv)

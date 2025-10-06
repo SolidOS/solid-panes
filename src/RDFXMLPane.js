@@ -8,7 +8,7 @@
 import * as UI from 'solid-ui'
 const ns = UI.ns
 
-export const RDFXMLPane =  {
+export const RDFXMLPane = {
   icon: UI.icons.originalIconBase + '22-text-xml4.png',
 
   name: 'RDFXML',

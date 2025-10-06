@@ -32,7 +32,7 @@ const HomePaneSource: PaneDefinition = {
   render: function (subject, context) {
     const dom = context.dom
     const showContent = async function () {
-      const homePaneContext = { div: div, dom: dom, statusArea: div, me: me }
+      const homePaneContext = { div, dom, statusArea: div, me }
       /*
             div.appendChild(dom.createElement('h4')).textContent = 'Login status'
             var loginStatusDiv = div.appendChild(context.dom.createElement('div'))
@@ -47,9 +47,9 @@ const HomePaneSource: PaneDefinition = {
       const creationDiv = div.appendChild(dom.createElement('div'))
       const creationContext: CreateContext = {
         div: creationDiv,
-        dom: dom,
+        dom,
         statusArea: div,
-        me: me
+        me
       }
       const relevantPanes = await login.filterAvailablePanes(
         context.session.paneRegistry.list

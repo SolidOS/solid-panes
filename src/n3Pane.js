@@ -7,7 +7,7 @@
 import * as UI from 'solid-ui'
 const ns = UI.ns
 
-export const n3Pane =  {
+export const n3Pane = {
   icon: UI.icons.originalIconBase + 'w3c/n3_smaller.png',
 
   name: 'n3',

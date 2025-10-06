@@ -2,9 +2,9 @@
  **
  */
 import * as UI from 'solid-ui'
-const ns = UI.ns
 
 import makeBSS from '@solid/better-simple-slideshow'
+const ns = UI.ns
 
 export const slideshowPane = {
   icon: UI.icons.iconBase + 'noun_138712.svg',
@@ -57,17 +57,17 @@ export const slideshowPane = {
 
       // get image with authenticated fetch
       store.fetcher._fetch(images[i].uri)
-        .then(function(response) {
+        .then(function (response) {
           return response.blob()
         })
-        .then(function(myBlob) {
+        .then(function (myBlob) {
           const objectURL = URL.createObjectURL(myBlob)
           img.setAttribute('src', objectURL) // w640 h480 //
         })
       img.setAttribute('width', '100%')
       figure.appendChild(dom.createElement('figcaption'))
     }
-    const options = { dom: dom }
+    const options = { dom }
 
     setTimeout(function () {
       makeBSS('.bss-slides', options)
