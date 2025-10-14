@@ -30,6 +30,10 @@ export default [
           use: {
             loader: 'babel-loader'
           }
+        },
+        {
+          test: /\.css$/i,
+          use: ['style-loader', 'css-loader']
         }
       ]
     },
@@ -40,7 +44,8 @@ export default [
       xmldom: 'window',
       'text-encoding': 'TextEncoder',
       'whatwg-url': 'window',
-      '@trust/webcrypto': 'crypto'
+      '@trust/webcrypto': 'crypto',
+      window: 'window'
     },
     devServer: {
       static: './dist',

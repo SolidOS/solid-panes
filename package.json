@@ -30,7 +30,7 @@
     "preversion": "npm run lint && npm run typecheck && npm test",
     "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && babel src -d dist --source-maps --extensions '.ts,.js' --watch",
-    "start": "npm install && npm run build-version && npx webpack serve --open"
+    "start": "npm run build-version && npx webpack serve --open"
   },
   "repository": {
     "type": "git",
@@ -89,6 +89,7 @@
     "babel-loader": "^10.0.0",
     "babel-plugin-inline-import": "^3.0.0",
     "buffer": "^6.0.3",
+    "css-loader": "^7.1.2",
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
     "html-webpack-plugin": "^5.6.3",
@@ -96,11 +97,12 @@
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fetch-mock": "^3.0.3",
-    "node-polyfill-webpack-plugin": "^4.1.0",
     "neostandard": "^0.12.2",
+    "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "style-loader": "^4.0.0",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2",
     "webpack": "^5.101.0",
