@@ -54,7 +54,8 @@
       "node_modules/@types",
       "node_modules/@testing-library",
       "typings",
-      "/src/types.ts"
+      "src/types.ts",
+      "declarations.d.ts",
     ] /* List of folders to include type definitions from. */,
     // "types": [],                           /* Type declaration files to be included in compilation. */
     // "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
@@ -73,7 +74,8 @@
   },
   "include": [
     "src/**/*",
-    "/typings/**/*"
+    "typings/**/*",
+    "declarations.d.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

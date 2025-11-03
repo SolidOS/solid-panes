@@ -11,15 +11,15 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rm -rf dist dist-dev src/versionInfo.ts",
+    "clean": "rm -rf dist src/versionInfo.ts",
     "build": "npm run clean && npm run build-version && npm run build-js && npm run postbuild-js",
     "build-version": "./timestamp.sh > src/versionInfo.ts  && eslint 'src/versionInfo.ts' --fix",
     "build-js": "npm run build-types && npm run build-babel",
     "build-types": "tsc --emitDeclarationOnly",
     "build-babel": "babel src --out-dir dist --extensions '.ts,.js' --source-maps",
     "postbuild-js": "rm -f dist/versionInfo.d.ts dist/versionInfo.d.ts.map",
-    "build-dev": "webpack --progress --mode=development",
     "lint": "eslint",
+    "lint-fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "typecheck-test": "tsc --noEmit -p tsconfig.test.json",
     "test": "jest --no-coverage",
@@ -30,7 +30,8 @@
     "preversion": "npm run lint && npm run typecheck && npm test",
     "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && babel src -d dist --source-maps --extensions '.ts,.js' --watch",
-    "start": "npm install && npm run build-version && npx webpack serve --open"
+    "start": "webpack serve --config webpack.dev.config.js --open"
+   
   },
   "repository": {
     "type": "git",
