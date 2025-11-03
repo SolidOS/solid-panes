@@ -31,7 +31,6 @@
     "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && babel src -d dist --source-maps --extensions '.ts,.js' --watch",
     "start": "webpack serve --config webpack.dev.config.js --open"
-   
   },
   "repository": {
     "type": "git",
@@ -58,21 +57,20 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "^0.7.1",
-    "chat-pane": "^2.5.1",
-    "contacts-pane": "^2.7.1",
+    "activitystreams-pane": "^0.7.1-dfe75bf9",
+    "chat-pane": "^2.5.1-c9500d87",
+    "contacts-pane": "^2.7.1-e839bc9e",
     "dompurify": "^3.2.6",
-    "folder-pane": "^2.5.1",
-    "issue-pane": "^2.6.1",
-    "lint-staged": "^16.1.6",
+    "folder-pane": "^2.5.1-2ae26502",
+    "issue-pane": "^2.6.1-0dab7458",
     "marked": "^16.1.2",
-    "meeting-pane": "^2.5.1",
+    "meeting-pane": "^2.5.1-5bcdc67c",
     "mime-types": "^3.0.1",
-    "profile-pane": "^1.2.1",
+    "profile-pane": "^1.2.1-776fad76",
     "rdflib": "^2.2.37",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "^2.6.1",
-    "source-pane": "^2.3.1"
+    "solid-ui": "^2.6.1-b384f98",
+    "source-pane": "^2.3.1-a2a6790e"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
@@ -97,8 +95,9 @@
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fetch-mock": "^3.0.3",
-    "node-polyfill-webpack-plugin": "^4.1.0",
+    "lint-staged": "^16.2.6",
     "neostandard": "^0.12.2",
+    "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
