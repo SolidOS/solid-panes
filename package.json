@@ -58,10 +58,10 @@
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "0.7.1-dfe75bf9",
-    "chat-pane": "^2.5.1-2b10771e",
+    "chat-pane": "2.5.1-2b10771e",
     "contacts-pane": "2.7.1-6b7e6809",
     "dompurify": "^3.2.6",
-    "folder-pane": "^2.5.1-a0c75290",
+    "folder-pane": "2.5.1-a0c75290",
     "issue-pane": "2.6.1-0dab7458",
     "marked": "^16.1.2",
     "meeting-pane": "2.5.1-5bcdc67c",
