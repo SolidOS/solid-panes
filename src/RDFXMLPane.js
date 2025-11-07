@@ -6,6 +6,8 @@
  */
 
 import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
+
 const ns = UI.ns
 
 export const RDFXMLPane = {
@@ -46,7 +48,7 @@ export const RDFXMLPane = {
         kludge.add(s.subject, s.predicate, s.object)
     }
     */
-    const sz = UI.rdf.Serializer(kb)
+    const sz = $rdf.Serializer(kb)
     sz.suggestNamespaces(kb.namespaces)
     sz.setBase(subject.uri)
     const str = sz.statementsToXML(sts)

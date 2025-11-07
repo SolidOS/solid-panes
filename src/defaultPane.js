@@ -7,6 +7,7 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+
 const ns = UI.ns
 
 export const defaultPane = {
@@ -66,7 +67,7 @@ export const defaultPane = {
     }
     if (
       (subject.termType === 'NamedNode' &&
-        kb.updater.editable(UI.rdf.Util.uri.docpart(subject.uri), kb)) ||
+        kb.updater.editable($rdf.Util.uri.docpart(subject.uri), kb)) ||
       (subject.termType === 'BlankNode' &&
         kb.anyStatementMatching(subject) &&
         kb.anyStatementMatching(subject).why &&

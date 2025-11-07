@@ -6,9 +6,9 @@
 
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
-
+import * as $rdf from 'rdflib'
 import formText from './formsForSchedule.ttl'
-const $rdf = UI.rdf
+
 const ns = UI.ns
 
 // @@ Give other combos too-- see schedule ontology

@@ -10,6 +10,7 @@
 
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 
 export const socialPane = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -320,7 +321,7 @@ export const socialPane = {
         if (editable) {
           const f = buildCheckboxForm(
             'You know ' + familiar,
-            new UI.rdf.Statement(me, knows, s, profile),
+            new $rdf.Statement(me, knows, s, profile),
             outgoing
           )
           tools.appendChild(f)

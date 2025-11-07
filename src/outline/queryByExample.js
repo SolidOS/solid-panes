@@ -8,6 +8,7 @@
 
 import { store } from 'solid-logic'
 import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 
 const optionalSubqueriesIndex = []
 
@@ -35,9 +36,9 @@ export function makeQueryRow (q, tr, constraint) {
 
   function makeRDFStatement (freeVar, parent) {
     if (inverse) {
-      return new UI.rdf.Statement(freeVar, st.predicate, parent)
+      return new $rdf.Statement(freeVar, st.predicate, parent)
     } else {
-      return new UI.rdf.Statement(parent, st.predicate, freeVar)
+      return new $rdf.Statement(parent, st.predicate, freeVar)
     }
   }
 
@@ -145,7 +146,7 @@ export function makeQueryRow (q, tr, constraint) {
 
 function saveQuery (selection, qs) {
   // var qs = outline.qs // @@
-  const q = new UI.rdf.Query()
+  const q = new $rdf.Query()
   const n = selection.length
   let i, sel, st, tr
   for (i = 0; i < n; i++) {

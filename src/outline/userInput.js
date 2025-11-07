@@ -14,8 +14,7 @@
 import * as UI from 'solid-ui'
 import { store } from 'solid-logic'
 import * as panes from 'pane-registry'
-
-const $rdf = UI.rdf
+import * as $rdf from 'rdflib'
 
 let UserInputFormula // Formula to store references of user's work
 let TempFormula // Formula to store incomplete triples (Requests),
@@ -49,23 +48,23 @@ export function UserInput (outline) {
   // var rss = UI.ns.rss
   // var contact = UI.ns.contact
   // var mo = UI.ns.mo
-  const bibo = UI.rdf.Namespace('http://purl.org/ontology/bibo/') // hql for pubsPane
-  // var dcterms = UI.rdf.Namespace('http://purl.org/dc/terms/')
-  const dcelems = UI.rdf.Namespace('http://purl.org/dc/elements/1.1/')
+  const bibo = $rdf.Namespace('http://purl.org/ontology/bibo/') // hql for pubsPane
+  // var dcterms = $rdf.Namespace('http://purl.org/dc/terms/')
+  const dcelems = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
 
   let movedArrow = false // hq
 
   // var updateService=new updateCenter(kb);
 
   if (!UserInputFormula) {
-    UserInputFormula = new UI.rdf.Formula()
+    UserInputFormula = new $rdf.Formula()
     UserInputFormula.superFormula = store
     // UserInputFormula.registerFormula("Your Work");
   }
-  if (!TempFormula) TempFormula = new UI.rdf.IndexedFormula()
+  if (!TempFormula) TempFormula = new $rdf.IndexedFormula()
   // Use RDFIndexedFormula so add returns the statement
   TempFormula.name = 'TempFormula'
-  if (!store.updater) store.updater = new UI.rdf.UpdateManager(store)
+  if (!store.updater) store.updater = new $rdf.UpdateManager(store)
 
   return {
     // updateService: updateService,
@@ -125,7 +124,7 @@ export function UserInput (outline) {
           store,
           UI.utils.ancestor(target.parentNode.parentNode, 'TD')
         )
-        const doc = store.sym(UI.rdf.Util.uri.docpart(subject.uri))
+        const doc = store.sym($rdf.Util.uri.docpart(subject.uri))
         This.formUndetStat(insertTr, subject, reqTerm1, reqTerm2, doc, false)
       }
 
@@ -442,7 +441,7 @@ export function UserInput (outline) {
           this.clearInputAndSave()
           return
         } else if (this.lastModified.isNew) {
-          s = new UI.rdf.Statement(
+          s = new $rdf.Statement(
             s.subject,
             s.predicate,
             store.literal(this.lastModified.value),
@@ -1896,7 +1895,7 @@ export function UserInput (outline) {
         let theNamespace = '??'
         for (const name in NameSpaces) {
           UI.log.debug(NameSpaces[name])
-          if (UI.rdf.Util.string_startswith(predicate.uri, NameSpaces[name])) {
+          if ($rdf.Util.string_startswith(predicate.uri, NameSpaces[name])) {
             theNamespace = name
             break
           }
@@ -2198,7 +2197,7 @@ export function UserInput (outline) {
         // ToDo: How to link two things with an inverse relationship
         const newTd = outline.outlinePredicateTD(inputTerm, tr, false, false)
         if (selectedTd.nextSibling.className !== 'undetermined') {
-          const s = new UI.rdf.Statement(
+          const s = new $rdf.Statement(
             stat.subject,
             inputTerm,
             stat.object,
@@ -2266,14 +2265,14 @@ export function UserInput (outline) {
         ) {
           let s
           if (!isInverse) {
-            s = new UI.rdf.Statement(
+            s = new $rdf.Statement(
               stat.subject,
               stat.predicate,
               inputTerm,
               stat.why
             )
           } else {
-            s = new UI.rdf.Statement(
+            s = new $rdf.Statement(
               inputTerm,
               stat.predicate,
               stat.object,
