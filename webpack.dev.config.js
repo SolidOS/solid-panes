@@ -12,9 +12,9 @@ export default [
     resolve: {
       extensions: ['.mjs', '.js', '.ts'],
       alias: {
-        'SolidUI': 'solid-ui',
-        'SolidLogic': 'solid-logic',
-        '$rdf': 'rdflib'
+        SolidUI: 'solid-ui',
+        SolidLogic: 'solid-logic',
+        $rdf: 'rdflib'
       }
     },
     module: {
@@ -30,9 +30,9 @@ export default [
     },
     externals: {
       'solid-ui': 'UI',
-      'SolidUI': 'UI',
+      SolidUI: 'UI',
       'solid-logic': 'SolidLogic',
-      'SolidLogic': 'SolidLogic',
+      SolidLogic: 'SolidLogic',
       rdflib: '$rdf'
     },
     devServer: {
