@@ -10,7 +10,12 @@ export default [
       new NodePolyfillPlugin()
     ],
     resolve: {
-      extensions: ['.mjs', '.js', '.ts']
+      extensions: ['.mjs', '.js', '.ts'],
+      alias: {
+        'SolidUI': 'solid-ui',
+        'SolidLogic': 'solid-logic',
+        '$rdf': 'rdflib'
+      }
     },
     module: {
       rules: [
@@ -23,8 +28,20 @@ export default [
         }
       ]
     },
+    externals: {
+      'solid-ui': 'UI',
+      'SolidUI': 'UI',
+      'solid-logic': 'SolidLogic',
+      'SolidLogic': 'SolidLogic',
+      rdflib: '$rdf'
+    },
     devServer: {
-      static: './dist',
+      static: ['./dev',
+        {
+          directory: './node_modules',
+          publicPath: '/node_modules'
+        }
+      ],
       compress: true,
       port: 9000
     },

@@ -57,20 +57,24 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "0.7.1-dfe75bf9",
-    "chat-pane": "2.5.1-2b10771e",
-    "contacts-pane": "2.7.1-6b7e6809",
+    "activitystreams-pane": "^0.7.1-5dc71b7d",
+    "chat-pane": "^2.5.1-81b8f52c",
+    "contacts-pane": "^2.7.1-bcdf51c6",
     "dompurify": "^3.2.6",
-    "folder-pane": "2.5.1-a0c75290",
-    "issue-pane": "2.6.1-0dab7458",
+    "folder-pane": "^2.5.1-c9231ac6",
+    "issue-pane": "^2.6.1-b6734c9d",
     "marked": "^16.1.2",
-    "meeting-pane": "2.5.1-5bcdc67c",
+    "meeting-pane": "^2.5.1-f652b85a",
     "mime-types": "^3.0.1",
-    "profile-pane": "1.2.1-df8d0a5a",
-    "rdflib": "^2.2.37",
+    "pane-registry": "^2.5.1-4c50f58",
+    "profile-pane": "^1.2.1-2e215f3f",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "2.6.1-b384f98",
-    "source-pane": "2.3.1-a2a6790e"
+    "source-pane": "^2.3.1-a2f864b8"
+  },
+  "peerDependencies": {
+    "rdflib": "^2.2.37",
+    "solid-logic": "3.1.1-d167ace",
+    "solid-ui": "2.6.1-6458d4e"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
@@ -91,31 +95,21 @@
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
     "html-webpack-plugin": "^5.6.3",
-    "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fetch-mock": "^3.0.3",
-    "lint-staged": "^16.2.6",
     "neostandard": "^0.12.2",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
+    "rdflib": "^2.2.37",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "solid-logic": "^3.1.1-d167ace",
+    "solid-ui": "^2.6.1-6458d4e",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2",
     "webpack": "^5.101.0",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "npm test"
-    }
-  },
-  "lint-staged": {
-    "src/**/*.(js|ts)": [
-      "eslint"
-    ]
   }
 }
