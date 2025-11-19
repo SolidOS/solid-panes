@@ -9,16 +9,16 @@ export default [
       new HtmlWebpackPlugin({ template: './dev/index.html' }),
       new NodePolyfillPlugin()
     ],
+    externals: {
+      'rdflib': '$rdf',
+      '$rdf': '$rdf',
+      'solid-logic': 'SolidLogic',
+      'SolidLogic': 'SolidLogic', 
+      'solid-ui': 'UI',
+      'UI': 'UI'
+    },
     resolve: {
-      extensions: ['.mjs', '.js', '.ts'],
-      alias: {
-        $rdf: 'rdflib',
-        rdflib: 'rdflib',
-        SolidLogic: 'solid-logic',
-        'solid-logic': 'solid-logic',
-        UI: 'solid-ui',
-        'solid-ui': 'solid-ui'
-      }
+      extensions: ['.mjs', '.js', '.ts']
     },
     module: {
       rules: [
@@ -32,7 +32,13 @@ export default [
       ]
     },
     devServer: {
-      static: './dev',
+      static: [
+        './dev',
+        {
+          directory: './node_modules',
+          publicPath: '/node_modules'
+        }
+      ],
       compress: true,
       port: 9000
     },
