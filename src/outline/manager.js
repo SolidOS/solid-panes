@@ -28,7 +28,7 @@ export default function (context) {
   let selection = []
   this.selection = selection
   this.ancestor = UI.utils.ancestor // make available as outline.ancestor in callbacks
-  this.sparql = UI.rdf.UpdateManager
+  this.sparql = $rdf.UpdateManager
   this.kb = store
   const kb = store
   const sf = store.fetcher
@@ -106,7 +106,7 @@ export default function (context) {
 
   this.appendAccessIcon = function (node, uri) {
     if (!uri) return ''
-    const docuri = UI.rdf.uri.docpart(uri)
+    const docuri = $rdf.uri.docpart(uri)
     if (docuri.slice(0, 5) !== 'http:') return ''
     const state = sf.getState(docuri)
     let icon, alt, listener
@@ -1142,7 +1142,7 @@ export default function (context) {
         console.log(e)
         baseURI = ''
       }
-      const relativeIconSrc = UI.rdf.uri.join(icon.src, baseURI)
+      const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
       if (eltSrc === relativeIconSrc) {
         iconTD.removeChild(elt)
       }
@@ -1777,11 +1777,11 @@ export default function (context) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
-      sf.fetch(UI.rdf.uri.docpart(uri), {
+      sf.fetch($rdf.uri.docpart(uri), {
         force: true
       }) // Add 'force' bit?
     } else {
-      sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))) // just one
+      sf.refresh(kb.sym($rdf.uri.docpart(uri))) // just one
     }
   }
 
@@ -1790,18 +1790,18 @@ export default function (context) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
-      sf.fetch(UI.rdf.uri.docpart(uri), {
+      sf.fetch($rdf.uri.docpart(uri), {
         force: true
       })
     } else {
-      sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))) // just one
+      sf.refresh(kb.sym($rdf.uri.docpart(uri))) // just one
     }
   }
 
   function unrequestedIconMouseDownListener (e) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
-    sf.fetch(UI.rdf.uri.docpart(uri))
+    sf.fetch($rdf.uri.docpart(uri))
   }
 
   function removeNodeIconMouseDownListener (e) {
@@ -1949,7 +1949,7 @@ export default function (context) {
     sf.removeCallback('fail', 'expand')
 
     let subject = kb.canon(subject1)
-    // var requTerm = subject.uri ? kb.sym(UI.rdf.uri.docpart(subject.uri)) : subject
+    // var requTerm = subject.uri ? kb.sym($rdf.uri.docpart(subject.uri)) : subject
 
     function render () {
       subject = kb.canon(subject)
@@ -2014,7 +2014,7 @@ export default function (context) {
           already
       )
       // var term = kb.sym(uri)
-      const docTerm = kb.sym(UI.rdf.uri.docpart(uri))
+      const docTerm = kb.sym($rdf.uri.docpart(uri))
       if (uri.indexOf('#') >= 0) {
         throw new Error('Internal error: hash in ' + uri)
       }
@@ -2027,7 +2027,7 @@ export default function (context) {
         for (let i = 0; i < as.length; i++) {
           // canon'l uri or any alias
           for (
-            let rd = UI.rdf.uri.docpart(as[i]);
+            let rd = $rdf.uri.docpart(as[i]);
             rd;
             rd = kb.HTTPRedirects[rd]
           ) {

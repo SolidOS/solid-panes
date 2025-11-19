@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "3.7.3",
+  "version": "3.7.3-newStyle",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,15 +11,15 @@
     "LICENSE"
   ],
   "scripts": {
-    "clean": "rm -rf dist dist-dev src/versionInfo.ts",
-    "build": "npm run clean && npm run build-version && npm run build-js && npm run postbuild-js",
-    "build-version": "./timestamp.sh > src/versionInfo.ts  && eslint 'src/versionInfo.ts' --fix",
-    "build-js": "npm run build-types && npm run build-babel",
+    "clean": "rm -rf dist src/versionInfo.ts",
+    "build": "npm run clean && npm run build-version && npm run typecheck && npm run build-dist && npm run postbuild-js",
+    "build-version": "./timestamp.sh > src/versionInfo.ts && eslint 'src/versionInfo.ts' --fix",
+    "build-dist": "npm run build-js && npm run build-types",
+    "build-js": "babel src --out-dir dist --extensions '.ts,.js' --source-maps",
     "build-types": "tsc --emitDeclarationOnly",
-    "build-babel": "babel src --out-dir dist --extensions '.ts,.js' --source-maps",
     "postbuild-js": "rm -f dist/versionInfo.d.ts dist/versionInfo.d.ts.map",
-    "build-dev": "webpack --progress --mode=development",
     "lint": "eslint",
+    "lint-fix": "eslint --fix",
     "typecheck": "tsc --noEmit",
     "typecheck-test": "tsc --noEmit -p tsconfig.test.json",
     "test": "jest --no-coverage",
@@ -30,11 +30,11 @@
     "preversion": "npm run lint && npm run typecheck && npm test",
     "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && babel src -d dist --source-maps --extensions '.ts,.js' --watch",
-    "start": "npm run build-version && npx webpack serve --open"
+    "start": "webpack serve --config webpack.dev.config.js --open"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/solidos/solid-panes"
+    "url": "git+https://github.com/solidos/solid-panes.git"
   },
   "keywords": [
     "solid",
@@ -57,21 +57,24 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "^0.7.1",
-    "chat-pane": "^2.5.1",
-    "contacts-pane": "^2.7.1",
+    "activitystreams-pane": "^0.7.1-5da248fa",
+    "chat-pane": "^2.5.1-8a75927f",
+    "contacts-pane": "^2.7.1-c1e2f19a",
     "dompurify": "^3.2.6",
-    "folder-pane": "^2.5.1",
-    "issue-pane": "^2.6.1",
-    "lint-staged": "^16.1.6",
-    "marked": "^16.1.2",
-    "meeting-pane": "^2.5.1",
+    "folder-pane": "^2.5.1-b014dfaf",
+    "issue-pane": "^2.6.1-fec664db",
+    "marked": "^17.0.0",
+    "meeting-pane": "^2.5.1-8ac4653c",
     "mime-types": "^3.0.1",
-    "profile-pane": "^1.2.1",
-    "rdflib": "^2.2.37",
+    "pane-registry": "^2.5.1-cfba46d",
+    "profile-pane": "^1.2.1-newStyle",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "^2.6.1",
-    "source-pane": "^2.3.1"
+    "source-pane": "^2.3.1-d61e2165"
+  },
+  "peerDependencies": {
+    "rdflib": "^2.3.0",
+    "solid-logic": "3.1.1-a44ca66",
+    "solid-ui": "2.6.1-e78cbe5"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
@@ -82,7 +85,6 @@
     "@testing-library/jest-dom": "^6.6.4",
     "@types/jest": "^30.0.0",
     "@types/webpack-env": "^1.18.8",
-    "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "@webpack-cli/serve": "^3.0.1",
     "babel-jest": "^30.1.2",
@@ -93,31 +95,22 @@
     "eslint": "^9.33.0",
     "globals": "^16.3.0",
     "html-webpack-plugin": "^5.6.3",
-    "husky": "^9.1.7",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
     "jest-fetch-mock": "^3.0.3",
     "neostandard": "^0.12.2",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
+    "rdflib": "^2.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "style-loader": "^4.0.0",
+    "solid-logic": "3.1.1-a44ca66",
+    "solid-ui": "2.6.1-e78cbe5",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2",
     "webpack": "^5.101.0",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.2"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "pre-push": "npm test"
-    }
-  },
-  "lint-staged": {
-    "src/**/*.(js|ts)": [
-      "eslint"
-    ]
   }
 }

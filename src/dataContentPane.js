@@ -10,6 +10,8 @@
 //         - original source view?  Use ffox view source
 
 import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
+
 const ns = UI.ns
 
 export const dataContentPane = {
@@ -44,7 +46,7 @@ export const dataContentPane = {
     const myDocument = context.dom
     // const outliner = context.getOutliner(myDocument)
     const rep = myDocument.createElement('table')
-    const sz = UI.rdf.Serializer(context.session.store)
+    const sz = $rdf.Serializer(context.session.store)
     const res = sz.rootSubjects(sts)
     let roots = res.roots
     const subjects = res.subjects
@@ -229,7 +231,7 @@ export const dataContentPane = {
     const myDocument = context.dom
 
     function alternativeRendering () {
-      const sz = UI.rdf.Serializer(context.session.store)
+      const sz = $rdf.Serializer(context.session.store)
       const res = sz.rootSubjects(sts)
       const roots = res.roots
       const p = {}
