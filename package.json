@@ -57,24 +57,24 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "0.7.1-6c12dae0",
-    "chat-pane": "2.5.1-1110d9b4",
-    "contacts-pane": "2.7.1-a03bb384",
+    "activitystreams-pane": "^0.7.1-5da248fa",
+    "chat-pane": "^2.5.1-8a75927f",
+    "contacts-pane": "^2.7.1-c1e2f19a",
     "dompurify": "^3.2.6",
-    "folder-pane": "2.5.1-544a7d63",
-    "issue-pane": "2.6.1-42ae3419",
-    "marked": "^16.1.2",
-    "meeting-pane": "2.5.1-ffc0ff92",
+    "folder-pane": "^2.5.1-b014dfaf",
+    "issue-pane": "^2.6.1-fec664db",
+    "marked": "^17.0.0",
+    "meeting-pane": "^2.5.1-8ac4653c",
     "mime-types": "^3.0.1",
-    "pane-registry": "2.5.1-ee1545f",
-    "profile-pane": "1.2.1-57c80dce",
+    "pane-registry": "^2.5.1-cfba46d",
+    "profile-pane": "^1.2.1-761bd8dd",
     "solid-namespace": "^0.5.4",
-    "source-pane": "2.3.1-29f78e72"
+    "source-pane": "^2.3.1-d61e2165"
   },
   "peerDependencies": {
     "rdflib": "^2.3.0",
-    "solid-logic": "3.1.1-3343cc7",
-    "solid-ui": "2.6.1-c6fc7fe"
+    "solid-logic": "3.1.1-a44ca66",
+    "solid-ui": "2.6.1-e78cbe5"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
@@ -104,8 +104,8 @@
     "rdflib": "^2.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "solid-logic": "3.1.1-3343cc7",
-    "solid-ui": "2.6.1-c6fc7fe",
+    "solid-logic": "3.1.1-a44ca66",
+    "solid-ui": "2.6.1-e78cbe5",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2",
     "webpack": "^5.101.0",
