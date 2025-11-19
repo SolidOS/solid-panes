@@ -3,6 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <title>Solid Pane Tester</title>
+    <!-- Load dependencies as globals -->
+    <script src="/node_modules/rdflib/dist/rdflib.min.js"></script>
+    <script src="/node_modules/solid-logic/dist/solid-logic.js"></script> 
+    <script src="/node_modules/solid-ui/dist/solid-ui.js"></script>
+    <script>
+        // Ensure the globals are available with the right names
+        if (typeof $rdf !== 'undefined') window.$rdf = $rdf;
+        if (typeof SolidLogic !== 'undefined') window.SolidLogic = SolidLogic;
+        if (typeof UI !== 'undefined') window.UI = UI;
+    </script>
     <style>
       body {
         margin: 10%;
