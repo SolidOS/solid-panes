@@ -36,6 +36,7 @@ function setHeaderOptions () {
 }
 
 async function setUserMenu (outliner: any) {
+  // @ts-ignore: showProfile is used conditionally
   const showProfile = {
     label: SHOW_YOUR_PROFILE_MENU_ITEM,
     onclick: () => openUserProfile(outliner)

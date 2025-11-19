@@ -1,4 +1,3 @@
-import tseslintPlugin from '@typescript-eslint/eslint-plugin'
 import globals from 'globals'
 import tsParser from '@typescript-eslint/parser'
 import neostandard from 'neostandard'
@@ -27,16 +26,25 @@ export default [
       }
     },
     rules: {
+      // Code style - match TypeScript settings
       semi: ['error', 'never'],
       quotes: ['error', 'single'],
-      'no-unused-vars': 'off', // handled by TS
-    }
+
+      // Strict checking - match TypeScript strictness
+      'no-console': 'warn',
+      'no-unused-vars': 'warn', // Match TypeScript noUnusedLocals: true
+      'no-undef': 'error',
+      strict: ['error', 'global'], // Match TypeScript alwaysStrict: true
+
+      // Additional strictness to match TypeScript behavior
+      'no-implicit-globals': 'error',
+      'prefer-const': 'error', // Encourage immutability
+      'no-var': 'error', // Use let/const only
+      'no-redeclare': 'error'
+    },
   },
   {
     files: ['src/**/*.ts'],
-    plugins: {
-      '@typescript-eslint': tseslintPlugin,
-    },
 
     languageOptions: {
       globals: {
@@ -53,20 +61,13 @@ export default [
     rules: {
       semi: ['error', 'never'],
       quotes: ['error', 'single'],
-      'no-console': 'warn',
-      'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-      }],
-      // '@typescript-eslint/no-explicit-any': 'warn', - codebase not ready for this
+      // Disable ESLint rules that TypeScript handles better
+      'no-unused-vars': 'off', // TypeScript handles this via noUnusedLocals
+      'no-undef': 'off', // TypeScript handles undefined variables
     },
   },
   {
     files: ['test/**/*.ts'],
-    plugins: {
-      '@typescript-eslint': tseslintPlugin,
-    },
     languageOptions: {
       parser: tsParser,
       parserOptions: {

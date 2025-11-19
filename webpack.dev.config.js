@@ -10,12 +10,12 @@ export default [
       new NodePolyfillPlugin()
     ],
     externals: {
-      'rdflib': '$rdf',
-      '$rdf': '$rdf',
+      rdflib: '$rdf',
+      $rdf: '$rdf',
       'solid-logic': 'SolidLogic',
-      'SolidLogic': 'SolidLogic', 
+      SolidLogic: 'SolidLogic',
       'solid-ui': 'UI',
-      'UI': 'UI'
+      UI: 'UI'
     },
     resolve: {
       extensions: ['.mjs', '.js', '.ts']
