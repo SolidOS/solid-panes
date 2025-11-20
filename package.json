@@ -30,7 +30,7 @@
     "preversion": "npm run lint && npm run typecheck && npm test",
     "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && babel src -d dist --source-maps --extensions '.ts,.js' --watch",
-    "start": "webpack serve --config webpack.dev.config.js --open"
+    "start": "webpack serve --config webpack.dev.config.mjs --open"
   },
   "repository": {
     "type": "git",
