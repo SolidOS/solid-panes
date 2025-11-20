@@ -71,10 +71,10 @@ jobs:
           run: npm ci
         - name: Ensure timestamp.sh is executable
           run: chmod +x timestamp.sh
-        - name: Check ESLint install
-          run: ./node_modules/.bin/eslint --version
-        - name: Debug ESLint versionInfo
-          run: ./node_modules/.bin/eslint src/versionInfo.ts --fix || true
+        - name: Show versionInfo.ts contents
+          run: cat src/versionInfo.ts
+        - name: Run ESLint on versionInfo.ts
+          run: ./node_modules/.bin/eslint src/versionInfo.ts || true
         - uses: rlespinasse/github-slug-action@v3.x
         - name: Append commit hash to package version
           run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
