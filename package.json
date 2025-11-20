@@ -13,7 +13,7 @@
   "scripts": {
     "clean": "rm -rf dist src/versionInfo.ts",
     "build": "npm run clean && npm run build-version && npm run typecheck && npm run build-dist && npm run postbuild-js",
-    "build-version": "./timestamp.sh > src/versionInfo.ts && eslint 'src/versionInfo.ts' --fix",
+    "build-version": "bash timestamp.sh > src/versionInfo.ts && eslint 'src/versionInfo.ts' --fix",
     "build-dist": "npm run build-js && npm run build-types",
     "build-js": "babel src --out-dir dist --extensions '.ts,.js' --source-maps",
     "build-types": "tsc --emitDeclarationOnly",
