@@ -8,11 +8,10 @@ permissions:
 on:
   push:
     branches:
-      - "**"
+      - main
   pull_request:
     branches:
-      - "**"
-    types: [opened, synchronize, reopened]
+      - main
   workflow_dispatch:
 
 jobs:
