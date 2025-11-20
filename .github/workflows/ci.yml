@@ -71,8 +71,6 @@ jobs:
           run: npm ci
         - name: Ensure timestamp.sh is executable
           run: chmod +x timestamp.sh
-        - name: Show permissions for timestamp.sh
-          run: ls -l ./timestamp.sh
         - uses: rlespinasse/github-slug-action@v3.x
         - name: Append commit hash to package version
           run: 'sed -i -E "s/(\"version\": *\"[^\"]+)/\1-${GITHUB_SHA_SHORT}/" package.json'
