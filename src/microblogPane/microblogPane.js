@@ -5,6 +5,7 @@
 /* global alert */
 import { authn, store } from 'solid-logic'
 import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 
 export default {
   icon: UI.icons.originalIconBase + 'microblog/microblog.png',
@@ -20,10 +21,10 @@ export default {
     //* **********************************************
     // NAMESPACES  SECTION
     //* **********************************************
-    const SIOC = UI.rdf.Namespace('http://rdfs.org/sioc/ns#')
-    const SIOCt = UI.rdf.Namespace('http://rdfs.org/sioc/types#')
-    const FOAF = UI.rdf.Namespace('http://xmlns.com/foaf/0.1/')
-    const terms = UI.rdf.Namespace('http://purl.org/dc/terms/')
+    const SIOC = $rdf.Namespace('http://rdfs.org/sioc/ns#')
+    const SIOCt = $rdf.Namespace('http://rdfs.org/sioc/types#')
+    const FOAF = $rdf.Namespace('http://xmlns.com/foaf/0.1/')
+    const terms = $rdf.Namespace('http://purl.org/dc/terms/')
     const RDF = UI.ns.rdf
 
     const kb = store
@@ -97,7 +98,7 @@ export default {
       return kb.sym(post) in this.favorites
     }
     Favorites.prototype.add = function (post, callback) {
-      const batch = new UI.rdf.Statement(
+      const batch = new $rdf.Statement(
         this.favoritesURI,
         SIOC('container_of'),
         kb.sym(post),
@@ -111,7 +112,7 @@ export default {
       })
     }
     Favorites.prototype.remove = function (post, callback) {
-      const batch = new UI.rdf.Statement(
+      const batch = new $rdf.Statement(
         this.favoritesURI,
         SIOC('container_of'),
         kb.sym(post),
@@ -242,27 +243,27 @@ export default {
 
       // generate new post
       const batch = [
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           newPost,
           RDF('type'),
           SIOCt('MicroblogPost'),
           myUser
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           newPost,
           SIOC('has_creator'),
           kb.sym(myUserURI),
           myUser
         ),
-        new UI.rdf.Statement(newPost, SIOC('content'), statusMsg, myUser),
-        new UI.rdf.Statement(newPost, terms('created'), new Date(), myUser),
-        new UI.rdf.Statement(micro, SIOC('container_of'), newPost, myUser)
+        new $rdf.Statement(newPost, SIOC('content'), statusMsg, myUser),
+        new $rdf.Statement(newPost, terms('created'), new Date(), myUser),
+        new $rdf.Statement(micro, SIOC('container_of'), newPost, myUser)
       ]
 
       // message replies
       if (replyTo) {
         batch.push(
-          new UI.rdf.Statement(
+          new $rdf.Statement(
             newPost,
             SIOC('reply_of'),
             kb.sym(replyTo),
@@ -274,7 +275,7 @@ export default {
       // @replies, #hashtags, !groupReplies
       for (const r in meta.recipients) {
         batch.push(
-          new UI.rdf.Statement(
+          new $rdf.Statement(
             newPost,
             SIOC('topic'),
             kb.sym(meta.recipients[r]),
@@ -282,14 +283,14 @@ export default {
           )
         )
         batch.push(
-          new UI.rdf.Statement(kb.any(), SIOC('container_of'), newPost, myUser)
+          new $rdf.Statement(kb.any(), SIOC('container_of'), newPost, myUser)
         )
         const mblogs = kb.each(kb.sym(meta.recipients[r]), SIOC('creator_of'))
         for (const mbl in mblogs) {
           if (
             kb.whether(mblogs[mbl], SIOC('topic'), kb.sym(meta.recipients[r]))
           ) {
-            const replyBatch = new UI.rdf.Statement(
+            const replyBatch = new $rdf.Statement(
               mblogs[mbl],
               SIOC('container_of'),
               newPost,
@@ -345,94 +346,94 @@ export default {
 
       const genUserMB = [
         // user
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           RDF('type'),
           SIOC('User'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           SIOC('creator_of'),
           kb.sym(host + '#mb'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           SIOC('creator_of'),
           kb.sym(host + '#mbn'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           SIOC('creator_of'),
           kb.sym(host + '#fav'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           SIOC('name'),
           name,
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           SIOC('id'),
           id,
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#' + id),
           RDF('label'),
           id,
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           s,
           FOAF('holdsAccount'),
           kb.sym(host + '#' + id),
           kb.sym(host)
         ),
         // microblog
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#mb'),
           RDF('type'),
           SIOCt('Microblog'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#mb'),
           SIOC('has_creator'),
           kb.sym(host + '#' + id),
           kb.sym(host)
         ),
         // notification microblog
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#mbn'),
           RDF('type'),
           SIOCt('Microblog'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#mbn'),
           SIOC('topic'),
           kb.sym(host + '#' + id),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#mbn'),
           SIOC('has_creator'),
           kb.sym(host + '#' + id),
           kb.sym(host)
         ),
         // favorites container
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#fav'),
           RDF('type'),
           SIOCt('FavouriteThings'),
           kb.sym(host)
         ),
-        new UI.rdf.Statement(
+        new $rdf.Statement(
           kb.sym(host + '#fav'),
           SIOC('has_creator'),
           kb.sym(host + '#' + id),
@@ -442,7 +443,7 @@ export default {
       if (avatar) {
         // avatar optional
         genUserMB.push(
-          new UI.rdf.Statement(
+          new $rdf.Statement(
             kb.sym(host + '#' + id),
             SIOC('avatar'),
             kb.sym(avatar),
@@ -487,7 +488,7 @@ export default {
           false
         )
 
-        this.tablist[id] = { view: view.id, tab: tab }
+        this.tablist[id] = { view: view.id, tab }
         this.tabView.appendChild(tab)
       }
       TabManager.prototype.getTabView = function () {
@@ -598,7 +599,7 @@ export default {
             that.notify('You ' + doFollow + username + '.')
           }
         }
-        const followMe = new UI.rdf.Statement(
+        const followMe = new $rdf.Statement(
           myUser,
           SIOC('follows'),
           that.creator.sym,
@@ -870,7 +871,7 @@ export default {
         xupdateContainer.addEventListener('submit', mbSubmitPost, false)
       } else {
         const xnewUser = doc.createTextNode(
-          "Hi, it looks like you don't have a microblog, " +
+          'Hi, it looks like you don\'t have a microblog, ' +
             ' would you like to create one? '
         )
         xcreateNewMB = doc.createElement('input')
