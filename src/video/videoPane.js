@@ -29,10 +29,10 @@ export default {
     video.setAttribute('controls', 'yes')
     // get video with authenticated fetch
     kb.fetcher._fetch(subject.uri)
-      .then(function(response) {
+      .then(function (response) {
         return response.blob()
       })
-      .then(function(myBlob) {
+      .then(function (myBlob) {
         const objectURL = URL.createObjectURL(myBlob)
         video.setAttribute('src', objectURL) // w640 h480 //
       })
