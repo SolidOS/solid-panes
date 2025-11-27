@@ -12,7 +12,7 @@ import { PaneDefinition } from 'pane-registry'
 import { NamedNode } from 'rdflib'
 import { authn } from 'solid-logic'
 import { create, icons, login } from 'solid-ui'
-import type { CreateContext } from 'solid-ui'
+// import type { CreateContext } from 'solid-ui'
 
 const HomePaneSource: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg', // noun_25830
@@ -45,7 +45,8 @@ const HomePaneSource: PaneDefinition = {
       div.appendChild(dom.createElement('h4')).textContent =
         'Create new thing somewhere'
       const creationDiv = div.appendChild(dom.createElement('div'))
-      const creationContext: CreateContext = {
+      // const creationContext: CreateContext = {
+      const creationContext = {
         div: creationDiv,
         dom,
         statusArea: div,

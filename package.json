@@ -57,7 +57,7 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "^0.7.1-35c4d3ee",
+    "activitystreams-pane": "^0.7.1-624a5af9",
     "chat-pane": "^2.5.1-6350f221",
     "contacts-pane": "^2.7.1-5e43880d",
     "dompurify": "^3.2.6",
