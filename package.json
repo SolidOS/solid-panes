@@ -72,9 +72,9 @@
     "source-pane": "^2.3.1-3840bd7f"
   },
   "overrides": {
-    "rdflib": "^2.3.0",
-    "solid-logic": "^3.1.1-8dffdcb",
-    "solid-ui": "^2.6.1-5ad23f4"
+    "rdflib": "$rdflib",
+    "solid-logic": "$solid-logic",
+    "solid-ui": "$solid-ui"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
@@ -104,7 +104,7 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "solid-logic": "^3.1.1-8dffdcb",
-    "solid-ui": "^2.6.1-5ad23f4",
+    "solid-ui": "^2.6.1-3a3c0bd",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2",
     "webpack": "^5.101.0",
