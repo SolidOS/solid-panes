@@ -187,7 +187,7 @@ export default {
         const setTRStyle = function (tr, account) {
           // var mystyle = "padding: 0.5em 1.5em 1em 1.5em; "
           let mystyle =
-            "'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;"
+            '\'padding-left: 0.5em; padding-right: 0.5em; padding-top: 0.1em;'
           if (account) {
             const backgroundColor = kb.any(account, UI.ns.ui('backgroundColor'))
             if (backgroundColor) {
@@ -265,7 +265,7 @@ export default {
         complain(
           '(Error: There is no back link to the original data source foir this transaction <' +
             subject.uri +
-            ">,\nso I can't tell how to annotate it.)"
+            '>,\nso I can\'t tell how to annotate it.)'
         )
       } else {
         store =
@@ -369,7 +369,7 @@ export default {
                 console.log('Error loading calendarYear: ' + e)
               })
           } else {
-            console.log("Can't get categories, because no calendarYear")
+            console.log('Can\'t get categories, because no calendarYear')
           }
           div.appendChild(
             UI.widgets.makeDescription(
@@ -541,8 +541,8 @@ export default {
 
             for (const y in yearCategoryTotal) {
               // @@ TODO: Write away the need for exception on next line
-               
-              if (yearCategoryTotal.hasOwnProperty(y)) {
+
+              if (Object.prototype.hasOwnProperty.call(yearCategoryTotal, y)) {
                 years.push(y)
               }
             }
@@ -567,8 +567,8 @@ export default {
 
             for (const uri in total) {
               // @@ TODO: Write away the need for exception on next line
-               
-              if (total.hasOwnProperty(uri)) {
+
+              if (Object.prototype.hasOwnProperty.call(total, uri)) {
                 types.push(uri)
                 grandTotal += total[uri]
               }

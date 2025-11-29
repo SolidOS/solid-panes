@@ -1,8 +1,8 @@
 /*   Single audio play Pane
  **
  */
- import * as UI from 'solid-ui'
- import * as $rdf from 'rdflib'
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 const ns = UI.ns
 
 export default {
@@ -158,10 +158,10 @@ export default {
       audio.setAttribute('controls', 'yes')
       // get audio with authenticated fetch
       kb.fetcher._fetch(song.uri)
-        .then(function(response) {
+        .then(function (response) {
           return response.blob()
         })
-        .then(function(myBlob) {
+        .then(function (myBlob) {
           const objectURL = URL.createObjectURL(myBlob)
           audio.setAttribute('src', objectURL) // w640 h480 //
         })

@@ -31,8 +31,8 @@ function getOutliner (dom) {
     const context = createContext(
       dom,
       { list, paneForIcon, paneForPredicate, register, byName },
-            store as LiveStore,
-            solidLogicSingleton
+      store as LiveStore,
+      solidLogicSingleton
     )
     dom.outlineManager = new OutlineManager(context)
   }

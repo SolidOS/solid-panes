@@ -4,7 +4,7 @@
  */
 import * as UI from 'solid-ui'
 
-export const imagePane =  {
+export const imagePane = {
   icon: UI.icons.originalIconBase + 'tango/22-image-x-generic.png',
 
   name: 'image',
@@ -54,10 +54,10 @@ export const imagePane =  {
 
     // get image with authenticated fetch
     store.fetcher._fetch(subject.uri)
-      .then(function(response) {
+      .then(function (response) {
         return response.blob()
       })
-      .then(function(myBlob) {
+      .then(function (myBlob) {
         const objectURL = URL.createObjectURL(myBlob)
         img.setAttribute('src', objectURL) // w640 h480 //
       })

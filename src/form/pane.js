@@ -66,7 +66,7 @@ export const formPane = {
       const ws = kb.each(me, ns.ui('workspace'))
       if (ws.length === 0) {
         mention(
-          "You don't seem to have any workspaces defined.  " +
+          'You don\'t seem to have any workspaces defined.  ' +
             'A workspace is a place on the web (http://..) or in ' +
             'the file system (file:///) to store application data.\n'
         )
