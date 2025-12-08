@@ -10,5 +10,5 @@ jest.mock('$rdf', () => require('rdflib'), { virtual: true })
 // Mock SolidLogic for solid-ui webpack bundle
 jest.mock('SolidLogic', () => require('solid-logic'), { virtual: true })
 
-global.TextEncoder = TextEncoder
-global.TextDecoder = TextDecoder
+global.TextEncoder = TextEncoder as any
+global.TextDecoder = TextDecoder as any

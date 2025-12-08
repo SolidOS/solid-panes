@@ -4,9 +4,6 @@ import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
 import Pane from 'profile-pane'
 
-// FIXME:
-window.$rdf = $rdf
-
 async function renderPane (uri: string) {
   if (!uri) {
     console.log("usage renderPane('http://example.com/#this')", uri)
@@ -48,7 +45,7 @@ function createIconElement (Pane) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderPane(
-    'https://solidos.solidcommunity.net/Team/SolidOs%20team%20chat/index.ttl#this'
+    'https://testingsolidos.solidcommunity.net/profile/card#me'
   )
 })
 

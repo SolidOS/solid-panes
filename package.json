@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "3.7.3-newStyle",
+  "version": "4.0.0-newStyle",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -57,24 +57,24 @@
   "homepage": "https://github.com/solidos/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
-    "activitystreams-pane": "^0.7.1-5da248fa",
-    "chat-pane": "^2.5.1-8a75927f",
-    "contacts-pane": "^2.7.1-c1e2f19a",
+    "activitystreams-pane": "^1.0.0",
+    "chat-pane": "^3.0.0",
+    "contacts-pane": "^3.0.0",
     "dompurify": "^3.2.6",
-    "folder-pane": "^2.5.1-b014dfaf",
-    "issue-pane": "^2.6.1-fec664db",
+    "folder-pane": "^3.0.0",
+    "issue-pane": "^3.0.0",
     "marked": "^17.0.0",
-    "meeting-pane": "^2.5.1-8ac4653c",
+    "meeting-pane": "^3.0.0",
     "mime-types": "^3.0.1",
-    "pane-registry": "^2.5.1-cfba46d",
-    "profile-pane": "^1.2.1-newStyle-373165d1",
+    "pane-registry": "^3.0.0",
+    "profile-pane": "^2.0.0-newStyle-ca717ed2",
     "solid-namespace": "^0.5.4",
-    "source-pane": "^2.3.1-d61e2165"
+    "source-pane": "^3.0.0"
   },
-  "peerDependencies": {
-    "rdflib": "^2.3.0",
-    "solid-logic": "3.1.1-a44ca66",
-    "solid-ui": "2.6.1-e78cbe5"
+  "overrides": {
+    "rdflib": "$rdflib",
+    "solid-logic": "$solid-logic",
+    "solid-ui": "$solid-ui"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.0",
@@ -104,8 +104,8 @@
     "rdflib": "^2.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "solid-logic": "3.1.1-a44ca66",
-    "solid-ui": "2.6.1-e78cbe5",
+    "solid-logic": "^4.0.1",
+    "solid-ui": "^3.0.1",
     "style-loader": "^4.0.0",
     "ts-jest": "^29.4.1",
     "typescript": "^5.9.2",
