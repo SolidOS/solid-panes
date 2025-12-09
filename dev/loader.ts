@@ -4,9 +4,6 @@ import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
 import Pane from 'profile-pane'
 
-// FIXME:
-window.$rdf = $rdf
-
 async function renderPane (uri: string) {
   if (!uri) {
     console.log("usage renderPane('http://example.com/#this')", uri)
@@ -28,10 +25,11 @@ async function renderPane (uri: string) {
       logic: solidLogicSingleton
     }
   }
-  const options = {}
-  console.log(subject, Pane)
+
+  console.log(subject, context)
   const icon = createIconElement(Pane)
-  const paneDiv = Pane.render(subject, context, options)
+  const paneDiv = Pane.render(subject, context)
+  
   const target = document.getElementById('render')
   target.innerHTML = ''
   target.appendChild(icon)
@@ -45,12 +43,6 @@ function createIconElement (Pane) {
   img.width = 40
   return img
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderPane(
-    'https://solidos.solidcommunity.net/Team/SolidOs%20team%20chat/index.ttl#this'
-  )
-})
 
 window.onload = async () => {
   console.log('document ready')
@@ -71,7 +63,8 @@ window.onload = async () => {
       'loginBanner'
     ).innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`
   }
-  renderPane()
+  renderPane('https://testingsolidos.solidcommunity.net/profile/card#me')
+
 }
 window.logout = () => {
   authSession.logout()
@@ -89,3 +82,4 @@ window.login = async function () {
   }
 };
 (window as any).renderPane = renderPane
+console.log("Pane at runtime:", Pane); window.Pane = Pane;
