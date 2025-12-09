@@ -67,7 +67,7 @@
     "meeting-pane": "^3.0.0",
     "mime-types": "^3.0.1",
     "pane-registry": "^3.0.0",
-    "profile-pane": "^2.0.0-newStyle-ca717ed2",
+    "profile-pane": "^2.0.0-shadowDom-34b192ec",
     "solid-namespace": "^0.5.4",
     "source-pane": "^3.0.0"
   },
