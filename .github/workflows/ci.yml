@@ -61,7 +61,7 @@ jobs:
       needs: build
       runs-on: ubuntu-latest
       steps:
-        - uses: actions/download-artifact@v6
+        - uses: actions/download-artifact@v7
           with:
             name: build
         - uses: actions/setup-node@v6
@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - uses: actions/download-artifact@v6
+      - uses: actions/download-artifact@v7
         with:
           name: build
       - uses: actions/setup-node@v6
