@@ -92,7 +92,7 @@
     "babel-plugin-inline-import": "^3.0.0",
     "buffer": "^6.0.3",
     "eslint": "^9.33.0",
-    "globals": "^16.3.0",
+    "globals": "^17.0.0",
     "html-webpack-plugin": "^5.6.3",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
