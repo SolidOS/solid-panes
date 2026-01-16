@@ -4,7 +4,9 @@
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
     "dist/",
     "README.md",
@@ -67,7 +69,7 @@
     "meeting-pane": "^3.0.0",
     "mime-types": "^3.0.1",
     "pane-registry": "^3.0.0",
-    "profile-pane": "^2.0.0-newStyle-18c2e2e1",
+    "profile-pane": "^2.0.0-newStyle-62df24f8",
     "solid-namespace": "^0.5.4",
     "source-pane": "^3.0.0"
   },
@@ -101,6 +103,7 @@
     "neostandard": "^0.12.2",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
+    "raw-loader": "^4.0.2",
     "rdflib": "^2.3.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -108,9 +111,10 @@
     "solid-ui": "^3.0.1",
     "style-loader": "^4.0.0",
     "ts-jest": "^29.4.1",
+    "ts-loader": "^9.5.4",
     "typescript": "^5.9.2",
-    "webpack": "^5.101.0",
+    "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.3"
   }
 }

@@ -1,8 +1,19 @@
+
 import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
 import Pane from 'profile-pane'
+
+// Add custom properties to the Window interface for TypeScript
+declare global {
+  interface Window {
+    logout: () => void;
+    login: () => Promise<void>;
+    renderPane: typeof renderPane;
+    Pane: typeof Pane;
+  }
+}
 
 async function renderPane (uri: string) {
   if (!uri) {
@@ -31,12 +42,16 @@ async function renderPane (uri: string) {
   const paneDiv = Pane.render(subject, context)
   
   const target = document.getElementById('render')
-  target.innerHTML = ''
-  target.appendChild(icon)
-  target.appendChild(paneDiv)
+  if (target) {
+    target.innerHTML = ''
+    target.appendChild(icon)
+    target.appendChild(paneDiv)
+  } else {
+    console.error("Element with id 'render' not found.")
+  }
 }
 
-function createIconElement (Pane) {
+function createIconElement (Pane: { icon: string }) {
   const icon = Pane.icon
   const img = document.createElement('img')
   img.src = icon
@@ -54,31 +69,37 @@ window.onload = async () => {
   const session = await authSession
   if (!session.info.isLoggedIn) {
     console.log('The user is not logged in')
-    document.getElementById('loginBanner').innerHTML =
-      '<button onclick="login()">Log in</button>'
-  } else {
-    console.log(`Logged in as ${session.info.webId}`)
-
-    document.getElementById(
-      'loginBanner'
-    ).innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`
+    const loginBanner = document.getElementById('loginBanner');
+    if (loginBanner) {
+      loginBanner.innerHTML = '<button onclick="login()">Log in</button>';
+    }
+    } else {
+      console.log(`Logged in as ${session.info.webId}`)
+    
+    const loginBanner = document.getElementById('loginBanner');
+    if (loginBanner) {
+      loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
+    }
   }
   renderPane('https://testingsolidos.solidcommunity.net/profile/card#me')
-
 }
 window.logout = () => {
   authSession.logout()
-  window.location = ''
+  window.location.href = ''
 }
 window.login = async function () {
   const session = await authSession
   if (!session.info.isLoggedIn) {
     const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
-    await authSession.login({
-      oidcIssuer: issuer,
-      redirectUrl: window.location.href,
-      clientName: 'Solid Panes Dev Loader'
-    })
+    if (issuer) {
+      await authSession.login({
+        oidcIssuer: issuer,
+        redirectUrl: window.location.href,
+        clientName: 'Solid Panes Dev Loader'
+      })
+    } else {
+      console.warn('Login cancelled: No issuer provided.')
+    }
   }
 };
 (window as any).renderPane = renderPane
