@@ -1,5 +1,5 @@
 export default {
-  sourceType: "unambiguous",
+  sourceType: 'unambiguous',
   presets: [
     ['@babel/preset-env', {
       targets: {

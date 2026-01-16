@@ -6,7 +6,7 @@ export default [
     mode: 'development',
     entry: './dev/loader.ts',
     plugins: [
-      new HtmlWebpackPlugin({ template: './dev/index.html'}),
+      new HtmlWebpackPlugin({ template: './dev/index.html' }),
       new NodePolyfillPlugin()
     ],
     externals: {
@@ -63,9 +63,9 @@ export default [
       compress: true,
       port: 9001,
       headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-        "Access-Control-Allow-Headers": "X-Requested-With, content-type, Authorization"
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+        'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
       }
     },
     devtool: 'source-map'
