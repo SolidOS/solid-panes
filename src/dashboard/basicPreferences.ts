@@ -67,6 +67,7 @@ export const basicPreferencesPane: PaneDefinition = {
         complainIfBad
       )
       appendedForm.style.borderStyle = 'none'
+      appendedForm.className = 'small-touch-target'
 
       const trustedApplicationsView = context.session.paneRegistry.byName('trustedApplications')
       if (trustedApplicationsView) {
@@ -189,13 +190,11 @@ function createSection (
   title: string
 ): Element {
   const section = container.appendChild(dom.createElement('div'))
-  section.style.border = '0.3em solid #418d99'
-  section.style.borderRadius = '0.5em'
-  section.style.padding = '0.7em'
-  section.style.marginTop = '0.7em'
+  section.setAttribute('style', 'border: 0.3em solid var(--sui-primary, #7C4DFF); border-radius: var(--sui-border-radius, 0.5em); padding: var(--sui-space-md, 0.7em); margin-top: var(--sui-space-md, 0.7em);')
 
   const titleElement = section.appendChild(dom.createElement('h3'))
   titleElement.innerText = title
+  titleElement.setAttribute('style', 'color: var(--sui-primary, #7C4DFF);')
 
   return section
 }
