@@ -4,6 +4,7 @@ import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
 import Pane from 'profile-pane'
+import './dev-mash.css'
 
 // Add custom properties to the Window interface for TypeScript
 declare global {
