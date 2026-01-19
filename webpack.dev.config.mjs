@@ -23,11 +23,32 @@ export default [
     module: {
       rules: [
         {
-          test: /\.(mjs|js|ts)$/,
+          test: /\.(mjs|js)$/,
           exclude: /(node_modules)/,
           use: {
-            loader: 'babel-loader'
+            loader: 'babel-loader',
+            options: {
+              presets: ['@babel/preset-env'],
+            },
           }
+        },
+        {
+          test: /\.ts$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'ts-loader',
+            options: {
+              configFile: 'tsconfig.dev.json'
+            }
+          },
+        },
+        {
+          test: /\.css$/i,
+          use: ['style-loader', 'css-loader']
+        },
+        {
+          test: /\.ttl$/,
+          use: 'raw-loader'
         }
       ]
     },
@@ -40,7 +61,12 @@ export default [
         }
       ],
       compress: true,
-      port: 9000
+      port: 9001,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+        'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
+      }
     },
     devtool: 'source-map'
   }]

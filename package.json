@@ -1,10 +1,12 @@
 {
   "name": "solid-panes",
-  "version": "4.0.0",
+  "version": "4.0.0-newStyle",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "files": [
     "dist/",
     "README.md",
@@ -13,7 +15,7 @@
   "scripts": {
     "clean": "rm -rf dist src/versionInfo.ts",
     "build": "npm run clean && npm run build-version && npm run typecheck && npm run build-dist && npm run postbuild-js",
-    "build-version": "./timestamp.sh > src/versionInfo.ts && eslint 'src/versionInfo.ts' --fix",
+    "build-version": "bash timestamp.sh > src/versionInfo.ts && ./node_modules/.bin/eslint 'src/versionInfo.ts' --fix",
     "build-dist": "npm run build-js && npm run build-types",
     "build-js": "babel src --out-dir dist --extensions '.ts,.js' --source-maps",
     "build-types": "tsc --emitDeclarationOnly",
@@ -26,11 +28,11 @@
     "test-watch": "npm run lint && jest --onlyChanged --watch",
     "test-coverage": "jest --coverage --collectCoverageFrom=src/**/*.[jt]s",
     "test-debug": "node --inspect-brk ./node_modules/.bin/jest -i --env jest-environment-node-debug",
-    "prepublishOnly": "npm test && npm run build",
+    "prepublishOnly": "npm run build && npm run lint && npm test",
     "preversion": "npm run lint && npm run typecheck && npm test",
     "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && babel src -d dist --source-maps --extensions '.ts,.js' --watch",
-    "start": "webpack serve --config webpack.dev.config.js --open"
+    "start": "webpack serve --config webpack.dev.config.mjs --open"
   },
   "repository": {
     "type": "git",
@@ -58,18 +60,18 @@
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "^1.0.0",
-    "chat-pane": "^3.0.0",
+    "chat-pane": "^3.0.0-013148ba",
     "contacts-pane": "^3.0.0",
     "dompurify": "^3.2.6",
-    "folder-pane": "^3.0.0",
+    "folder-pane": "^3.0.0-022e04cb",
     "issue-pane": "^3.0.0",
     "marked": "^17.0.0",
     "meeting-pane": "^3.0.0",
     "mime-types": "^3.0.1",
     "pane-registry": "^3.0.0",
-    "profile-pane": "^2.0.0",
+    "profile-pane": "^2.0.0-newStyle-ca46bda5",
     "solid-namespace": "^0.5.4",
-    "source-pane": "^3.0.0"
+    "source-pane": "^3.0.0-08c8076b"
   },
   "overrides": {
     "rdflib": "$rdflib",
@@ -91,6 +93,7 @@
     "babel-loader": "^10.0.0",
     "babel-plugin-inline-import": "^3.0.0",
     "buffer": "^6.0.3",
+    "css-loader": "^7.1.2",
     "eslint": "^9.33.0",
     "globals": "^17.0.0",
     "html-webpack-plugin": "^5.6.3",
@@ -100,15 +103,18 @@
     "neostandard": "^0.12.2",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
-    "rdflib": "^2.3.0",
+    "raw-loader": "^4.0.2",
+    "rdflib": "^2.3.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "solid-logic": "^4.0.0",
-    "solid-ui": "^3.0.0",
+    "solid-ui": "^3.0.1-27039d9",
+    "style-loader": "^4.0.0",
     "ts-jest": "^29.4.1",
+    "ts-loader": "^9.5.4",
     "typescript": "^5.9.2",
-    "webpack": "^5.101.0",
+    "webpack": "^5.104.1",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.3"
   }
 }

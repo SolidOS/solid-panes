@@ -42,8 +42,9 @@ const HomePaneSource: PaneDefinition = {
               // Here we know new log in status
             }))
       */
-      div.appendChild(dom.createElement('h4')).textContent =
-        'Create new thing somewhere'
+      const h4 = div.appendChild(dom.createElement('h4'))
+      h4.textContent = 'Create new thing somewhere'
+      h4.setAttribute('style', 'color: var(--sui-primary, #7C4DFF);')
       const creationDiv = div.appendChild(dom.createElement('div'))
       const creationContext: CreateContext = {
         div: creationDiv,

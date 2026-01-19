@@ -7,11 +7,11 @@ export default [
   {
     ignores: [
       'dist/**',
+      'dist-dev/**',
       'lib/**',
       'docs/**',
       'node_modules/**',
       'dev/**',
-      'dev-dist/**',
       'coverage/**',
     ],
   },
@@ -84,10 +84,21 @@ export default [
   {
     files: ['test/**/**/*.js', 'test/**/*.js'],
     rules: {
+      // Code style - match TypeScript settings
       semi: ['error', 'never'],
       quotes: ['error', 'single'],
-      'no-console': 'off', // Allow console in tests
-      'no-undef': 'off', // Tests may define globals
-    }
+
+      // Strict checking - match TypeScript strictness
+      'no-console': 'warn',
+      'no-unused-vars': 'warn', // Match TypeScript noUnusedLocals: true
+      'no-undef': 'error',
+      strict: ['error', 'global'], // Match TypeScript alwaysStrict: true
+
+      // Additional strictness to match TypeScript behavior
+      'no-implicit-globals': 'error',
+      'prefer-const': 'error', // Encourage immutability
+      'no-var': 'error', // Use let/const only
+      'no-redeclare': 'error'
+    },
   }
 ]
