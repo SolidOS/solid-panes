@@ -8,8 +8,7 @@ export const dashboardPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
   label: subject => {
-    console.log()
-    if (subject.uri === subject.site().uri) {
+    if (subject.termType === 'NamedNode' && subject.uri === subject.site().uri) {
       return 'Dashboard'
     }
     return null
