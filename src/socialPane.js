@@ -10,8 +10,9 @@
 
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
+import * as $rdf from 'rdflib'
 
-export const socialPane =  {
+export const socialPane = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
 
   name: 'social',
@@ -255,7 +256,7 @@ export const socialPane =  {
 
       if (!profile) {
         say(
-          message + "\nI couldn't find your editable personal profile document."
+          message + '\nI couldn\'t find your editable personal profile document.'
         )
       } else {
         say('Editing your profile ' + profile + '.')
@@ -320,7 +321,7 @@ export const socialPane =  {
         if (editable) {
           const f = buildCheckboxForm(
             'You know ' + familiar,
-            new UI.rdf.Statement(me, knows, s, profile),
+            new $rdf.Statement(me, knows, s, profile),
             outgoing
           )
           tools.appendChild(f)

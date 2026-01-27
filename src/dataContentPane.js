@@ -10,6 +10,8 @@
 //         - original source view?  Use ffox view source
 
 import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
+
 const ns = UI.ns
 
 export const dataContentPane = {
@@ -44,7 +46,7 @@ export const dataContentPane = {
     const myDocument = context.dom
     // const outliner = context.getOutliner(myDocument)
     const rep = myDocument.createElement('table')
-    const sz = UI.rdf.Serializer(context.session.store)
+    const sz = $rdf.Serializer(context.session.store)
     const res = sz.rootSubjects(sts)
     let roots = res.roots
     const subjects = res.subjects
@@ -153,7 +155,7 @@ export const dataContentPane = {
           if (
             UI.utils.ancestor(newTable, 'TABLE') &&
             UI.utils.ancestor(newTable, 'TABLE').style.backgroundColor ===
-              'white'
+            'white'
           ) {
             newTable.style.backgroundColor = '#eee'
           } else {
@@ -198,6 +200,7 @@ export const dataContentPane = {
     }
     for (let i = 0; i < roots.length; i++) {
       const tr = myDocument.createElement('tr')
+      tr.setAttribute('style', `background-color: ${i % 2 === 0 ? '#f0f0f0' : 'white'};`)
       rep.appendChild(tr)
       const subjectTD = myDocument.createElement('td')
       tr.appendChild(subjectTD)
@@ -228,7 +231,7 @@ export const dataContentPane = {
     const myDocument = context.dom
 
     function alternativeRendering () {
-      const sz = UI.rdf.Serializer(context.session.store)
+      const sz = $rdf.Serializer(context.session.store)
       const res = sz.rootSubjects(sts)
       const roots = res.roots
       const p = {}
@@ -279,6 +282,7 @@ export const dataContentPane = {
     // or we could keep all the pre-smushed triples.
     const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
 
+    // eslint-disable-next-line no-constant-condition
     if (false) { // keep code
       alternativeRendering()
     } else {

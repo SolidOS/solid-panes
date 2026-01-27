@@ -8,7 +8,7 @@ import * as $rdf from 'rdflib'
 
 const ns = UI.ns
 
-export const classInstancePane =  {
+export const classInstancePane = {
   icon: UI.icons.originalIconBase + 'tango/22-folder-open.png',
 
   name: 'classInstance',

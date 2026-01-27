@@ -7,8 +7,6 @@ import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
-import { licenseOptions } from './licenseOptions'
-
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
@@ -30,7 +28,7 @@ export default function (context) {
   let selection = []
   this.selection = selection
   this.ancestor = UI.utils.ancestor // make available as outline.ancestor in callbacks
-  this.sparql = UI.rdf.UpdateManager
+  this.sparql = $rdf.UpdateManager
   this.kb = store
   const kb = store
   const sf = store.fetcher
@@ -108,7 +106,7 @@ export default function (context) {
 
   this.appendAccessIcon = function (node, uri) {
     if (!uri) return ''
-    const docuri = UI.rdf.uri.docpart(uri)
+    const docuri = $rdf.uri.docpart(uri)
     if (docuri.slice(0, 5) !== 'http:') return ''
     const state = sf.getState(docuri)
     let icon, alt, listener
@@ -177,14 +175,7 @@ export default function (context) {
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
     )
     td.setAttribute('notSelectable', 'false')
-    let theClass = 'obj'
-
-    // check the IPR on the data.  Ok if there is any checked license which is one the document has.
-    if (statement && statement.why) {
-      if (licenseOptions && licenseOptions.checklicense && licenseOptions.checklicense()) {
-        theClass += ' licOkay' // flag as light green etc .licOkay {background-color: #dfd}
-      }
-    }
+    const theClass = 'obj'
 
     // set about and put 'expand' icon
     if (
@@ -367,8 +358,13 @@ export default function (context) {
         icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
       },
       {
+        paneName: 'profile',
+        label: 'Your Profile',
+        icon: UI.icons.iconBase + 'noun_15059.svg'
+      },
+      {
         paneName: 'editProfile',
-        label: 'Edit your profile',
+        label: 'Edit your Profile',
         icon: UI.icons.iconBase + 'noun_492246.svg'
       }
     ]
@@ -494,7 +490,7 @@ export default function (context) {
     })
 
     // close the dashboard if user log out
-    authSession.onLogout(closeDashboard)
+    authSession.events.on('logout', closeDashboard)
 
     // finally - switch to showing dashboard
     outlineContainer.style.display = 'none'
@@ -1146,7 +1142,7 @@ export default function (context) {
         console.log(e)
         baseURI = ''
       }
-      const relativeIconSrc = UI.rdf.uri.join(icon.src, baseURI)
+      const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
       if (eltSrc === relativeIconSrc) {
         iconTD.removeChild(elt)
       }
@@ -1443,7 +1439,7 @@ export default function (context) {
     } else if (e.srcElement) {
       target = e.srcElement
     } else {
-      UI.log.error("can't get target for event " + e)
+      UI.log.error('can\'t get target for event ' + e)
       return false
     } // fail
     if (target.nodeType === 3) {
@@ -1631,24 +1627,25 @@ export default function (context) {
       }
       case 39: // right
         // @@ TODO: Write away the need for exception on next line
-        // eslint-disable-next-line no-case-declarations
-        const obj = UI.utils.getAbout(kb, selectedTd)
-        if (obj) {
-          walk = this.walk
-          if (selectedTd.nextSibling) {
-            // when selectedTd is a predicate
-            this.walk('right')
-            return
+        {
+          const obj = UI.utils.getAbout(kb, selectedTd)
+          if (obj) {
+            walk = this.walk
+            if (selectedTd.nextSibling) {
+              // when selectedTd is a predicate
+              this.walk('right')
+              return
+            }
+            if (selectedTd.firstChild.tagName !== 'TABLE') {
+              // not expanded
+              sf.addCallback('done', setSelectedAfterward)
+              sf.addCallback('fail', setSelectedAfterward)
+              outlineExpand(selectedTd, obj, {
+                pane: paneRegistry.byName('defaultPane')
+              })
+            }
+            setSelectedAfterward()
           }
-          if (selectedTd.firstChild.tagName !== 'TABLE') {
-            // not expanded
-            sf.addCallback('done', setSelectedAfterward)
-            sf.addCallback('fail', setSelectedAfterward)
-            outlineExpand(selectedTd, obj, {
-              pane: paneRegistry.byName('defaultPane')
-            })
-          }
-          setSelectedAfterward()
         }
         break
       case 38: // up
@@ -1780,11 +1777,11 @@ export default function (context) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
-      sf.fetch(UI.rdf.uri.docpart(uri), {
+      sf.fetch($rdf.uri.docpart(uri), {
         force: true
       }) // Add 'force' bit?
     } else {
-      sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))) // just one
+      sf.refresh(kb.sym($rdf.uri.docpart(uri))) // just one
     }
   }
 
@@ -1793,18 +1790,18 @@ export default function (context) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
     if (e.altKey) {
-      sf.fetch(UI.rdf.uri.docpart(uri), {
+      sf.fetch($rdf.uri.docpart(uri), {
         force: true
       })
     } else {
-      sf.refresh(kb.sym(UI.rdf.uri.docpart(uri))) // just one
+      sf.refresh(kb.sym($rdf.uri.docpart(uri))) // just one
     }
   }
 
   function unrequestedIconMouseDownListener (e) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
-    sf.fetch(UI.rdf.uri.docpart(uri))
+    sf.fetch($rdf.uri.docpart(uri))
   }
 
   function removeNodeIconMouseDownListener (e) {
@@ -1952,7 +1949,7 @@ export default function (context) {
     sf.removeCallback('fail', 'expand')
 
     let subject = kb.canon(subject1)
-    // var requTerm = subject.uri ? kb.sym(UI.rdf.uri.docpart(subject.uri)) : subject
+    // var requTerm = subject.uri ? kb.sym($rdf.uri.docpart(subject.uri)) : subject
 
     function render () {
       subject = kb.canon(subject)
@@ -2017,7 +2014,7 @@ export default function (context) {
           already
       )
       // var term = kb.sym(uri)
-      const docTerm = kb.sym(UI.rdf.uri.docpart(uri))
+      const docTerm = kb.sym($rdf.uri.docpart(uri))
       if (uri.indexOf('#') >= 0) {
         throw new Error('Internal error: hash in ' + uri)
       }
@@ -2030,7 +2027,7 @@ export default function (context) {
         for (let i = 0; i < as.length; i++) {
           // canon'l uri or any alias
           for (
-            let rd = UI.rdf.uri.docpart(as[i]);
+            let rd = $rdf.uri.docpart(as[i]);
             rd;
             rd = kb.HTTPRedirects[rd]
           ) {
@@ -2238,8 +2235,8 @@ export default function (context) {
 
     if (expand) {
       outlineExpand(td, subject, {
-        pane: pane,
-        solo: solo
+        pane,
+        solo
       })
       const tr = td.parentNode
       UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
@@ -2288,8 +2285,8 @@ export default function (context) {
     if (obj.termType === 'Literal') {
       const styles = {
         integer: 'text-align: right;',
-        decimal: "text-align: '.';",
-        double: "text-align: '.';"
+        decimal: 'text-align: \'.\';',
+        double: 'text-align: \'.\';'
       }
       rep = dom.createElement('span')
       rep.textContent = obj.value

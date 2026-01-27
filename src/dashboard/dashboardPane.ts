@@ -8,8 +8,7 @@ export const dashboardPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
   label: subject => {
-    console.log()
-    if (subject.uri === subject.site().uri) {
+    if (subject.termType === 'NamedNode' && subject.uri === subject.site().uri) {
       return 'Dashboard'
     }
     return null
@@ -28,11 +27,11 @@ export const dashboardPane: PaneDefinition = {
       )
     }
 
-    authSession.onLogin(() => {
+    authSession.events.on('login', () => {
       // console.log('On Login')
       runBuildPage()
     })
-    authSession.onSessionRestore(() => {
+    authSession.events.on('sessionRestore', () => {
       // console.log('On Session Restore')
       runBuildPage()
     })

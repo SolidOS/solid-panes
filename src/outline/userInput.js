@@ -14,8 +14,7 @@
 import * as UI from 'solid-ui'
 import { store } from 'solid-logic'
 import * as panes from 'pane-registry'
-
-const $rdf = UI.rdf
+import * as $rdf from 'rdflib'
 
 let UserInputFormula // Formula to store references of user's work
 let TempFormula // Formula to store incomplete triples (Requests),
@@ -49,23 +48,23 @@ export function UserInput (outline) {
   // var rss = UI.ns.rss
   // var contact = UI.ns.contact
   // var mo = UI.ns.mo
-  const bibo = UI.rdf.Namespace('http://purl.org/ontology/bibo/') // hql for pubsPane
-  // var dcterms = UI.rdf.Namespace('http://purl.org/dc/terms/')
-  const dcelems = UI.rdf.Namespace('http://purl.org/dc/elements/1.1/')
+  const bibo = $rdf.Namespace('http://purl.org/ontology/bibo/') // hql for pubsPane
+  // var dcterms = $rdf.Namespace('http://purl.org/dc/terms/')
+  const dcelems = $rdf.Namespace('http://purl.org/dc/elements/1.1/')
 
   let movedArrow = false // hq
 
   // var updateService=new updateCenter(kb);
 
   if (!UserInputFormula) {
-    UserInputFormula = new UI.rdf.Formula()
+    UserInputFormula = new $rdf.Formula()
     UserInputFormula.superFormula = store
     // UserInputFormula.registerFormula("Your Work");
   }
-  if (!TempFormula) TempFormula = new UI.rdf.IndexedFormula()
+  if (!TempFormula) TempFormula = new $rdf.IndexedFormula()
   // Use RDFIndexedFormula so add returns the statement
   TempFormula.name = 'TempFormula'
-  if (!store.updater) store.updater = new UI.rdf.UpdateManager(store)
+  if (!store.updater) store.updater = new $rdf.UpdateManager(store)
 
   return {
     // updateService: updateService,
@@ -125,7 +124,7 @@ export function UserInput (outline) {
           store,
           UI.utils.ancestor(target.parentNode.parentNode, 'TD')
         )
-        const doc = store.sym(UI.rdf.Util.uri.docpart(subject.uri))
+        const doc = store.sym($rdf.Util.uri.docpart(subject.uri))
         This.formUndetStat(insertTr, subject, reqTerm1, reqTerm2, doc, false)
       }
 
@@ -442,7 +441,7 @@ export function UserInput (outline) {
           this.clearInputAndSave()
           return
         } else if (this.lastModified.isNew) {
-          s = new UI.rdf.Statement(
+          s = new $rdf.Statement(
             s.subject,
             s.predicate,
             store.literal(this.lastModified.value),
@@ -482,7 +481,7 @@ export function UserInput (outline) {
         } else {
           if (this.statIsInverse) {
             UI.log.error(
-              "Invalid Input: a literal can't be a subject in RDF/XML"
+              'Invalid Input: a literal can\'t be a subject in RDF/XML'
             )
             this.backOut()
             return
@@ -721,7 +720,6 @@ export function UserInput (outline) {
         outline.walk('up')
         return
       }
-      let removedTr
       // var afterTr
       const s = this.getStatementAbout(selectedTd)
       if (
@@ -763,8 +761,8 @@ export function UserInput (outline) {
 
       UI.log.debug('removed')
       outline.walk('up')
-      // eslint-disable-next-line prefer-const
-      removedTr = selectedTd.parentNode
+
+      const removedTr = selectedTd.parentNode
       // afterTr = removedTr.nextSibling
       function removefromview () {
         let trIterator
@@ -1091,8 +1089,8 @@ export function UserInput (outline) {
         // -------presenter
         // ToDo: how to sort selected predicates?
         this.showMenu(e, 'GeneralPredicateChoice', predicateQuery, {
-          isPredicate: isPredicate,
-          selectedTd: selectedTd
+          isPredicate,
+          selectedTd
         })
       } else {
         // objectTd
@@ -1129,8 +1127,8 @@ export function UserInput (outline) {
           // I should just use kb.each
           const classQuery = $rdf.SPARQLToQuery(sparqlText)
           this.showMenu(e, 'TypeChoice', classQuery, {
-            isPredicate: isPredicate,
-            selectedTd: selectedTd
+            isPredicate,
+            selectedTd
           })
         }
       }
@@ -1265,7 +1263,7 @@ export function UserInput (outline) {
                 } else {
                   setHighlightItem(menu.lastHighlight.previousSibling)
                 }
-                return "I'm a little Arrow Up"
+                return 'I\'m a little Arrow Up'
               case 40: // down
                 qp('handler: Arrow Down')
                 movedArrow = true // hq
@@ -1274,7 +1272,7 @@ export function UserInput (outline) {
                 } else {
                   setHighlightItem(menu.lastHighlight.nextSibling)
                 }
-                return "I'm a little Down Arrow"
+                return 'I\'m a little Down Arrow'
               case 37: // left
               case 39: // right
                 qp('handler: Arrow left, right')
@@ -1897,7 +1895,7 @@ export function UserInput (outline) {
         let theNamespace = '??'
         for (const name in NameSpaces) {
           UI.log.debug(NameSpaces[name])
-          if (UI.rdf.Util.string_startswith(predicate.uri, NameSpaces[name])) {
+          if ($rdf.Util.string_startswith(predicate.uri, NameSpaces[name])) {
             theNamespace = name
             break
           }
@@ -1983,18 +1981,19 @@ export function UserInput (outline) {
           break
         }
         case 'PredicateAutoComplete': // Prompt user  for possible relationships for new data
+        {
           inputText = extraInformation.inputText
           /*   The labeller functionality code ahs been lost or dropped -- reinstate this? */
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-case-declarations
+
           const predicates = outline.labeller.searchAdv(
             inputText,
             undefined,
             'predicate'
           )
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-case-declarations
-          let results = [] // @@ fixme
+
+          const results = [] // @@ fixme
           for (let i = 0; i < predicates.length; i++) {
             const tempQuery = {}
             tempQuery.vars = []
@@ -2004,13 +2003,13 @@ export function UserInput (outline) {
             try {
               addPredicateChoice(tempQuery)(tempBinding)
             } catch (e) {
-              throw new Error("I'll deal with bnodes later...[Kenny]" + e)
+              throw new Error('I\'ll deal with bnodes later...[Kenny]' + e)
             } // I'll deal with bnodes later...
           }
 
           // @@ TODO: Write away the need for exception on next line
-          // eslint-disable-next-line no-case-declarations
-          let entries = results[0]
+
+          const entries = results[0]
           if (entries.length === 0) {
             console.log('cm length 0\n') // hq
             this.clearMenu()
@@ -2021,8 +2020,10 @@ export function UserInput (outline) {
             addMenuItem(entries[i][1])
           }
           break
+        }
         case 'GeneralAutoComplete': {
           inputText = extraInformation.inputText
+          let results
           try {
             results = outline.labeller.search(inputText)
           } catch (e) {
@@ -2034,7 +2035,7 @@ export function UserInput (outline) {
                 '\n'
             )
           }
-          entries = results[0] // [label, subject,priority]
+          const entries = results[0] // [label, subject,priority]
           const types = results[1]
           if (entries.length === 0) {
             console.log('cm length 0\n') // hq
@@ -2121,7 +2122,7 @@ export function UserInput (outline) {
 
           console.log('matched: ' + matchedtitle + '\n')
 
-          console.log("\\\\done showMenu's JTAutocomplete\n")
+          console.log('\\\\done showMenu\'s JTAutocomplete\n')
           break
         }
         case 'LimitedPredicateChoice': {
@@ -2174,12 +2175,8 @@ export function UserInput (outline) {
     /* When a blank is filled. This happens even for blue-cross editing. */
     fillInRequest: function fillInRequest (type, selectedTd, inputTerm) {
       const tr = selectedTd.parentNode
-      let stat
-      let isInverse
-      // eslint-disable-next-line prefer-const
-      stat = tr.AJAR_statement
-      // eslint-disable-next-line prefer-const
-      isInverse = tr.AJAR_inverse
+      const stat = tr.AJAR_statement
+      const isInverse = tr.AJAR_inverse
 
       const reqTerm = type === 'object' ? stat.object : stat.predicate
       let newStat
@@ -2200,7 +2197,7 @@ export function UserInput (outline) {
         // ToDo: How to link two things with an inverse relationship
         const newTd = outline.outlinePredicateTD(inputTerm, tr, false, false)
         if (selectedTd.nextSibling.className !== 'undetermined') {
-          const s = new UI.rdf.Statement(
+          const s = new $rdf.Statement(
             stat.subject,
             inputTerm,
             stat.object,
@@ -2268,14 +2265,14 @@ export function UserInput (outline) {
         ) {
           let s
           if (!isInverse) {
-            s = new UI.rdf.Statement(
+            s = new $rdf.Statement(
               stat.subject,
               stat.predicate,
               inputTerm,
               stat.why
             )
           } else {
-            s = new UI.rdf.Statement(
+            s = new $rdf.Statement(
               inputTerm,
               stat.predicate,
               stat.object,
@@ -2315,7 +2312,7 @@ export function UserInput (outline) {
                   )
                 }
                 if (!newStats.length) {
-                  UI.log.error("userinput.js 1711: Can't find statememt!")
+                  UI.log.error('userinput.js 1711: Can\'t find statememt!')
                 }
                 tr.AJAR_statement = newStats[0]
               } else {

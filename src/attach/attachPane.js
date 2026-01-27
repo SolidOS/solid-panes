@@ -8,8 +8,8 @@
  **
  */
 
- import * as UI from 'solid-ui'
- import * as $rdf from 'rdflib'
+import * as UI from 'solid-ui'
+import * as $rdf from 'rdflib'
 
 export default {
   icon: UI.icons.iconBase + 'noun_25830.svg', // noun_25830
@@ -117,8 +117,8 @@ export default {
       const subjects = []
       for (u in uriHash) {
         // @@ TODO: Write away the need for exception on next line
-        // eslint-disable-next-line no-prototype-builtins
-        if (uriHash.hasOwnProperty(u)) {
+
+        if (Object.prototype.hasOwnProperty.call(uriHash, u)) {
           x = kb.sym(u)
           if (sortBy) {
             key = kb.any(x, sortBy)
