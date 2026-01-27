@@ -245,7 +245,7 @@ export default function (context) {
       case 'Collection': // some choices of predicate
         lab = UI.utils.predicateLabelForXML(predicate.elements[0], inverse)
     }
-    lab = lab.slice(0, 1).toUpperCase() + lab.slice(1)
+    lab = lab ? lab.slice(0, 1).toUpperCase() + lab.slice(1) : '...'
     // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
 
     const labelTD = dom.createElement('TD')
