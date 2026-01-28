@@ -1,0 +1,202 @@
+/* ---ONLY FOR LOCAL DEV--- */
+/* ---final version is in mashlib--- */
+
+
+/*
+** Light Theme (Default)
+** Default color scheme for SolidOS
+*/
+
+:root {
+  /* Background and Text */
+  --color-background: white;
+  --color-text: ##1A1A1A;
+  --color-text-secondary: #666;
+  --color-text-light: #aaa;
+  --color-text-link: #3B5998;
+  --color-text-link-visited: #3B5998;
+  --color-text-link-hover: #3B5998;
+  --color-text-link-active: #888;
+  --color-text-answer: #00c;
+  --color-text-muted: #444;
+  --color-text-dark-gray: #202;
+  --color-text-blue: #004;
+  --color-text-brown: #440;
+  
+  /* Borders */
+  --color-border: #ccc;
+  --color-border-dark: #777;
+  --color-border-darker: #444;
+  --color-border-light: #aaa;
+  --color-border-pale: #eee;
+  
+  /* Status Colors */
+  --color-selected-bg: #8F3;
+  --color-warning: red;
+  --color-success-bg: #dfd;
+  --color-success-border: green;
+  --color-failure-bg: white;
+  --color-failure-border: red;
+  
+  /* Info and Alert Colors */
+  --color-info-bg: #ccccff;
+  --color-info-border: #3399ff;
+  --color-alert-bg: #ffffdd;
+  --color-alert-border: yellow;
+  --color-fetch-bg: #eeffee;
+  --color-request-bg: yellow;
+  --color-error-bg: white;
+  --color-error-notice-bg: #fee;
+  --color-unparseable-bg: #ffcc00;
+  
+  /* Component Colors */
+  --color-container-border: black;
+  --color-iframe-bg: white;
+  --color-main-block-bg: #fff;
+  --color-nav-block-bg: #eee;
+  --color-nav-block-border: gray;
+  --color-category-bg: #f8fff8;
+  --color-category-border: #777777;
+  --color-category-class-bg: #efe;
+  --color-category-class-border: green;
+  --color-pubs-pane-bg: #F2F6DA;
+  --color-pubs-pane-border: #777777;
+  --color-cv-pane-bg: LightSkyBlue;
+  
+  /* Data Content Pane */
+  --color-data-pane-border-top: black;
+  --color-data-pane-border-side: #777;
+  --color-table-header-bg: #ddf;
+  --color-table-result-bg: #fff;
+  --color-table-border-dark: #777;
+  
+  /* Notification Colors */
+  --color-log-normal: black;
+  --color-log-info: black;
+  --color-log-warn: black;
+  --color-log-warn-bg: #ffd;
+  --color-log-error: black;
+  --color-log-error-bg: #fdd;
+  --color-log-message: green;
+  --color-log-debug: black;
+  --color-log-debug-bg: #ddf;
+  
+  /* Suggestion List */
+  --color-suggestion-bg: white;
+  --color-suggestion-border: navy;
+  --color-suggestion-link: navy;
+  --color-suggestion-selected-bg: navy;
+  --color-suggestion-selected-text: white;
+  
+  /* Photo Pane */
+  --color-photo-border: #AAAAAA;
+  --color-photo-tag-highlight: #DDEEFF;
+  --color-photo-tag-highlight-border: #DDBB99;
+  --color-photo-thumb-border: #CCCCCC;
+  
+  /* Menu and Tab Colors */
+  --color-menu-bg: #FFFFFF;
+  --color-menu-item-text: #654d6c;
+  --color-menu-item-active: #D1C6DA;
+  --color-view-tab-bg: #fff;
+  --color-view-window-bg: #ccc;
+  --color-query-select-bg: #ccc;
+  --color-tab-inactive-bg: #eee;
+  --color-tab-inactive-border: #ddd;
+  --color-tab-inactive-border-light: #aaa;
+  --color-tab-inactive-text: #99f;
+  --color-tab-active-bg: #ccc;
+  --color-tab-active-border: #ddd;
+  --color-tab-active-border-light: #aaa;
+  --color-tab-active-text: #22f;
+  
+  /* Special Highlights */
+  --color-source-highlight: yellow;
+  --color-hover-visibility: visible;
+  --color-hidden-visibility: hidden;
+  --color-mild-notice-bg: #ffe;
+  --color-bottom-border-highlight: rgb(100%,65%,0%);
+  --color-col-close: #aaa;
+  --color-sort-arrow: #aaa;
+  --color-pending-edit: #bbb;
+  
+  /* Typography */
+  --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-size-base: 100%;
+  --font-size-strong: 120%;
+  --font-weight-normal: normal;
+  --font-weight-bold: bold;
+  --line-height-base: 1.5;
+  --line-height-tight: 1.4;
+  --line-height-loose: 1.6;
+  --letter-spacing-wide: 0.025em;
+  --font-size-sm: 0.875rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.25rem;
+  
+  /* Spacing and Sizing */
+  --spacing-tiny: 0.05em;
+  --spacing-small: 0.1em;
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75em;
+  --spacing-base: 0.5em;
+  --spacing-md: 1em;
+  --spacing-lg: 1.5em;
+  --spacing-xl: 2em;
+  --spacing-2xl: 3em;
+  --border-width-thin: 1px;
+  --border-width-medium: 2px;
+  --border-width-bold: 5px;
+  --border-radius-base: 0.5em;
+  --border-radius-lg: 0.75em;
+  --border-radius-full: 1em;
+  
+  /* Primary/Accent Colors */
+  --color-primary: #7C4DFF;
+  --color-primary-alpha: rgba(124, 77, 255, 0.25);
+  --color-primary-alpha-light: rgba(124, 77, 255, 0.1);
+  --color-secondary: #0077B6;
+  --color-accent: #FFD600;
+  --color-error: #B00020;
+  --color-success: #00C853;
+  
+  /* Card/Section Backgrounds */
+  --color-card-bg: #FFFFFF;
+  --color-section-bg: #F5F5F5;
+  --color-zebra-stripe: rgba(0, 0, 0, 0.02);
+  --color-hover-bg: rgba(0, 0, 0, 0.05);
+  
+  /* Shadows */
+  --box-shadow: 0 2px 8px rgba(124,77,255,0.08);
+  --box-shadow-sm: 0 1px 4px rgba(124,77,255,0.12);
+  
+  /* Accessibility */
+  --min-touch-target: 44px;
+  --focus-ring-width: 2px;
+  --focus-indicator-width: 3px;
+  --animation-duration: 0.2s;
+  --animation-duration-slow: 0.3s;
+  --min-font-size: 14px;
+  --min-line-height: 1.4;
+  --high-contrast-ratio: 7:1; /* WCAG AAA standard */
+  
+  /* Overlay and Modal */
+  --overlay-bg: rgba(0, 0, 0, 0.5);
+  --z-index-modal: 9999;
+  --z-index-skip-links: 1000;
+  
+  /* Opacity */
+  --opacity-disabled: 0.6;
+  
+  /* Layout Values */
+  --max-width-readable: 65ch;
+  --max-width-readable-wide: 70ch;
+  --grid-min-column: 30em;
+  
+  /* Outline Offsets */
+  --outline-offset-sm: 2px;
+  
+  /* Success Alpha */
+  --color-success-alpha: rgba(0, 200, 83, 0.1);
+}

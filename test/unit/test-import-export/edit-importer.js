@@ -1,4 +1,3 @@
-'use strict'
 //  Suspect this is unsed test code
 
 /*   Profile Editing Appp Pane
