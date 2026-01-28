@@ -87,7 +87,7 @@ const humanReadablePane = {
     const kb = context.session.store
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    let ct = cts ? cts[0].split(';', 1)[0].trim() : null // remove content-type parameters
+    const ct = cts ? cts[0].split(';', 1)[0].trim() : null // remove content-type parameters
 
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
