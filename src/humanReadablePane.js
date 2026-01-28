@@ -8,6 +8,13 @@ import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 
+// Helper function to check if a URI has a markdown file extension
+const isMarkdownFile = (uri) => {
+  if (!uri) return false
+  const path = uri.split('?')[0].split('#')[0] // Remove query string and fragment
+  return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(path)
+}
+
 const humanReadablePane = {
   icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
 
@@ -59,6 +66,11 @@ const humanReadablePane = {
     const t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 
+    // Check file extension for markdown files
+    if (isMarkdownFile(subject.uri)) {
+      return 'View'
+    }
+
     if (
       hasContentTypeIn(kb, subject, allowed) ||
       hasContentTypeIn2(kb, subject, allowed)
@@ -75,7 +87,11 @@ const humanReadablePane = {
     const kb = context.session.store
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-    const ct = cts ? cts[0].split(';', 1)[0].trim() : null // remove content-type parameters
+    let ct = cts ? cts[0].split(';', 1)[0].trim() : null // remove content-type parameters
+
+    // Fallback: detect markdown by file extension if content-type is not text/markdown
+    const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
+
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
     } else {
@@ -84,8 +100,22 @@ const humanReadablePane = {
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
-    const element = ct === 'text/markdown' ? 'DIV' : 'IFRAME'
-    const frame = myDocument.createElement(element)
+
+    // render markdown to html in a DIV element
+    const renderMarkdownContent = function (frame) {
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const markdownText = response.responseText
+        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
+        const res = marked.parse(markdownText)
+        const clean = DOMPurify.sanitize(res)
+        frame.innerHTML = clean
+        frame.setAttribute('class', 'doc')
+        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
+      }).catch(error => {
+        console.error('Error fetching markdown content:', error)
+        frame.innerHTML = '<p>Error loading content</p>'
+      })
+    }
 
     const setIframeAttributes = (frame, blob, lines) => {
       frame.setAttribute('src', URL.createObjectURL(blob))
@@ -103,26 +133,17 @@ const humanReadablePane = {
       }
     }
 
-    // render markdown to html
-    const markdownHtml = function () {
-      kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const markdownText = response.responseText
-        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
-        const res = marked.parse(markdownText)
-        const clean = DOMPurify.sanitize(res)
-        frame.innerHTML = clean
-        frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
-      }).catch(error => {
-        console.error('Error fetching markdown content:', error)
-        frame.innerHTML = '<p>Error loading content</p>'
-      })
-    }
-
-    if (ct === 'text/markdown') {
-      markdownHtml()
+    if (isMarkdown) {
+      // For markdown, use a DIV element and render the content
+      const frame = myDocument.createElement('DIV')
+      renderMarkdownContent(frame)
+      const tr = myDocument.createElement('TR')
+      tr.appendChild(frame)
+      div.appendChild(tr)
     } else {
-    // Fetch and process the blob
+      // For other content types, use IFRAME
+      const frame = myDocument.createElement('IFRAME')
+      // Fetch and process the blob
       kb.fetcher._fetch(subject.uri)
         .then(response => response.blob())
         .then(blob => {
@@ -132,16 +153,22 @@ const humanReadablePane = {
         .then(({ blob, blobText }) => {
           const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
           const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-          setIframeAttributes(frame, blob, lines)
+          // For text content, create a new blob with proper charset to avoid encoding warnings
+          if (blob.type.startsWith('text/') && !blob.type.includes('charset')) {
+            const newBlob = new Blob([blobText], { type: blob.type + '; charset=utf-8' })
+            setIframeAttributes(frame, newBlob, lines)
+          } else {
+            setIframeAttributes(frame, blob, lines)
+          }
         })
         .catch(err => {
           console.log('Error fetching or processing blob:', err)
         })
+      const tr = myDocument.createElement('TR')
+      tr.appendChild(frame)
+      div.appendChild(tr)
     }
 
-    const tr = myDocument.createElement('TR')
-    tr.appendChild(frame)
-    div.appendChild(tr)
     return div
   }
 }
