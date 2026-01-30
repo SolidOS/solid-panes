@@ -58,12 +58,6 @@ export default {
 
     if (!subject.uri) return null // no bnodes
 
-    // Don't match markdown files - let humanReadablePane handle those
-    const uri = subject.uri
-    if (uri.endsWith('.md') || uri.endsWith('.markdown')) {
-      return null
-    }
-
     const t = kb.findTypeURIs(subject)
     if (t[ns.link('WebPage').uri]) return 'view'
 

@@ -17,10 +17,6 @@ export const n3Pane = {
   audience: [ns.solid('Developer')],
 
   label: function (subject, context) {
-    // Don't match markdown files - let humanReadablePane handle those
-    if (subject.uri && (subject.uri.endsWith('.md') || subject.uri.endsWith('.markdown'))) {
-      return null
-    }
     const store = context.session.store
     if (
       'http://www.w3.org/2007/ont/link#ProtocolEvent' in
