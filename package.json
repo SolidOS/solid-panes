@@ -69,14 +69,15 @@
     "meeting-pane": "^3.0.1",
     "mime-types": "^3.0.2",
     "pane-registry": "^3.0.1",
-    "profile-pane": "^3.0.0",
+    "profile-pane": "^3.0.0-264c7cec",
     "solid-namespace": "^0.5.4",
     "source-pane": "^3.0.1"
   },
   "overrides": {
     "rdflib": "$rdflib",
     "solid-logic": "$solid-logic",
-    "solid-ui": "$solid-ui"
+    "solid-ui": "$solid-ui",
+    "profile-pane": "$profile-pane"
   },
   "devDependencies": {
     "@babel/cli": "^7.28.6",
