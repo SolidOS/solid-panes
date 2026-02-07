@@ -54,9 +54,9 @@
   "author": "Tim Berners-Lee <timbl@mit.edu>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/solidos/solid-panes/issues"
+    "url": "https://github.com/SolidOS/solid-panes/issues"
   },
-  "homepage": "https://github.com/solidos/solid-panes",
+  "homepage": "https://github.com/SolidOS/solid-panes",
   "dependencies": {
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "^1.0.1",
