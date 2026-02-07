@@ -69,7 +69,7 @@
     "meeting-pane": "^3.0.1",
     "mime-types": "^3.0.2",
     "pane-registry": "^3.0.1",
-    "profile-pane": "^3.0.0-264c7cec",
+    "profile-pane": "^3.0.0",
     "solid-namespace": "^0.5.4",
     "source-pane": "^3.0.1"
   },
@@ -81,8 +81,8 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.28.6",
-    "@babel/core": "^7.28.6",
-    "@babel/preset-env": "^7.28.6",
+    "@babel/core": "^7.29.0",
+    "@babel/preset-env": "^7.29.0",
     "@babel/preset-typescript": "^7.28.5",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -96,7 +96,7 @@
     "buffer": "^6.0.3",
     "css-loader": "^7.1.3",
     "eslint": "^9.39.2",
-    "globals": "^17.2.0",
+    "globals": "^17.3.0",
     "html-webpack-plugin": "^5.6.6",
     "jest": "^30.2.0",
     "jest-environment-jsdom": "^30.2.0",
@@ -114,7 +114,7 @@
     "ts-jest": "^29.4.6",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
-    "webpack": "^5.104.1",
+    "webpack": "^5.105.0",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.3"
   }
