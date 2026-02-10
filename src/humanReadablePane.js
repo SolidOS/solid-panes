@@ -24,13 +24,43 @@ const humanReadablePane = {
     if (subject && isMarkdownFile(subject.uri)) {
       return icons.iconBase + 'markdown.svg'
     }
-    // Dokieli files detected by cached content check
+    
+    // Dokieli files detected by RDF metadata (synchronous)
     if (subject) {
+      const kb = context.session.store
+      
+      // Check RDF for dokieli stylesheets
+      const stylesheets = kb.each(subject, ns.link('stylesheet'))
+      const isDokieliByRDF = stylesheets.some(s => 
+        s.uri && s.uri.includes('dokie.li/media/css/dokieli.css')
+      )
+      
+      if (isDokieliByRDF) {
+        dokieliCache.set(subject.uri, 'dokieli')
+        return icons.iconBase + 'dokieli-logo.png'
+      }
+      
+      // Check cache from previous content detection
       const cachedResult = dokieliCache.get(subject.uri)
       if (cachedResult === 'dokieli') {
         return icons.iconBase + 'dokieli-logo.png'
+      } else if (cachedResult === 'html') {
+        return icons.originalIconBase + 'tango/22-text-x-generic.png'
+      }
+      
+      // Not in RDF or cache - check if content already fetched
+      const responseText = kb.fetcher.getHeader(subject.doc(), 'content')
+      if (responseText && responseText.length > 0) {
+        const text = responseText[0]
+        const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">') || 
+                         text.includes('dokieli.css')
+        dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+        return isDokieli 
+          ? icons.iconBase + 'dokieli-logo.png'
+          : icons.originalIconBase + 'tango/22-text-x-generic.png'
       }
     }
+    
     // Default for all other human-readable content
     return icons.originalIconBase + 'tango/22-text-x-generic.png'
   },
@@ -174,10 +204,23 @@ const humanReadablePane = {
         frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
       }
 
-      // Use cached dokieli detection result or default
-      const cachedResult = dokieliCache.get(subject.uri)
-      const lines = cachedResult === 'dokieli' ? 35 : 30
-      setIframeAttributes(frame, lines)
+      // Fetch content to calculate lines dynamically
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const blobText = response.responseText
+        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
+        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
+        
+        // Cache dokieli detection result
+        const isDokieli = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') || 
+                         blobText.includes('dokieli.css')
+        dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+        
+        setIframeAttributes(frame, lines)
+      }).catch(error => {
+        console.error('Error fetching content for line calculation:', error)
+        // Fallback to default height
+        setIframeAttributes(frame, 30)
+      })
 
       const tr = myDocument.createElement('TR')
       tr.appendChild(frame)
