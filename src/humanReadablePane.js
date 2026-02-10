@@ -20,18 +20,18 @@ const dokieliCache = new Map()
 
 const humanReadablePane = {
   icon: function (subject, context) {
-    // Check for markdown files by extension
-    if (isMarkdownFile(subject.uri)) {
+    // Markdown files detected by extension
+    if (subject && isMarkdownFile(subject.uri)) {
       return icons.iconBase + 'markdown.svg'
     }
-    
-    // Check if we detected dokieli in label()
-    const cachedResult = dokieliCache.get(subject.uri)
-    if (cachedResult === 'dokieli') {
-      return icons.iconBase + 'dokieli-logo.png'
+    // Dokieli files detected by cached content check
+    if (subject) {
+      const cachedResult = dokieliCache.get(subject.uri)
+      if (cachedResult === 'dokieli') {
+        return icons.iconBase + 'dokieli-logo.png'
+      }
     }
-    
-    // Default icon for other files
+    // Default for all other human-readable content
     return icons.originalIconBase + 'tango/22-text-x-generic.png'
   },
 
@@ -176,7 +176,7 @@ const humanReadablePane = {
 
       // Use cached dokieli detection result or default
       const cachedResult = dokieliCache.get(subject.uri)
-      const lines = cachedResult === 'dokieli' ? 20 : 35
+      const lines = cachedResult === 'dokieli' ? 35 : 30
       setIframeAttributes(frame, lines)
 
       const tr = myDocument.createElement('TR')

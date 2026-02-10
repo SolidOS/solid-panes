@@ -597,7 +597,8 @@ export default function (context) {
         // if only one, simplify interface
         relevantPanes.forEach((pane, index) => {
           const label = pane.label(subject, context)
-          const ico = UI.utils.AJARImage(pane.icon, label, label, dom)
+          const iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+          const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
           ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
           // ico.style.width = iconHeight
