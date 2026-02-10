@@ -138,47 +138,42 @@ export default {
     div.setAttribute('class', 'docView')
     const iframe = myDocument.createElement('IFRAME')
 
-    // Function to set iframe attributes
-    const setIframeAttributes = (iframe, blob, lines) => {
-      const objectURL = URL.createObjectURL(blob)
-      iframe.setAttribute('src', objectURL)
-      iframe.setAttribute('type', blob.type)
-      iframe.setAttribute('class', 'doc')
-      iframe.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
-
-      // Apply sandbox attribute only for HTML files
-      // @@ NOte beflow - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
-      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-      // You can;'t have any sandbox and allow plugins.
-      // We could sandbox only HTML files I suppose.
-      // HTML5 bug: https://lists.w3.org/Archives/Public/public-html/2011Jun/0330.html
-      if (blob.type === 'text/html' || blob.type === 'application/xhtml+xml') {
-        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin')
-      }
-    }
-
-    // Fetch and process the blob
-    kb.fetcher._fetch(subject.uri)
-      .then(response => response.blob())
-      .then(blob => {
-        const blobTextPromise = blob.type.startsWith('text') ? blob.text() : Promise.resolve('')
-        return blobTextPromise.then(blobText => ({ blob, blobText }))
-      })
-      .then(({ blob, blobText }) => {
-        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
-        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-        setIframeAttributes(iframe, blob, lines)
-      })
-      .catch(err => {
-        console.log('Error fetching or processing blob:', err)
-      })
-
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     const ct = cts ? cts[0].split(';', 1)[0].trim() : null
     if (ct) {
       console.log('dokieliPane: c-t:' + ct)
     } else {
       console.log('dokieliPane: unknown content-type?')
+    }
+
+    // Function to set iframe attributes
+    const setIframeAttributes = (iframe, lines) => {
+      iframe.setAttribute('src', subject.uri)
+      iframe.setAttribute('class', 'doc')
+      iframe.setAttribute('style', `border: 1px solid; padding: 1em; height:${lines}em; width:800px; resize: both; overflow: auto;`)
+    }
+
+    // Apply sandbox for HTML/XHTML
+    if (ct === 'text/html' || ct === 'application/xhtml+xml') {
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin')
+    }
+
+    // Check if content is dokieli to adjust height
+    if (ct === 'text/html') {
+      kb.fetcher._fetch(subject.uri)
+        .then(response => response.text())
+        .then(text => {
+          const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">')
+          const lines = isDokieli ? 20 : 35
+          setIframeAttributes(iframe, lines)
+        })
+        .catch(err => {
+          console.log('Error fetching content:', err)
+          setIframeAttributes(iframe, 35)
+        })
+    } else {
+      // For non-HTML content, use default height
+      setIframeAttributes(iframe, 35)
     }
 
     const tr = myDocument.createElement('tr')

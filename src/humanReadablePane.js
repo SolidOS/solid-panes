@@ -117,20 +117,10 @@ const humanReadablePane = {
       })
     }
 
-    const setIframeAttributes = (frame, blob, lines) => {
-      frame.setAttribute('src', URL.createObjectURL(blob))
-      frame.setAttribute('type', blob.type)
+    const setIframeAttributes = (frame, lines) => {
+      frame.setAttribute('src', subject.uri)
       frame.setAttribute('class', 'doc')
       frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
-
-      // Apply sandbox attribute only for HTML files
-      // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
-      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-      // You can't have any sandbox and allow plugins.
-      // We could sandbox only HTML files I suppose.
-      if (blob.type === 'text/html' || blob.type === 'application/xhtml+xml') {
-        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
-      }
     }
 
     if (isMarkdown) {
@@ -143,27 +133,30 @@ const humanReadablePane = {
     } else {
       // For other content types, use IFRAME
       const frame = myDocument.createElement('IFRAME')
-      // Fetch and process the blob
-      kb.fetcher._fetch(subject.uri)
-        .then(response => response.blob())
-        .then(blob => {
-          const blobTextPromise = blob.type.startsWith('text') ? blob.text() : Promise.resolve('')
-          return blobTextPromise.then(blobText => ({ blob, blobText }))
-        })
-        .then(({ blob, blobText }) => {
-          const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
-          const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-          // For text content, create a new blob with proper charset to avoid encoding warnings
-          if (blob.type.startsWith('text/') && !blob.type.includes('charset')) {
-            const newBlob = new Blob([blobText], { type: blob.type + '; charset=utf-8' })
-            setIframeAttributes(frame, newBlob, lines)
-          } else {
-            setIframeAttributes(frame, blob, lines)
-          }
-        })
-        .catch(err => {
-          console.log('Error fetching or processing blob:', err)
-        })
+      
+      // Apply sandbox for HTML/XHTML
+      if (ct === 'text/html' || ct === 'application/xhtml+xml') {
+        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
+      }
+      
+      // Check if content is dokieli to adjust height
+      if (ct === 'text/html') {
+        kb.fetcher._fetch(subject.uri)
+          .then(response => response.text())
+          .then(text => {
+            const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">')
+            const lines = isDokieli ? 20 : 35
+            setIframeAttributes(frame, lines)
+          })
+          .catch(err => {
+            console.log('Error fetching content:', err)
+            setIframeAttributes(frame, 35)
+          })
+      } else {
+        // For non-HTML content, use default height
+        setIframeAttributes(frame, 35)
+      }
+      
       const tr = myDocument.createElement('TR')
       tr.appendChild(frame)
       div.appendChild(tr)
