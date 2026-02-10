@@ -15,8 +15,32 @@ const isMarkdownFile = (uri) => {
   return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(path)
 }
 
+// Helper function to check if HTML content is a dokieli document
+const isDokieliFile = (kb, subject) => {
+  const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+  if (!cts) return false
+  const ct = cts[0].split(';', 1)[0].trim()
+  // Only check HTML files, and we'll need to have fetched it already
+  return ct === 'text/html' && kb.holds(undefined, undefined, undefined, subject.doc())
+}
+
 const humanReadablePane = {
-  icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
+  icon: function (subject, context) {
+    const kb = context.session.store
+    
+    // Check for dokieli files
+    if (isDokieliFile(kb, subject)) {
+      return icons.iconBase + 'dokieli-logo.png'
+    }
+    
+    // Check for markdown files
+    if (isMarkdownFile(subject.uri)) {
+      return icons.iconBase + 'markdown.svg'
+    }
+    
+    // Default icon for other files
+    return icons.originalIconBase + 'tango/22-text-x-generic.png'
+  },
 
   name: 'humanReadable',
 
