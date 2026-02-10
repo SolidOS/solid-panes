@@ -15,27 +15,20 @@ const isMarkdownFile = (uri) => {
   return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(path)
 }
 
-// Helper function to check if HTML content is a dokieli document
-const isDokieliFile = (kb, subject) => {
-  const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
-  if (!cts) return false
-  const ct = cts[0].split(';', 1)[0].trim()
-  // Only check HTML files, and we'll need to have fetched it already
-  return ct === 'text/html' && kb.holds(undefined, undefined, undefined, subject.doc())
-}
+// Cache for dokieli detection results (keyed by subject URI)
+const dokieliCache = new Map()
 
 const humanReadablePane = {
   icon: function (subject, context) {
-    const kb = context.session.store
-    
-    // Check for dokieli files
-    if (isDokieliFile(kb, subject)) {
-      return icons.iconBase + 'dokieli-logo.png'
-    }
-    
-    // Check for markdown files
+    // Check for markdown files by extension
     if (isMarkdownFile(subject.uri)) {
       return icons.iconBase + 'markdown.svg'
+    }
+    
+    // Check if we detected dokieli in label()
+    const cachedResult = dokieliCache.get(subject.uri)
+    if (cachedResult === 'dokieli') {
+      return icons.iconBase + 'dokieli-logo.png'
     }
     
     // Default icon for other files
@@ -99,6 +92,24 @@ const humanReadablePane = {
       hasContentTypeIn(kb, subject, allowed) ||
       hasContentTypeIn2(kb, subject, allowed)
     ) {
+      // For HTML files, check if it's dokieli (async check, store result for later)
+      const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+      const ct = cts ? cts[0].split(';', 1)[0].trim() : null
+      
+      if (ct === 'text/html' && !dokieliCache.has(subject.uri)) {
+        // Async check for dokieli, don't wait for result
+        kb.fetcher._fetch(subject.uri)
+          .then(response => response.text())
+          .then(text => {
+            const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">') || 
+                             text.includes('dokieli.css')
+            dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+          })
+          .catch(() => {
+            dokieliCache.set(subject.uri, 'html')
+          })
+      }
+      
       return 'View'
     }
 
@@ -163,23 +174,10 @@ const humanReadablePane = {
         frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
       }
 
-      // Check if content is dokieli to adjust height
-      if (ct === 'text/html') {
-        kb.fetcher._fetch(subject.uri)
-          .then(response => response.text())
-          .then(text => {
-            const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">')
-            const lines = isDokieli ? 20 : 35
-            setIframeAttributes(frame, lines)
-          })
-          .catch(err => {
-            console.log('Error fetching content:', err)
-            setIframeAttributes(frame, 35)
-          })
-      } else {
-        // For non-HTML content, use default height
-        setIframeAttributes(frame, 35)
-      }
+      // Use cached dokieli detection result or default
+      const cachedResult = dokieliCache.get(subject.uri)
+      const lines = cachedResult === 'dokieli' ? 20 : 35
+      setIframeAttributes(frame, lines)
 
       const tr = myDocument.createElement('TR')
       tr.appendChild(frame)
