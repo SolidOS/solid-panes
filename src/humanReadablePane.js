@@ -133,12 +133,12 @@ const humanReadablePane = {
     } else {
       // For other content types, use IFRAME
       const frame = myDocument.createElement('IFRAME')
-      
+
       // Apply sandbox for HTML/XHTML
       if (ct === 'text/html' || ct === 'application/xhtml+xml') {
         frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
       }
-      
+
       // Check if content is dokieli to adjust height
       if (ct === 'text/html') {
         kb.fetcher._fetch(subject.uri)
@@ -156,7 +156,7 @@ const humanReadablePane = {
         // For non-HTML content, use default height
         setIframeAttributes(frame, 35)
       }
-      
+
       const tr = myDocument.createElement('TR')
       tr.appendChild(frame)
       div.appendChild(tr)
