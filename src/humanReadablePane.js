@@ -25,22 +25,11 @@ const humanReadablePane = {
       return icons.iconBase + 'markdown.svg'
     }
     
-    // Dokieli files detected by RDF metadata (synchronous)
+    // Dokieli files detected by content check
     if (subject) {
       const kb = context.session.store
       
-      // Check RDF for dokieli stylesheets
-      const stylesheets = kb.each(subject, ns.link('stylesheet'))
-      const isDokieliByRDF = stylesheets.some(s => 
-        s.uri && s.uri.includes('dokie.li/media/css/dokieli.css')
-      )
-      
-      if (isDokieliByRDF) {
-        dokieliCache.set(subject.uri, 'dokieli')
-        return icons.iconBase + 'dokieli-logo.png'
-      }
-      
-      // Check cache from previous content detection
+      // Check cache from previous detection
       const cachedResult = dokieliCache.get(subject.uri)
       if (cachedResult === 'dokieli') {
         return icons.iconBase + 'dokieli-logo.png'
@@ -48,7 +37,7 @@ const humanReadablePane = {
         return icons.originalIconBase + 'tango/22-text-x-generic.png'
       }
       
-      // Not in RDF or cache - check if content already fetched
+      // Check if content already fetched (synchronous)
       const responseText = kb.fetcher.getHeader(subject.doc(), 'content')
       if (responseText && responseText.length > 0) {
         const text = responseText[0]
@@ -58,6 +47,27 @@ const humanReadablePane = {
         return isDokieli 
           ? icons.iconBase + 'dokieli-logo.png'
           : icons.originalIconBase + 'tango/22-text-x-generic.png'
+      }
+      
+      // Content not yet fetched - return a promise (async detection)
+      const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+      const ct = cts ? cts[0].split(';', 1)[0].trim() : null
+      
+      if (ct === 'text/html') {
+        return kb.fetcher._fetch(subject.uri)
+          .then(response => response.text())
+          .then(text => {
+            const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">') || 
+                             text.includes('dokieli.css')
+            dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+            return isDokieli 
+              ? icons.iconBase + 'dokieli-logo.png'
+              : icons.originalIconBase + 'tango/22-text-x-generic.png'
+          })
+          .catch(() => {
+            dokieliCache.set(subject.uri, 'html')
+            return icons.originalIconBase + 'tango/22-text-x-generic.png'
+          })
       }
     }
     
@@ -201,7 +211,7 @@ const humanReadablePane = {
 
       // Apply sandbox for HTML/XHTML
       if (ct === 'text/html' || ct === 'application/xhtml+xml') {
-        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
+        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms')
       }
 
       // Fetch content to calculate lines dynamically

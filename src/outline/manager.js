@@ -597,6 +597,7 @@ export default function (context) {
         // if only one, simplify interface
         relevantPanes.forEach((pane, index) => {
           const label = pane.label(subject, context)
+
           const iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
           const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
           
