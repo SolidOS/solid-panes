@@ -600,7 +600,7 @@ export default function (context) {
 
           const iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
           const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
-          
+
           // Handle async icon functions
           if (iconSrc instanceof Promise) {
             iconSrc.then(resolvedIconSrc => {
@@ -609,7 +609,7 @@ export default function (context) {
               console.error('Error resolving async icon:', err)
             })
           }
-          
+
           ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
           // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
           // ico.style.width = iconHeight
