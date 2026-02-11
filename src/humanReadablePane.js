@@ -15,8 +15,65 @@ const isMarkdownFile = (uri) => {
   return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(path)
 }
 
+// Cache for dokieli detection results (keyed by subject URI)
+const dokieliCache = new Map()
+
 const humanReadablePane = {
-  icon: icons.originalIconBase + 'tango/22-text-x-generic.png',
+  icon: function (subject, context) {
+    // Markdown files detected by extension
+    if (subject && isMarkdownFile(subject.uri)) {
+      return icons.iconBase + 'markdown.svg'
+    }
+
+    // Dokieli files detected by content check
+    if (subject) {
+      const kb = context.session.store
+
+      // Check cache from previous detection
+      const cachedResult = dokieliCache.get(subject.uri)
+      if (cachedResult === 'dokieli') {
+        return icons.iconBase + 'dokieli-logo.png'
+      } else if (cachedResult === 'html') {
+        return icons.originalIconBase + 'tango/22-text-x-generic.png'
+      }
+
+      // Check if content already fetched (synchronous)
+      const responseText = kb.fetcher.getHeader(subject.doc(), 'content')
+      if (responseText && responseText.length > 0) {
+        const text = responseText[0]
+        const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">') ||
+                         text.includes('dokieli.css')
+        dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+        return isDokieli
+          ? icons.iconBase + 'dokieli-logo.png'
+          : icons.originalIconBase + 'tango/22-text-x-generic.png'
+      }
+
+      // Content not yet fetched - return a promise (async detection)
+      const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+      const ct = cts ? cts[0].split(';', 1)[0].trim() : null
+
+      if (ct === 'text/html') {
+        return kb.fetcher._fetch(subject.uri)
+          .then(response => response.text())
+          .then(text => {
+            const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">') ||
+                             text.includes('dokieli.css')
+            dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+            return isDokieli
+              ? icons.iconBase + 'dokieli-logo.png'
+              : icons.originalIconBase + 'tango/22-text-x-generic.png'
+          })
+          .catch(() => {
+            dokieliCache.set(subject.uri, 'html')
+            return icons.originalIconBase + 'tango/22-text-x-generic.png'
+          })
+      }
+    }
+
+    // Default for all other human-readable content
+    return icons.originalIconBase + 'tango/22-text-x-generic.png'
+  },
 
   name: 'humanReadable',
 
@@ -75,6 +132,24 @@ const humanReadablePane = {
       hasContentTypeIn(kb, subject, allowed) ||
       hasContentTypeIn2(kb, subject, allowed)
     ) {
+      // For HTML files, check if it's dokieli (async check, store result for later)
+      const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+      const ct = cts ? cts[0].split(';', 1)[0].trim() : null
+
+      if (ct === 'text/html' && !dokieliCache.has(subject.uri)) {
+        // Async check for dokieli, don't wait for result
+        kb.fetcher._fetch(subject.uri)
+          .then(response => response.text())
+          .then(text => {
+            const isDokieli = text.includes('<script src="https://dokie.li/scripts/dokieli.js">') ||
+                             text.includes('dokieli.css')
+            dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+          })
+          .catch(() => {
+            dokieliCache.set(subject.uri, 'html')
+          })
+      }
+
       return 'View'
     }
 
@@ -117,20 +192,10 @@ const humanReadablePane = {
       })
     }
 
-    const setIframeAttributes = (frame, blob, lines) => {
-      frame.setAttribute('src', URL.createObjectURL(blob))
-      frame.setAttribute('type', blob.type)
+    const setIframeAttributes = (frame, lines) => {
+      frame.setAttribute('src', subject.uri)
       frame.setAttribute('class', 'doc')
       frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
-
-      // Apply sandbox attribute only for HTML files
-      // @@ Note below - if we set ANY sandbox, then Chrome and Safari won't display it if it is PDF.
-      // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe
-      // You can't have any sandbox and allow plugins.
-      // We could sandbox only HTML files I suppose.
-      if (blob.type === 'text/html' || blob.type === 'application/xhtml+xml') {
-        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin')
-      }
     }
 
     if (isMarkdown) {
@@ -143,27 +208,30 @@ const humanReadablePane = {
     } else {
       // For other content types, use IFRAME
       const frame = myDocument.createElement('IFRAME')
-      // Fetch and process the blob
-      kb.fetcher._fetch(subject.uri)
-        .then(response => response.blob())
-        .then(blob => {
-          const blobTextPromise = blob.type.startsWith('text') ? blob.text() : Promise.resolve('')
-          return blobTextPromise.then(blobText => ({ blob, blobText }))
-        })
-        .then(({ blob, blobText }) => {
-          const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
-          const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-          // For text content, create a new blob with proper charset to avoid encoding warnings
-          if (blob.type.startsWith('text/') && !blob.type.includes('charset')) {
-            const newBlob = new Blob([blobText], { type: blob.type + '; charset=utf-8' })
-            setIframeAttributes(frame, newBlob, lines)
-          } else {
-            setIframeAttributes(frame, blob, lines)
-          }
-        })
-        .catch(err => {
-          console.log('Error fetching or processing blob:', err)
-        })
+
+      // Apply sandbox for HTML/XHTML
+      if (ct === 'text/html' || ct === 'application/xhtml+xml') {
+        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms')
+      }
+
+      // Fetch content to calculate lines dynamically
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const blobText = response.responseText
+        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
+        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
+
+        // Cache dokieli detection result
+        const isDokieli = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ||
+                         blobText.includes('dokieli.css')
+        dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+
+        setIframeAttributes(frame, lines)
+      }).catch(error => {
+        console.error('Error fetching content for line calculation:', error)
+        // Fallback to default height
+        setIframeAttributes(frame, 30)
+      })
+
       const tr = myDocument.createElement('TR')
       tr.appendChild(frame)
       div.appendChild(tr)
