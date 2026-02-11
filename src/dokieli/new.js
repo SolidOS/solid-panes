@@ -1,5 +1,4 @@
-const DOKIELI_TEMPLATE = `
-<!DOCTYPE html>
+const DOKIELI_TEMPLATE = `<!DOCTYPE html>
 <html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta charset="utf-8" />
@@ -17,6 +16,7 @@ const DOKIELI_TEMPLATE = `
       </article>
     </main>
   </body>
-</html>`
+</html>
+`
 
 export default DOKIELI_TEMPLATE
