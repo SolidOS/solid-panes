@@ -69,7 +69,7 @@
     "meeting-pane": "^3.0.1",
     "mime-types": "^3.0.2",
     "pane-registry": "^3.0.1",
-    "profile-pane": "^3.1.0",
+    "profile-pane": "^3.1.1",
     "solid-namespace": "^0.5.4",
     "source-pane": "^3.0.1"
   },
@@ -107,13 +107,13 @@
     "rdflib": "^2.3.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "solid-logic": "^4.0.2",
+    "solid-logic": "^4.0.3",
     "solid-ui": "^3.0.4",
     "style-loader": "^4.0.0",
     "ts-jest": "^29.4.6",
     "ts-loader": "^9.5.4",
     "typescript": "^5.9.3",
-    "webpack": "^5.105.1",
+    "webpack": "^5.105.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.3"
   }

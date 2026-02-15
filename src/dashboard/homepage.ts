@@ -6,7 +6,7 @@ export async function generateHomepage (
   store: IndexedFormula,
   fetcher: Fetcher
 ): Promise<HTMLElement> {
-  const ownersProfile = await loadProfile(subject, fetcher)
+  const ownersProfile = await loadProfile(subject, store, fetcher)
   const name = getName(store, ownersProfile)
 
   const wrapper = document.createElement('div')
@@ -54,13 +54,36 @@ function createTitle (uri: string, name: string): HTMLElement {
 
 async function loadProfile (
   subject: NamedNode,
+  store: IndexedFormula,
   fetcher: Fetcher
 ): Promise<NamedNode> {
   const pod = subject.site().uri
   // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
   const webId = sym(`${pod}profile/card#me`)
-  await fetcher.load(webId)
-  return webId
+  try {
+    await fetcher.load(webId)
+    return webId
+  } catch (err) {
+    // Fall back to pod root and any discovered profile links.
+  }
+
+  try {
+    await fetcher.load(subject)
+  } catch (err) {
+    return subject
+  }
+
+  const primaryTopic = store.any(subject, ns.foaf('primaryTopic'), null, subject.doc())
+  if (primaryTopic && primaryTopic.termType === 'NamedNode') {
+    try {
+      await fetcher.load(primaryTopic as NamedNode)
+      return primaryTopic as NamedNode
+    } catch (err) {
+      return subject
+    }
+  }
+
+  return subject
 }
 
 function getName (store: IndexedFormula, ownersProfile: NamedNode): string {
