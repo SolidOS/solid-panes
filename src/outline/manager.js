@@ -2100,8 +2100,24 @@ export default function (context) {
       !UI.widgets.isAudio(subject) &&
       !UI.widgets.isVideo(subject)
     ) {
+      const docUri = (subject.doc() && subject.doc().uri) ? subject.doc().uri : '' + subject.doc()
+      const appendOutlineError = function (detail, errObj) {
+        if (p.querySelector && docUri) {
+          const existing = p.querySelector('[data-outline-error-for="' + docUri + '"]')
+          if (existing) return
+        }
+        const message = UI.widgets.errorMessageBlock(
+          dom,
+          detail,
+          '#fee',
+          errObj instanceof Error ? errObj : undefined
+        )
+        if (docUri) message.setAttribute('data-outline-error-for', docUri)
+        p.appendChild(message)
+      }
       // Wait till at least the main URI is loaded before expanding:
-      sf.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
+      let errorReported = false
+      const fetchPromise = sf.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
         if (ok) {
           sf.lookUpThing(subject)
           render() // inital open, or else full if re-open
@@ -2111,14 +2127,17 @@ export default function (context) {
             setUrlBarAndTitle(subject)
           }
         } else {
-          const message = dom.createElement('pre')
-          message.textContent = body
-          message.setAttribute('style', 'background-color: #fee;')
-          message.textContent =
-            'Outline.expand: Unable to fetch ' + subject.doc() + ': ' + body
-          p.appendChild(message)
+          errorReported = true
+          appendOutlineError(body, undefined)
         }
       })
+      if (fetchPromise && typeof fetchPromise.catch === 'function') {
+        fetchPromise.catch(function (err) {
+          if (errorReported) return
+          errorReported = true
+          appendOutlineError(err, err)
+        })
+      }
     } else {
       render()
     }
