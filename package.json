@@ -61,7 +61,7 @@
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "^1.0.1",
     "chat-pane": "^3.0.1",
-    "contacts-pane": "3.1.0-newStyle-88f990f7",
+    "contacts-pane": "^3.0.1",
     "dompurify": "^3.3.1",
     "folder-pane": "^3.0.1",
     "issue-pane": "^3.0.1",
