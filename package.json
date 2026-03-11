@@ -70,8 +70,8 @@
     "pane-registry": "^3.0.1",
     "profile-pane": "^3.1.2",
     "solid-namespace": "^0.5.4",
-    "source-pane": "^3.0.1",
-    "solid-ui": "3.0.4"
+    "solid-ui": "^3.0.4",
+    "source-pane": "^3.0.1"
   },
   "overrides": {
     "rdflib": "$rdflib",
@@ -93,9 +93,9 @@
     "babel-loader": "^10.0.0",
     "babel-plugin-inline-import": "^3.0.0",
     "buffer": "^6.0.3",
+    "copy-webpack-plugin": "^13.0.1",
     "css-loader": "^7.1.4",
     "eslint": "^9.39.3",
-    "copy-webpack-plugin": "^13.0.1",
     "globals": "^17.3.0",
     "html-webpack-plugin": "^5.6.6",
     "jest": "^30.2.0",
@@ -109,7 +109,6 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "solid-logic": "^4.0.3",
-    "solid-ui": "^3.0.4",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.16",
     "ts-jest": "^29.4.6",
