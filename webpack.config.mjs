@@ -28,17 +28,17 @@ const common = {
     ],
   },
   externals: {
-    'fs': 'null',
+    fs: 'null',
     'node-fetch': 'fetch',
     'isomorphic-fetch': 'fetch',
     'text-encoding': 'TextEncoder',
     '@trust/webcrypto': 'crypto',
-    'rdflib': 'rdflib',
-    '$rdf': 'rdflib',
+    rdflib: 'rdflib',
+    $rdf: 'rdflib',
     'solid-logic': 'SolidLogic',
-    'SolidLogic': 'SolidLogic',
+    SolidLogic: 'SolidLogic',
     'solid-ui': 'UI',
-    'UI': 'UI',
+    UI: 'UI',
   },
   devtool: 'source-map',
 }
@@ -65,8 +65,8 @@ const normalConfig = {
           from: 'src/**/*.css',
           to: ({ context, absoluteFilename }) => {
             // Preserve folder structure under dist/
-            const relPath = path.relative(path.resolve('src'), absoluteFilename);
-            return path.resolve('dist', relPath);
+            const relPath = path.relative(path.resolve('src'), absoluteFilename)
+            return path.resolve('dist', relPath)
           },
         },
       ],
@@ -99,9 +99,9 @@ const minConfig = {
           from: 'src/**/*.css',
           to: ({ context, absoluteFilename }) => {
             // Preserve folder structure under dist/
-            const relPath = path.relative(path.resolve('src'), absoluteFilename);
-            return path.resolve('dist', relPath);
-            },
+            const relPath = path.relative(path.resolve('src'), absoluteFilename)
+            return path.resolve('dist', relPath)
+          },
         },
       ],
     }),
