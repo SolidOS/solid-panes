@@ -12,7 +12,10 @@ export default {
   },
   transformIgnorePatterns: ['/node_modules/(?!lit-html).+\\.js'],
   moduleNameMapper: {
-    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js',
+    '^SolidLogic$': 'solid-logic',
+    '^UI$': 'solid-ui',
+    '^\\$rdf$': 'rdflib',
+    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js'
   },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],

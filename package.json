@@ -70,7 +70,8 @@
     "pane-registry": "^3.0.1",
     "profile-pane": "^3.1.2",
     "solid-namespace": "^0.5.4",
-    "source-pane": "^3.0.1"
+    "source-pane": "^3.0.1",
+    "solid-ui": "3.0.4-e2611ae"
   },
   "overrides": {
     "rdflib": "$rdflib",
@@ -108,7 +109,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "solid-logic": "^4.0.3",
-    "solid-ui": "^3.0.4",
+    "solid-ui": "^3.0.4-e2611ae",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.16",
     "ts-jest": "^29.4.6",
