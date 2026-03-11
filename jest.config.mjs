@@ -11,6 +11,9 @@ export default {
     '^.+\\.[tj]sx?$': ['babel-jest', { configFile: './babel.config.mjs' }],
   },
   transformIgnorePatterns: ['/node_modules/(?!lit-html).+\\.js'],
+  moduleNameMapper: {
+    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js',
+  },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   roots: ['<rootDir>/src', '<rootDir>/test'],

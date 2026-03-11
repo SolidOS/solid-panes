@@ -173,6 +173,10 @@ export default function (context) {
     const td = dom.createElement('td')
     td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
+    td.style.margin = '0.2em'
+    td.style.border = 'none'
+    td.style.padding = '0'
+    td.style.verticalAlign = 'top'
     const theClass = 'obj'
 
     // set about and put 'expand' icon
@@ -196,7 +200,6 @@ export default function (context) {
       ).addEventListener('click', expandMouseDownListener)
     }
     td.setAttribute('class', theClass) // this is how you find an object
-    // @@ TAKE CSS OUT OF STYLE SHEET
     if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
       td.className = 'undetermined'
     } // @@? why-timbl
