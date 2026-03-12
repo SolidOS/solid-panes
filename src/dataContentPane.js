@@ -11,6 +11,7 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import './style/dataContentPane.css '
 
 const ns = UI.ns
 
