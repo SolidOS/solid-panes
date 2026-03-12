@@ -11,7 +11,7 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
-import './style/dataContentPane.css '
+import './styles/dataContentPane.css'
 
 const ns = UI.ns
 
@@ -75,6 +75,7 @@ export const dataContentPane = {
       for (let i = 0; i < sts.length; i++) {
         const st = sts[i]
         const tr = myDocument.createElement('tr')
+        tr.classList.add('dataContentPaneTopAlignedRow')
         if (st.predicate.uri !== lastPred) {
           if (lastPred && same > 1) {
             predicateTD.setAttribute('rowspan', '' + same)
@@ -126,7 +127,7 @@ export const dataContentPane = {
         case 'Literal':
           if (!obj.datatype || !obj.datatype.uri) {
             res = myDocument.createElement('div')
-            res.setAttribute('style', 'white-space: pre-wrap;')
+            res.classList.add('contentPaneLiteral')
             res.textContent = obj.value
             return res
           } else if (
@@ -134,7 +135,7 @@ export const dataContentPane = {
             'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral'
           ) {
             res = myDocument.createElement('div')
-            res.setAttribute('class', 'embeddedXHTML')
+            res.classList.add('embeddedXHTML')
             res.innerHTML = obj.value // Try that  @@@ beware embedded dangerous code
             return res
           }
@@ -153,14 +154,11 @@ export const dataContentPane = {
           doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
           const newTable = propertyTree(obj)
           doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
-          if (
-            UI.utils.ancestor(newTable, 'TABLE') &&
-            UI.utils.ancestor(newTable, 'TABLE').style.backgroundColor ===
-            'white'
-          ) {
-            newTable.style.backgroundColor = '#eee'
+          const parentTable = UI.utils.ancestor(newTable, 'TABLE')
+          if (parentTable && parentTable.classList.contains('dataContentPaneNestedLight')) {
+            newTable.classList.add('dataContentPaneNestedDark')
           } else {
-            newTable.style.backgroundColor = 'white'
+            newTable.classList.add('dataContentPaneNestedLight')
           }
           return newTable
         }
@@ -201,7 +199,7 @@ export const dataContentPane = {
     }
     for (let i = 0; i < roots.length; i++) {
       const tr = myDocument.createElement('tr')
-      tr.setAttribute('style', `background-color: ${i % 2 === 0 ? '#f0f0f0' : 'white'};`)
+      tr.classList.add(i % 2 === 0 ? 'dataContentPaneRowEven' : 'dataContentPaneRowOdd')
       rep.appendChild(tr)
       const subjectTD = myDocument.createElement('td')
       tr.appendChild(subjectTD)
@@ -249,9 +247,9 @@ export const dataContentPane = {
         return div
       }
       for (let i = 0; i < roots.length; i++) {
-        const tr = myDocument.createElement('TR')
+        const tr = myDocument.createElement('tr')
+        tr.classList.add('dataContentPaneTopAlignedRow')
         const root = roots[i]
-        tr.style.verticalAlign = 'top'
         const td = outliner.outlineObjectTD(root, undefined, tr)
         tr.appendChild(td)
         div.appendChild(tr)

@@ -1,0 +1,23 @@
+.contentPaneLiteral {
+  white-space: pre-wrap;
+}
+
+.dataContentPaneRowEven {
+  background-color: #f0f0f0;
+}
+
+.dataContentPaneRowOdd {
+  background-color: white;
+}
+
+.dataContentPaneTopAlignedRow {
+  vertical-align: top;
+}
+
+.dataContentPaneNestedLight {
+  background-color: white;
+}
+
+.dataContentPaneNestedDark {
+  background-color: #eee;
+}
