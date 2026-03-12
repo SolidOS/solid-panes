@@ -3,7 +3,7 @@ import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
-import { dataContentPane as Pane } from '../src/dataContentPane.js'
+import Pane from '../src/humanReadablePane.js'
 import './dev-mash.css'
 
 // Add custom properties to the Window interface for TypeScript

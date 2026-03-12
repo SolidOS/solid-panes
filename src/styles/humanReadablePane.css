@@ -1,0 +1,8 @@
+.humanReadableFrame {
+	border: 1px solid;
+	padding: 1em;
+	height: var(--human-readable-height, 30em);
+	width: 800px;
+	resize: both;
+	overflow: auto;
+}

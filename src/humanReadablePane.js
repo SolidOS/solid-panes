@@ -7,6 +7,7 @@ import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import './styles/humanReadablePane.css'
 
 // Helper function to check if a URI has a markdown file extension
 const isMarkdownFile = (uri) => {
@@ -176,6 +177,11 @@ const humanReadablePane = {
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
 
+    const setFrameDisplayStyles = function (frame, lines) {
+      frame.classList.add('doc', 'humanReadableFrame')
+      frame.style.setProperty('--human-readable-height', `${lines}em`)
+    }
+
     // render markdown to html in a DIV element
     const renderMarkdownContent = function (frame) {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
@@ -184,8 +190,7 @@ const humanReadablePane = {
         const res = marked.parse(markdownText)
         const clean = DOMPurify.sanitize(res)
         frame.innerHTML = clean
-        frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
+        setFrameDisplayStyles(frame, lines)
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'
@@ -194,20 +199,19 @@ const humanReadablePane = {
 
     const setIframeAttributes = (frame, lines) => {
       frame.setAttribute('src', subject.uri)
-      frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
+      setFrameDisplayStyles(frame, lines)
     }
 
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
-      const frame = myDocument.createElement('DIV')
+      const frame = myDocument.createElement('div')
       renderMarkdownContent(frame)
-      const tr = myDocument.createElement('TR')
+      const tr = myDocument.createElement('tr')
       tr.appendChild(frame)
       div.appendChild(tr)
     } else {
       // For other content types, use IFRAME
-      const frame = myDocument.createElement('IFRAME')
+      const frame = myDocument.createElement('iframe')
 
       // Apply sandbox for HTML/XHTML
       if (ct === 'text/html' || ct === 'application/xhtml+xml') {
@@ -232,7 +236,7 @@ const humanReadablePane = {
         setIframeAttributes(frame, 30)
       })
 
-      const tr = myDocument.createElement('TR')
+      const tr = myDocument.createElement('tr')
       tr.appendChild(frame)
       div.appendChild(tr)
     }
