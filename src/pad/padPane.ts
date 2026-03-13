@@ -517,7 +517,7 @@ const paneDef: PaneDefinition = {
     //  Build the DOM
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.classList.add('padPaneTable')
-  
+
     const naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
     naviLoginoutTR.appendChild(dom.createElement('td')) // naviLoginout1
     naviLoginoutTR.appendChild(dom.createElement('td'))
