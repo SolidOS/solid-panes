@@ -3,7 +3,7 @@ import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
-import Pane from '../src/humanReadablePane.js'
+import { schedulePane as Pane } from '../src/schedule/schedulePane'
 import './dev-mash.css'
 
 // Add custom properties to the Window interface for TypeScript
@@ -53,7 +53,7 @@ async function renderPane (uri: string) {
   console.log(subject, context)
   try {
     const icon = createIconElement(Pane)
-    const paneDiv = Pane.render(paneSubject, context)
+    const paneDiv = Pane.render(paneSubject, context, {})
     if (target) {
       target.innerHTML = ''
       target.appendChild(icon)
@@ -100,7 +100,7 @@ window.onload = async () => {
       loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
     }
   }
-  renderPane('https://testingsolidos.solidcommunity.net/profile/card')
+  renderPane('https://sstratsianis.solidcommunity.net/ScheduleEventTest/details.ttl#this')
 }
 window.logout = () => {
   authSession.logout()
