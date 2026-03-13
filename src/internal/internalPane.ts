@@ -8,6 +8,7 @@
 import { icons, ns, widgets } from 'solid-ui'
 import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+import '../styles/internalPane.css'
 
 const pane: PaneDefinition = {
   icon: icons.originalIconBase + 'tango/22-emblem-system.png',
@@ -35,11 +36,7 @@ const pane: PaneDefinition = {
     }
 
     const div = dom.createElement('div')
-    div.setAttribute('class', 'internalPane')
-    div.setAttribute(
-      'style',
-      'background-color: #ddddff; padding: 0.5em; border-radius: 1em;'
-    )
+    div.classList.add('internalPane', 'internalPaneContent')
 
     function deleteRecursive (kb: IndexedFormula, folder: NamedNode) {
       const fetcher = (kb as any).fetcher
@@ -85,8 +82,7 @@ const pane: PaneDefinition = {
     const isDocument = subject.uri && !subject.uri.includes('#')
     if (isDocument) {
       const controls = div.appendChild(dom.createElement('table'))
-      controls.style.width = '100%'
-      controls.style.margin = '1em'
+      controls.classList.add('internalPaneControls')
       const controlRow = controls.appendChild(dom.createElement('tr'))
 
       const deleteCell = controlRow.appendChild(dom.createElement('td'))
@@ -127,8 +123,9 @@ const pane: PaneDefinition = {
               })
           }
         )
-        deleteButton.style = 'height: 2em;'
+
         deleteButton.class = '' // Remove hover hide
+        deleteButton.classList.add('internalPaneDeleteButton')
         deleteCell.appendChild(deleteButton)
       }
 

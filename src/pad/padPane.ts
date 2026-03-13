@@ -2,6 +2,7 @@ import { icons, ns, pad, widgets, login } from 'solid-ui'
 import { authn, AppDetails } from 'solid-logic'
 import { graph, log, NamedNode, Namespace, sym, serialize, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+import '../styles/padPane.css'
 /*   pad Pane
  **
  */
@@ -390,7 +391,7 @@ const paneDef: PaneDefinition = {
         // give the user links to the new app
 
         const p = div.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'font-size: 140%;')
+        p.classList.add('padPaneSuccess')
         p.innerHTML =
           'Your <a href=\'' +
           newIndexDoc.uri +
@@ -416,7 +417,7 @@ const paneDef: PaneDefinition = {
 
       const title =
         store.any(subject, ns.dc('title')) || store.any(subject, ns.vcard('fn'))
-      if (paneOptions.solo && typeof window !== 'undefined' && title) {
+      if (paneOptions?.solo && typeof window !== 'undefined' && title) {
         window.document.title = title.value
       }
       options.exists = exists
@@ -515,10 +516,7 @@ const paneDef: PaneDefinition = {
 
     //  Build the DOM
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
-    structure.setAttribute(
-      'style',
-      'background-color: white; min-width: 94%; margin-right:3% margin-left: 3%; min-height: 13em;'
-    )
+    structure.classList.add('padPaneTable')
 
     const naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
     naviLoginoutTR.appendChild(dom.createElement('td')) // naviLoginout1
@@ -541,8 +539,7 @@ const paneDef: PaneDefinition = {
     const spawnArea = naviSpawn.appendChild(dom.createElement('div'))
 
     const naviMenu = structure.appendChild(dom.createElement('tr'))
-    naviMenu.setAttribute('class', 'naviMenu')
-    // naviMenu.setAttribute('style', 'margin-top: 3em;');
+    naviMenu.classList.add('naviMenu')
     naviMenu.appendChild(dom.createElement('td')) // naviLeft
     naviMenu.appendChild(dom.createElement('td'))
     naviMenu.appendChild(dom.createElement('td'))

@@ -1,0 +1,13 @@
+.padPaneTable {
+  border-collapse: collapse;
+  width: 100%;
+  background-color: white; 
+  min-width: 94%; 
+  margin-right: 3%;
+  margin-left: 3%;
+  min-height: 13em;
+}
+
+.padPaneSuccess {
+  font-size: 140%;
+}

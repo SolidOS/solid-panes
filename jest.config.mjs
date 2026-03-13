@@ -11,6 +11,12 @@ export default {
     '^.+\\.[tj]sx?$': ['babel-jest', { configFile: './babel.config.mjs' }],
   },
   transformIgnorePatterns: ['/node_modules/(?!lit-html).+\\.js'],
+  moduleNameMapper: {
+    '^SolidLogic$': 'solid-logic',
+    '^UI$': 'solid-ui',
+    '^\\$rdf$': 'rdflib',
+    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js'
+  },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   roots: ['<rootDir>/src', '<rootDir>/test'],
