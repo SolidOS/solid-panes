@@ -8,6 +8,7 @@ import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
 import formText from './formsForSchedule.ttl'
+import '../styles/schedulePane.css'
 
 const ns = UI.ns
 
@@ -347,10 +348,6 @@ export const schedulePane = {
 
     $rdf.parse(formText, kb, formsURI, 'text/turtle') // Load forms directly
 
-    const inputStyle =
-      'background-color: #eef; padding: 0.5em;  border: .5em solid white; font-size: 100%' //  font-size: 120%
-    const buttonIconStyle = 'width: 1.8em; height: 1.8em;'
-
     // Utility functions
 
     const complainIfBad = function (ok, message) {
@@ -369,9 +366,10 @@ export const schedulePane = {
     const refreshCellColor = function (cell, value) {
       const bg = kb.any(value, UI.ns.ui('backgroundColor'))
       if (bg) {
+        cell.classList.add('schedulePaneCell')
         cell.setAttribute(
           'style',
-          'padding: 0.3em; text-align: center; background-color: ' + bg + ';'
+          'background-color: ' + bg + ';'
         )
       }
     }
@@ -402,7 +400,7 @@ export const schedulePane = {
         { noun: 'scheduler' },
         initializeNewInstanceInWorkspace
       )
-      b.firstChild.setAttribute('style', inputStyle)
+      b.firstChild.classList.add('schedulePaneButton')
       return b
     } // newInstanceButton
 
@@ -539,7 +537,7 @@ export const schedulePane = {
       div.appendChild(dom.createElement('br')) // @@
 
       const button = div.appendChild(dom.createElement('button'))
-      button.setAttribute('style', inputStyle)
+      button.classList.add('schedulePaneButton')
       button.textContent = 'Start new poll at this URI'
       button.addEventListener('click', function (_e) {
         let newBase = baseField.value
@@ -649,7 +647,7 @@ export const schedulePane = {
           }
         }
         const b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
-        b1.setAttribute('style', inputStyle)
+        b1.classList.add('schedulePaneButton')
         b1.textContent = '<- go back'
         b1.addEventListener(
           'click',
@@ -665,7 +663,7 @@ export const schedulePane = {
         const b2 = clearElement(naviRight).appendChild(
           dom.createElement('button')
         )
-        b2.setAttribute('style', inputStyle)
+        b2.classList.add('schedulePaneButton')
         b2.textContent = 'continue ->'
         b2.addEventListener(
           'click',
@@ -730,7 +728,7 @@ export const schedulePane = {
         $rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)
       ) // @@ also link in results
 
-      doneButton.setAttribute('style', inputStyle)
+      doneButton.classList.add('schedulePaneButton')
       doneButton.textContent = 'Go to poll'
       doneButton.addEventListener(
         'click',
@@ -759,10 +757,10 @@ export const schedulePane = {
       )
 
       const emailButton = dom.createElement('button')
-      emailButton.setAttribute('style', inputStyle)
+      emailButton.classList.add('schedulePaneButton')
       const emailIcon = emailButton.appendChild(dom.createElement('img'))
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
-      emailIcon.setAttribute('style', buttonIconStyle)
+      emailIcon.classList.add('schedulePaneButtonIcon')
       // emailButton.textContent = 'email invitations'
       emailButton.addEventListener(
         'click',
@@ -1047,11 +1045,11 @@ export const schedulePane = {
         matrix.setAttribute('class', 'matrix')
 
         const refreshButton = dom.createElement('button')
-        refreshButton.setAttribute('style', inputStyle)
+        refreshButton.classList.add('schedulePaneButton')
         // refreshButton.textContent = 'refresh' // noun_479395.svg
         const refreshIcon = dom.createElement('img')
         refreshIcon.setAttribute('src', UI.icons.iconBase + 'noun_479395.svg')
-        refreshIcon.setAttribute('style', buttonIconStyle)
+        refreshIcon.classList.add('schedulePaneButtonIcon')
         refreshButton.appendChild(refreshIcon)
         refreshButton.addEventListener(
           'click',
@@ -1180,11 +1178,11 @@ export const schedulePane = {
       const instanceCreator = kb.any(subject, ns.foaf('maker')) // owner?
       if (!instanceCreator || instanceCreator.sameTerm(me)) {
         const editButton = dom.createElement('button')
-        editButton.setAttribute('style', inputStyle)
+        editButton.classList.add('schedulePaneButton')
         // editButton.textContent = '(Modify the poll)' // noun_344563.svg
         const editIcon = dom.createElement('img')
         editIcon.setAttribute('src', UI.icons.iconBase + 'noun_344563.svg')
-        editIcon.setAttribute('style', buttonIconStyle)
+        editIcon.classList.add('schedulePaneButtonIcon')
         editButton.appendChild(editIcon)
         editButton.addEventListener(
           'click',
@@ -1206,10 +1204,7 @@ export const schedulePane = {
 
     const div = dom.createElement('div')
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
-    structure.setAttribute(
-      'style',
-      'background-color: white; min-width: 40em; min-height: 13em;'
-    )
+    structure.classList.add('schedulePaneTable')
 
     const naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
@@ -1230,12 +1225,7 @@ export const schedulePane = {
     naviMain.setAttribute('colspan', '3')
 
     const naviMenu = structure.appendChild(dom.createElement('tr'))
-    naviMenu.setAttribute('class', 'naviMenu')
-    naviMenu.setAttribute(
-      'style',
-      ' text-align: middle; vertical-align: middle; padding-top: 4em; '
-    )
-    //    naviMenu.setAttribute('style', 'margin-top: 3em;')
+    naviMenu.classList.add('naviMenu', 'schedulePaneNaviMenu')
     const naviLeft = naviMenu.appendChild(dom.createElement('td'))
     const naviCenter = naviMenu.appendChild(dom.createElement('td'))
     const naviRight = naviMenu.appendChild(dom.createElement('td'))
