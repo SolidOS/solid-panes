@@ -1,0 +1,19 @@
+.formPaneMessage {
+	color: #666;
+	margin: var(--spacing-xs, 0.5em) 0;
+	padding: var(--spacing-xs, 0.35em) var(--spacing-xs, 0.5em);
+}
+
+.formPaneMessageInfo {
+	background-color: var(--color-main-block-bg, #eee);
+}
+
+.formPaneMessageError {
+	background-color: var(--color-log-error-bg, #fee);
+}
+.formPaneEditButton {
+  padding: var(--spacing-xs, 0.5em);  
+  border: .5em solid white; 
+  font-size: 100%;
+  float: right;
+}
