@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [22, 24]
 
     steps:
       - uses: actions/checkout@v6
@@ -30,8 +30,8 @@ jobs:
       - run: npm test
       - run: npm run build --if-present
       - name: Save build
-        if: matrix.node-version == 20
-        uses: actions/upload-artifact@v7
+        if: matrix.node-version == 22
+        uses: actions/upload-artifact@v6
         with:
           name: build
           path: |
@@ -66,7 +66,7 @@ jobs:
             name: build
         - uses: actions/setup-node@v6
           with:
-            node-version: 20
+            node-version: 22
             registry-url: 'https://registry.npmjs.org'
         - name: Update npm to latest (required for OIDC)
           run: npm install -g npm@latest
@@ -92,7 +92,7 @@ jobs:
           name: build
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 22
           registry-url: 'https://registry.npmjs.org'
       - name: Update npm to latest (required for OIDC)
         run: npm install -g npm@latest
