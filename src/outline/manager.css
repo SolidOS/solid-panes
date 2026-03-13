@@ -1,0 +1,80 @@
+/* Styles extracted from manager.js */
+
+.obj {
+  margin: 0.2em;
+  border: none;
+  padding: 0;
+  vertical-align: top;
+}
+
+.pred, .pred.internal {
+  /* Add any specific styles for predicate TDs here */
+}
+
+.iconTD {
+  margin: 0.2em;
+  border: none;
+  padding: 0;
+  vertical-align: top;
+  width: 0px;
+}
+
+.labelTD {
+  width: 100%;
+}
+
+.paneIconTray {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.paneShown {
+  width: 24px;
+  border-radius: 0.5em;
+  border-top: solid #222 1px;
+  border-left: solid #222 0.1em;
+  border-bottom: solid #eee 0.1em;
+  border-right: solid #eee 0.1em;
+  margin-left: 1em;
+  padding: 3px;
+  background-color: #ffd;
+}
+
+.paneHidden {
+  width: 24px;
+  border-radius: 0.5em;
+  margin-left: 1em;
+  padding: 3px;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.strongHeader {
+  font-size: 150%;
+  margin: 0 0.6em 0 0;
+  padding: 0.1em 0.4em;
+}
+
+.tableFullWidth {
+  width: 100%;
+}
+
+.placeholderTable {
+  width: 100%;
+}
+
+.tdFlex {
+  margin: 0.2em;
+  border: none;
+  padding: 0;
+  vertical-align: top;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
