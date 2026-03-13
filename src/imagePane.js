@@ -3,6 +3,7 @@
  **  This outline pane contains the document contents for an Image document
  */
 import * as UI from 'solid-ui'
+import './styles/imagePane.css'
 
 export const imagePane = {
   icon: UI.icons.originalIconBase + 'tango/22-image-x-generic.png',
@@ -50,7 +51,7 @@ export const imagePane = {
     const store = context.session.store
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'imageView')
-    const img = myDocument.createElement('IMG')
+    const img = myDocument.createElement('img')
 
     // get image with authenticated fetch
     store.fetcher._fetch(subject.uri)
@@ -61,11 +62,8 @@ export const imagePane = {
         const objectURL = URL.createObjectURL(myBlob)
         img.setAttribute('src', objectURL) // w640 h480 //
       })
-
-    img.setAttribute('style', 'max-width: 100%; max-height: 100%;')
-    //        div.style['max-width'] = '640'
-    //        div.style['max-height'] = '480'
-    const tr = myDocument.createElement('TR') // why need tr?
+    img.classList.add('imagePaneViewImage')  
+    const tr = myDocument.createElement('tr') // why need tr?
     tr.appendChild(img)
     div.appendChild(tr)
     return div
