@@ -62,7 +62,7 @@ export const imagePane = {
         const objectURL = URL.createObjectURL(myBlob)
         img.setAttribute('src', objectURL) // w640 h480 //
       })
-    img.classList.add('imagePaneViewImage')  
+    img.classList.add('imagePaneViewImage')
     const tr = myDocument.createElement('tr') // why need tr?
     tr.appendChild(img)
     div.appendChild(tr)
