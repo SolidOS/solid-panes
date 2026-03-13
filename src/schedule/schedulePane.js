@@ -557,9 +557,53 @@ export const schedulePane = {
     const showForms = function () {
       clearElement(naviCenter) // Remove refresh button if nec
       const div = naviMain
+
+      // form2 depends on sched:allDay; seed a local default for new polls
+      if (!kb.any(subject, ns.sched('allDay'))) {
+        kb.add(
+          subject,
+          ns.sched('allDay'),
+          $rdf.literal(
+            'true',
+            undefined,
+            $rdf.sym('http://www.w3.org/2001/XMLSchema#boolean')
+          ),
+          detailsDoc
+        )
+      }
+
       const wizard = true
       let currentSlide = 0
       let gotDoneButton = false
+
+      const hasFormControls = function (container) {
+        return !!container.querySelector('input, select, textarea, button')
+      }
+
+      const asBoolean = function (term, fallback) {
+        if (!term) return fallback
+        const value = (term.value || '').toLowerCase()
+        if (value === 'true' || value === '1') return true
+        if (value === 'false' || value === '0') return false
+        return fallback
+      }
+
+      const renderTimeProposalFallback = function (slide) {
+        const allDayValue = asBoolean(kb.any(subject, ns.sched('allDay')), true)
+        const fallbackForm = kb.sym(
+          formsURI + (allDayValue ? '#AllDayForm2' : '#NotAllDayForm2')
+        )
+        UI.widgets.appendForm(
+          document,
+          slide,
+          {},
+          subject,
+          fallbackForm,
+          detailsDoc,
+          complainIfBad
+        )
+      }
+
       if (wizard) {
         const forms = [form1, form2, form3]
         const slides = []
@@ -575,6 +619,12 @@ export const schedulePane = {
             detailsDoc,
             complainIfBad
           )
+
+          // Some stores end up with form2's ui:Options unresolved; force a usable input form.
+          if (f === 1 && !hasFormControls(slide)) {
+            renderTimeProposalFallback(slide)
+          }
+
           slides.push(slide)
         }
 
@@ -882,7 +932,7 @@ export const schedulePane = {
 
     // Read or create empty results file
     function getResults () {
-      fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
+      fetcher.nowOrWhenFetched(resultsDoc.uri, undefined, (ok, body, response) => {
         if (!ok) {
           if (response.status === 404) {
             // /  Check explicitly for 404 error
