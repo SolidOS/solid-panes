@@ -3,8 +3,29 @@ import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
-import { schedulePane as Pane } from '../src/schedule/schedulePane'
+import { formPane as Pane } from '../src/form/pane'
 import './dev-mash.css'
+
+function registerPaneModule (moduleOrPane: any) {
+  const pane = moduleOrPane?.default || moduleOrPane
+  paneRegistry.register(pane)
+}
+
+async function preloadFormOntologies () {
+  const ontologyDocs = [
+    'https://www.w3.org/ns/ui.ttl'
+  ]
+
+  await Promise.all(
+    ontologyDocs.map(async uri => {
+      try {
+        await store.fetcher.load($rdf.sym(uri))
+      } catch (error) {
+        console.warn('Could not preload ontology:', uri, error)
+      }
+    })
+  )
+}
 
 // Add custom properties to the Window interface for TypeScript
 declare global {
@@ -80,8 +101,9 @@ function createIconElement (Pane: { icon: string }) {
 window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
-  paneRegistry.register(Pane)
-  paneRegistry.register(require('contacts-pane'))
+  registerPaneModule(Pane)
+  registerPaneModule(require('contacts-pane'))
+  await preloadFormOntologies()
   await authSession.handleIncomingRedirect({
     restorePreviousSession: true
   })
@@ -100,7 +122,7 @@ window.onload = async () => {
       loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
     }
   }
-  renderPane('https://sstratsianis.solidcommunity.net/ScheduleEventTest/details.ttl#this')
+  renderPane('https://sstratsianis.solidcommunity.net/formtest.ttl#this')
 }
 window.logout = () => {
   authSession.logout()
