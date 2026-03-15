@@ -1018,17 +1018,24 @@ export const schedulePane = {
       options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) {
         return kb.any(opt, ns.cal('dtstart'))
+      }).filter(function (time) {
+        return !!time
       })
 
       options.set_y = kb.each(subject, ns.sched('response'))
       options.set_y = options.set_y.map(function (resp) {
         return kb.any(resp, ns.dc('author'))
+      }).filter(function (author) {
+        return !!author
       })
 
       const possibleTimes = kb
         .each(invitation, ns.sched('option'))
         .map(function (opt) {
           return kb.any(opt, ns.cal('dtstart'))
+        })
+        .filter(function (time) {
+          return !!time
         })
 
       const displayTheMatrix = function () {
@@ -1105,6 +1112,7 @@ export const schedulePane = {
             } //  @@ may need that
             const selectOptions = {}
             const predicate = ns.sched('availabilty')
+            if (!x) return
             const cellSubject = dataPointForNT[x.toNT()]
             const selector = UI.widgets.makeSelectForOptions(
               dom,
@@ -1143,19 +1151,22 @@ export const schedulePane = {
           const dps = kb.each(myResponse, ns.sched('cell'))
           dps.forEach(function (dataPoint) {
             const time = kb.any(dataPoint, ns.cal('dtstart'))
+            if (!time) return
             dataPointForNT[time.toNT()] = dataPoint
           })
         }
         for (let j = 0; j < possibleTimes.length; j++) {
-          if (dataPointForNT[possibleTimes[j].toNT()]) continue
+          const possibleTime = possibleTimes[j]
+          if (!possibleTime) continue
+          if (dataPointForNT[possibleTime.toNT()]) continue
           const dataPoint = $rdf.sym(id + '_' + j)
           insertables.push(
             $rdf.st(myResponse, ns.sched('cell'), dataPoint, doc)
           )
           insertables.push(
-            $rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)
+            $rdf.st(dataPoint, ns.cal('dtstart'), possibleTime, doc)
           ) // @@
-          dataPointForNT[possibleTimes[j].toNT()] = dataPoint
+          dataPointForNT[possibleTime.toNT()] = dataPoint
         }
         if (insertables.length) {
           kb.updater.update([], insertables, function (
