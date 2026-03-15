@@ -589,19 +589,95 @@ export const schedulePane = {
       }
 
       const renderTimeProposalFallback = function (slide) {
-        const allDayValue = asBoolean(kb.any(subject, ns.sched('allDay')), true)
-        const fallbackForm = kb.sym(
-          formsURI + (allDayValue ? '#AllDayForm2' : '#NotAllDayForm2')
+        const controls = slide.appendChild(dom.createElement('div'))
+        controls.setAttribute('style', 'margin: 0.5em 0;')
+
+        const label = controls.appendChild(dom.createElement('label'))
+        label.textContent = 'Time proposal mode: '
+
+        const modeSelector = controls.appendChild(dom.createElement('select'))
+        modeSelector.setAttribute('style', inputStyle)
+
+        const allDayOption = modeSelector.appendChild(dom.createElement('option'))
+        allDayOption.setAttribute('value', 'true')
+        allDayOption.textContent = 'All day'
+
+        const specificTimesOption = modeSelector.appendChild(
+          dom.createElement('option')
         )
-        UI.widgets.appendForm(
-          document,
-          slide,
-          {},
-          subject,
-          fallbackForm,
-          detailsDoc,
-          complainIfBad
+        specificTimesOption.setAttribute('value', 'false')
+        specificTimesOption.textContent = 'Specific times'
+
+        const fallbackContainer = slide.appendChild(dom.createElement('div'))
+
+        const renderChosenFallbackForm = function () {
+          clearElement(fallbackContainer)
+          const allDayValue = asBoolean(kb.any(subject, ns.sched('allDay')), true)
+          const fallbackForm = kb.sym(
+            formsURI + (allDayValue ? '#AllDayForm2' : '#NotAllDayForm2')
+          )
+          UI.widgets.appendForm(
+            document,
+            fallbackContainer,
+            {},
+            subject,
+            fallbackForm,
+            detailsDoc,
+            complainIfBad
+          )
+        }
+
+        const setAllDayAndRender = function (nextAllDayValue) {
+          const existing = kb.statementsMatching(
+            subject,
+            ns.sched('allDay'),
+            undefined,
+            detailsDoc
+          )
+          const replacement = [
+            $rdf.st(
+              subject,
+              ns.sched('allDay'),
+              $rdf.literal(
+                nextAllDayValue ? 'true' : 'false',
+                undefined,
+                $rdf.sym('http://www.w3.org/2001/XMLSchema#boolean')
+              ),
+              detailsDoc
+            )
+          ]
+
+          if (kb.updater && kb.updater.editable(detailsDoc.uri, kb)) {
+            kb.updater.update(existing, replacement, function (
+              _uri,
+              success,
+              body
+            ) {
+              if (!success) {
+                complainIfBad(false, body)
+                return
+              }
+              renderChosenFallbackForm()
+            })
+          } else {
+            existing.forEach(st => kb.remove(st))
+            replacement.forEach(st => kb.add(st.subject, st.predicate, st.object, st.why))
+            renderChosenFallbackForm()
+          }
+        }
+
+        modeSelector.value =
+          asBoolean(kb.any(subject, ns.sched('allDay')), true) ? 'true' : 'false'
+
+        modeSelector.addEventListener(
+          'change',
+          function () {
+            setAllDayAndRender(modeSelector.value === 'true')
+          },
+          false
         )
+
+        renderChosenFallbackForm()
       }
 
       if (wizard) {
