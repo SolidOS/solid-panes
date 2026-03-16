@@ -1,3 +1,5 @@
 :root {
   --icon-sm: 1.8em;
+  --color-background-row-default: white;
+  --color-background-row-alternate: #f0f0f0;
 }

@@ -7,7 +7,7 @@
 }
 
 .dataContentPaneRowOdd {
-  background-color: white;
+  background-color: var(--color-background, white);
 }
 
 .dataContentPaneTopAlignedRow {
@@ -15,7 +15,7 @@
 }
 
 .dataContentPaneNestedLight {
-  background-color: white;
+  background-color: var(--color-background, white);
 }
 
 .dataContentPaneNestedDark {
