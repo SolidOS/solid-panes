@@ -9,6 +9,7 @@ import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
 import formText from './formsForSchedule.ttl'
 import '../styles/schedulePane.css'
+import '../styles/utilities.css'
 
 const ns = UI.ns
 

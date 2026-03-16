@@ -13,15 +13,16 @@
 }
 
 .schedulePaneButtonIcon {
-  width: 1.8em; 
-  height: 1.8em;
+  width: var(--icon-sm, 1.8em); 
+  height: var(--icon-sm, 1.8em);
 }
+
 .schedulePaneNaviMenu {
   text-align: center; 
   vertical-align: middle; 
   padding-top: 4em;
 }
 .schedulePaneCell {
-  padding: 0.3em; 
+  padding: var(--spacing-xs, 0.3em); 
   text-align: center;
 }
