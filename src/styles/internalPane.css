@@ -8,5 +8,5 @@
   margin: var(--spacing-sm, 1em);
 }
 .internalPaneDeleteButton {
-  height: 2em;
+  height: var(--icon-base, 2em);
 }
