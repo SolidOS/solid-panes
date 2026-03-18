@@ -2106,11 +2106,16 @@ export default function (context) {
           const existing = p.querySelector('[data-outline-error-for="' + docUri + '"]')
           if (existing) return
         }
+        const detailStr = typeof detail === 'string' ? detail : (detail && detail.message) || ''
+        const errorStatus = (errObj && errObj.status) || (detailStr.match(/status:\s*(\d+)/) || [])[1]
+        const isAuthError = errorStatus === 401 || errorStatus === 403 ||
+          errorStatus === '401' || errorStatus === '403' ||
+          /Unauthorized|Forbidden/.test(detailStr)
         const message = UI.widgets.errorMessageBlock(
           dom,
-          detail,
-          '#fee',
-          errObj instanceof Error ? errObj : undefined
+          isAuthError ? 'You need to log in to see this resource.' : detail,
+          isAuthError ? '#d8d8d8' : '#fee',
+          !isAuthError && errObj instanceof Error ? errObj : undefined
         )
         if (docUri) message.setAttribute('data-outline-error-for', docUri)
         p.appendChild(message)
