@@ -173,10 +173,6 @@ export default function (context) {
     const td = dom.createElement('td')
     td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
-    td.style.margin = '0.2em'
-    td.style.border = 'none'
-    td.style.padding = '0'
-    td.style.verticalAlign = 'top'
     const theClass = 'obj'
 
     // set about and put 'expand' icon
