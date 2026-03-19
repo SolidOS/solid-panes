@@ -40,8 +40,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('has style', () => {
-        expect(result).toHaveStyle('margin: 0.2em; border: none; padding: 0; vertical-align: top;')
+      it('uses stylesheet layout (no inline style)', () => {
+        expect(result).not.toHaveAttribute('style')
       })
       it('shows an expand icon', () => {
         const img = result.firstChild
@@ -94,8 +94,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('has style', () => {
-        expect(result).toHaveStyle('margin: 0.2em; border: none; padding: 0; vertical-align: top;')
+      it('uses stylesheet layout (no inline style)', () => {
+        expect(result).not.toHaveAttribute('style')
       })
       it('shows an expand icon', () => {
         const img = result.firstChild
@@ -141,8 +141,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('has style', () => {
-        expect(result).toHaveStyle('margin: 0.2em; border: none; padding: 0; vertical-align: top;')
+      it('uses stylesheet layout (no inline style)', () => {
+        expect(result).not.toHaveAttribute('style')
       })
       it('shows the literal text', () => {
         expect(result).toHaveTextContent('some text')
@@ -171,8 +171,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('has style', () => {
-        expect(result).toHaveStyle('margin: 0.2em; border: none; padding: 0; vertical-align: top;')
+      it('uses stylesheet layout (no inline style)', () => {
+        expect(result).not.toHaveAttribute('style')
       })
       it('shows 3 dots', () => {
         expect(result).toHaveTextContent('...')
