@@ -17,7 +17,7 @@ export default async function initMainPage (store: LiveStore, uri?: string | Nam
   const isLoggedIn = !!(authSession.info && authSession.info.isLoggedIn)
   const isBareAppRoot = locationUrl.pathname === '/' && !locationUrl.search && !locationUrl.hash
 
-  if (isBareAppRoot && !hasExplicitUriArg && !explicitUriQuery) {
+  if (isBareAppRoot && !hasExplicitUriArg && explicitUriQuery === null) {
     // At bare app root, avoid fetching '/' as data. If logged in, land on the user's profile instead.
     let me = authn.currentUser()
     if (isLoggedIn && !me) {
