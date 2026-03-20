@@ -2108,8 +2108,9 @@ export default function (context) {
         }
         const detailStr = typeof detail === 'string' ? detail : (detail && detail.message) || ''
         const errorStatus = (errObj && errObj.status) || (detailStr.match(/status:\s*(\d+)/) || [])[1]
-        const isAuthError = errorStatus === 401 || errorStatus === 403 ||
-          errorStatus === '401' || errorStatus === '403' ||
+        const statusCode = Number(errorStatus)
+        const isAuthError =
+          (Number.isFinite(statusCode) && [401, 403].includes(statusCode)) ||
           /Unauthorized|Forbidden/.test(detailStr)
         const message = UI.widgets.errorMessageBlock(
           dom,
