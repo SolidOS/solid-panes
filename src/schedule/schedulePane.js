@@ -18,6 +18,23 @@ const possibleAvailabilities = [
   ns.sched('Yes')
 ]
 
+function resolveScheduleSubject (kb, subject) {
+  if (!subject || !subject.uri) {
+    return subject
+  }
+
+  const rewrittenUri = subject.uri.replace(
+    /index\.ttl#this$/,
+    'details.ttl#event'
+  )
+
+  if (rewrittenUri === subject.uri) {
+    return subject
+  }
+
+  return kb.sym(rewrittenUri)
+}
+
 export const schedulePane = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
@@ -27,8 +44,18 @@ export const schedulePane = {
 
   // Does the subject deserve an Scheduler pane?
   label: function (subject, context) {
+    let t = null
     const kb = context.session.store
-    const t = kb.findTypeURIs(subject)
+    /* Sometimes this pane gets created without an index.ttl#this
+       file, when useExisting is empty. Only details.ttl#event and
+       results.ttl get created. folder-pane hardcodes looking for
+       index.ttl#this */
+    t = kb.findTypeURIs(subject)
+    if (Object.keys(t).length === 0) {
+      const resolvedSubject = resolveScheduleSubject(kb, subject)
+      t = kb.findTypeURIs(resolvedSubject)
+    }
+
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) {
       return 'Scheduling poll'
     }
@@ -321,7 +348,7 @@ export const schedulePane = {
     const dom = context.dom
     const kb = context.session.store
     const ns = UI.ns
-    const invitation = subject
+    const invitation = resolveScheduleSubject(kb, subject)
     const appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     // ////////////////////////////////////////////
@@ -330,8 +357,8 @@ export const schedulePane = {
     const updater = kb.updater
     let waitingForLogin = false
 
-    const thisInstance = subject
-    const detailsDoc = subject.doc()
+    const thisInstance = invitation
+    const detailsDoc = invitation.doc()
     const baseDir = detailsDoc.dir()
     const base = baseDir.uri
 
