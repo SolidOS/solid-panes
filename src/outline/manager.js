@@ -3,6 +3,7 @@
    Outline Mode Manager
 */
 import * as paneRegistry from 'pane-registry'
+import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
@@ -170,11 +171,12 @@ export default function (context) {
     statement
   ) {
     const td = dom.createElement('td')
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
+    td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
+    td.style.margin = '0.2em'
+    td.style.border = 'none'
+    td.style.padding = '0'
+    td.style.verticalAlign = 'top'
     const theClass = 'obj'
 
     // set about and put 'expand' icon
@@ -198,7 +200,6 @@ export default function (context) {
       ).addEventListener('click', expandMouseDownListener)
     }
     td.setAttribute('class', theClass) // this is how you find an object
-    // @@ TAKE CSS OUT OF STYLE SHEET
     if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
       td.className = 'undetermined'
     } // @@? why-timbl
@@ -249,10 +250,7 @@ export default function (context) {
     // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
 
     const labelTD = dom.createElement('TD')
-    labelTD.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
+    labelTD.classList.add('labelTD')
     labelTD.setAttribute('notSelectable', 'true')
     labelTD.appendChild(dom.createTextNode(lab))
     predicateTD.appendChild(labelTD)
@@ -345,7 +343,7 @@ export default function (context) {
     const me = authn.currentUser()
     if (!me) return []
     const div = dom.createElement('div')
-    const [books, pods] = await Promise.all([getAddressBooks(), getPods()])
+    const [pods] = await Promise.all([getPods()])
     return [
       {
         paneName: 'home',
@@ -368,7 +366,6 @@ export default function (context) {
         icon: UI.icons.iconBase + 'noun_492246.svg'
       }
     ]
-      .concat(books)
       .concat(pods)
 
     async function getPods () {
@@ -808,7 +805,7 @@ export default function (context) {
     const table = d.parentNode
     const par = table.parentNode
     const placeholder = dom.createElement('table')
-    placeholder.setAttribute('style', 'width: 100%;')
+    placeholder.classList.add('placeholderTable')
     par.replaceChild(placeholder, table)
     table.removeChild(d)
     par.replaceChild(table, placeholder) // Attempt to
@@ -827,7 +824,7 @@ export default function (context) {
     if (!table) {
       // Create a new property table
       table = dom.createElement('table')
-      table.setAttribute('style', 'width: 100%;')
+      table.classList.add('tableFullWidth')
       expandedHeaderTR(subject, pane, options).then(tr1 => {
         table.appendChild(tr1)
 
@@ -2365,7 +2362,7 @@ export default function (context) {
     } else if (obj.termType === 'Collection') {
       // obj.elements is an array of the elements in the collection
       rep = dom.createElement('table')
-      rep.setAttribute('style', 'width: 100%;')
+      rep.classList.add('tableFullWidth')
       rep.setAttribute('about', obj.toNT())
       /* Not sure which looks best -- with or without. I think without
 
@@ -2377,10 +2374,7 @@ export default function (context) {
         const elt = obj.elements[i]
         const row = rep.appendChild(dom.createElement('tr'))
         const numcell = row.appendChild(dom.createElement('td'))
-        numcell.setAttribute(
-          'style',
-          'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-        )
+        numcell.classList.add('obj')
         numcell.setAttribute('notSelectable', 'false')
         numcell.setAttribute('about', obj.toNT())
         numcell.innerHTML = i + 1 + ')'
