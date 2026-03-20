@@ -37,9 +37,16 @@ export default async function initMainPage (store: LiveStore, uri?: string | Nam
       // Optional override: set localStorage.solidosSafeLandingUri to a public resource URI.
       const configuredLandingUri = window.localStorage.getItem('solidosSafeLandingUri')
       if (configuredLandingUri) {
-        const fallbackUrl = new URL(configuredLandingUri, locationUrl.origin)
-        if (!(fallbackUrl.origin === locationUrl.origin && fallbackUrl.pathname === '/')) {
-          outliner.GotoSubject(store.sym(fallbackUrl.toString()), true, undefined, true, undefined)
+        try {
+          const fallbackUrl = new URL(configuredLandingUri, locationUrl.origin)
+          const protocol = fallbackUrl.protocol
+          // Only allow safe HTTP(S) protocols, and avoid redirecting back to bare app root.
+          if ((protocol === 'http:' || protocol === 'https:') &&
+            !(fallbackUrl.origin === locationUrl.origin && fallbackUrl.pathname === '/')) {
+            outliner.GotoSubject(store.sym(fallbackUrl.toString()), true, undefined, true, undefined)
+          }
+        } catch {
+          // Ignore invalid configuredLandingUri values.
         }
       }
     }
