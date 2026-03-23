@@ -10,7 +10,7 @@
 :root {
   /* Background and Text */
   --color-background: white;
-  --color-text: ##1A1A1A;
+  --color-text: #1A1A1A;
   --color-text-secondary: #666;
   --color-text-light: #aaa;
   --color-text-link: #3B5998;
@@ -29,6 +29,7 @@
   --color-border-darker: #444;
   --color-border-light: #aaa;
   --color-border-pale: #eee;
+  --color-border-accent: #88c;
   
   /* Status Colors */
   --color-selected-bg: #8F3;
@@ -138,16 +139,23 @@
   /* Spacing and Sizing */
   --spacing-tiny: 0.05em;
   --spacing-small: 0.1em;
+  --spacing-xxxs: 0.2em;
+  --spacing-xxs: 0.3em;
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75em;
+  --spacing-btn: 0.7em;
   --spacing-base: 0.5em;
   --spacing-md: 1em;
   --spacing-lg: 1.5em;
   --spacing-xl: 2em;
   --spacing-2xl: 3em;
+  --border-width-xthin: 0.05em;
+  --border-width-sm: 0.1em;
   --border-width-thin: 1px;
   --border-width-medium: 2px;
   --border-width-bold: 5px;
+  --border-radius-xs: 0.1em;
+  --border-radius-sm: 0.2em;
   --border-radius-base: 0.5em;
   --border-radius-lg: 0.75em;
   --border-radius-full: 1em;
@@ -170,6 +178,12 @@
   /* Shadows */
   --box-shadow: 0 2px 8px rgba(124,77,255,0.08);
   --box-shadow-sm: 0 1px 4px rgba(124,77,255,0.12);
+  --box-shadow-active: 0 1px 2px rgba(124, 77, 255, 0.2);
+  --box-shadow-focus: 0 0 0 5px rgba(124, 77, 255, 0.25);
+  --box-shadow-hover: 0 2px 4px rgba(124, 77, 255, 0.2);
+  --box-shadow-modal: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --box-shadow-overlay: 0 4px 24px rgba(0, 0, 0, 0.2);
+  --box-shadow-popup: 0 0.5em 0.9em rgba(0, 0, 0, 0.2);
   
   /* Accessibility */
   --min-touch-target: 44px;
@@ -183,11 +197,13 @@
   
   /* Overlay and Modal */
   --overlay-bg: rgba(0, 0, 0, 0.5);
+  --overlay-bg-muted: rgba(0, 0, 0, 0.3);
   --z-index-modal: 9999;
   --z-index-skip-links: 1000;
   
   /* Opacity */
   --opacity-disabled: 0.6;
+  --opacity-input-disabled: 0.75;
   
   /* Layout Values */
   --max-width-readable: 65ch;
