@@ -464,10 +464,10 @@ export default function (context) {
   async function showDashboard (options = {}) {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
-    // reuse dashboard if already children already is inserted
+    // reuse dashboard if children already inserted
     if (dashboardContainer.childNodes.length > 0 && options.pane) {
-      outlineContainer.style.display = 'none'
-      dashboardContainer.style.display = 'inherit'
+      outlineContainer.setAttribute('hidden', '')
+      dashboardContainer.removeAttribute('hidden')
       const tab = dashboardContainer.querySelector(
         `[data-global-pane-name="${options.pane}"]`
       )
@@ -490,7 +490,8 @@ export default function (context) {
     authSession.events.on('logout', closeDashboard)
 
     // finally - switch to showing dashboard
-    outlineContainer.style.display = 'none'
+    outlineContainer.setAttribute('hidden', '')
+    dashboardContainer.removeAttribute('hidden')
     dashboardContainer.appendChild(dashboard)
     const tab = dashboardContainer.querySelector(
       `[data-global-pane-name="${options.pane}"]`
@@ -500,35 +501,37 @@ export default function (context) {
     }
 
     function closeDashboard () {
-      dashboardContainer.style.display = 'none'
-      outlineContainer.style.display = 'inherit'
+      dashboardContainer.setAttribute('hidden', '')
+      outlineContainer.removeAttribute('hidden')
     }
   }
   this.showDashboard = showDashboard
 
   function getDashboardContainer () {
-    return getOrCreateContainer('GlobalDashboard')
+    return getOrCreateContainer('GlobalDashboard', 'Dashboard')
   }
 
   function getOutlineContainer () {
-    return getOrCreateContainer('outline')
+    return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
   /**
-   * Get element with id or create a new on the fly with that id
+   * Get element with id or create a new section on the fly with that id
    *
    * @param {string} id The ID of the element you want to get or create
+   * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
-  function getOrCreateContainer (id) {
+  function getOrCreateContainer (id, ariaLabel) {
     return (
       document.getElementById(id) ||
       (() => {
-        const dashboardContainer = document.createElement('div')
-        dashboardContainer.id = id
+        const container = document.createElement('section')
+        container.id = id
+        if (ariaLabel) container.setAttribute('aria-label', ariaLabel)
         const mainContainer =
           document.querySelector('[role="main"]') || document.body
-        return mainContainer.appendChild(dashboardContainer)
+        return mainContainer.appendChild(container)
       })()
     )
   }
@@ -581,8 +584,9 @@ export default function (context) {
       const paneHiddenStyle =
         'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
-      paneIconTray.style =
-        'display:flex; justify-content: flex-start; align-items: center;'
+      paneIconTray.setAttribute('role', 'toolbar')
+      paneIconTray.setAttribute('aria-label', 'Pane views')
+      paneIconTray.classList.add('paneIconTray')
 
       const relevantPanes = options.hideList
         ? []
@@ -1577,7 +1581,7 @@ export default function (context) {
             outline.GotoSubject(object, true)
             /* //deal with this later
             deselectAll();
-            var newTr=dom.getElementById('outline').lastChild;
+            var newTr=dom.getElementById('OutlineView').lastChild;
             setSelected(newTr.firstChild.firstChild.childNodes[1].lastChild,true);
             function setSelectedAfterward(uri){
                 deselectAll();
@@ -2242,7 +2246,7 @@ export default function (context) {
   @param table   -- option  -- a table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || dom.getElementById('outline') // if does not exist just add one? nowhere to out it
+    table = table || dom.getElementById('OutlineView') // if does not exist just add one? nowhere to out it
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'

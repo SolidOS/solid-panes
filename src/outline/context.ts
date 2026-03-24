@@ -14,7 +14,9 @@ export function createContext (
     getOutliner,
     session: {
       paneRegistry,
+      // @ts-ignore
       store,
+      // @ts-ignore
       logic
     }
   }

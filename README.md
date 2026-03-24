@@ -78,3 +78,11 @@ contacts (A VCARD Address Book, Group, Individual, Organization) can be handled 
 pane. Any other pane which wants to deal with contacts can just use the pane within its own user interface.
 
 ![Mapping many classes on the L to panes on the R](https://solidos.github.io/solid-panes/doc/images/panes-for-classes.svg)
+
+
+## Generative AI usage
+The SolidOS team is using GitHub Copilot integrated in Visual Studio Code. 
+We have added comments in the code to make it explicit which parts are 100% written by AI. 
+
+### Prompt usage hitory:
+* Model Claude Opus 4.6: Initially solid-panes is loaded into a HTML shell form mashlib that looks like ... Also, an iFrame is rendered inside the <div class="TabulatorOutline" id="DummyUUID"> for “isolated pane rendering”. Analize the solid-panes code for what it uses from this HTML and suggest a new HTML structure which is mobile and accessibility friendly. Lets go ahead and make chnages in this code as suggested to accommodate the new databwroser HTML.
