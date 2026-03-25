@@ -63,9 +63,7 @@ export const imagePane = {
         img.setAttribute('src', objectURL) // w640 h480 //
       })
     img.classList.add('imagePaneViewImage')
-    const tr = myDocument.createElement('tr') // why need tr?
-    tr.appendChild(img)
-    div.appendChild(tr)
+    div.appendChild(img)
     return div
   }
 }
