@@ -79,7 +79,7 @@ pane. Any other pane which wants to deal with contacts can just use the pane wit
 
 ![Mapping many classes on the L to panes on the R](https://solidos.github.io/solid-panes/doc/images/panes-for-classes.svg)
 
-## Genertive AI usage
+## Generative AI usage
 The SolidOS team is using GitHub Copilot integrated in Visual Studio Code. 
 We have added comments in the code to make it explicit which parts are 100% written by AI.
 Example: 
