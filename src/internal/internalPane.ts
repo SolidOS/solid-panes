@@ -124,7 +124,7 @@ const pane: PaneDefinition = {
           }
         )
 
-        deleteButton.class = '' // Remove hover hide
+        deleteButton.removeAttribute('class') // Remove hover hide
         deleteButton.classList.add('internalPaneDeleteButton')
         deleteCell.appendChild(deleteButton)
       }
