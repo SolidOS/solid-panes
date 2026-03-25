@@ -236,9 +236,7 @@ const humanReadablePane = {
         setIframeAttributes(frame, 30)
       })
 
-      const tr = myDocument.createElement('tr')
-      tr.appendChild(frame)
-      div.appendChild(tr)
+      div.appendChild(frame)
     }
 
     return div
