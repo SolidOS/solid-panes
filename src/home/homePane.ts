@@ -11,8 +11,8 @@
 import { PaneDefinition } from 'pane-registry'
 import { NamedNode } from 'rdflib'
 import { authn } from 'solid-logic'
-import { create, icons, login } from 'solid-ui'
-import type { CreateContext } from 'solid-ui'
+import { create, icons, login, widgets } from 'solid-ui'
+import { CreateContext } from 'solid-ui'
 
 const HomePaneSource: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg', // noun_25830
@@ -32,6 +32,7 @@ const HomePaneSource: PaneDefinition = {
   render: function (subject, context) {
     const dom = context.dom
     const showContent = async function () {
+      const me = authn.currentUser() as NamedNode
       const homePaneContext = { div, dom, statusArea: div, me }
       /*
             div.appendChild(dom.createElement('h4')).textContent = 'Login status'
@@ -41,7 +42,8 @@ const HomePaneSource: PaneDefinition = {
             loginStatusDiv.appendChild(UI.login.loginStatusBox(context.dom, () => {
               // Here we know new log in status
             }))
-      */
+      */ 
+      div.appendChild(widgets.createPeopleSearch(context.dom, context.session.store, me))
       div.appendChild(dom.createElement('h4')).textContent =
         'Create new thing somewhere'
       const creationDiv = div.appendChild(dom.createElement('div'))
@@ -60,7 +62,6 @@ const HomePaneSource: PaneDefinition = {
     }
 
     const div = dom.createElement('div')
-    const me: NamedNode = authn.currentUser() as NamedNode // this will be incorrect if not logged in
 
     showContent()
 

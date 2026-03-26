@@ -3,8 +3,29 @@ import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
-import Pane from 'profile-pane'
+import Pane from '../src/home/homePane'
 import './dev-mash.css'
+
+function registerPaneModule (moduleOrPane: any) {
+  const pane = moduleOrPane?.default || moduleOrPane
+  paneRegistry.register(pane)
+}
+
+async function preloadFormOntologies () {
+  const ontologyDocs = [
+    'https://www.w3.org/ns/ui.ttl'
+  ]
+
+  await Promise.all(
+    ontologyDocs.map(async uri => {
+      try {
+        await store.fetcher.load($rdf.sym(uri))
+      } catch (error) {
+        console.warn('Could not preload ontology:', uri, error)
+      }
+    })
+  )
+}
 
 // Add custom properties to the Window interface for TypeScript
 declare global {
@@ -23,10 +44,21 @@ async function renderPane (uri: string) {
   }
   const subject = $rdf.sym(uri)
   const doc = subject.doc()
+  const paneSubject = Pane.name === 'dataContents' ? doc : subject
 
-  await new Promise((resolve, reject) => {
-    store.fetcher.load(doc).then(resolve, reject)
-  })
+  const target = document.getElementById('render')
+
+  try {
+    await new Promise((resolve, reject) => {
+      store.fetcher.load(doc).then(resolve, reject)
+    })
+  } catch (error) {
+    console.error('Failed to load document for pane rendering', error)
+    if (target) {
+      target.innerHTML = `<pre>Failed to load ${doc.uri}\n${String(error)}</pre>`
+    }
+    return
+  }
   const context = {
     // see https://github.com/solidos/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
     dom: document,
@@ -39,16 +71,21 @@ async function renderPane (uri: string) {
   }
 
   console.log(subject, context)
-  const icon = createIconElement(Pane)
-  const paneDiv = Pane.render(subject, context)
-  
-  const target = document.getElementById('render')
-  if (target) {
-    target.innerHTML = ''
-    target.appendChild(icon)
-    target.appendChild(paneDiv)
-  } else {
-    console.error("Element with id 'render' not found.")
+  try {
+    const icon = createIconElement(Pane)
+    const paneDiv = Pane.render(paneSubject, context, {})
+    if (target) {
+      target.innerHTML = ''
+      target.appendChild(icon)
+      target.appendChild(paneDiv)
+    } else {
+      console.error("Element with id 'render' not found.")
+    }
+  } catch (error) {
+    console.error('Pane render failed', error)
+    if (target) {
+      target.innerHTML = `<pre>Pane render failed\n${String(error)}</pre>`
+    }
   }
 }
 
@@ -63,7 +100,9 @@ function createIconElement (Pane: { icon: string }) {
 window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
-  paneRegistry.register(require('contacts-pane'))
+  registerPaneModule(Pane)
+  registerPaneModule(require('contacts-pane'))
+  await preloadFormOntologies()
   await authSession.handleIncomingRedirect({
     restorePreviousSession: true
   })
@@ -82,7 +121,7 @@ window.onload = async () => {
       loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
     }
   }
-  renderPane('https://testingsolidos.solidcommunity.net/profile/card#me')
+  renderPane('https://timea.solidcommunity.net/profile/card#me')
 }
 window.logout = () => {
   authSession.logout()
