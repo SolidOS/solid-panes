@@ -70,7 +70,7 @@
     "pane-registry": "^3.0.1",
     "profile-pane": "^3.1.2",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "^3.0.4",
+    "solid-ui": "^3.0.5",
     "source-pane": "^3.0.1"
   },
   "overrides": {
@@ -105,10 +105,10 @@
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
     "raw-loader": "^4.0.2",
-    "rdflib": "^2.3.5",
+    "rdflib": "^2.3.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "solid-logic": "^4.0.3",
+    "solid-logic": "^4.0.6",
     "style-loader": "^4.0.0",
     "terser-webpack-plugin": "^5.3.16",
     "ts-jest": "^29.4.6",

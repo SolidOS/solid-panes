@@ -1,4 +1,4 @@
-import { DataBrowserContext, PaneRegistry } from 'pane-registry'
+import { DataBrowserContext, PaneRegistry, RenderEnvironment } from 'pane-registry'
 import { getOutliner } from '../index'
 import { SolidLogic } from 'solid-logic'
 import { LiveStore } from 'rdflib'
@@ -7,7 +7,8 @@ export function createContext (
   dom: HTMLDocument,
   paneRegistry: PaneRegistry,
   store: LiveStore,
-  logic: SolidLogic
+  logic: SolidLogic,
+  environment?: RenderEnvironment
 ): DataBrowserContext {
   return {
     dom,
@@ -18,6 +19,7 @@ export function createContext (
       store,
       // @ts-ignore
       logic
-    }
+    },
+    environment
   }
 }

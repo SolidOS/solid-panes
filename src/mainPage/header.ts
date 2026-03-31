@@ -1,5 +1,7 @@
 import { authSession, authn } from 'solid-logic'
 import { icons, initHeader } from 'solid-ui'
+import { OutlineManager } from '../outline/manager'
+import { LiveStore } from 'rdflib'
 /**
  * menu icons
 */
@@ -21,7 +23,7 @@ type UserMenuItem = { label: string; onclick: () => void }
 const USER_GUIDE_MENU_URL = 'https://solidos.github.io/userguide/'
 const REPORT_A_PROBLEM_MENU_URL = 'https://github.com/solidos/solidos/issues'
 
-export async function createHeader (store, outliner) {
+export async function createHeader (store: LiveStore, outliner: OutlineManager) {
   initHeader(store, await setUserMenu(outliner), setHeaderOptions())
 }
 
@@ -35,7 +37,7 @@ function setHeaderOptions () {
   return headerOptions
 }
 
-async function setUserMenu (outliner: any) {
+async function setUserMenu (outliner: OutlineManager) {
   // @ts-ignore: showProfile is used conditionally
   const showProfile = {
     label: SHOW_YOUR_PROFILE_MENU_ITEM,
@@ -58,12 +60,12 @@ async function setUserMenu (outliner: any) {
 }
 
 // Does not work to jump to user profile,
-function openUserProfile (outliner: any) {
+function openUserProfile (outliner: OutlineManager) {
   outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
   location.reload()
 }
 
-async function getMenuItems (outliner: any) {
+async function getMenuItems (outliner: OutlineManager) {
   const items = await outliner.getDashboardItems()
   return items.map((element) => {
     return {
@@ -73,7 +75,7 @@ async function getMenuItems (outliner: any) {
   })
 }
 
-async function openDashboardPane (outliner: any, pane: string): Promise<void> {
+async function openDashboardPane (outliner: OutlineManager, pane: string): Promise<void> {
   outliner.showDashboard({
     pane
   })

@@ -21,6 +21,7 @@ export default function (context) {
   const dom = context.dom
 
   this.document = context.dom
+  this.context = context
   this.outlineIcons = outlineIcons
   this.labeller = this.labeller || {}
   this.labeller.LanguagePreference = '' // for now
@@ -48,6 +49,17 @@ export default function (context) {
     table.outline = this
   }
 
+  this.getLayoutMode = function () {
+    const envLayout = this.context?.environment?.layout
+    if (envLayout === 'mobile' || envLayout === 'desktop') return envLayout
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(max-width: 768px)').matches ? 'mobile' : 'desktop'
+    }
+
+    return 'desktop'
+  }
+  
   /** benchmark a function **/
   benchmark.lastkbsize = 0
 
@@ -2243,7 +2255,7 @@ export default function (context) {
   @param pane    -- optional -- pane to be used for expanded display
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
-  @param table   -- option  -- a table element in which to put the outline.
+  @param table   -- option  -- default is a HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
     table = table || dom.getElementById('OutlineView') // if does not exist just add one? nowhere to out it

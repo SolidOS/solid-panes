@@ -86,3 +86,5 @@ We have added comments in the code to make it explicit which parts are 100% writ
 
 ### Prompt usage hitory:
 * Model Claude Opus 4.6: Initially solid-panes is loaded into a HTML shell form mashlib that looks like ... Also, an iFrame is rendered inside the <div class="TabulatorOutline" id="DummyUUID"> for “isolated pane rendering”. Analize the solid-panes code for what it uses from this HTML and suggest a new HTML structure which is mobile and accessibility friendly. Lets go ahead and make chnages in this code as suggested to accommodate the new databwroser HTML.
+
+* Raptor mini: take a look how I wired the environement from mashlib into solid-panes. It is not quite right, can you suggest fixes?
