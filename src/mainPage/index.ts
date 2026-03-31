@@ -11,7 +11,7 @@ import { initResponsiveMenu } from './menu'
 
 export { updateMenuLayout } from './menu'
 
-function ensureMainContent() {
+function ensureMainContent () {
   let main = document.getElementById('MainContent') as HTMLElement | null
   if (!main) {
     main = document.createElement('main')

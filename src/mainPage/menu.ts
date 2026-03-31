@@ -135,5 +135,4 @@ export const initResponsiveMenu = (outliner: OutlineManager) => {
       }
     })
   }
-
 }

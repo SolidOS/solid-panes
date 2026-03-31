@@ -59,7 +59,7 @@ export default function (context) {
 
     return 'desktop'
   }
-  
+
   /** benchmark a function **/
   benchmark.lastkbsize = 0
 

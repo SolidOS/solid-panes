@@ -44,12 +44,11 @@ function getOutliner (dom, environment?: RenderEnvironment): OutlineManager {
   return dom.outlineManager
 }
 
-function updateEnvironment(outliner: OutlineManager, environment: RenderEnvironment) {
+function updateEnvironment (outliner: OutlineManager, environment: RenderEnvironment) {
   if (!outliner) return
   outliner.context = outliner.context || {}
   outliner.context.environment = environment
 }
-
 
 if (typeof window !== 'undefined') {
   getOutliner(window.document)
