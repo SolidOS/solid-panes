@@ -51,9 +51,9 @@ export function registerPanes (register) {
   const editProfileView = profilePane.editor
   if (!editProfileView) {
     console.log('@@@ editProfileView', 'profilePane is not providing an editor pane')
+  } else {
+    register(editProfileView) // Edit my profile.
   }
-
-  register(editProfileView) // Edit my profile.
 
   register(trustedApplications) // must be registered before basicPreferences
   register(dashboardPane)
