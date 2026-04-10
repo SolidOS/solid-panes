@@ -62,7 +62,7 @@ export const buildMenuHtml = (isAuthenticated: boolean) => {
   `
 }
 
-export const updateMenuLayout = (layout: 'mobile' | 'desktop') => {
+export const refreshMenu = (layout: 'mobile' | 'desktop') => {
   const navMenu = document.getElementById('NavMenu') as HTMLElement | null
   const toggle = document.getElementById('MenuToggleBtn') as HTMLButtonElement | null
   const overlay = document.getElementById('MenuOverlay') as HTMLElement | null
@@ -85,7 +85,7 @@ export const updateMenuLayout = (layout: 'mobile' | 'desktop') => {
   }
 }
 
-export const initResponsiveMenu = (outliner: OutlineManager) => {
+export const createLeftSideMenu = (outliner: OutlineManager) => {
   ensureMenuSkeleton()
   const navMenu = document.getElementById('NavMenu') as HTMLElement | null
   const menuToggle = document.getElementById('MenuToggleBtn') as HTMLElement | null

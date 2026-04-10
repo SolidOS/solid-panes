@@ -25,7 +25,7 @@ import {
   RenderEnvironment
 } from 'pane-registry'
 import { createContext } from './outline/context'
-import { initMainPage, updateMenuLayout } from './mainPage'
+import { initMainPage, refreshUI } from './mainPage'
 
 function getOutliner (dom, environment?: RenderEnvironment): OutlineManager {
   if (!dom.outlineManager) {
@@ -68,7 +68,7 @@ export {
   UI,
   versionInfo,
   initMainPage,
-  updateMenuLayout,
+  refreshUI,
   list, // from paneRegistry
   paneForIcon, // from paneRegistry
   paneForPredicate, // from paneRegistry

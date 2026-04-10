@@ -4,12 +4,13 @@
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
-import { getOutliner } from '../index'
-import { createHeader } from './header'
+import { getOutliner, OutlineManager } from '../index'
+import { createHeader, refreshHeader } from './header'
 import { createFooter } from './footer'
-import { initResponsiveMenu } from './menu'
+import { createLeftSideMenu, refreshMenu } from './menu'
 
-export { updateMenuLayout } from './menu'
+export { refreshMenu as updateMenuLayout } from './menu'
+export { refreshHeader } from './header'
 
 function ensureMainContent () {
   let main = document.getElementById('MainContent') as HTMLElement | null
@@ -37,7 +38,12 @@ export async function initMainPage (
   outliner.GotoSubject(subject, true, undefined, true, undefined)
 
   const header = await createHeader(store, outliner)
-  const menu = initResponsiveMenu(outliner)
+  const menu = createLeftSideMenu(outliner)
   const footer = createFooter(store)
   return Promise.all([header, menu, footer])
+}
+
+export async function refreshUI (outliner: OutlineManager) {
+  await refreshHeader(outliner)
+  refreshMenu(outliner.context.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
 }

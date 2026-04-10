@@ -21,7 +21,7 @@
 
 .menu-toggle {
   position: fixed;
-  top: 1.75rem;
+  top: 0.5rem;
   left: 2.75rem;
   z-index: 300;
   display: inline-flex;
