@@ -23,7 +23,7 @@ const ACCOUNT_MENU_LABEL = '▼'
 const SIGN_UP__MENU_LINK = 'https://solidproject.org/get_a_pod'
 
 // data structure extracted for solid-ui-header binding
-export const DEFAULT_HELP_MENU_LIST = [
+export const HELP_MENU_LIST = [
   { label: 'User guide', url: 'https://solidos.github.io/userguide/', target: '_blank' },
   { label: 'Report a problem', url: 'https://github.com/solidos/solidos/issues', target: '_blank' }
 ]
@@ -69,20 +69,29 @@ export async function createHeader (store: LiveStore, outliner: OutlineManager) 
     authSession.events.on('logout', refreshCurrentHeader)
     authSession.events.on('sessionRestore', refreshCurrentHeader)
 
-    header.addEventListener('login-success', async () => {
-      await refreshCurrentHeader()
+    header.addEventListener('auth-action-select', async (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      if (detail?.role === 'login') {
+        await refreshCurrentHeader()
+        await openDashboardPane(outliner, 'profile') // upon successfull login, we open the dashboard pane
+      }
     })
 
     header.addEventListener('signup-success', async () => {
-      await refreshCurrentHeader()
+      // do nothing
     })
 
-    header.addEventListener('account-menu-select', (e: Event) => {
+    header.addEventListener('account-menu-select', async (e: Event) => {
       const detail = (e as CustomEvent).detail
       if (detail?.action === 'logout') {
         authSession.logout()
       } else if (detail?.action === 'show-profile') {
-        openUserProfile(outliner)
+        // TODO see if this can be consolidated
+        if (!authn.currentUser()) {
+          openUserProfile(outliner)
+        } else {
+          await openDashboardPane(outliner, 'profile')
+        }
       }
     })
   }
@@ -123,7 +132,7 @@ function setHeaderOptions (outliner: OutlineManager) {
   const headerOptions = {
     logo: SOLID_ICON_URL,
     helpIcon: HELP_MENU_ICON,
-    helpMenuList: DEFAULT_HELP_MENU_LIST,
+    helpMenuList: HELP_MENU_LIST,
     layout,
     theme,
     brandLink: '/',
@@ -160,8 +169,7 @@ async function setUserMenu () {
       label: utils.label(me),
       avatar: widgets.findImage(me),
       webid: me.value,
-      action: 'show-profile',
-      pane: 'profile-pane'
+      action: 'show-profile'
     },
     // TODO add all my available accounts
   ]
@@ -169,8 +177,16 @@ async function setUserMenu () {
   return accountMenu
 }
 
-// Does not work to jump to user profile,
+// TODO see if these 2 calls can be consolidated
 function openUserProfile (outliner: OutlineManager) {
+  console.log('-----Opening user profile')
   outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
   location.reload()
+}
+
+async function openDashboardPane (outliner: any, pane: string): Promise<void> {
+  console.log('-----Opening profile pane')
+  outliner.showDashboard({
+    pane
+  })
 }
