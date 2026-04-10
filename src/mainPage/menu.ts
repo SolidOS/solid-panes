@@ -1,6 +1,12 @@
 import './menu.css'
 import { OutlineManager } from '../outline/manager'
-import { authn } from 'solid-logic'
+import { authSession, authn } from 'solid-logic'
+
+type MenuItem = {
+  id?: string
+  label: string
+  onclick: () => void | Promise<void>
+}
 
 const ensureMenuSkeleton = () => {
   const root = document.querySelector('[role="main"]') || document.body
@@ -46,20 +52,53 @@ const ensureMenuSkeleton = () => {
   }
 }
 
-export const buildMenuHtml = (isAuthenticated: boolean) => {
-  if (!isAuthenticated) {
-    return `
-       <a class="menu-item" href="#profile">Profile</a>
-    `
+const getMenuItems = async (outliner: any): Promise<MenuItem[]> => {
+  try {
+    const items = await outliner.getDashboardItems()
+    return items.map((element) => {
+      return {
+        label: element.label,
+        onclick: () => openDashboardPane(outliner, element.tabName || element.paneName)
+      }
+    })
+  } catch (error) {
+    console.error('Unable to load navigation menu items', error)
+    return []
+  }
+}
+
+const createMenuButton = (item: MenuItem) => {
+  const button = document.createElement('button')
+  button.className = 'menu-item'
+  button.type = 'button'
+  button.textContent = item.label
+
+  if (item.id) {
+    button.id = item.id
   }
 
-  return `
-    <a class="menu-item" href="#profile">Profile</a>
-    <a class="menu-item" href="#pods">My Pods</a>
-    <a class="menu-item" href="#contacts">Contacts</a>
-    <a class="menu-item" href="#settings">Settings</a>
-    <div class="menu-item" role="button" tabindex="0" id="MenuLogoutItem">Logout</div>
-  `
+  button.addEventListener('click', async () => {
+    await item.onclick()
+  })
+
+  return button
+}
+
+const renderMenuItems = async (outliner: OutlineManager, container: HTMLElement) => {
+  const me = authn.currentUser()
+  const menuItems = me ? await getMenuItems(outliner) : []
+
+  if (me) {
+    menuItems.push({
+      id: 'MenuLogoutItem',
+      label: 'Logout',
+      onclick: async () => {
+        await authSession.logout()
+      }
+    })
+  }
+
+  container.replaceChildren(...menuItems.map(createMenuButton))
 }
 
 export const refreshMenu = (layout: 'mobile' | 'desktop') => {
@@ -85,11 +124,12 @@ export const refreshMenu = (layout: 'mobile' | 'desktop') => {
   }
 }
 
-export const createLeftSideMenu = (outliner: OutlineManager) => {
+export const createLeftSideMenu = async (outliner: OutlineManager) => {
   ensureMenuSkeleton()
   const navMenu = document.getElementById('NavMenu') as HTMLElement | null
   const menuToggle = document.getElementById('MenuToggleBtn') as HTMLElement | null
   const menuOverlay = document.getElementById('MenuOverlay') as HTMLElement | null
+  const navMenuContent = document.getElementById('NavMenuContent') as HTMLElement | null
 
   const closeMobileMenu = () => {
     if (!navMenu || !menuToggle || !menuOverlay) return
@@ -122,10 +162,19 @@ export const createLeftSideMenu = (outliner: OutlineManager) => {
     menuOverlay.addEventListener('click', closeMobileMenu)
   }
 
-  const navMenuContent = document.getElementById('NavMenuContent')
-  const me = authn.currentUser()
   if (navMenuContent) {
-    navMenuContent.innerHTML = buildMenuHtml(!!me)
+    await renderMenuItems(outliner, navMenuContent)
+
+    if (!navMenuContent.dataset.authEventsBound) {
+      const refreshMenuItems = async () => {
+        await renderMenuItems(outliner, navMenuContent)
+      }
+
+      authSession.events.on('login', refreshMenuItems)
+      authSession.events.on('logout', refreshMenuItems)
+      authSession.events.on('sessionRestore', refreshMenuItems)
+      navMenuContent.dataset.authEventsBound = 'true'
+    }
 
     navMenuContent.addEventListener('click', (event) => {
       const item = (event.target as HTMLElement).closest('.menu-item')
@@ -135,4 +184,11 @@ export const createLeftSideMenu = (outliner: OutlineManager) => {
       }
     })
   }
+}
+
+async function openDashboardPane (outliner: any, pane: string): Promise<void> {
+  console.log('-----Opening profile pane')
+  outliner.showDashboard({
+    pane
+  })
 }

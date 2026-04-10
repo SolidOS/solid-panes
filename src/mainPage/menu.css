@@ -12,6 +12,9 @@
   background: var(--color-background);
   color: var(--color-text);
   text-decoration: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
 }
 
 .menu-item:hover,

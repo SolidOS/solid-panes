@@ -1,11 +1,7 @@
 import { authSession, authn, store } from 'solid-logic'
 import { icons, widgets, utils } from 'solid-ui'
-import { Header } from 'solid-ui/dist/components/header/index'
-import type {
-  HeaderAccountMenuItem,
-  HeaderAuthState,
-  HeaderMenuItem
-} from 'solid-ui/dist/components/header/index'
+import { Header } from 'solid-ui/components/header'
+import type { HeaderMenuItem, HeaderAccountMenuItem, HeaderAuthState } from 'solid-ui/components/header'
 import { OutlineManager } from '../outline/manager'
 import { LiveStore } from 'rdflib'
 /**
@@ -30,6 +26,11 @@ export const HELP_MENU_LIST = [
 
 const HEADER_MOBILE_STYLE_ID = 'solid-ui-header-mobile-style'
 
+type ManagedHeader = Header & {
+  __solidPanesListenersAttached?: boolean
+  __solidPanesOutliner?: OutlineManager
+}
+
 function ensureMobileHeaderStyles () {
   if (document.getElementById(HEADER_MOBILE_STYLE_ID)) return
   const style = document.createElement('style')
@@ -45,8 +46,9 @@ function ensureMobileHeaderStyles () {
 export async function createHeader (store: LiveStore, outliner: OutlineManager) {
   ensureMobileHeaderStyles()
 
-  const header = (document.querySelector('solid-ui-header') || document.createElement('solid-ui-header')) as Header
+  const header = (document.querySelector('solid-ui-header') || document.createElement('solid-ui-header')) as ManagedHeader
   const isNewHeader = !header.isConnected
+  header.__solidPanesOutliner = outliner
 
   // ensure it is in DOM (before MainContent for consistency)
   const main = document.getElementById('MainContent')
@@ -61,42 +63,62 @@ export async function createHeader (store: LiveStore, outliner: OutlineManager) 
   await refreshHeader(outliner, header)
 
   if (isNewHeader) {
-    const refreshCurrentHeader = async () => {
-      await refreshHeader(outliner, header)
-    }
-
-    authSession.events.on('login', refreshCurrentHeader)
-    authSession.events.on('logout', refreshCurrentHeader)
-    authSession.events.on('sessionRestore', refreshCurrentHeader)
-
-    header.addEventListener('auth-action-select', async (e: Event) => {
-      const detail = (e as CustomEvent).detail
-      if (detail?.role === 'login') {
-        await refreshCurrentHeader()
-        await openDashboardPane(outliner, 'profile') // upon successfull login, we open the dashboard pane
-      }
-    })
-
-    header.addEventListener('signup-success', async () => {
-      // do nothing
-    })
-
-    header.addEventListener('account-menu-select', async (e: Event) => {
-      const detail = (e as CustomEvent).detail
-      if (detail?.action === 'logout') {
-        authSession.logout()
-      } else if (detail?.action === 'show-profile') {
-        // TODO see if this can be consolidated
-        if (!authn.currentUser()) {
-          openUserProfile(outliner)
-        } else {
-          await openDashboardPane(outliner, 'profile')
-        }
-      }
-    })
+    header.__solidPanesListenersAttached = false
   }
 
+  attachHeaderListeners(header)
+
   return header
+}
+
+function attachHeaderListeners (header: ManagedHeader) {
+  if (header.__solidPanesListenersAttached) return
+
+  const refreshCurrentHeader = async () => {
+    const outliner = header.__solidPanesOutliner
+    if (!outliner) return
+    await refreshHeader(outliner, header)
+  }
+
+  authSession.events.on('login', refreshCurrentHeader)
+  authSession.events.on('logout', refreshCurrentHeader)
+  authSession.events.on('sessionRestore', refreshCurrentHeader)
+
+  header.addEventListener('auth-action-select', async (e: Event) => {
+    const outliner = header.__solidPanesOutliner
+    if (!outliner) return
+
+    const detail = (e as CustomEvent).detail
+    if (detail?.role === 'login') {
+      await refreshCurrentHeader()
+      outliner.showDashboard({ pane: 'profile' }) // upon successfull login, we open the dashboard pane
+    }
+  })
+
+  header.addEventListener('signup-success', async () => {
+    // do nothing
+  })
+
+  header.addEventListener('account-menu-select', async (e: Event) => {
+    const outliner = header.__solidPanesOutliner
+    if (!outliner) return
+
+    const detail = (e as CustomEvent).detail
+    if (detail?.action === 'logout') {
+      console.log('-----Logging out')
+      await refreshCurrentHeader()
+      openUserProfile(outliner)
+    } else if (detail?.action === 'show-profile') {
+      // TODO see if this can be consolidated
+      if (!authn.currentUser()) {
+        openUserProfile(outliner)
+      } else {
+        outliner.showDashboard({ pane: 'profile' })
+      }
+    }
+  })
+
+  header.__solidPanesListenersAttached = true
 }
 
 export async function refreshHeader (outliner: OutlineManager, headerElement?: Header) {
@@ -182,11 +204,4 @@ function openUserProfile (outliner: OutlineManager) {
   console.log('-----Opening user profile')
   outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
   location.reload()
-}
-
-async function openDashboardPane (outliner: any, pane: string): Promise<void> {
-  console.log('-----Opening profile pane')
-  outliner.showDashboard({
-    pane
-  })
 }

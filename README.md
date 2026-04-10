@@ -90,3 +90,13 @@ We have added comments in the code to make it explicit which parts are 100% writ
 * Raptor mini: take a look how I wired the environement from mashlib into solid-panes. It is not quite right, can you suggest fixes?
 
 * Raptor mini: Update the code to use the new solid-ui-header component. Keep in mind the log in and sign up are wired in specific ways.
+
+* Auto: chnage the menu to fill up the menu items like in the code: async function getMenuItems (outliner: any) {
+const items = await outliner.getDashboardItems()
+return items.map((element) => {
+return {
+label: element.label,
+onclick: () => openDashboardPane(outliner, element.tabName || element.paneName)
+}
+})
+}
