@@ -5,6 +5,7 @@ import { solidLogicSingleton, store, authSession } from 'solid-logic'
 import { getOutliner } from '../src'
 import Pane from 'profile-pane'
 import './dev-mash.css'
+import { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 
 // Add custom properties to the Window interface for TypeScript
 declare global {
@@ -27,7 +28,15 @@ async function renderPane (uri: string) {
   await new Promise((resolve, reject) => {
     store.fetcher.load(doc).then(resolve, reject)
   })
-  const context = {
+
+  const devEnvironment : RenderEnvironment = {
+    layout: 'desktop', // or 'mobile'
+    layoutPreference: 'desktop', // or 'mobile' or 'auto'
+    inputMode: 'pointer', // or 'touch'
+    theme: 'light', // or 'dark'
+    viewport: { width: 800, height: 480 } // this is the default viewport for the browser window
+  }
+  const context : DataBrowserContext = {
     // see https://github.com/solidos/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
     dom: document,
     getOutliner,
@@ -35,7 +44,8 @@ async function renderPane (uri: string) {
       store: store,
       paneRegistry,
       logic: solidLogicSingleton
-    }
+    },
+    environment: devEnvironment
   }
 
   console.log(subject, context)

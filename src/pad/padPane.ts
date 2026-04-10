@@ -16,6 +16,7 @@ const paneDef: PaneDefinition = {
 
   // Does the subject deserve an pad pane?
   label: function (subject, context) {
+    // @ts-ignore
     const t = (context.session.store as Store).findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
       return 'pad'
@@ -26,6 +27,7 @@ const paneDef: PaneDefinition = {
   mintClass: ns.pad('Notepad'),
 
   mintNew: function (context, newPaneOptions: any) {
+    // @ts-ignore
     const store = context.session.store as Store
     const updater = store.updater
     if (newPaneOptions.me && !newPaneOptions.me.uri) {
@@ -77,6 +79,7 @@ const paneDef: PaneDefinition = {
   // @@ TODO Set better type for paneOptions
   render: function (subject, context, paneOptions: any) {
     const dom = context.dom
+    // @ts-ignore
     const store = context.session.store as Store
     // Utility functions
     const complainIfBad = function (ok: boolean, message: string) {

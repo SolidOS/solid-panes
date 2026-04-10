@@ -21,22 +21,33 @@ import {
   paneForIcon,
   paneForPredicate,
   register,
-  byName
+  byName,
+  RenderEnvironment
 } from 'pane-registry'
 import { createContext } from './outline/context'
-import initMainPage from './mainPage'
+import { initMainPage, refreshUI } from './mainPage'
 
-function getOutliner (dom) {
+function getOutliner (dom, environment?: RenderEnvironment): OutlineManager {
   if (!dom.outlineManager) {
     const context = createContext(
       dom,
       { list, paneForIcon, paneForPredicate, register, byName },
       store as LiveStore,
-      solidLogicSingleton
+      solidLogicSingleton,
+      environment
     )
     dom.outlineManager = new OutlineManager(context)
+  } else if (environment) {
+    dom.outlineManager.context = dom.outlineManager.context || {}
+    dom.outlineManager.context.environment = environment
   }
   return dom.outlineManager
+}
+
+function updateEnvironment (outliner: OutlineManager, environment: RenderEnvironment) {
+  if (!outliner) return
+  outliner.context = outliner.context || {}
+  outliner.context.environment = environment
 }
 
 if (typeof window !== 'undefined') {
@@ -53,9 +64,11 @@ registerPanes((cjsOrEsModule: any) => register(cjsOrEsModule.default || cjsOrEsM
 export {
   OutlineManager,
   getOutliner,
+  updateEnvironment,
   UI,
   versionInfo,
   initMainPage,
+  refreshUI,
   list, // from paneRegistry
   paneForIcon, // from paneRegistry
   paneForPredicate, // from paneRegistry
