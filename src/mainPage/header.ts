@@ -1,7 +1,7 @@
 import { authSession, authn, store } from 'solid-logic'
 import { icons, widgets, utils } from 'solid-ui'
-import { Header } from 'solid-ui/components/header'
-import type { HeaderMenuItem, HeaderAccountMenuItem, HeaderAuthState } from 'solid-ui/components/header'
+import 'solid-ui/components/header'
+import type { Header, HeaderMenuItem, HeaderAccountMenuItem, HeaderAuthState } from 'solid-ui/components/header'
 import { OutlineManager } from '../outline/manager'
 import { LiveStore } from 'rdflib'
 /**
@@ -48,6 +48,9 @@ export async function createHeader (store: LiveStore, outliner: OutlineManager) 
 
   const header = (document.querySelector('solid-ui-header') || document.createElement('solid-ui-header')) as ManagedHeader
   const isNewHeader = !header.isConnected
+  if (!header.id) {
+    header.id = 'mainSolidUiHeader'
+  }
   header.__solidPanesOutliner = outliner
 
   // ensure it is in DOM (before MainContent for consistency)
