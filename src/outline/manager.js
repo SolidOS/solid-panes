@@ -521,6 +521,22 @@ export default function (context) {
    * @returns {HTMLElement}
    */
   function getOrCreateContainer (id) {
+    if (id === 'outline') {
+      const existingOutline = document.getElementById('outline')
+      if (existingOutline) {
+        return existingOutline
+      }
+
+      const outlineHost = document.getElementById('OutlineView')
+      if (outlineHost) {
+        const outlineTable = document.createElement('table')
+        outlineTable.id = 'outline'
+        outlineTable.style.width = '100%'
+        outlineHost.appendChild(outlineTable)
+        return outlineTable
+      }
+    }
+
     return (
       document.getElementById(id) ||
       (() => {
@@ -2242,7 +2258,7 @@ export default function (context) {
   @param table   -- option  -- a table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || dom.getElementById('outline') // if does not exist just add one? nowhere to out it
+    table = table || getOutlineContainer() // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'
