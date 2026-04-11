@@ -16,6 +16,7 @@ const TabbedPane: PaneDefinition = {
 
   // Does the subject deserve this pane?
   label: (subject, context) => {
+    // @ts-ignore
     const kb = context.session.store as Store
     const typeURIs = kb.findTypeURIs(subject)
     if (ns.meeting('Cluster').uri in typeURIs) {
@@ -26,6 +27,7 @@ const TabbedPane: PaneDefinition = {
 
   render: (subject, context) => {
     const dom = context.dom
+    // @ts-ignore
     const store = context.session.store as Store
     const div = dom.createElement('div')
 

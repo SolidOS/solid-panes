@@ -1418,8 +1418,11 @@ export function UserInput (outline) {
         false
       )
       window.addEventListener('mousedown', UserInput.Mousedown, false)
-      document.getElementById('outline').oncontextmenu = function () {
-        return false
+      const outlineView = document.getElementById('OutlineView')
+      if (outlineView) {
+        outlineView.oncontextmenu = function () {
+          return false
+        }
       }
 
       if (e.button === 2) {

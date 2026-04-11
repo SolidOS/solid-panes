@@ -8,6 +8,7 @@ const SOLID_PROJECT_URL = 'https://solidproject.org'
 const SOLID_PROJECT_NAME = 'solidproject.org'
 
 export function createFooter (store: LiveStore) {
+  // @ts-ignore
   initFooter(store, setFooterOptions())
 }
 

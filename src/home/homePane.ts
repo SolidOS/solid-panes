@@ -8,7 +8,7 @@
  **
  */
 
-import { PaneDefinition } from 'pane-registry'
+import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 import { NamedNode } from 'rdflib'
 import { authn } from 'solid-logic'
 import { create, icons, login } from 'solid-ui'
@@ -29,7 +29,7 @@ const HomePaneSource: PaneDefinition = {
     return 'home'
   },
 
-  render: function (subject, context) {
+  render: function (subject, context: DataBrowserContext) {
     const dom = context.dom
     const showContent = async function () {
       const homePaneContext = { div, dom, statusArea: div, me }
@@ -54,6 +54,7 @@ const HomePaneSource: PaneDefinition = {
       const relevantPanes = await login.filterAvailablePanes(
         context.session.paneRegistry.list
       )
+      // @ts-ignore
       create.newThingUI(creationContext, context, relevantPanes) // newUI Have to pass panes down
 
       login.registrationList(homePaneContext, {}).then(function () {})

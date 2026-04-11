@@ -21,6 +21,7 @@ export default function (context) {
   const dom = context.dom
 
   this.document = context.dom
+  this.context = context
   this.outlineIcons = outlineIcons
   this.labeller = this.labeller || {}
   this.labeller.LanguagePreference = '' // for now
@@ -46,6 +47,17 @@ export default function (context) {
   this.init = function () {
     const table = getOutlineContainer()
     table.outline = this
+  }
+
+  this.getLayoutMode = function () {
+    const envLayout = this.context?.environment?.layout
+    if (envLayout === 'mobile' || envLayout === 'desktop') return envLayout
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      return window.matchMedia('(max-width: 768px)').matches ? 'mobile' : 'desktop'
+    }
+
+    return 'desktop'
   }
 
   /** benchmark a function **/
@@ -464,10 +476,10 @@ export default function (context) {
   async function showDashboard (options = {}) {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
-    // reuse dashboard if already children already is inserted
+    // reuse dashboard if children already inserted
     if (dashboardContainer.childNodes.length > 0 && options.pane) {
-      outlineContainer.style.display = 'none'
-      dashboardContainer.style.display = 'inherit'
+      outlineContainer.setAttribute('hidden', '')
+      dashboardContainer.removeAttribute('hidden')
       const tab = dashboardContainer.querySelector(
         `[data-global-pane-name="${options.pane}"]`
       )
@@ -490,7 +502,8 @@ export default function (context) {
     authSession.events.on('logout', closeDashboard)
 
     // finally - switch to showing dashboard
-    outlineContainer.style.display = 'none'
+    outlineContainer.setAttribute('hidden', '')
+    dashboardContainer.removeAttribute('hidden')
     dashboardContainer.appendChild(dashboard)
     const tab = dashboardContainer.querySelector(
       `[data-global-pane-name="${options.pane}"]`
@@ -500,27 +513,28 @@ export default function (context) {
     }
 
     function closeDashboard () {
-      dashboardContainer.style.display = 'none'
-      outlineContainer.style.display = 'inherit'
+      dashboardContainer.setAttribute('hidden', '')
+      outlineContainer.removeAttribute('hidden')
     }
   }
   this.showDashboard = showDashboard
 
   function getDashboardContainer () {
-    return getOrCreateContainer('GlobalDashboard')
+    return getOrCreateContainer('GlobalDashboard', 'Dashboard')
   }
 
   function getOutlineContainer () {
-    return getOrCreateContainer('outline')
+    return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
   /**
-   * Get element with id or create a new on the fly with that id
+   * Get element with id or create a new section on the fly with that id
    *
    * @param {string} id The ID of the element you want to get or create
+   * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
-  function getOrCreateContainer (id) {
+  function getOrCreateContainer (id, ariaLabel) {
     if (id === 'outline') {
       const existingOutline = document.getElementById('outline')
       if (existingOutline) {
@@ -540,11 +554,12 @@ export default function (context) {
     return (
       document.getElementById(id) ||
       (() => {
-        const dashboardContainer = document.createElement('div')
-        dashboardContainer.id = id
+        const container = document.createElement('section')
+        container.id = id
+        if (ariaLabel) container.setAttribute('aria-label', ariaLabel)
         const mainContainer =
           document.querySelector('[role="main"]') || document.body
-        return mainContainer.appendChild(dashboardContainer)
+        return mainContainer.appendChild(container)
       })()
     )
   }
@@ -597,8 +612,9 @@ export default function (context) {
       const paneHiddenStyle =
         'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
-      paneIconTray.style =
-        'display:flex; justify-content: flex-start; align-items: center;'
+      paneIconTray.setAttribute('role', 'toolbar')
+      paneIconTray.setAttribute('aria-label', 'Pane views')
+      paneIconTray.classList.add('paneIconTray')
 
       const relevantPanes = options.hideList
         ? []
@@ -1593,7 +1609,7 @@ export default function (context) {
             outline.GotoSubject(object, true)
             /* //deal with this later
             deselectAll();
-            var newTr=dom.getElementById('outline').lastChild;
+            var newTr=dom.getElementById('OutlineView').lastChild;
             setSelected(newTr.firstChild.firstChild.childNodes[1].lastChild,true);
             function setSelectedAfterward(uri){
                 deselectAll();
@@ -2255,10 +2271,10 @@ export default function (context) {
   @param pane    -- optional -- pane to be used for expanded display
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
-  @param table   -- option  -- a table element in which to put the outline.
+  @param table   -- option  -- default is a HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || getOutlineContainer() // if does not exist create a compatible host in the current shell
+  table = table || getOutlineContainer() // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'
