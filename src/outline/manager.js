@@ -54,7 +54,10 @@ export default function (context) {
     if (envLayout === 'mobile' || envLayout === 'desktop') return envLayout
 
     if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(max-width: 768px)').matches ? 'mobile' : 'desktop'
+      const viewportWidth = Math.round(Math.min(window.innerWidth, window.visualViewport?.width || window.innerWidth))
+      const isTouchInput = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0
+
+      return viewportWidth <= 768 || (isTouchInput && viewportWidth <= 1024) ? 'mobile' : 'desktop'
     }
 
     return 'desktop'
@@ -476,10 +479,21 @@ export default function (context) {
   async function showDashboard (options = {}) {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
+
+    function showContainer (container) {
+      container.removeAttribute('hidden')
+      container.style.display = ''
+    }
+
+    function hideContainer (container) {
+      container.setAttribute('hidden', '')
+      container.style.display = 'none'
+    }
+
     // reuse dashboard if children already inserted
     if (dashboardContainer.childNodes.length > 0 && options.pane) {
-      outlineContainer.setAttribute('hidden', '')
-      dashboardContainer.removeAttribute('hidden')
+      hideContainer(outlineContainer)
+      showContainer(dashboardContainer)
       const tab = dashboardContainer.querySelector(
         `[data-global-pane-name="${options.pane}"]`
       )
@@ -502,8 +516,8 @@ export default function (context) {
     authSession.events.on('logout', closeDashboard)
 
     // finally - switch to showing dashboard
-    outlineContainer.setAttribute('hidden', '')
-    dashboardContainer.removeAttribute('hidden')
+    hideContainer(outlineContainer)
+    showContainer(dashboardContainer)
     dashboardContainer.appendChild(dashboard)
     const tab = dashboardContainer.querySelector(
       `[data-global-pane-name="${options.pane}"]`
@@ -513,8 +527,8 @@ export default function (context) {
     }
 
     function closeDashboard () {
-      dashboardContainer.setAttribute('hidden', '')
-      outlineContainer.removeAttribute('hidden')
+      hideContainer(dashboardContainer)
+      showContainer(outlineContainer)
     }
   }
   this.showDashboard = showDashboard
