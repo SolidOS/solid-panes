@@ -336,20 +336,25 @@ export default function (context) {
       )
     }
 
-    div.appendChild(
-      UI.tabs.tabWidget({
-        dom,
-        subject: me,
-        items,
-        renderMain,
-        renderTab,
-        ordered: true,
-        orientation: 0,
-        backgroundColor: '#eeeeee', // black?
-        selectedTab: options.selectedTab,
-        onClose: options.onClose
-      })
-    )
+    const widget = UI.tabs.tabWidget({
+      dom,
+      subject: me,
+      items,
+      renderMain,
+      renderTab,
+      ordered: true,
+      orientation: 0,
+      backgroundColor: '#eeeeee', // black?
+      selectedTab: options.selectedTab,
+      onClose: options.onClose
+    })
+
+    const widgetNav = widget.querySelector('nav')
+    if (widgetNav) {
+      widgetNav.style.display = 'none'
+    }
+
+    div.appendChild(widget)
     return div
   }
   this.getDashboard = globalAppTabs
@@ -630,9 +635,7 @@ export default function (context) {
       paneIconTray.setAttribute('aria-label', 'Pane views')
       paneIconTray.classList.add('paneIconTray')
 
-      const relevantPanes = options.hideList
-        ? []
-        : await getRelevantPanes(subject, context)
+      const relevantPanes = await getRelevantPanes(subject, context)
       tr.firstPane = requiredPane || getPane(relevantPanes, subject)
       const paneNumber = relevantPanes.indexOf(tr.firstPane)
 
@@ -806,11 +809,7 @@ export default function (context) {
       UI.widgets.makeDraggable(strong, subject)
     }
 
-    header.appendChild(
-      await renderPaneIconTray(td, {
-        hideList: showHeader
-      })
-    )
+    header.appendChild(await renderPaneIconTray(td))
 
     // set DOM methods
     tr.firstChild.tabulatorSelect = function () {
