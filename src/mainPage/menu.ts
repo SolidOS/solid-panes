@@ -1,9 +1,11 @@
 import './menu.css'
 import { OutlineManager } from '../outline/manager'
-import { authSession, authn } from 'solid-logic'
+import { authSession } from 'solid-logic'
 
 type MenuItem = {
   id?: string
+  icon?: string
+  paneName?: string
   label: string
   onclick: () => void | Promise<void>
 }
@@ -57,6 +59,8 @@ const getMenuItems = async (outliner: any): Promise<MenuItem[]> => {
     const items = await outliner.getDashboardItems()
     return items.map((element) => {
       return {
+        icon: element.icon,
+        paneName: element.tabName || element.paneName,
         label: element.label,
         onclick: () => openDashboardPane(outliner, element.tabName || element.paneName)
       }
@@ -71,7 +75,23 @@ const createMenuButton = (item: MenuItem) => {
   const button = document.createElement('button')
   button.className = 'menu-item'
   button.type = 'button'
-  button.textContent = item.label
+  if (item.paneName) {
+    button.dataset.paneName = item.paneName
+  }
+
+  if (item.icon) {
+    const icon = document.createElement('img')
+    icon.className = 'menu-item-icon'
+    icon.src = item.icon
+    icon.alt = ''
+    icon.setAttribute('aria-hidden', 'true')
+    button.appendChild(icon)
+  }
+
+  const label = document.createElement('span')
+  label.className = 'menu-item-label'
+  label.textContent = item.label
+  button.appendChild(label)
 
   if (item.id) {
     button.id = item.id
@@ -84,21 +104,38 @@ const createMenuButton = (item: MenuItem) => {
   return button
 }
 
-const renderMenuItems = async (outliner: OutlineManager, container: HTMLElement) => {
-  const me = authn.currentUser()
-  const menuItems = me ? await getMenuItems(outliner) : []
+const setActiveMenuItem = (container: HTMLElement, paneName?: string) => {
+  const menuItems = Array.from(container.querySelectorAll<HTMLButtonElement>('.menu-item'))
+  let activeItem: HTMLButtonElement | undefined
 
-  if (me) {
-    menuItems.push({
-      id: 'MenuLogoutItem',
-      label: 'Logout',
-      onclick: async () => {
-        await authSession.logout()
-      }
-    })
+  menuItems.forEach((item) => {
+    const isActive = Boolean(paneName) && item.dataset.paneName === paneName
+    item.classList.toggle('menu-item-active', isActive)
+    if (isActive) {
+      item.setAttribute('aria-current', 'page')
+      activeItem = item
+    } else {
+      item.removeAttribute('aria-current')
+    }
+  })
+
+  if (!activeItem && menuItems[0]) {
+    menuItems[0].classList.add('menu-item-active')
+    menuItems[0].setAttribute('aria-current', 'page')
+    container.dataset.activePaneName = menuItems[0].dataset.paneName || ''
+    return
   }
 
+  if (paneName) {
+    container.dataset.activePaneName = paneName
+  }
+}
+
+const renderMenuItems = async (outliner: OutlineManager, container: HTMLElement) => {
+  const menuItems = await getMenuItems(outliner)
+
   container.replaceChildren(...menuItems.map(createMenuButton))
+  setActiveMenuItem(container, container.dataset.activePaneName)
 }
 
 export const refreshMenu = (layout: 'mobile' | 'desktop') => {
@@ -178,6 +215,9 @@ export const createLeftSideMenu = async (outliner: OutlineManager) => {
 
     navMenuContent.addEventListener('click', (event) => {
       const item = (event.target as HTMLElement).closest('.menu-item')
+      if (item instanceof HTMLButtonElement) {
+        setActiveMenuItem(navMenuContent, item.dataset.paneName)
+      }
       const isMobile = outliner.context?.environment?.layout === 'mobile'
       if (item && isMobile) {
         closeMobileMenu()
@@ -187,7 +227,6 @@ export const createLeftSideMenu = async (outliner: OutlineManager) => {
 }
 
 async function openDashboardPane (outliner: any, pane: string): Promise<void> {
-  console.log('-----Opening profile pane')
   outliner.showDashboard({
     pane
   })

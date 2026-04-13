@@ -100,3 +100,8 @@ onclick: () => openDashboardPane(outliner, element.tabName || element.paneName)
 }
 })
 }
+
+* Auto: each #sym:MenuItem has an icon which i want displayed on the left side of each menu item when rendered
+
+* Auto: don't add each menu item in a button looking border. Simply list them.
+Upon hover apply background color e6dcff and selected or active to be background color: cbb9ff
