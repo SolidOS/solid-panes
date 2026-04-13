@@ -87,7 +87,7 @@ We have added comments in the code to make it explicit which parts are 100% writ
 ### Prompt usage hitory:
 * Model Claude Opus 4.6: Initially solid-panes is loaded into an HTML shell form mashlib that looks like ... Also, an iFrame is rendered inside the `<div class="TabulatorOutline" id="DummyUUID">` for “isolated pane rendering”. Analyze the solid-panes code for what it uses from this HTML and suggest a new HTML structure which is mobile and accessibility friendly. Let's go ahead and make changes in this code as suggested to accommodate the new databrowser HTML.
 
-* Raptor mini: take a look how I wired the environement from mashlib into solid-panes. It is not quite right, can you suggest fixes?
+* Raptor mini: take a look at how I wired the environment from mashlib into solid-panes. It is not quite right, can you suggest fixes?
 
 * Raptor mini: Update the code to use the new solid-ui-header component. Keep in mind the log in and sign up are wired in specific ways.
 
