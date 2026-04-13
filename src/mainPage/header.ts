@@ -94,7 +94,7 @@ function attachHeaderListeners (header: ManagedHeader) {
     const detail = (e as CustomEvent).detail
     if (detail?.role === 'login') {
       await refreshCurrentHeader()
-      outliner.showDashboard({ pane: 'profile' }) // upon successfull login, we open the dashboard pane
+      outliner.showDashboard({ pane: 'profile' }) // upon successful login, we open the dashboard pane
     }
   })
 
