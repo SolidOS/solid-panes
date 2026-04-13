@@ -91,7 +91,7 @@ We have added comments in the code to make it explicit which parts are 100% writ
 
 * Raptor mini: Update the code to use the new solid-ui-header component. Keep in mind the log in and sign up are wired in specific ways.
 
-* Auto: chnage the menu to fill up the menu items like in the code: async function getMenuItems (outliner: any) {
+* Auto: change the menu to fill up the menu items like in the code: async function getMenuItems (outliner: any) {
 const items = await outliner.getDashboardItems()
 return items.map((element) => {
 return {
