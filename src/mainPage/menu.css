@@ -5,11 +5,13 @@
 }
 
 .menu-item {
-  display: block;
-  border: 1px solid var(--color-border);
-  border-radius: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  border: 0;
+  border-radius: 0;
   padding: 0.5rem 0.75rem;
-  background: var(--color-background);
+  background: transparent;
   color: var(--color-text);
   text-decoration: none;
   width: 100%;
@@ -17,9 +19,26 @@
   cursor: pointer;
 }
 
+.menu-item-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  object-fit: contain;
+}
+
+.menu-item-label {
+  min-width: 0;
+}
+
 .menu-item:hover,
 .menu-item:focus {
-  background: var(--color-highlight-bg);
+  background: #e6dcff;
+}
+
+.menu-item-active,
+.menu-item-active:hover,
+.menu-item-active:focus {
+  background: #cbb9ff;
 }
 
 .menu-toggle {

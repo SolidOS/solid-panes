@@ -361,32 +361,47 @@ export default function (context) {
 
   async function getDashboardItems () {
     const me = authn.currentUser()
-    if (!me) return []
-    const div = dom.createElement('div')
-    const [pods] = await Promise.all([getPods()])
-    return [
+    const panes = [
       {
         paneName: 'home',
-        label: 'Your stuff',
+        label: 'Dashboard',
         icon: UI.icons.iconBase + 'noun_547570.svg'
       },
       {
-        paneName: 'basicPreferences',
-        label: 'Preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
-      },
-      {
         paneName: 'profile',
-        label: 'Your Profile',
+        label: 'Profile',
         icon: UI.icons.iconBase + 'noun_15059.svg'
       },
+      {
+        paneName: 'socialPane',
+        label: 'Friends',
+        icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif'
+      }
+    ]
+
+    if (!me) {
+      return panes
+    }
+
+    const [pods] = await Promise.all([getPods()])
+    panes.push(
+      /* not in use since redesign of profile-pane
       {
         paneName: 'editProfile',
         label: 'Edit your Profile',
         icon: UI.icons.iconBase + 'noun_492246.svg'
+      },
+      */
+      {
+        paneName: 'basicPreferences',
+        label: 'Preferences',
+        icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
       }
-    ]
-      .concat(pods)
+    )
+
+    panes.push(...pods)
+
+    return panes
 
     async function getPods () {
       async function addPodStorage (pod) { // namedNode
@@ -451,25 +466,6 @@ export default function (context) {
           icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
         }
       })
-    }
-
-    async function getAddressBooks () {
-      try {
-        const context = await UI.login.findAppInstances(
-          { me, div, dom },
-          ns.vcard('AddressBook')
-        )
-        return (context.instances || []).map((book, index) => ({
-          paneName: 'contact',
-          tabName: `contact-${index}`,
-          label: 'Contacts',
-          subject: book,
-          icon: UI.icons.iconBase + 'noun_15695.svg'
-        }))
-      } catch (err) {
-        console.error('oops in globalAppTabs AddressBook')
-      }
-      return []
     }
   }
   this.getDashboardItems = getDashboardItems
