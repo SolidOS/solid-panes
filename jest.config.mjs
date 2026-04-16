@@ -3,6 +3,7 @@ export default {
   coverageDirectory: 'coverage',
   preset: 'ts-jest/presets/js-with-babel',
   testEnvironment: 'jsdom',
+  setupFiles: ['./test/helpers/globals.js'],
   testEnvironmentOptions: {
     customExportConditions: ['node']
   },
