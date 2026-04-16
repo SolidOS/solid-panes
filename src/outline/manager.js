@@ -11,6 +11,7 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
+import { loadProfileFromURI } from '../profileUtils/ownerProfile'
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -189,6 +190,10 @@ export default function (context) {
     td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
     td.style.margin = '0.2em'
+    if (!obj) {
+      td.textContent = 'No object available.'
+      return td
+    }
     td.style.border = 'none'
     td.style.padding = '0'
     td.style.verticalAlign = 'top'
@@ -305,80 +310,82 @@ export default function (context) {
    * @param {Function} [options.onClose] If given, will present an X for the dashboard, and call this method when clicked
    * @returns Promise<{Element}> - the div that holds the dashboard
    */
-  async function globalAppTabs (options = {}) {
+  async function globalAppTabs (subject, options = {}) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
     const me = authn.currentUser()
-    if (!me) {
-      alert('Must be logged in for this')
-      throw new Error('Not logged in')
-    }
-    const items = await getDashboardItems()
+    const items = await getDashboardItems(subject)
 
-    function renderTab (div, item) {
-      div.dataset.globalPaneName = item.tabName || item.paneName
-      div.textContent = item.label
-    }
-
-    function renderMain (containerDiv, item) {
-      // Items are pane names
-      const pane = paneRegistry.byName(item.paneName) // 20190701
-      containerDiv.innerHTML = ''
-      const table = containerDiv.appendChild(dom.createElement('table'))
-      const me = authn.currentUser()
-      thisOutline.GotoSubject(
-        item.subject || me,
-        true,
-        pane,
-        false,
-        undefined,
-        table
+    const selectedItem = options.selectedTab
+      ? items.find(
+        item => item.paneName === options.selectedTab || item.tabName === options.selectedTab
       )
+      : items[0]
+
+    if (!selectedItem) {
+      return div
     }
 
-    div.appendChild(
-      UI.tabs.tabWidget({
-        dom,
-        subject: me,
-        items,
-        renderMain,
-        renderTab,
-        ordered: true,
-        orientation: 0,
-        backgroundColor: '#eeeeee', // black?
-        selectedTab: options.selectedTab,
-        onClose: options.onClose
-      })
+    div.dataset.globalPaneName = selectedItem.tabName || selectedItem.paneName
+
+    if (typeof options.onClose === 'function') {
+      const closeButton = dom.createElement('button')
+      closeButton.type = 'button'
+      closeButton.className = 'dashboard-close'
+      closeButton.textContent = '×'
+      closeButton.addEventListener('click', options.onClose)
+      div.appendChild(closeButton)
+    }
+
+    const content = div.appendChild(dom.createElement('div'))
+    const webId = subject || selectedItem.subject || me
+    if (!webId) {
+      const message = dom.createElement('div')
+      message.textContent =
+        'Unable to display this dashboard item because no profile is loaded.'
+      content.appendChild(message)
+      return div
+    }
+
+    const pane = paneRegistry.byName(selectedItem.paneName) // 20190701
+    const table = content.appendChild(dom.createElement('table'))
+    thisOutline.GotoSubject(
+      webId,
+      true,
+      pane,
+      false,
+      undefined,
+      table
     )
+
     return div
   }
   this.getDashboard = globalAppTabs
 
-  async function getDashboardItems () {
-    const me = authn.currentUser()
+  async function getDashboardItems (subject) {
     const panes = [
-      {
-        paneName: 'home',
-        label: 'Dashboard',
-        icon: UI.icons.iconBase + 'noun_547570.svg'
-      },
       {
         paneName: 'profile',
         label: 'Profile',
         icon: UI.icons.iconBase + 'noun_15059.svg'
       },
       {
-        paneName: 'socialPane',
+        paneName: 'social', // loads socialPane
         label: 'Friends',
         icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif'
       }
     ]
 
+    // if we are not logged in, we get the webId from the URI
+    const me = authn.currentUser()
     if (!me) {
       return panes
     }
 
-    const [pods] = await Promise.all([getPods()])
+    const [pods] = await Promise.all([getPods(subject, me)])
+
+    panes.push(...pods)
+
     panes.push(
       /* not in use since redesign of profile-pane
       {
@@ -388,17 +395,33 @@ export default function (context) {
       },
       */
       {
+        paneName: 'home',
+        label: 'Stuff',
+        icon: UI.icons.iconBase + 'noun_547570.svg'
+      },
+      {
         paneName: 'basicPreferences',
         label: 'Preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
+        icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg'
       }
     )
 
-    panes.push(...pods)
-
     return panes
 
-    async function getPods () {
+    async function getPods (subject, me) {
+      let webId
+      if (me) { // if I am logged in, I continue
+        webId = me
+        try {
+          // need to make sure that profile is loaded
+          await kb.fetcher.load(me.doc())
+        } catch (err) {
+          console.error('Unable to load profile', err)
+          return []
+        }
+      } else { // if I am not logged in, I find teh webId
+        webId = await loadProfileFromURI(subject)
+      }
       async function addPodStorage (pod) { // namedNode
         await loadContainerRepresentation(pod)
         if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
@@ -417,16 +440,8 @@ export default function (context) {
         }
         // TODO should url.origin be added to pods list when there are no pim:Storage ???
       }
-
-      try {
-        // need to make sure that profile is loaded
-        await kb.fetcher.load(me.doc())
-      } catch (err) {
-        console.error('Unable to load profile', err)
-        return []
-      }
       // load pod's storages from profile
-      let pods = kb.each(me, ns.space('storage'), null, me.doc())
+      let pods = kb.each(webId, ns.space('storage'), null, webId.doc())
       pods.map(async (pod) => {
         // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
         await loadContainerRepresentation(pod)
@@ -452,7 +467,7 @@ export default function (context) {
       if (!pods.length) return []
       return pods.map((pod, index) => {
         function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-        const label = split(me).startsWith(split(pod)) ? 'Your storage' : split(pod)
+        const label = split(webId).startsWith(split(pod)) ? 'Storage' : split(pod)
         return {
           paneName: 'folder',
           tabName: `folder-${index}`,
@@ -467,12 +482,12 @@ export default function (context) {
 
   /**
    * Call this method to show the global dashboard.
-   *
+   * @param {NamedNode} [subject] The subject form the URI
    * @param {Object} [options] A set of options that can be passed
    * @param {string} [options.pane] To open a specific dashboard pane
    * @returns {Promise<void>}
    */
-  async function showDashboard (options = {}) {
+  async function showDashboard (subject, options = {}) {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
 
@@ -486,27 +501,29 @@ export default function (context) {
       container.style.display = 'none'
     }
 
-    // reuse dashboard if children already inserted
-    if (dashboardContainer.childNodes.length > 0 && options.pane) {
-      hideContainer(outlineContainer)
-      showContainer(dashboardContainer)
-      const tab = dashboardContainer.querySelector(
-        `[data-global-pane-name="${options.pane}"]`
-      )
-      if (tab) {
-        tab.click()
+    // reuse existing dashboard if already rendered for the requested pane
+    if (dashboardContainer.childNodes.length > 0) {
+      const existingDashboard = dashboardContainer.firstElementChild
+      if (
+        existingDashboard &&
+        options.pane &&
+        existingDashboard.dataset.globalPaneName === options.pane
+      ) {
+        hideContainer(outlineContainer)
+        showContainer(dashboardContainer)
         return
       }
-      console.warn(
-        'Did not find the referred tab in global dashboard, will open first one'
-      )
+      dashboardContainer.innerHTML = ''
     }
 
-    // create a new dashboard if not already present
-    const dashboard = await globalAppTabs({
-      selectedTab: options.pane,
-      onClose: closeDashboard
-    })
+    // create a new dashboard view without tab navigation
+    const dashboard = await globalAppTabs(
+      subject,
+      {
+        selectedTab: options.pane,
+        // onClose: closeDashboard -> we do not need to close tabs anymore
+      }
+    )
 
     // close the dashboard if user log out
     authSession.events.on('logout', closeDashboard)
@@ -515,12 +532,6 @@ export default function (context) {
     hideContainer(outlineContainer)
     showContainer(dashboardContainer)
     dashboardContainer.appendChild(dashboard)
-    const tab = dashboardContainer.querySelector(
-      `[data-global-pane-name="${options.pane}"]`
-    )
-    if (tab) {
-      tab.click()
-    }
 
     function closeDashboard () {
       hideContainer(dashboardContainer)
@@ -538,7 +549,7 @@ export default function (context) {
   }
 
   /**
-   * Get element with id or create a new section on the fly with that id
+   * Get element with id or create a new on the fly with that id
    *
    * @param {string} id The ID of the element you want to get or create
    * @param {string} [ariaLabel] Optional aria-label for accessibility
@@ -622,9 +633,8 @@ export default function (context) {
       const paneHiddenStyle =
         'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
-      paneIconTray.setAttribute('role', 'toolbar')
-      paneIconTray.setAttribute('aria-label', 'Pane views')
-      paneIconTray.classList.add('paneIconTray')
+      paneIconTray.style =
+        'display:flex; justify-content: flex-start; align-items: center;'
 
       const relevantPanes = options.hideList
         ? []
@@ -2284,6 +2294,7 @@ export default function (context) {
   @param table   -- option  -- default is an HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
+    console.log('-----GotoSubject ', subject.termType, subject.value)
     table = table || getOutlineContainer() // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)

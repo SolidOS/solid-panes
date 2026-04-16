@@ -33,12 +33,12 @@ export async function initMainPage (
   ensureMainContent()
   const outliner = getOutliner(document, environment)
   uri = uri || window.location.href
-  let subject = uri
-  if (typeof uri === 'string') subject = store.sym(uri)
+  const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
+  console.log('-----initMainPage GotoSubject ', subject)
   outliner.GotoSubject(subject, true, undefined, true, undefined)
 
   const header = await createHeader(store, outliner)
-  const menu = createLeftSideMenu(outliner)
+  const menu = createLeftSideMenu(subject, outliner)
   const footer = createFooter(store)
   return Promise.all([header, menu, footer])
 }

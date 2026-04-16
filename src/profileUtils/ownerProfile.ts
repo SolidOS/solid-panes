@@ -1,0 +1,51 @@
+/*
+* Utility functions to help load the profile
+* especially when I am not logged in
+*/
+
+import { Fetcher, IndexedFormula, NamedNode, sym } from 'rdflib'
+import { ns } from 'solid-ui'
+
+const DEFAULT_PROFILE_PATH = 'profile/card#me'
+
+export async function loadProfileFromURI (
+  uri: NamedNode,
+  store: IndexedFormula,
+  fetcher: Fetcher
+): Promise<NamedNode> {
+  const pod = uri.site().uri
+  // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
+  const webId = sym(`${pod}${DEFAULT_PROFILE_PATH}`)
+  try {
+    await fetcher.load(webId)
+    return webId
+  } catch (err) {
+    // Fall back to pod root and any discovered profile links.
+  }
+
+  try {
+    await fetcher.load(uri)
+  } catch (err) {
+    return uri
+  }
+
+  const primaryTopic = store.any(uri, ns.foaf('primaryTopic'), null, uri.doc())
+  if (primaryTopic && primaryTopic.termType === 'NamedNode') {
+    try {
+      await fetcher.load(primaryTopic as NamedNode)
+      return primaryTopic as NamedNode
+    } catch (err) {
+      return uri
+    }
+  }
+
+  return uri
+}
+
+export function getName (store: IndexedFormula, ownersProfile: NamedNode): string {
+  return (
+    store.anyValue(ownersProfile, ns.vcard('fn'), null, ownersProfile.doc()) ||
+    store.anyValue(ownersProfile, ns.foaf('name'), null, ownersProfile.doc()) ||
+    new URL(ownersProfile.uri).host.split('.')[0]
+  )
+}
