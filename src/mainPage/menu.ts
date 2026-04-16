@@ -1,7 +1,8 @@
 import './menu.css'
 import { OutlineManager } from '../outline/manager'
-import { authSession } from 'solid-logic'
+import { authSession, authn } from 'solid-logic'
 import { NamedNode } from 'rdflib'
+import { loadProfileFromURI } from '../profileUtils/ownerProfile'
 
 type MenuItem = {
   id?: string
@@ -230,6 +231,18 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
 }
 
 async function openDashboardPane (subject, outliner: any, pane: string): Promise<void> {
+  const me = authn.currentUser()
+  if (me) {
+    subject = me
+  } else {
+    const store = outliner?.context?.store || outliner?.context?.session?.store || outliner?.kb
+    const fetcher = outliner?.context?.fetcher || store?.fetcher
+    if (!store || !fetcher) {
+      throw new Error('Unable to load profile: missing RDF store or fetcher')
+    }
+    subject = await loadProfileFromURI(subject, store, fetcher)
+  }
+  console.log(`-----Opening dashboard pane ${pane} for`, subject)
   outliner.showDashboard(subject, {
     pane
   })
