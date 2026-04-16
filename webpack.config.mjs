@@ -42,7 +42,7 @@ const common = {
     'solid-logic': 'SolidLogic',
     SolidLogic: 'SolidLogic',
     'solid-ui': 'UI',
-    UI: 'UI',
+    UI: 'UI'
   },
   devtool: 'source-map',
 }
