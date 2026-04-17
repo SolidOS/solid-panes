@@ -185,7 +185,7 @@ const humanReadablePane = {
         const clean = DOMPurify.sanitize(res)
         frame.innerHTML = clean
         frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
+        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'
@@ -195,7 +195,7 @@ const humanReadablePane = {
     const setIframeAttributes = (frame, lines) => {
       frame.setAttribute('src', subject.uri)
       frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; width: 800px; resize: both; overflow: auto;`)
+      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
     }
 
     if (isMarkdown) {
