@@ -17,17 +17,7 @@ export const socialPane = {
 
   name: 'social',
 
-  label: function (subject, context) {
-    const kb = context.session.store
-    const types = kb.findTypeURIs(subject)
-    if (
-      types[UI.ns.foaf('Person').uri] ||
-      types[UI.ns.vcard('Individual').uri]
-    ) {
-      return 'Friends'
-    }
-    return null
-  },
+  label: () => { return 'Friends' }, // we do not care if it is a webID or not
 
   render: function (s, context) {
     const dom = context.dom

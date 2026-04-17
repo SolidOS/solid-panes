@@ -9,10 +9,10 @@
   align-items: center;
   gap: 0.625rem;
   border: 0;
-  border-radius: 0;
+  border-radius: var(--border-radius-sm, 0.2rem);
   padding: 0.5rem 0.75rem;
   background: transparent;
-  color: var(--color-text);
+  color: var(--color-text-heading, #000000);
   text-decoration: none;
   width: 100%;
   text-align: left;
@@ -32,13 +32,14 @@
 
 .menu-item:hover,
 .menu-item:focus {
-  background: #e6dcff;
+  background: var(--color-header-menu-item-hover, #e6dcff);
 }
 
 .menu-item-active,
 .menu-item-active:hover,
 .menu-item-active:focus {
-  background: #cbb9ff;
+  background: var(--color-header-menu-item-selected, #cbb9ff);
+  color: var(--color-header-menu-item-text-selected, #7c4cff);
 }
 
 .menu-toggle {
@@ -54,7 +55,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-background);
   color: var(--color-text);
-  border-radius: 0.4rem;
+  border-radius: var(--border-radius-sm, 0.2rem);
   margin: 0;
 }
 

@@ -1,12 +1,12 @@
-import { Fetcher, IndexedFormula, NamedNode, sym } from 'rdflib'
-import { ns } from 'solid-ui'
+import { Fetcher, IndexedFormula, NamedNode } from 'rdflib'
+import { loadProfileFromURI, getName } from '../profileUtils/ownerProfile'
 
 export async function generateHomepage (
-  subject: NamedNode,
+  uri: NamedNode,
   store: IndexedFormula,
   fetcher: Fetcher
 ): Promise<HTMLElement> {
-  const ownersProfile = await loadProfile(subject, store, fetcher)
+  const ownersProfile = await loadProfileFromURI(uri, store, fetcher)
   const name = getName(store, ownersProfile)
 
   const wrapper = document.createElement('div')
@@ -50,46 +50,4 @@ function createTitle (uri: string, name: string): HTMLElement {
   title.appendChild(profileLinkPost)
 
   return title
-}
-
-async function loadProfile (
-  subject: NamedNode,
-  store: IndexedFormula,
-  fetcher: Fetcher
-): Promise<NamedNode> {
-  const pod = subject.site().uri
-  // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
-  const webId = sym(`${pod}profile/card#me`)
-  try {
-    await fetcher.load(webId)
-    return webId
-  } catch (err) {
-    // Fall back to pod root and any discovered profile links.
-  }
-
-  try {
-    await fetcher.load(subject)
-  } catch (err) {
-    return subject
-  }
-
-  const primaryTopic = store.any(subject, ns.foaf('primaryTopic'), null, subject.doc())
-  if (primaryTopic && primaryTopic.termType === 'NamedNode') {
-    try {
-      await fetcher.load(primaryTopic as NamedNode)
-      return primaryTopic as NamedNode
-    } catch (err) {
-      return subject
-    }
-  }
-
-  return subject
-}
-
-function getName (store: IndexedFormula, ownersProfile: NamedNode): string {
-  return (
-    store.anyValue(ownersProfile, ns.vcard('fn'), null, ownersProfile.doc()) ||
-    store.anyValue(ownersProfile, ns.foaf('name'), null, ownersProfile.doc()) ||
-    new URL(ownersProfile.uri).host.split('.')[0]
-  )
 }

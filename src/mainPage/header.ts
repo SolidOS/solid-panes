@@ -94,7 +94,8 @@ function attachHeaderListeners (header: ManagedHeader) {
     const detail = (e as CustomEvent).detail
     if (detail?.role === 'login') {
       await refreshCurrentHeader()
-      outliner.showDashboard({ pane: 'profile' }) // upon successful login, we open the dashboard pane
+      // Do not auto-open the profile pane after login.
+      // outliner.showDashboard({ pane: 'profile' })
     }
   })
 
@@ -108,14 +109,11 @@ function attachHeaderListeners (header: ManagedHeader) {
 
     const detail = (e as CustomEvent).detail
     if (detail?.action === 'logout') {
-      console.log('-----Logging out')
       await refreshCurrentHeader()
-      openUserProfile(outliner)
+      // Do not navigate to the profile after logout.
     } else if (detail?.action === 'show-profile') {
       // TODO see if this can be consolidated
-      if (!authn.currentUser()) {
-        openUserProfile(outliner)
-      } else {
+      if (authn.currentUser()) {
         outliner.showDashboard({ pane: 'profile' })
       }
     }
@@ -200,11 +198,4 @@ async function setUserMenu () {
   ]
 
   return accountMenu
-}
-
-// TODO see if these 2 calls can be consolidated
-function openUserProfile (outliner: OutlineManager) {
-  console.log('-----Opening user profile')
-  outliner.GotoSubject(authn.currentUser(), true, undefined, true, undefined)
-  location.reload()
 }

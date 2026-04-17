@@ -1,6 +1,8 @@
 import './menu.css'
 import { OutlineManager } from '../outline/manager'
-import { authSession } from 'solid-logic'
+import { authSession, authn } from 'solid-logic'
+import { NamedNode } from 'rdflib'
+import { loadProfileFromURI } from '../profileUtils/ownerProfile'
 
 type MenuItem = {
   id?: string
@@ -54,15 +56,15 @@ const ensureMenuSkeleton = () => {
   }
 }
 
-const getMenuItems = async (outliner: any): Promise<MenuItem[]> => {
+const getMenuItems = async (subject: NamedNode, outliner: any): Promise<MenuItem[]> => {
   try {
-    const items = await outliner.getDashboardItems()
+    const items = await outliner.getDashboardItems(subject)
     return items.map((element) => {
       return {
         icon: element.icon,
         paneName: element.tabName || element.paneName,
         label: element.label,
-        onclick: () => openDashboardPane(outliner, element.tabName || element.paneName)
+        onclick: () => openDashboardPane(subject, outliner, element.tabName || element.paneName)
       }
     })
   } catch (error) {
@@ -131,8 +133,8 @@ const setActiveMenuItem = (container: HTMLElement, paneName?: string) => {
   }
 }
 
-const renderMenuItems = async (outliner: OutlineManager, container: HTMLElement) => {
-  const menuItems = await getMenuItems(outliner)
+const renderMenuItems = async (subject: NamedNode, outliner: OutlineManager, container: HTMLElement) => {
+  const menuItems = await getMenuItems(subject, outliner)
 
   container.replaceChildren(...menuItems.map(createMenuButton))
   setActiveMenuItem(container, container.dataset.activePaneName)
@@ -161,7 +163,7 @@ export const refreshMenu = (layout: 'mobile' | 'desktop') => {
   }
 }
 
-export const createLeftSideMenu = async (outliner: OutlineManager) => {
+export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineManager) => {
   ensureMenuSkeleton()
   const navMenu = document.getElementById('NavMenu') as HTMLElement | null
   const menuToggle = document.getElementById('MenuToggleBtn') as HTMLElement | null
@@ -200,11 +202,11 @@ export const createLeftSideMenu = async (outliner: OutlineManager) => {
   }
 
   if (navMenuContent) {
-    await renderMenuItems(outliner, navMenuContent)
+    await renderMenuItems(subject, outliner, navMenuContent)
 
     if (!navMenuContent.dataset.authEventsBound) {
       const refreshMenuItems = async () => {
-        await renderMenuItems(outliner, navMenuContent)
+        await renderMenuItems(subject, outliner, navMenuContent)
       }
 
       authSession.events.on('login', refreshMenuItems)
@@ -228,8 +230,20 @@ export const createLeftSideMenu = async (outliner: OutlineManager) => {
   refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
 }
 
-async function openDashboardPane (outliner: any, pane: string): Promise<void> {
-  outliner.showDashboard({
+async function openDashboardPane (subject, outliner: any, pane: string): Promise<void> {
+  const me = authn.currentUser()
+  if (me) {
+    subject = me
+  } else {
+    const store = outliner?.context?.store || outliner?.context?.session?.store || outliner?.kb
+    const fetcher = outliner?.context?.fetcher || store?.fetcher
+    if (!store || !fetcher) {
+      throw new Error('Unable to load profile: missing RDF store or fetcher')
+    }
+    subject = await loadProfileFromURI(subject, store, fetcher)
+  }
+  console.log(`-----Opening dashboard pane ${pane} for`, subject)
+  outliner.showDashboard(subject, {
     pane
   })
 }
