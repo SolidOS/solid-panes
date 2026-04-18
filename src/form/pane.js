@@ -103,7 +103,7 @@ export const formPane = {
                   complainIfBad
                 )
               )
-              e.setAttribute('style', 'float: right;')
+              e.setAttribute('style', 'margin-left: auto; display: block;')
             }
           }
           const anchor = dom.createElement('a')

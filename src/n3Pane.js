@@ -51,6 +51,7 @@ export const n3Pane = {
     sz.setBase(subject.uri)
     const str = sz.statementsToN3(sts)
     const pre = myDocument.createElement('PRE')
+    pre.setAttribute('style', 'overflow-x: auto; max-width: 100%; box-sizing: border-box;')
     pre.appendChild(myDocument.createTextNode(str))
     div.appendChild(pre)
     return div

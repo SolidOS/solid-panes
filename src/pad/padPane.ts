@@ -2,6 +2,7 @@ import { icons, ns, pad, widgets, login } from 'solid-ui'
 import { authn, AppDetails } from 'solid-logic'
 import { graph, log, NamedNode, Namespace, sym, serialize, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+import './padPane.css'
 /*   pad Pane
  **
  */
@@ -514,38 +515,42 @@ const paneDef: PaneDefinition = {
     const div = dom.createElement('div')
 
     //  Build the DOM
-    const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
-    structure.setAttribute(
-      'style',
-      'background-color: white; min-width: 94%; margin-right:3% margin-left: 3%; min-height: 13em;'
-    )
+    const structure = div.appendChild(dom.createElement('div')) // responsive flex layout
+    structure.className = 'pad-layout'
 
-    const naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
-    naviLoginoutTR.appendChild(dom.createElement('td')) // naviLoginout1
-    naviLoginoutTR.appendChild(dom.createElement('td'))
-    naviLoginoutTR.appendChild(dom.createElement('td'))
+    const naviLoginoutTR = structure.appendChild(dom.createElement('div'))
+    naviLoginoutTR.className = 'pad-row'
+    naviLoginoutTR.appendChild(dom.createElement('div')) // naviLoginout1
+    naviLoginoutTR.appendChild(dom.createElement('div'))
+    naviLoginoutTR.appendChild(dom.createElement('div'))
 
-    const naviTop = structure.appendChild(dom.createElement('tr')) // stuff
-    const naviMain = naviTop.appendChild(dom.createElement('td'))
-    naviMain.setAttribute('colspan', '3')
+    const naviTop = structure.appendChild(dom.createElement('div')) // stuff
+    naviTop.className = 'pad-row'
+    const naviMain = naviTop.appendChild(dom.createElement('div'))
+    naviMain.className = 'pad-main'
 
-    const naviMiddle = structure.appendChild(dom.createElement('tr')) // controls
-    const naviMiddle1 = naviMiddle.appendChild(dom.createElement('td'))
-    const naviMiddle2 = naviMiddle.appendChild(dom.createElement('td'))
-    const naviMiddle3 = naviMiddle.appendChild(dom.createElement('td'))
+    const naviMiddle = structure.appendChild(dom.createElement('div')) // controls
+    naviMiddle.className = 'pad-row pad-controls'
+    const naviMiddle1 = naviMiddle.appendChild(dom.createElement('div'))
+    naviMiddle1.className = 'pad-cell'
+    const naviMiddle2 = naviMiddle.appendChild(dom.createElement('div'))
+    naviMiddle2.className = 'pad-cell'
+    const naviMiddle3 = naviMiddle.appendChild(dom.createElement('div'))
+    naviMiddle3.className = 'pad-cell'
 
-    const naviStatus = structure.appendChild(dom.createElement('tr')) // status etc
+    const naviStatus = structure.appendChild(dom.createElement('div')) // status etc
+    naviStatus.className = 'pad-row'
     const statusArea = naviStatus.appendChild(dom.createElement('div'))
 
-    const naviSpawn = structure.appendChild(dom.createElement('tr')) // create new
+    const naviSpawn = structure.appendChild(dom.createElement('div')) // create new
+    naviSpawn.className = 'pad-row'
     const spawnArea = naviSpawn.appendChild(dom.createElement('div'))
 
-    const naviMenu = structure.appendChild(dom.createElement('tr'))
-    naviMenu.setAttribute('class', 'naviMenu')
-    // naviMenu.setAttribute('style', 'margin-top: 3em;');
-    naviMenu.appendChild(dom.createElement('td')) // naviLeft
-    naviMenu.appendChild(dom.createElement('td'))
-    naviMenu.appendChild(dom.createElement('td'))
+    const naviMenu = structure.appendChild(dom.createElement('div'))
+    naviMenu.setAttribute('class', 'pad-row naviMenu')
+    naviMenu.appendChild(dom.createElement('div')) // naviLeft
+    naviMenu.appendChild(dom.createElement('div'))
+    naviMenu.appendChild(dom.createElement('div'))
 
     const options: any = { statusArea, timingArea: naviMiddle1 }
 

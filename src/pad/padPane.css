@@ -1,0 +1,36 @@
+.pad-layout {
+  background-color: white;
+  min-width: 94%;
+  margin-right: 3%;
+  margin-left: 3%;
+  min-height: 13em;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.pad-row {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.pad-main {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+.pad-controls {
+  gap: 0.5em;
+  align-items: center;
+}
+
+.pad-cell {
+  flex: 1 1 auto;
+}
+
+@media (max-width: 600px) {
+  .pad-controls .pad-cell {
+    flex: 1 1 100%;
+  }
+}

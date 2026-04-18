@@ -11,6 +11,7 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
+import './socialPane.css'
 
 export const socialPane = {
   icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -166,25 +167,20 @@ export const socialPane = {
     const foaf = UI.ns.foaf
     const vcard = UI.ns.vcard
 
-    // extracted from tabbedtab.css 2017-03-21
-    const navBlockStyle =
-      'background-color: #eee; width: 25%; border: 0; padding: 0.5em; margin: 0;'
-    const mainBlockStyle =
-      'background-color: #fff; color: #000; width: 46%; margin: 0; border-left: 1px solid #ccc; border-right: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 0;'
-    const foafPicStyle = ' width: 100% ; border: none; margin: 0; padding: 0;'
+    const foafPicStyle = 'social-pic'
 
-    const structure = div.appendChild(dom.createElement('table'))
-    const tr = structure.appendChild(dom.createElement('tr'))
-    const left = tr.appendChild(dom.createElement('td'))
-    const middle = tr.appendChild(dom.createElement('td'))
-    const right = tr.appendChild(dom.createElement('td'))
+    const structure = div.appendChild(dom.createElement('div'))
+    structure.className = 'social-layout'
+    const left = structure.appendChild(dom.createElement('div'))
+    left.className = 'social-nav'
+    const middle = structure.appendChild(dom.createElement('div'))
+    const right = structure.appendChild(dom.createElement('div'))
+    right.className = 'social-nav'
 
     const tools = left
-    tools.style.cssText = navBlockStyle
     const mainTable = middle.appendChild(dom.createElement('table'))
-    mainTable.style.cssText = mainBlockStyle
+    mainTable.className = 'social-main'
     const tips = right
-    tips.style.cssText = navBlockStyle
 
     // Image top left
     const src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
@@ -192,7 +188,7 @@ export const socialPane = {
       const img = dom.createElement('IMG')
       img.setAttribute('src', src.uri) // w640 h480
       // img.className = 'foafPic'
-      img.style.cssText = foafPicStyle
+      img.className = foafPicStyle
       tools.appendChild(img)
     }
     const name = kb.anyValue(s, foaf('name')) || '???'

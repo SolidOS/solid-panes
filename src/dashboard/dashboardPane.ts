@@ -60,9 +60,7 @@ function buildDashboard (container: HTMLElement, context: DataBrowserContext) {
   // console.log('build dashboard')
   // @@ TODO get a proper type
   const outliner: any = context.getOutliner(context.dom)
-  outliner
-    .getDashboard()
-    .then((dashboard: HTMLElement) => container.appendChild(dashboard))
+  outliner.showDashboard({})
 }
 
 function buildHomePage (container: HTMLElement, subject: NamedNode) {

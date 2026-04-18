@@ -321,20 +321,24 @@ export default function (context) {
       )
     }
 
-    div.appendChild(
-      UI.tabs.tabWidget({
-        dom,
-        subject: me,
-        items,
-        renderMain,
-        renderTab,
-        ordered: true,
-        orientation: 0,
-        backgroundColor: '#eeeeee', // black?
-        selectedTab: options.selectedTab,
-        onClose: options.onClose
-      })
-    )
+    const tabWidgetEl = UI.tabs.tabWidget({
+      dom,
+      subject: me,
+      items,
+      renderMain,
+      renderTab,
+      ordered: true,
+      orientation: 0,
+      backgroundColor: '#eeeeee', // black?
+      selectedTab: options.selectedTab,
+      onClose: options.onClose
+    })
+    // Hide the tab strip visually while keeping tabs clickable for programmatic navigation
+    const tabNav = tabWidgetEl.querySelector('nav')
+    if (tabNav) {
+      tabNav.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;'
+    }
+    div.appendChild(tabWidgetEl)
     return div
   }
   this.getDashboard = globalAppTabs
