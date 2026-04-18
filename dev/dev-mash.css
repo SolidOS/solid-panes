@@ -8,6 +8,10 @@
 @import url("./dev-light.css");
 @import url("./dev-mash-utilities.css");
 
+:root {
+  --app-header-height: 4.5rem;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -15,38 +19,210 @@ html, body {
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);
   background: var(--color-background);
-  color: var(--color-text);
+  color: var(--color-text-primary); /* new design change, used to be --color-text */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-}
-
-/* ── App layout ── */
-body {
   display: flex;
   flex-direction: column;
   min-height: 100dvh;        /* dvh = dynamic viewport for mobile chrome */
 }
 
-#PageHeader {
-  position: sticky;
+#PageHeader,
+#mainSolidUiHeader {
+  position: fixed;
   top: 0;
-  z-index: 100;
-  flex-shrink: 0;
+  left: 0;
+  right: 0;
+  z-index: 110;
+  background: var(--color-header-row-bg);
+}
+
+#mainSolidUiHeader {
+  display: block;
 }
 
 #MainContent {
   flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;   /* smooth iOS scroll */
-  padding: clamp(0.5rem, 2vw, 1.5rem); /* responsive gutter */
   container-type: inline-size;          /* enable @container queries */
+  display: flex;
 }
 
 #PageFooter {
   flex-shrink: 0;
 }
 
+
+/* ── New responsive app nav layout ── */
+.app-shell {
+  display: flex;
+  min-height: calc(100vh - var(--app-header-height) - 2.5rem); /* header + footer space */
+  margin-top: var(--app-header-height);
+}
+
+.app-nav {
+  width: min(280px, 85vw);
+  max-width: 280px;
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--color-background);
+  border-right: 1px solid var(--color-border);
+  padding: 0.75rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+  height: calc(100vh - var(--app-header-height)); /* header height */
+  transition: transform 0.25s ease-in-out;
+}
+
+.app-view {
+  flex: 1;
+  padding: 1rem;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  #MainContent {
+    margin-left: 0;
+  }
+
+  .app-shell {
+    flex-direction: column;
+  }
+
+  .app-nav {
+    position: fixed;
+    top: var(--app-header-height);
+    left: 0;
+    bottom: 0;
+    z-index: 110;
+    width: min(80vw, 320px);
+    background: var(--color-background);
+    border-right: 1px solid var(--color-border);
+    padding: 0.75rem;
+  }
+
+  .app-nav.desktop {
+    display: none;
+  }
+
+  .app-view {
+    padding: 1rem 0.75rem;
+  }
+
+  #MenuToggleBtn {
+    display: inline-flex;
+  }
+}
+@media (min-width: 769px) {
+
+  #MenuToggleBtn {
+    display: none;
+  }
+
+  #NavMenu {
+    position: relative;
+    transform: none !important;
+    top: auto;
+    left: auto;
+    height: auto;
+  }
+}
+
+/* HTML improvements - profile pane */
+/* Semantic HTML5 improvements */
+article, aside, section {
+  display: block;
+}
+
+header {
+  margin-bottom: var(--spacing-md);
+}
+
+nav {
+  display: block;
+}
+
+nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* end HTML improvements - profile pane */
+/* ── Pane icon tray (responsive) ── */
+.pane-icon-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+  overflow-x: auto;         /* horizontal scroll on very narrow screens */
+  -webkit-overflow-scrolling: touch;
+}
+
+.pane-icon-tray img {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  transition: outline 0.15s;
+}
+.pane-icon-tray img:focus-visible {
+  outline: 2px solid var(--color-border-accent);
+  outline-offset: 2px;
+}
+
+/* ── Subject blocks ── */
+.subject-block {
+  border-bottom: 1px solid var(--color-border-pale);
+  padding-block: 0.75rem;
+}
+
+/* ── Responsive breakpoints via container queries ── */
+@container (max-width: 40rem) {
+  .pane-icon-tray {
+    justify-content: center;
+  }
+  .subject-block h1 {
+    font-size: 1.15rem;
+  }
+}
+
+/* Improved heading hierarchy */
+h1, h2, h3, h4, h5, h6 {
+  /* color: var(--color-primary); new design no longer has purple headings. */
+  font-weight: var(--font-weight-bold, 600);
+  line-height: var(--line-height-tight);
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+}
+
+h1 { font-size: 2em; }    /* 32px */
+h2 { font-size: 1.5em; }  /* 24px */
+h3 { font-size: var(--font-size-xl, 1.375rem); } /* New design: 22px was 20px*/
+h4 { font-size: var(--font-size-lg, 1.125rem); }/* 18px */
+h5, h6 { font-size: var(--font-size-base, 1rem); }/* 16px */
+
+/* Better paragraph spacing */
+p {
+  margin-bottom: var(--spacing-md);
+  line-height: var(--line-height-base);
+  max-width: 65ch; /* Optimal reading width */
+}
+
+/* Improved link accessibility */
+a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.125em;
+  text-decoration-thickness: 0.0625em;
+}
+
+a:hover, a:focus {
+  text-decoration-thickness: 0.125em;
+}
 
 .warning {
   color: var(--color-warning);
@@ -589,8 +765,6 @@ div.dataContentPane tr {
 .dataContentPane.embeddedText {
   white-space: pre-wrap;
 }
-.dataContentPane.embeddedXHTML {
-}
 
 /* div.dataContentPane a { text-decoration: none; color: #006} /* Only very slightly blue */
 div.dataContentPane td.pred {
@@ -619,13 +793,9 @@ div.n3Pane {
 .n3Pane pre {
   font-size: 120%;
 }
-div.n3Pane {
-}
 
 .RDFXMLPane pre {
   font-size: 120%;
-}
-div.RDFXMLPane {
 }
 
 div.RDFXMLPane {
@@ -707,10 +877,9 @@ table#sources {
 
 table {
   border-spacing: 0;
-}
-
-table {
   margin: 0em;
+  border-collapse: collapse; /* from contact-pane accessibility */
+  width: 100%; /* from contact-pane accessibility */
 }
 
 td {
@@ -883,11 +1052,24 @@ table.viewTable tr {
   border-style: none;
 }
 
+/* Improved link accessibility from profile-pane */
+a {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.125em;
+  text-decoration-thickness: 0.0625em;
+}
+
+a:hover, a:focus {
+  text-decoration-thickness: 0.125em;
+}
+
+/* OLD
 a {
   color: var(--color-text-link);
   text-decoration: none;
   cursor: pointer;
-}
+} */
 a.inactive {
   background-color: var(--color-tab-inactive-bg);
   border-right: solid var(--color-tab-inactive-border) 0.1em;
@@ -1383,29 +1565,197 @@ End of styles for tableViewPane
   -o-box-shadow: $x-axis $y-axis $blur $color;
 }
 
+/* Accessibility: COPIED FROM PROFILE-PANE */
+/* Support for larger text preferences */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Accessibility: Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Accessibility: High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-border-pale: #000;
+    --box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    --box-shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  }
+}
+
+/* Accessibility: Improved focus management */
+/* SAM wondering about the outline, it's affecting the
+cancel button. Maybe should just be for inputs ? */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--color-background);
+  border-radius: 2px; /* new */
+  transition: none; /* new Remove transitions on focus for immediate feedback */
+}
+
+/* Improve focus management for interactive elements */
+[role="button"]:focus,
+[role="link"]:focus,
+button:focus,
+a:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--color-background);
+}
+/* Enhanced error message accessibility */
+[role="alert"] {
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-error);
+  border-radius: var(--border-radius-base);
+  background-color: rgba(176, 0, 32, 0.1);
+  margin: var(--spacing-md) 0;
+}
+
+/* Success message styling */
+[role="status"] {
+  padding: var(--spacing-md);
+  border: 2px solid var(--color-success);
+  border-radius: var(--border-radius-base);
+  background-color: rgba(0, 200, 83, 0.1);
+  margin: var(--spacing-md) 0;
+}
+
+th {
+  background-color: var(--color-section-bg);
+  font-weight: 600;
+  text-align: left;
+  padding: var(--spacing-sm);
+}
+
+td {
+  padding: var(--spacing-sm);
+}
+
+/* Focus trap for modals */
+.focus-trap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Enhanced button accessibility */
+button, [role="button"] {
+  cursor: pointer;
+  border: none;
+  border-radius: var(--border-radius-base);
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--min-touch-target);
+  min-width: var(--min-touch-target);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  transition: all var(--animation-duration) ease;
+  position: relative;
+}
+
+button:disabled, [role="button"][aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Loading indicator accessibility */
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border-pale);
+  border-top: 3px solid var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+    border-top-color: var(--color-primary);
+  }
+}
+/* copied from profile-pane */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+@media (prefers-contrast: high) {
+  :root {
+    --color-border-pale: #000;
+    --box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    --box-shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+  }
+}
+/* end of media copied from PROFILE-PANE */
+/* focus copied from profile-pane */
+:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+  box-shadow: 0 0 0 1px var(--color-background);
+}
+
+/* Enhanced keyboard navigation */
+*:focus-visible {
+  outline: var(--focus-indicator-width) solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--color-background), 0 0 0 4px rgba(124, 77, 255, 0.2);
+  border-radius: 2px;
+  transition: none; /* Remove transitions on focus for immediate feedback */
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width, 2px) solid var(--color-primary, #7C4DFF);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 1px var(--color-background, #F8F9FB);
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none; /* new */
+}
+
+/* Prevent labels from appearing focusable to keyboard users. */
+label:focus,
+label:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* end of focus copied from profile-pane */
+
+/* end of accessibility from PROFILE-PANE */
+
 /* Generated by AI */
 @media screen and (max-width: 768px) {
   #PageHeader,
   #PageFooter {
     width: 100%;
-  }
-
-  #MainContent {
-    padding-top: 0.75rem;
-    padding-right: max(0.75rem, env(safe-area-inset-right));
-    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
-    padding-left: max(0.75rem, env(safe-area-inset-left));
-  }
-
-  .TabulatorOutline,
-  .outline-view {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .TabulatorOutline table,
-  .outline-view table {
-    min-width: 100%;
   }
 
   img.outlineImage,
