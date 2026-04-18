@@ -31,21 +31,21 @@
 
 .paneShown {
   width: 24px;
-  border-radius: 0.5em;
-  border-top: solid #222 1px;
-  border-left: solid #222 0.1em;
-  border-bottom: solid #eee 0.1em;
-  border-right: solid #eee 0.1em;
-  margin-left: 1em;
-  padding: 3px;
+  border-radius: var(--border-radius-md, 0.5rem);
+  border-top: solid #222 var(--border-width-sm, 0.1rem);
+  border-left: solid #222 var(--border-width-sm, 0.1rem);
+  border-bottom: solid #eee var(--border-width-sm, 0.1rem);
+  border-right: solid #eee var(--border-width-sm, 0.1rem);
+  margin-left: var(--spacing-small, 0.1rem);
+  padding: 0.188rem; /* 3px */
   background-color: #ffd;
 }
 
 .paneHidden {
   width: 24px;
-  border-radius: 0.5em;
-  margin-left: 1em;
-  padding: 3px;
+  border-radius: var(--border-radius-md, 0.5rem);
+  margin-left: var(--spacing-small, 0.1rem);
+  padding: 0.188rem; /* 3px */
 }
 
 .header {
@@ -57,8 +57,8 @@
 
 .strongHeader {
   font-size: 150%;
-  margin: 0 0.6em 0 0;
-  padding: 0.1em 0.4em;
+  margin: 0 0.6rem 0 0;
+  padding: 0.1rem 0.4rem;
 }
 
 .tableFullWidth {
@@ -70,7 +70,7 @@
 }
 
 .tdFlex {
-  margin: 0.2em;
+  margin: var(--spacing-xxxs, 0.2rem);
   border: none;
   padding: 0;
   vertical-align: top;
