@@ -7,10 +7,10 @@
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: var(--spacing-2xs, 0.625rem);
   border: 0;
   border-radius: var(--border-radius-sm, 0.2rem);
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem var(--spacing-xs, 0.75rem);
   background: transparent;
   color: var(--color-text-heading, #000000);
   text-decoration: none;
@@ -20,9 +20,9 @@
 }
 
 .menu-item-icon {
-  width: 1rem;
-  height: 1rem;
-  flex: 0 0 1rem;
+  width: var(--icon-xxs, 1rem);
+  height: var(--icon-xxs, 1rem);
+  flex: 0 0 var(--icon-xxs, 1rem);
   object-fit: contain;
 }
 
@@ -50,8 +50,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: var(--icon-md, 2.5rem);
+  height: var(--icon-md, 2.5rem);
   border: 1px solid var(--color-border);
   background: var(--color-background);
   color: var(--color-text);
