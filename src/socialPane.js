@@ -192,22 +192,13 @@ export const socialPane = {
       img.className = foafPicStyle
       tools.appendChild(img)
     }
-    const name = kb.anyValue(s, foaf('name')) || '???'
+    const name = kb.anyValue(s, vcard('fn')) || '???'
     let h3 = dom.createElement('H3')
-    h3.appendChild(dom.createTextNode(name))
+    h3.appendChild(dom.createTextNode(name + '\'s Friends'))
+    tools.appendChild(h3)
 
-    let me = authn.currentUser()
+    const me = authn.currentUser()
     const meUri = me ? me.uri : null
-
-    // @@ Add: event handler to redraw the stuff below when me changes.
-    const loginOutButton = UI.login.loginStatusBox(dom, webIdUri => {
-      me = kb.sym(webIdUri)
-      // @@ To be written:   redraw as a function the new me
-      // @@ refresh the sidebars
-      UI.widgets.refreshTree(div) // this refreshes the middle at least
-    })
-
-    tips.appendChild(loginOutButton)
 
     const thisIsYou = me && kb.sameThings(me, s)
 
@@ -226,8 +217,9 @@ export const socialPane = {
     let editable = false
     let incoming
     let outgoing
+
     if (me) {
-      // The definition of FAF personal profile document is ..
+      // The definition of FOAF personal profile document is ..
       const works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
       let message = ''
       for (let i = 0; i < works.length; i++) {
@@ -238,28 +230,30 @@ export const socialPane = {
             foaf('PersonalProfileDocument')
           )
         ) {
-          editable = outliner.UserInput.sparqler.editable(works[i].uri, kb)
+          const doc = works[i]
+          editable = outliner.UserInput.sparqler.editable(doc.uri, kb)
           if (!editable) {
             message +=
               'Your profile <' +
-              UI.utils.escapeForXML(works[i].uri) +
+              UI.utils.escapeForXML(doc.uri) +
               '> is not remotely editable.'
           } else {
-            profile = works[i]
+            profile = doc
             break
           }
         }
       }
 
+      /*
       if (!profile) {
         say(
           message + '\nI couldn\'t find your editable personal profile document.'
         )
       } else {
         say('Editing your profile ' + profile + '.')
-        // Do I have an EDITABLE profile?
         editable = outliner.UserInput.sparqler.editable(profile.uri, kb)
       }
+        */
 
       if (thisIsYou) {
         // This is about me
@@ -445,10 +439,11 @@ export const socialPane = {
     } */
     // //////////////////////////////////// Basic info on left
 
+    /*
     h3 = dom.createElement('h3')
     h3.appendChild(dom.createTextNode('Basic Information'))
     tools.appendChild(h3)
-
+    */
     // For each home page like thing make a label which will
     // make sense and add the domain (like "w3.org blog") if there are more than one of the same type
     //
