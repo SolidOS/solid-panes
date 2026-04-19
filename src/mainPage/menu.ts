@@ -242,7 +242,6 @@ async function openDashboardPane (subject, outliner: any, pane: string): Promise
     }
     subject = await loadProfileFromURI(subject, store, fetcher)
   }
-  console.log(`-----Opening dashboard pane ${pane} for`, subject)
   outliner.showDashboard(subject, {
     pane
   })

@@ -18,7 +18,18 @@ export const socialPane = {
 
   name: 'social',
 
-  label: () => { return 'Friends' }, // we do not care if it is a webID or not
+  label: function (subject, context) {
+    const kb = context.session.store
+    const types = kb.findTypeURIs(subject)
+    if (
+      types[UI.ns.foaf('Person').uri] ||
+      types[UI.ns.vcard('Individual').uri]
+    ) {
+      return 'Friends'
+    }
+    return null
+  },
+  global: true, // doe snot add it to the nav tray in OutlineView
 
   render: function (s, context) {
     const dom = context.dom

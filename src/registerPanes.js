@@ -56,7 +56,7 @@ export function registerPanes (register) {
   }
 
   register(trustedApplications) // must be registered before basicPreferences
-  register(dashboardPane)
+  // register(dashboardPane)
   register(basicPreferences)
   register(issuePane)
   register(contactsPane)

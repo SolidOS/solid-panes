@@ -2294,7 +2294,6 @@ export default function (context) {
   @param table   -- option  -- default is an HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    console.log('-----GotoSubject ', subject.termType, subject.value)
     table = table || getOutlineContainer() // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)

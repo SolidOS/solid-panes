@@ -17,7 +17,6 @@ export async function loadProfileFromURI (
   // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
   const webId = sym(`${pod}${DEFAULT_PROFILE_PATH}`)
   try {
-    console.log('-----Trying to load prefixed pod profile', webId)
     await fetcher.load(webId)
     return webId
   } catch (err) {
@@ -31,7 +30,6 @@ export async function loadProfileFromURI (
     if (pathSegments.length > 0) {
       const derivedPod = `${uriUrl.origin}/${pathSegments[0]}/`
       const derivedWebId = sym(`${derivedPod}${DEFAULT_PROFILE_PATH}`)
-      console.log('-----Trying to load suffixed pod profile', derivedWebId)
       await fetcher.load(derivedWebId)
       return derivedWebId
     }

@@ -7,7 +7,12 @@ import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 export const dashboardPane: PaneDefinition = {
   icon: icons.iconBase + 'noun_547570.svg',
   name: 'dashboard',
-  label: () => { return 'Dashboard' }, // we do not care if it is a WebID or not, not yet
+  label: subject => {
+    if (subject.termType === 'NamedNode' && subject.uri === subject.site().uri) {
+      return 'Dashboard'
+    }
+    return null
+  },
   render: (subject, context) => {
     console.log('Dashboard Pane Render')
     const dom = context.dom
