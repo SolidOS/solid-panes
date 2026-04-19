@@ -442,10 +442,12 @@ export default function (context) {
       }
       // load pod's storages from profile
       let pods = kb.each(webId, ns.space('storage'), null, webId.doc())
-      pods.map(async (pod) => {
-        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-        await loadContainerRepresentation(pod)
-      })
+      await Promise.all(
+        pods.map(async (pod) => {
+          // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
+          await loadContainerRepresentation(pod)
+        })
+      )
 
       try {
         // if uri then SolidOS is a browse.html web app

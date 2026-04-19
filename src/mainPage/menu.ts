@@ -8,6 +8,7 @@ type MenuItem = {
   id?: string
   icon?: string
   paneName?: string
+  subject?: NamedNode
   label: string
   onclick: () => void | Promise<void>
 }
@@ -60,11 +61,13 @@ const getMenuItems = async (subject: NamedNode, outliner: any): Promise<MenuItem
   try {
     const items = await outliner.getDashboardItems(subject)
     return items.map((element) => {
+      const targetSubject = element.subject || (authn.currentUser() || subject)
       return {
         icon: element.icon,
+        subject: targetSubject,
         paneName: element.tabName || element.paneName,
         label: element.label,
-        onclick: () => openDashboardPane(subject, outliner, element.tabName || element.paneName)
+        onclick: () => openDashboardPane(targetSubject, outliner, element.tabName || element.paneName)
       }
     })
   } catch (error) {
@@ -232,15 +235,17 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
 
 async function openDashboardPane (subject, outliner: any, pane: string): Promise<void> {
   const me = authn.currentUser()
-  if (me) {
-    subject = me
-  } else {
-    const store = outliner?.context?.store || outliner?.context?.session?.store || outliner?.kb
-    const fetcher = outliner?.context?.fetcher || store?.fetcher
-    if (!store || !fetcher) {
-      throw new Error('Unable to load profile: missing RDF store or fetcher')
+  if (!subject) {
+    if (me) {
+      subject = me
+    } else {
+      const store = outliner?.context?.store || outliner?.context?.session?.store || outliner?.kb
+      const fetcher = outliner?.context?.fetcher || store?.fetcher
+      if (!store || !fetcher) {
+        throw new Error('Unable to load profile: missing RDF store or fetcher')
+      }
+      subject = await loadProfileFromURI(subject, store, fetcher)
     }
-    subject = await loadProfileFromURI(subject, store, fetcher)
   }
   outliner.showDashboard(subject, {
     pane
