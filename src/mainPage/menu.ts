@@ -13,7 +13,51 @@ type MenuItem = {
   onclick: () => void | Promise<void>
 }
 
+const MENU_COLLAPSED_KEY = 'solid-panes-menu-collapsed'
+let menuCollapsed = false
+
+const loadMenuCollapsedState = (): boolean => {
+  try {
+    return localStorage.getItem(MENU_COLLAPSED_KEY) === 'true'
+  } catch (error) {
+    return false
+  }
+}
+
+const saveMenuCollapsedState = (collapsed: boolean): void => {
+  try {
+    localStorage.setItem(MENU_COLLAPSED_KEY, String(collapsed))
+  } catch (error) {
+    // ignore storage errors
+  }
+}
+
+const updateMenuCollapseButton = (): void => {
+  const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
+  if (!collapseBtn) return
+  collapseBtn.textContent = menuCollapsed ? '\u203A' : '\u2039'
+  collapseBtn.setAttribute('aria-label', menuCollapsed ? 'Expand navigation menu' : 'Collapse navigation menu')
+}
+
+const updateCollapseButtonPosition = (navMenu: HTMLElement | null, collapseBtn: HTMLButtonElement | null): void => {
+  if (!navMenu || !collapseBtn) return
+  const navRect = navMenu.getBoundingClientRect()
+  const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+  const buttonWidth = parseFloat(getComputedStyle(collapseBtn).width) || 1.25 * rootFontSize
+  const offsetRem = (navRect.width - buttonWidth / 2) / rootFontSize
+  collapseBtn.style.setProperty('left', `${offsetRem.toFixed(3)}rem`, 'important')
+}
+
+const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
+  if (!navMenu) return
+  navMenu.classList.toggle('collapsed', menuCollapsed)
+  updateMenuCollapseButton()
+  const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
+  updateCollapseButtonPosition(navMenu, collapseBtn)
+}
+
 const ensureMenuSkeleton = () => {
+  menuCollapsed = loadMenuCollapsedState()
   const root = document.querySelector('[role="main"]') || document.body
 
   let navMenu = document.getElementById('NavMenu') as HTMLElement | null
@@ -54,6 +98,18 @@ const ensureMenuSkeleton = () => {
     overlay.className = 'menu-overlay'
     overlay.hidden = true
     document.body.appendChild(overlay)
+  }
+
+  let collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
+  if (!collapseBtn) {
+    collapseBtn = document.createElement('button')
+    collapseBtn.id = 'MenuCollapseBtn'
+    collapseBtn.className = 'menu-collapse'
+    collapseBtn.type = 'button'
+    collapseBtn.setAttribute('aria-label', 'Collapse navigation menu')
+    collapseBtn.textContent = '\u2039'
+    collapseBtn.hidden = true
+    document.body.appendChild(collapseBtn)
   }
 }
 
@@ -146,22 +202,28 @@ const renderMenuItems = async (subject: NamedNode, outliner: OutlineManager, con
 export const refreshMenu = (layout: 'mobile' | 'desktop') => {
   const navMenu = document.getElementById('NavMenu') as HTMLElement | null
   const toggle = document.getElementById('MenuToggleBtn') as HTMLButtonElement | null
+  const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
   const overlay = document.getElementById('MenuOverlay') as HTMLElement | null
 
-  if (!navMenu || !toggle || !overlay) return
+  if (!navMenu || !toggle || !overlay || !collapseBtn) return
 
   if (layout === 'mobile') {
     navMenu.classList.add('mobile-hidden')
     navMenu.classList.remove('mobile-visible')
     toggle.hidden = false
+    collapseBtn.hidden = true
     overlay.hidden = true
     navMenu.hidden = false
+    navMenu.classList.remove('collapsed')
     toggle.setAttribute('aria-expanded', 'false')
   } else {
     navMenu.classList.remove('mobile-hidden', 'mobile-visible')
     toggle.hidden = true
+    collapseBtn.hidden = false
     overlay.hidden = true
     navMenu.hidden = false
+    applyMenuCollapsedState(navMenu)
+    updateCollapseButtonPosition(navMenu, collapseBtn)
     toggle.setAttribute('aria-expanded', 'false')
   }
 }
@@ -197,6 +259,15 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
       } else {
         openMobileMenu()
       }
+    })
+  }
+
+  const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
+  if (collapseBtn) {
+    collapseBtn.addEventListener('click', () => {
+      menuCollapsed = !menuCollapsed
+      saveMenuCollapsedState(menuCollapsed)
+      applyMenuCollapsedState(navMenu)
     })
   }
 
