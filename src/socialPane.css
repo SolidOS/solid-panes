@@ -1,0 +1,43 @@
+.socialPane .social-layout {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 0;
+}
+
+.socialPane .social-nav {
+  flex: 1 1 22%;
+  min-width: 8rem;
+  background-color: #eee;
+  border: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+}
+
+.socialPane .social-main {
+  flex: 2 1 50%;
+  min-width: 12rem;
+  background-color: #fff;
+  color: #000;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.socialPane .social-pic {
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 600px) {
+  .socialPane .social-nav,
+  .socialPane .social-main {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
