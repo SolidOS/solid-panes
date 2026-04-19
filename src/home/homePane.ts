@@ -11,7 +11,7 @@
 import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 import { NamedNode } from 'rdflib'
 import { authn } from 'solid-logic'
-import { create, icons, login } from 'solid-ui'
+import { create, icons, login, ns } from 'solid-ui'
 import type { CreateContext } from 'solid-ui'
 
 const HomePaneSource: PaneDefinition = {
@@ -28,6 +28,8 @@ const HomePaneSource: PaneDefinition = {
   label: function () {
     return 'home'
   },
+
+  audience: [ns.solid('PowerUser')],
 
   render: function (subject, context: DataBrowserContext) {
     const dom = context.dom

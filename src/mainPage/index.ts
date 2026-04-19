@@ -34,7 +34,6 @@ export async function initMainPage (
   const outliner = getOutliner(document, environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  console.log('-----initMainPage GotoSubject ', subject)
   outliner.GotoSubject(subject, true, undefined, true, undefined)
 
   const header = await createHeader(store, outliner)
