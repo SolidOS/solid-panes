@@ -67,6 +67,24 @@ const ensureMenuSkeleton = () => {
     navMenu.className = 'app-nav'
     navMenu.setAttribute('aria-label', 'App navigation')
 
+    const headerEl = document.createElement('div')
+    headerEl.className = 'menu-header'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.id = 'MenuCloseBtn'
+    closeBtn.className = 'menu-close'
+    closeBtn.type = 'button'
+    closeBtn.setAttribute('aria-label', 'Close menu')
+    closeBtn.textContent = '✕'
+    headerEl.appendChild(closeBtn)
+
+    const title = document.createElement('span')
+    title.className = 'menu-header-title'
+    title.textContent = 'Menu'
+    headerEl.appendChild(title)
+
+    navMenu.appendChild(headerEl)
+
     const authStateEl = document.createElement('div')
     authStateEl.id = 'AuthState'
     authStateEl.className = 'menu-auth-state'
@@ -78,6 +96,24 @@ const ensureMenuSkeleton = () => {
     navMenu.appendChild(contentEl)
 
     root.insertBefore(navMenu, root.firstChild)
+  } else if (!navMenu.querySelector('.menu-header')) {
+    const headerEl = document.createElement('div')
+    headerEl.className = 'menu-header'
+
+    const closeBtn = document.createElement('button')
+    closeBtn.id = 'MenuCloseBtn'
+    closeBtn.className = 'menu-close'
+    closeBtn.type = 'button'
+    closeBtn.setAttribute('aria-label', 'Close menu')
+    closeBtn.textContent = '✕'
+    headerEl.appendChild(closeBtn)
+
+    const title = document.createElement('span')
+    title.className = 'menu-header-title'
+    title.textContent = 'Menu'
+    headerEl.appendChild(title)
+
+    navMenu.insertBefore(headerEl, navMenu.firstChild)
   }
 
   let toggle = document.getElementById('MenuToggleBtn') as HTMLButtonElement | null
@@ -273,6 +309,11 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
 
   if (menuOverlay) {
     menuOverlay.addEventListener('click', closeMobileMenu)
+  }
+
+  const closeBtn = document.getElementById('MenuCloseBtn') as HTMLButtonElement | null
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeMobileMenu)
   }
 
   if (navMenuContent) {

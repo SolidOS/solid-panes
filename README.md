@@ -106,5 +106,7 @@ onclick: () => openDashboardPane(outliner, element.tabName || element.paneName)
 * Auto: don't add each menu item in a button looking border. Simply list them.
 Upon hover apply background color e6dcff and selected or active to be background color: cbb9ff
 
-* Raptor mini: the menu dissapears not when on mobile. That is great.
+* Raptor mini: the menu dissapears when on mobile. That is great.
 I want the menu to have a tiny button on the bottom margin left with an arrow to the left or right for expanding the menu or for making it small. This is only for web. When we make it small it folds and only displays the icons of teh menu items, when it is expanded it should also add the labels to the menu items.
+
+* Raptor mini: i want to imporve the left side menu on mobile. When the menu is visible it should be higher, the top part should be on top of the header, folding out and in with the rest of the menu. It should have an x close button and it should say menu. The locor of that top line of the header should be the color of the header 332746
