@@ -287,6 +287,26 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
     menuOverlay.hidden = false
   }
 
+  const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
+
+  const expandDesktopMenu = () => {
+    if (!navMenu || !collapseBtn) return
+    if (!menuCollapsed) return
+    menuCollapsed = false
+    saveMenuCollapsedState(menuCollapsed)
+    applyMenuCollapsedState(navMenu)
+  }
+
+  if (navMenu) {
+    navMenu.addEventListener('click', (event) => {
+      const isMobile = outliner.context?.environment?.layout === 'mobile'
+      const clickedCollapseButton = (event.target as HTMLElement).closest('#MenuCollapseBtn')
+      if (!isMobile && menuCollapsed && !clickedCollapseButton) {
+        expandDesktopMenu()
+      }
+    })
+  }
+
   if (menuToggle) {
     menuToggle.hidden = false
     menuToggle.addEventListener('click', () => {
@@ -297,8 +317,6 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
       }
     })
   }
-
-  const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
   if (collapseBtn) {
     collapseBtn.addEventListener('click', () => {
       menuCollapsed = !menuCollapsed
