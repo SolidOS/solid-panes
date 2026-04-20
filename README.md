@@ -112,3 +112,11 @@ I want the menu to have a tiny button on the bottom margin left with an arrow to
 * Raptor mini: i want to imporve the left side menu on mobile. When the menu is visible it should be higher, the top part should be on top of the header, folding out and in with the rest of the menu. It should have an x close button and it should say menu. The locor of that top line of the header should be the color of the header 332746
 
 * Raptor mini: the menu, on desktop, has a button to fold in or out. I want the same behavior to occur also when i simply click the folded in menu: it should expend. Not just when i click the dedicated button
+
+* Raprot mini: instead of this code (index.ts of footer), I want to make use of a new footer web component with the readme: # solid-ui-footer component
+
+* Raptor mini: The footer created shoudl actually be part of the left side menu only. Should be displayed inside it and should collaps and expand as the menu.
+
+* Raptor mini: the footer should completely dissapear when menu folded up.
+
+* Raptor mini: Please always keep the footer at the bottom of the menu

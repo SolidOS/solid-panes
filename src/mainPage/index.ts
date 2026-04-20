@@ -38,7 +38,7 @@ export async function initMainPage (
 
   const header = await createHeader(store, outliner)
   const menu = createLeftSideMenu(subject, outliner)
-  const footer = createFooter(store)
+  const footer = menu.then(() => createFooter(store))
   return Promise.all([header, menu, footer])
 }
 

@@ -3,6 +3,24 @@
   flex-direction: column;
   gap: 0.5rem;
   padding-top: 0.75rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.menu-footer {
+  width: 100%;
+  padding: 1rem;
+  border-top: 1px solid var(--color-border, #d1d1d1);
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #555);
+  line-height: 1.4;
+  background: inherit;
+}
+
+.app-nav.collapsed .menu-footer {
+  display: none;
+  text-align: center;
+  padding: 0.75rem 0;
 }
 
 .menu-item {
@@ -68,10 +86,16 @@
 }
 
 .app-nav {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: min(18rem, 320px);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
   background: var(--color-background);
+  z-index: 10;
 }
 
 .app-nav.mobile-hidden,
@@ -169,7 +193,7 @@
 .menu-collapse {
   position: fixed;
   left: 3rem;
-  bottom: 5rem;
+  bottom: 8rem;
   z-index: 320;
   width: 1.25rem;
   height: 1.25rem;
