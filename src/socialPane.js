@@ -74,12 +74,15 @@ export const socialPane = {
 
     const buildCheckboxForm = function (lab, statement, state) {
       const f = dom.createElement('form')
+      const label = dom.createElement('label')
       const input = dom.createElement('input')
-      f.appendChild(input)
-      const tx = dom.createTextNode(lab)
+      const tx = dom.createElement('span')
       tx.className = 'question'
-      f.appendChild(tx)
+      tx.textContent = lab
       input.setAttribute('type', 'checkbox')
+      label.appendChild(input)
+      label.appendChild(tx)
+      f.appendChild(label)
       const boxHandler = function (_e) {
         tx.className = 'pendingedit'
         // alert('Should be greyed out')
@@ -133,7 +136,7 @@ export const socialPane = {
                     '\n\n' +
                     errorBody
                 )
-                this.checked = true // Rollback UI
+                input.checked = true // Rollback UI
               } else {
                 kb.removeMany(
                   statement.subject,
@@ -145,7 +148,7 @@ export const socialPane = {
             })
           } catch (e) {
             UI.log.alert('Delete fails:' + e)
-            this.checked = true // Rollback UI
+            input.checked = true // Rollback UI
             // return
           }
         }
