@@ -166,6 +166,7 @@ const humanReadablePane = {
 
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
+    const isPlainText = ct === 'text/plain'
 
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
@@ -192,6 +193,20 @@ const humanReadablePane = {
       })
     }
 
+    // render plain text in a PRE element
+    const renderPlainTextContent = function (frame) {
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const plainText = response.responseText
+        const lines = Math.min(30, plainText.split(/\n/).length + 5)
+        frame.textContent = plainText
+        frame.setAttribute('class', 'doc')
+        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
+      }).catch(error => {
+        console.error('Error fetching plain text content:', error)
+        frame.textContent = 'Error loading content'
+      })
+    }
+
     const setIframeAttributes = (frame, lines) => {
       frame.setAttribute('src', subject.uri)
       frame.setAttribute('class', 'doc')
@@ -202,6 +217,13 @@ const humanReadablePane = {
       // For markdown, use a DIV element and render the content
       const frame = myDocument.createElement('DIV')
       renderMarkdownContent(frame)
+      const tr = myDocument.createElement('TR')
+      tr.appendChild(frame)
+      div.appendChild(tr)
+    } else if (isPlainText) {
+      // For plain text, use a PRE element and render the content
+      const frame = myDocument.createElement('PRE')
+      renderPlainTextContent(frame)
       const tr = myDocument.createElement('TR')
       tr.appendChild(frame)
       div.appendChild(tr)
