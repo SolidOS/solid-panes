@@ -9,12 +9,12 @@
  */
 
 import './socialPane.css'
-import * as UI from 'solid-ui'
+import { utils, ns, log, widgets } from 'solid-ui'
 import { authn } from 'solid-logic'
-import * as $rdf from 'rdflib'
+import { NamedNode, Statement } from 'rdflib'
 
 export const socialPane = {
-  icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif',
+  icon: utils.icons.originalIconBase + 'foaf/foafTiny.gif',
 
   name: 'social',
 
@@ -22,8 +22,8 @@ export const socialPane = {
     const kb = context.session.store
     const types = kb.findTypeURIs(subject)
     if (
-      types[UI.ns.foaf('Person').uri] ||
-      types[UI.ns.vcard('Individual').uri]
+      types[ns.foaf('Person').uri] ||
+      types[ns.vcard('Individual').uri]
     ) {
       return 'Friends'
     }
@@ -33,9 +33,9 @@ export const socialPane = {
 
   render: function (s, context) {
     const dom = context.dom
-    const common = function (x, y) {
+    const common = function (x: NamedNode[], y: NamedNode[]) {
       // Find common members of two lists
-      const both = []
+      const both: NamedNode[] = []
       for (let i = 0; i < x.length; i++) {
         for (let j = 0; j < y.length; j++) {
           if (y[j].sameTerm(x[i])) {
@@ -47,20 +47,14 @@ export const socialPane = {
       return both
     }
 
-    const people = function (n) {
+    const people = function (n: number) {
       let res = ' '
       res += n || 'no'
       if (n === 1) return res + ' person'
       return res + ' people'
     }
-    const say = function (str) {
-      console.log(str)
-      const p = dom.createElement('p')
-      p.textContent = str
-      tips.appendChild(p)
-    }
 
-    const link = function (contents, uri) {
+    const link = function (contents: Node, uri: string | null | undefined) {
       if (!uri) return contents
       const a = dom.createElement('a')
       a.setAttribute('href', uri)
@@ -68,11 +62,11 @@ export const socialPane = {
       return a
     }
 
-    const text = function (str) {
+    const text = function (str: string) {
       return dom.createTextNode(str)
     }
 
-    const buildCheckboxForm = function (lab, statement, state) {
+    const buildCheckboxForm = function (lab: string, statement: Statement, state: boolean) {
       const f = dom.createElement('form')
       const label = dom.createElement('label')
       const input = dom.createElement('input')
@@ -83,7 +77,7 @@ export const socialPane = {
       label.appendChild(input)
       label.appendChild(tx)
       f.appendChild(label)
-      const boxHandler = function (_e) {
+      const boxHandler = function (this: HTMLInputElement, _e: Event) {
         tx.className = 'pendingedit'
         // alert('Should be greyed out')
         if (this.checked) {
@@ -96,9 +90,7 @@ export const socialPane = {
             ) {
               tx.className = 'question'
               if (!success) {
-                UI.log.alert(
-                  null,
-                  'Message',
+                log.alert(
                   'Error occurs while inserting ' +
                     statement +
                     '\n\n' +
@@ -115,8 +107,8 @@ export const socialPane = {
               )
             })
           } catch (e) {
-            UI.log.error('Data write fails:' + e)
-            UI.log.alert('Data write fails:' + e)
+            log.error('Data write fails:' + e)
+            log.alert('Data write fails:' + e)
             input.checked = false // rollback UI
             tx.className = 'question'
           }
@@ -130,7 +122,7 @@ export const socialPane = {
             ) {
               tx.className = 'question'
               if (!success) {
-                UI.log.alert(
+                log.alert(
                   'Error occurs while deleting ' +
                     statement +
                     '\n\n' +
@@ -147,7 +139,7 @@ export const socialPane = {
               }
             })
           } catch (e) {
-            UI.log.alert('Delete fails:' + e)
+              log.alert('Delete fails:' + e)
             input.checked = true // Rollback UI
             // return
           }
@@ -158,9 +150,12 @@ export const socialPane = {
       return f
     }
 
-    const oneFriend = function (friend, _confirmed) {
-      return UI.widgets.personTR(dom, UI.ns.foaf('knows'), friend, {})
+    const oneFriend = function (friend: NamedNode, _confirmed: boolean) {
+      return widgets.personTR(dom, ns.foaf('knows'), friend, {})
     }
+
+    // Retained for future reactivation of the older triage-based friends rendering.
+    void oneFriend
 
     // ////////// Body of render():
 
@@ -168,23 +163,25 @@ export const socialPane = {
     const kb = context.session.store
     const div = dom.createElement('div')
     div.setAttribute('class', 'socialPane')
-    const foaf = UI.ns.foaf
-    const vcard = UI.ns.vcard
+    const foaf = ns.foaf
+    const vcard = ns.vcard
 
     const foafPicStyle = 'social-pic'
 
     const structure = div.appendChild(dom.createElement('div'))
     structure.className = 'social-layout'
-    const left = structure.appendChild(dom.createElement('div'))
+    const primary = structure.appendChild(dom.createElement('div'))
+    primary.className = 'social-primary'
+    const left = primary.appendChild(dom.createElement('div'))
     left.className = 'social-nav'
-    const middle = structure.appendChild(dom.createElement('div'))
+    const middle = primary.appendChild(dom.createElement('div'))
+    middle.className = 'social-content'
     const right = structure.appendChild(dom.createElement('div'))
-    right.className = 'social-nav'
+    right.className = 'social-toolbar'
 
     const tools = left
     const mainTable = middle.appendChild(dom.createElement('table'))
     mainTable.className = 'social-main'
-    const tips = right
 
     // Image top left
     const src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
@@ -216,10 +213,10 @@ export const socialPane = {
     const friends = kb.each(s, knows)
 
     // Do I have a public profile document?
-    let profile = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
+    let profile: NamedNode | null = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
     let editable = false
-    let incoming
-    let outgoing
+    let incoming: boolean | NamedNode[]
+    let outgoing: boolean | NamedNode[]
 
     if (me) {
       // The definition of FOAF personal profile document is ..
@@ -229,7 +226,7 @@ export const socialPane = {
         if (
           kb.whether(
             works[i],
-            UI.ns.rdf('type'),
+            ns.rdf('type'),
             foaf('PersonalProfileDocument')
           )
         ) {
@@ -238,7 +235,7 @@ export const socialPane = {
           if (!editable) {
             message +=
               'Your profile <' +
-              UI.utils.escapeForXML(doc.uri) +
+              utils.escapeForXML(doc.uri) +
               '> is not remotely editable.'
           } else {
             profile = doc
@@ -315,7 +312,7 @@ export const socialPane = {
         if (editable) {
           const f = buildCheckboxForm(
             'You know ' + familiar,
-            new $rdf.Statement(me, knows, s, profile),
+            new Statement(me, knows, s, profile ?? undefined),
             outgoing
           )
           tools.appendChild(f)
@@ -340,7 +337,7 @@ export const socialPane = {
             if (mutualFriends) {
               for (let i = 0; i < mutualFriends.length; i++) {
                 tr.appendChild(
-                  dom.createTextNode(',  ' + UI.utils.label(mutualFriends[i]))
+                  dom.createTextNode(',  ' + utils.label(mutualFriends[i]))
                 )
               }
             }
@@ -359,29 +356,107 @@ export const socialPane = {
     // Should: Find the intersection and difference sets
 
     // List all x such that s knows x.
-    UI.widgets.attachmentList(dom, s, mainTable, {
+    const friendsList = widgets.attachmentList(dom, s, mainTable, {
       doc: profile,
       modify: !!editable,
       predicate: foaf('knows'),
       noun: 'friend'
     })
+    /* ,
+      renderSupportingInfo?: RenderSupportingInfo,
+      renderNameSuffix?: RenderNameSuffix */
+    friendsList.classList.add('social-friends-list')
+    const friendsListRow = friendsList.querySelector('tr')
+    const friendsListPromptCell = friendsListRow?.children?.[0]
+    const friendsListRightCell = friendsListRow?.children?.[1]
+    const friendsHeader = dom.createElement('caption')
+    friendsHeader.className = 'social-friends-header'
+
+    const friendsHeaderTitle = dom.createElement('span')
+    friendsHeaderTitle.className = 'social-friends-header-title'
+    friendsHeaderTitle.textContent = 'Friends'
+    friendsHeader.appendChild(friendsHeaderTitle)
+
+    const friendsHeaderActions = dom.createElement('div')
+    friendsHeaderActions.className = 'social-friends-header-actions'
+
+    if (friendsListPromptCell instanceof HTMLElement) {
+      while (friendsListPromptCell.firstChild) {
+        friendsHeaderActions.appendChild(friendsListPromptCell.firstChild)
+      }
+      friendsListPromptCell.remove()
+    }
+
+    if (friendsHeaderActions.childNodes.length > 0) {
+      friendsHeader.appendChild(friendsHeaderActions)
+    }
+
+    if (friendsListRightCell instanceof HTMLTableCellElement) {
+      friendsListRightCell.colSpan = 2
+    }
+    friendsList.prepend(friendsHeader)
+
+    const friendsItemsTable = friendsList.querySelector('td table')
+    let friendRows: HTMLTableRowElement[] = []
+    if (friendsItemsTable instanceof HTMLTableElement) {
+      friendsItemsTable.style.display = 'flex'
+      friendsItemsTable.style.flexWrap = 'wrap'
+      friendsItemsTable.style.alignItems = 'stretch'
+      friendsItemsTable.style.width = '100%'
+      friendsItemsTable.style.tableLayout = 'fixed'
+      friendsItemsTable.style.borderCollapse = 'separate'
+      friendsItemsTable.style.borderSpacing = '0'
+      friendsItemsTable.style.gap = '0.75rem'
+
+      friendRows = Array.from(
+        friendsItemsTable.querySelectorAll<HTMLTableRowElement>(':scope > tr')
+      )
+      friendRows.forEach(function (row) {
+        if (!row.textContent?.trim()) {
+          row.style.display = 'none'
+          return
+        }
+        row.style.display = 'inline-table'
+        row.style.width = 'calc(50% - 0.375rem)'
+        row.style.tableLayout = 'fixed'
+        row.style.boxSizing = 'border-box'
+        row.style.border = '1px solid #d8d8d8'
+        row.style.background = '#fff'
+      })
+    }
+
+    console.groupCollapsed('[socialPane] friendsList DOM')
+    console.log('friendsList element', friendsList)
+    console.log('friendsList outerHTML', friendsList.outerHTML)
+    console.log('friendsHeader outerHTML', friendsHeader.outerHTML)
+    console.log('friendsItemsTable', friendsItemsTable)
+    console.log(
+      'friendRows',
+      friendRows.map(function (row) {
+        return {
+          text: row.textContent?.trim(),
+          html: row.outerHTML
+        }
+      })
+    )
+    console.groupEnd()
 
     // Figure out which are reciprocated:
     // @@ Does not look up profiles
     // Does distinguish reciprocated from unreciprocated friendships
     //
-    function _triageFriends (s) {
-      outgoing = kb.each(s, foaf('knows'))
-      incoming = kb.each(undefined, foaf('knows'), s) // @@ have to load the friends
-      const confirmed = []
-      const unconfirmed = []
-      const requests = []
+    function _triageFriends (subject: NamedNode) {
+      const outgoingFriends: NamedNode[] = kb.each(subject, foaf('knows'))
+      const incomingFriends: NamedNode[] = kb.each(undefined, foaf('knows'), subject) // @@ have to load the friends
+      const confirmed: NamedNode[] = []
+      const unconfirmed: NamedNode[] = []
+      const requests: NamedNode[] = []
 
-      for (let i = 0; i < outgoing.length; i++) {
-        const friend = outgoing[i]
+      for (let i = 0; i < outgoingFriends.length; i++) {
+        const friend = outgoingFriends[i]
         let found = false
-        for (let j = 0; j < incoming.length; j++) {
-          if (incoming[j].sameTerm(friend)) {
+        for (let j = 0; j < incomingFriends.length; j++) {
+          if (incomingFriends[j].sameTerm(friend)) {
             found = true
             break
           }
@@ -390,12 +465,11 @@ export const socialPane = {
         else unconfirmed.push(friend)
       } // outgoing
 
-      for (let i = 0; i < incoming.length; i++) {
-        const friend = incoming[i]
-        // var lab = UI.utils.label(friend)
+      for (let i = 0; i < incomingFriends.length; i++) {
+        const friend = incomingFriends[i]
         let found = false
-        for (let j = 0; j < outgoing.length; j++) {
-          if (outgoing[j].sameTerm(friend)) {
+        for (let j = 0; j < outgoingFriends.length; j++) {
+          if (outgoingFriends[j].sameTerm(friend)) {
             found = true
             break
           }
@@ -404,9 +478,9 @@ export const socialPane = {
       } // incoming
 
       const cases = [
-        ['Acquaintances', outgoing],
+        ['Acquaintances', outgoingFriends],
         ['Mentioned as acquaintances by: ', requests]
-      ]
+      ] as Array<[string, NamedNode[]]>
       for (let i = 0; i < cases.length; i++) {
         const thisCase = cases[i]
         const friends = thisCase[1]
@@ -418,25 +492,29 @@ export const socialPane = {
         htr.appendChild(h3)
         mainTable.appendChild(htr)
 
-        const items = []
+        const items: Array<[string, NamedNode]> = []
         for (let j9 = 0; j9 < friends.length; j9++) {
-          items.push([UI.utils.label(friends[j9]), friends[j9]])
+          items.push([utils.label(friends[j9]), friends[j9]])
         }
         items.sort()
-        let last = null
-        let fr
+        let last: NamedNode | null = null
+        let friendNode: NamedNode
         for (let j7 = 0; j7 < items.length; j7++) {
-          fr = items[j7][1]
-          if (fr.sameTerm(last)) continue // unique
-          last = fr
-          if (UI.utils.label(fr) !== '...') {
+          friendNode = items[j7][1]
+          if (last && friendNode.sameTerm(last)) continue // unique
+          last = friendNode
+          if (utils.label(friendNode) !== '...') {
             // This check is to avoid bnodes with no labels attached
             // appearing in the friends list with "..." - Oshani
-            mainTable.appendChild(oneFriend(fr))
+            mainTable.appendChild(oneFriend(friendNode, false))
           }
         }
       }
     }
+
+    // Retained intentionally for later use without affecting the current render path.
+    void _triageFriends
+
     /* if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
       triageFriends(s)
     } */
@@ -450,11 +528,11 @@ export const socialPane = {
     // For each home page like thing make a label which will
     // make sense and add the domain (like "w3.org blog") if there are more than one of the same type
     //
-    const preds = [
-      UI.ns.foaf('homepage'),
-      UI.ns.foaf('weblog'),
-      UI.ns.foaf('workplaceHomepage'),
-      UI.ns.foaf('schoolHomepage')
+    const preds: NamedNode[] = [
+      ns.foaf('homepage'),
+      ns.foaf('weblog'),
+      ns.foaf('workplaceHomepage'),
+      ns.foaf('schoolHomepage')
     ]
     for (let i6 = 0; i6 < preds.length; i6++) {
       const pred = preds[i6]
@@ -462,7 +540,7 @@ export const socialPane = {
       if (sts.length === 0) {
         // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
       } else {
-        const uris = []
+        const uris: string[] = []
         for (let j5 = 0; j5 < sts.length; j5++) {
           const st = sts[j5]
           if (st.object.uri) uris.push(st.object.uri) // Ignore if not symbol
@@ -475,7 +553,7 @@ export const socialPane = {
           if (uri === last2) continue // uniques only
           last2 = uri
           let hostlabel = ''
-          lab2 = UI.utils.label(pred)
+          lab2 = utils.label(pred)
           if (uris.length > 1) {
             const l = uri.indexOf('//')
             if (l > 0) {
@@ -500,7 +578,7 @@ export const socialPane = {
       }
     }
 
-    const preds2 = [UI.ns.foaf('openid'), UI.ns.foaf('nick')]
+    const preds2: NamedNode[] = [ns.foaf('openid'), ns.foaf('nick')]
     for (let i2 = 0; i2 < preds2.length; i2++) {
       const pred = preds2[i2]
       const sts2 = kb.statementsMatching(s, pred)

@@ -1,26 +1,44 @@
 .socialPane {
-  display: flex;
+  display: block;
   color: #333;
   background-color: #f9f9f9;
-  border: 1px solid #ccc;
   border-radius: 4px;
   overflow: hidden;
   width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
   max-width: none;
   margin: 0;
 }
 
 .socialPane .social-layout {
   display: flex;
-  flex-wrap: nowrap;
-  align-items: stretch;
+  align-items: flex-start;
+  gap: 1rem;
   width: 100%;
-  gap: 0;
+}
+
+.socialPane .social-primary {
+  flex: 1 1 70%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .socialPane .social-nav {
-  flex: 0 0 16rem;
-  min-width: 12rem;
+  display: block;
+  width: 100%;
+  background-color: #eee;
+  border: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+}
+
+.socialPane .social-toolbar {
+  flex: 0 0 30%;
+  min-width: 14rem;
+  width: 30%;
   background-color: #eee;
   border: 0;
   padding: 0.5em;
@@ -28,22 +46,60 @@
 }
 
 .socialPane .social-content {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
+  display: block;
+  width: 100%;
 }
 
 .socialPane .social-main {
-  flex: 1 1 auto;
-  min-width: 0;
+  display: table;
   background-color: #fff;
   color: #000;
-  border-left: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-  border-bottom: 1px solid #ccc;
+  border: 0;
   padding: 0;
   box-sizing: border-box;
   width: 100%;
+}
+
+.socialPane .social-friends-list {
+  width: 100%;
+}
+
+.socialPane .social-friends-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #f1f1f1;
+  caption-side: top;
+}
+
+.socialPane .social-friends-header-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #202;
+}
+
+.socialPane .social-friends-header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.socialPane .social-friends-header-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem !important;
+  min-width: 1.5rem !important;
+  height: 1.5rem !important;
+  padding: 0.125rem !important;
+  margin: 0 !important;
+  border-width: 0 !important;
+}
+
+.socialPane .social-friends-header-actions button img {
+  width: 1em !important;
+  height: 1em !important;
 }
 
 .socialPane .social-pic {
@@ -53,14 +109,18 @@
   padding: 0;
 }
 
+.socialPane .social-nav h3 {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 /* From tabbedtab.css */
 /* ***************** Social Pane **********/
 
 div.socialPane {
-  border-top: solid 1px #777;
-  border-bottom: solid 1px #777;
-  padding-top: 0.5em;
-  padding-bottom: 0.5em;
+  padding-top: 0;
+  padding-bottom: 0;
   margin: 0;
 }
 
@@ -178,14 +238,15 @@ div.social_linkButton {
 }
 
 @media (max-width: 600px) {
-  .socialPane .social-layout {
-    flex-wrap: wrap;
+  .socialPane .social-layout,
+  .socialPane .social-primary {
+    display: block;
   }
 
   .socialPane .social-nav,
+  .socialPane .social-toolbar,
   .socialPane .social-content,
   .socialPane .social-main {
-    flex: 1 1 100%;
     width: 100%;
   }
 }
