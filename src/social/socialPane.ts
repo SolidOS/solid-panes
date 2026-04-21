@@ -9,12 +9,15 @@
  */
 
 import './socialPane.css'
-import { utils, ns, log, widgets } from 'solid-ui'
+import { icons, utils, ns, log, widgets } from 'solid-ui'
 import { authn } from 'solid-logic'
-import { NamedNode, Statement } from 'rdflib'
+import { LiveStore, NamedNode, Statement } from 'rdflib'
+import { DataBrowserContext } from 'pane-registry'
+import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
+
 
 export const socialPane = {
-  icon: utils.icons.originalIconBase + 'foaf/foafTiny.gif',
+  icon: icons.originalIconBase + 'foaf/foafTiny.gif',
 
   name: 'social',
 
@@ -78,7 +81,6 @@ export const socialPane = {
       label.appendChild(tx)
       f.appendChild(label)
       const boxHandler = function (this: HTMLInputElement, _e: Event) {
-        tx.className = 'pendingedit'
         // alert('Should be greyed out')
         if (this.checked) {
           // Add link
@@ -161,42 +163,10 @@ export const socialPane = {
 
     const outliner = context.getOutliner(dom)
     const kb = context.session.store
-    const div = dom.createElement('div')
-    div.setAttribute('class', 'socialPane')
+    const socialPane = dom.createElement('div')
+    socialPane.classList.add('social-pane', 'flex-column', 'gap-lg', 'p-lg')
     const foaf = ns.foaf
     const vcard = ns.vcard
-
-    const foafPicStyle = 'social-pic'
-
-    const structure = div.appendChild(dom.createElement('div'))
-    structure.className = 'social-layout'
-    const primary = structure.appendChild(dom.createElement('div'))
-    primary.className = 'social-primary'
-    const left = primary.appendChild(dom.createElement('div'))
-    left.className = 'social-nav'
-    const middle = primary.appendChild(dom.createElement('div'))
-    middle.className = 'social-content'
-    const right = structure.appendChild(dom.createElement('div'))
-    right.className = 'social-toolbar'
-
-    const tools = left
-    const mainTable = middle.appendChild(dom.createElement('table'))
-    mainTable.className = 'social-main'
-
-    // Image top left
-    const src = kb.any(s, foaf('img')) || kb.any(s, foaf('depiction'))
-    if (src) {
-      const img = dom.createElement('IMG')
-      img.setAttribute('src', src.uri) // w640 h480
-      // img.className = 'foafPic'
-      img.className = foafPicStyle
-      tools.appendChild(img)
-    }
-    const name = kb.anyValue(s, vcard('fn')) || '???'
-    let h3 = dom.createElement('H3')
-    h3.appendChild(dom.createTextNode(name + '\'s Friends'))
-    tools.appendChild(h3)
-
     const me = authn.currentUser()
     const meUri = me ? me.uri : null
 
@@ -217,6 +187,19 @@ export const socialPane = {
     let editable = false
     let incoming: boolean | NamedNode[]
     let outgoing: boolean | NamedNode[]
+
+    const structure = socialPane.appendChild(dom.createElement('div'))
+    structure.className = 'social-layout'
+    const primary = structure.appendChild(dom.createElement('div'))
+    primary.className = 'social-primary'
+    const left = primary.appendChild(dom.createElement('section'))
+    left.className = 'social-pane__header-section'
+    const middle = primary.appendChild(dom.createElement('div'))
+    middle.className = 'social-content'
+
+    const tools = left
+    const mainTable = middle.appendChild(dom.createElement('table'))
+    mainTable.className = 'social-main'
 
     if (me) {
       // The definition of FOAF personal profile document is ..
@@ -262,7 +245,7 @@ export const socialPane = {
         // This is about someone else
         // My relationship with this person
 
-        h3 = dom.createElement('h3')
+        const h3 = dom.createElement('h3')
         h3.appendChild(dom.createTextNode('You and ' + familiar))
         tools.appendChild(h3)
 
@@ -349,22 +332,66 @@ export const socialPane = {
     } // me is defined
     // End of you and s
 
+    const header = createHeader(context, s, Boolean(thisIsYou && editable))
+    header.classList.add('social-pane__header-section')
+    socialPane.prepend(header)
+
     // div.appendChild(dom.createTextNode(plural(friends.length, 'acquaintance') +'. '))
 
     // /////////////////////////////////////////////  Main block
     //
     // Should: Find the intersection and difference sets
 
+    const friendDetailsByUri = new Map<string, FriendDetails>()
+
+    const hydrateFriendDetailsCache = function (friendNodes: NamedNode[]) {
+      const nextCache = new Map<string, FriendDetails>()
+
+      friendNodes.forEach(friendNode => {
+        if (!friendNode?.value || friendNode.value === s.value) return
+        nextCache.set(friendNode.value, toFriendDetails(kb, friendNode))
+      })
+
+      friendDetailsByUri.clear()
+      nextCache.forEach((value, key) => {
+        friendDetailsByUri.set(key, value)
+      })
+    }
+
+    hydrateFriendDetailsCache(friends as NamedNode[])
+
+    const renderSupportingInfo = function (target: NamedNode, renderDom: HTMLDocument) {
+      const friend = friendDetailsByUri.get(target.value)
+      if (!friend) return null
+
+      const lines = [
+        [friend.jobTitle, friend.organization].filter(Boolean).join(' | '),
+        friend.location || ''
+      ].filter(Boolean)
+
+      if (lines.length === 0) return null
+
+      const container = renderDom.createElement('div')
+      for (let index = 0; index < lines.length; index++) {
+        const line = container.appendChild(renderDom.createElement('div'))
+        line.textContent = lines[index]
+      }
+      return container
+    }
+
+    const renderNameSuffix = function (target: NamedNode, _renderDom: HTMLDocument) {
+      return friendDetailsByUri.get(target.value)?.pronouns || null
+    }
+
     // List all x such that s knows x.
     const friendsList = widgets.attachmentList(dom, s, mainTable, {
       doc: profile,
       modify: !!editable,
       predicate: foaf('knows'),
-      noun: 'friend'
+      noun: 'friend',
+      renderSupportingInfo,
+      renderNameSuffix
     })
-    /* ,
-      renderSupportingInfo?: RenderSupportingInfo,
-      renderNameSuffix?: RenderNameSuffix */
     friendsList.classList.add('social-friends-list')
     const friendsListRow = friendsList.querySelector('tr')
     const friendsListPromptCell = friendsListRow?.children?.[0]
@@ -397,49 +424,30 @@ export const socialPane = {
     friendsList.prepend(friendsHeader)
 
     const friendsItemsTable = friendsList.querySelector('td table')
-    let friendRows: HTMLTableRowElement[] = []
     if (friendsItemsTable instanceof HTMLTableElement) {
-      friendsItemsTable.style.display = 'flex'
-      friendsItemsTable.style.flexWrap = 'wrap'
-      friendsItemsTable.style.alignItems = 'stretch'
-      friendsItemsTable.style.width = '100%'
-      friendsItemsTable.style.tableLayout = 'fixed'
-      friendsItemsTable.style.borderCollapse = 'separate'
-      friendsItemsTable.style.borderSpacing = '0'
-      friendsItemsTable.style.gap = '0.75rem'
-
-      friendRows = Array.from(
-        friendsItemsTable.querySelectorAll<HTMLTableRowElement>(':scope > tr')
-      )
-      friendRows.forEach(function (row) {
-        if (!row.textContent?.trim()) {
-          row.style.display = 'none'
-          return
-        }
-        row.style.display = 'inline-table'
-        row.style.width = 'calc(50% - 0.375rem)'
-        row.style.tableLayout = 'fixed'
-        row.style.boxSizing = 'border-box'
-        row.style.border = '1px solid #d8d8d8'
-        row.style.background = '#fff'
-      })
+      friendsItemsTable.classList.add('social-friends-grid')
     }
 
-    console.groupCollapsed('[socialPane] friendsList DOM')
-    console.log('friendsList element', friendsList)
-    console.log('friendsList outerHTML', friendsList.outerHTML)
-    console.log('friendsHeader outerHTML', friendsHeader.outerHTML)
-    console.log('friendsItemsTable', friendsItemsTable)
-    console.log(
-      'friendRows',
-      friendRows.map(function (row) {
-        return {
-          text: row.textContent?.trim(),
-          html: row.outerHTML
+    const refreshFriendsList = function () {
+      const refresh = (friendsList as HTMLTableElement & { refresh?: () => void }).refresh
+      if (typeof refresh !== 'function') return
+
+      refresh.call(friendsList)
+    }
+
+    void (async () => {
+      try {
+        for await (const streamedFriends of streamFriends(context, s)) {
+          friendDetailsByUri.clear()
+          streamedFriends.forEach(friend => {
+            friendDetailsByUri.set(friend.url, friend)
+          })
+          refreshFriendsList()
         }
-      })
-    )
-    console.groupEnd()
+      } catch {
+        // Keep the initial snapshot if async friend loading fails.
+      }
+    })()
 
     // Figure out which are reciprocated:
     // @@ Does not look up profiles
@@ -520,63 +528,7 @@ export const socialPane = {
     } */
     // //////////////////////////////////// Basic info on left
 
-    /*
-    h3 = dom.createElement('h3')
-    h3.appendChild(dom.createTextNode('Basic Information'))
-    tools.appendChild(h3)
-    */
-    // For each home page like thing make a label which will
-    // make sense and add the domain (like "w3.org blog") if there are more than one of the same type
-    //
-    const preds: NamedNode[] = [
-      ns.foaf('homepage'),
-      ns.foaf('weblog'),
-      ns.foaf('workplaceHomepage'),
-      ns.foaf('schoolHomepage')
-    ]
-    for (let i6 = 0; i6 < preds.length; i6++) {
-      const pred = preds[i6]
-      const sts = kb.statementsMatching(s, pred)
-      if (sts.length === 0) {
-        // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
-      } else {
-        const uris: string[] = []
-        for (let j5 = 0; j5 < sts.length; j5++) {
-          const st = sts[j5]
-          if (st.object.uri) uris.push(st.object.uri) // Ignore if not symbol
-        }
-        uris.sort()
-        let last2 = ''
-        let lab2
-        for (let k = 0; k < uris.length; k++) {
-          const uri = uris[k]
-          if (uri === last2) continue // uniques only
-          last2 = uri
-          let hostlabel = ''
-          lab2 = utils.label(pred)
-          if (uris.length > 1) {
-            const l = uri.indexOf('//')
-            if (l > 0) {
-              let r = uri.indexOf('/', l + 2)
-              const r2 = uri.lastIndexOf('.', r)
-              if (r2 > 0) r = r2
-              hostlabel = uri.slice(l + 2, r)
-            }
-          }
-          if (hostlabel) lab2 = hostlabel + ' ' + lab2 // disambiguate
-          const t = dom.createTextNode(lab2)
-          const a = dom.createElement('a')
-          a.appendChild(t)
-          a.setAttribute('href', uri)
-          const d = dom.createElement('div')
-          // d.className = 'social_linkButton'
-          d.style.cssText =
-            'width: 80%; background-color: #fff; border: solid 0.05em #ccc;  margin-top: 0.1em; margin-bottom: 0.1em; padding: 0.1em; text-align: center;'
-          d.appendChild(a)
-          tools.appendChild(d)
-        }
-      }
-    }
+    
 
     const preds2: NamedNode[] = [ns.foaf('openid'), ns.foaf('nick')]
     for (let i2 = 0; i2 < preds2.length; i2++) {
@@ -591,7 +543,282 @@ export const socialPane = {
       }
     }
 
-    return div
+    return socialPane
   } // render()
 } //
 // ends
+// ***************** Social Pane Selectors **********/
+/* Should move to another file, but will leave for now */
+/* Will create a social pane folder or maybe repo later */
+
+const FRIEND_BATCH_SIZE = 3
+
+export interface ProfileDetails {
+  url: string
+  imageUrl?: string
+  name?: string
+  nickname?: string
+  jobTitle?: string
+  organization?: string
+  location?: string | null
+  pronouns?: string
+  birthdate?: string
+}
+
+export interface FriendDetails extends ProfileDetails {
+  subjectNode: NamedNode
+}
+
+
+/* pronounsAsText and formatLocation were copied from HeadingSection selectors */
+export function pronounsAsText (store: LiveStore, subject: NamedNode): string {
+  let pronouns = store.anyJS(subject, ns.solid('preferredSubjectPronoun')) || ''
+  if (pronouns) {
+    const them = store.anyJS(subject, ns.solid('preferredObjectPronoun'))
+    if (them) {
+      pronouns += '/' + them
+    }
+  }
+  return pronouns || ''
+}
+
+function formatLocation(countryName: string | void, locality: string | void) {
+  return countryName && locality
+    ? `${locality}, ${countryName}`
+    : countryName || locality || null
+}
+
+function toFriendDetails(store: any, friendNode: NamedNode): FriendDetails {
+  const name =
+    store.anyValue(friendNode, ns.vcard('fn')) ||
+    store.anyValue(friendNode, ns.foaf('name')) ||
+    null
+  const nickname =
+    store.anyValue(friendNode, ns.vcard('nickname')) ||
+    store.anyValue(friendNode, ns.foaf('nick')) ||
+    null
+  const dateOfBirth = store.anyValue(friendNode, ns.vcard('bday')) || null
+  const imageSrc = widgets.findImage(friendNode)
+  const jobTitle = store.anyValue(friendNode, ns.vcard('role')) || null
+  const orgName = store.anyValue(friendNode, ns.vcard('organization-name')) || null
+  const primaryAddressEntryNode = store.any(friendNode, ns.vcard('hasAddress')) as NamedNode | null
+  const address: NamedNode | null = primaryAddressEntryNode || null
+  const countryName =
+      address != null
+        ? store.anyValue(address, ns.vcard('country-name'))
+        : null
+  const locality =
+    address != null
+      ? store.anyValue(address, ns.vcard('locality'))
+      : null
+
+  const location = formatLocation(countryName, locality)
+  const pronouns = pronounsAsText(store, friendNode)
+    
+  return {
+    url: friendNode.value,
+    imageUrl: imageSrc,
+    name,
+    nickname,
+    jobTitle,
+    organization: orgName,
+    birthdate: dateOfBirth,
+    location,
+    pronouns,
+    subjectNode: friendNode
+  }
+}
+
+export async function * streamFriends(
+  context: DataBrowserContext,
+  subject: NamedNode,
+  batchSize = FRIEND_BATCH_SIZE
+): AsyncGenerator<FriendDetails[], void, void> {
+  const store = context.session.store
+  const fetcher = (store as any)?.fetcher
+
+  if (fetcher && typeof fetcher.load === 'function') {
+    try {
+      await fetcher.load(subject.doc())
+    } catch {
+      // Continue with whatever is already in the store.
+    }
+  }
+
+  const seen = new Set<string>()
+  const friendNodes = store.each(subject, ns.foaf('knows'), null, subject.doc())
+  const uniqueFriendNodes: NamedNode[] = []
+
+  for (const friendNode of friendNodes) {
+    const key = friendNode?.value
+    if (!key || seen.has(key) || subject.value === key) continue
+    seen.add(key)
+    uniqueFriendNodes.push(friendNode as NamedNode)
+  }
+
+  const friends: FriendDetails[] = []
+
+  for (const friendNode of uniqueFriendNodes) {
+    if (fetcher && typeof fetcher.load === 'function') {
+      try {
+        await fetcher.load(friendNode.doc())
+      } catch {
+        // Keep partial friend data when one linked document fails to load.
+      }
+    }
+
+    friends.push(toFriendDetails(store, friendNode))
+
+    if (friends.length % batchSize === 0) {
+      yield [...friends]
+    }
+  }
+
+  if (friends.length > 0 && friends.length % batchSize !== 0) {
+    yield [...friends]
+  }
+}
+
+export async function extractFriends(context: DataBrowserContext, subject: NamedNode): Promise<FriendDetails[] | null> {
+  let latestFriends: FriendDetails[] | null = null
+
+  for await (const friends of streamFriends(context, subject)) {
+    latestFriends = friends
+  }
+
+  return latestFriends
+}
+
+export function selectProfileData(context: DataBrowserContext, subject: NamedNode): ProfileDetails | null {
+  const store = context.session.store
+
+  const name =
+      store.anyValue(subject, ns.vcard('fn')) ||
+      store.anyValue(subject, ns.foaf('name')) ||
+      undefined
+    const nickname =
+      store.anyValue(subject, ns.vcard('nickname')) ||
+      store.anyValue(subject, ns.foaf('nick')) ||
+      undefined
+    const dateOfBirth = store.anyValue(subject, ns.vcard('bday')) || undefined
+    const imageSrc = widgets.findImage(subject)
+    const jobTitle = store.anyValue(subject, ns.vcard('role')) || undefined
+    const orgName = store.anyValue(subject, ns.vcard('organization-name')) || undefined
+    const primaryAddressEntryNode = store.any(subject, ns.vcard('hasAddress')) as NamedNode | null
+    const address: NamedNode | null = primaryAddressEntryNode || null
+    const countryName =
+        address != null
+          ? store.anyValue(address, ns.vcard('country-name'))
+          : undefined
+    const locality =
+      address != null
+        ? store.anyValue(address, ns.vcard('locality'))
+        : undefined
+
+    const location = formatLocation(countryName, locality)
+    const pronouns = pronounsAsText(store, subject)
+    return {
+      url: subject.value,
+      imageUrl: imageSrc,
+      name,
+      nickname,
+      jobTitle,
+      organization: orgName,
+      birthdate: dateOfBirth,
+      location,
+      pronouns
+    }
+}
+
+export function personInCircleIcon (): SVGSVGElement {
+  const svgNamespace = 'http://www.w3.org/2000/svg'
+  const svg = document.createElementNS(svgNamespace, 'svg')
+  svg.setAttribute('xmlns', svgNamespace)
+  svg.setAttribute('width', '64')
+  svg.setAttribute('height', '64')
+  svg.setAttribute('viewBox', '0 0 64 64')
+  svg.setAttribute('fill', 'none')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('focusable', 'false')
+
+  const paths = [
+    'M32.0007 58.6666C46.7282 58.6666 58.6673 46.7275 58.6673 31.9999C58.6673 17.2723 46.7282 5.33325 32.0007 5.33325C17.2731 5.33325 5.33398 17.2723 5.33398 31.9999C5.33398 46.7275 17.2731 58.6666 32.0007 58.6666Z',
+    'M32 34.6667C36.4183 34.6667 40 31.085 40 26.6667C40 22.2485 36.4183 18.6667 32 18.6667C27.5817 18.6667 24 22.2485 24 26.6667C24 31.085 27.5817 34.6667 32 34.6667Z',
+    'M18.666 55.0986V50.6666C18.666 49.2521 19.2279 47.8955 20.2281 46.8954C21.2283 45.8952 22.5849 45.3333 23.9993 45.3333H39.9993C41.4138 45.3333 42.7704 45.8952 43.7706 46.8954C44.7708 47.8955 45.3327 49.2521 45.3327 50.6666V55.0986'
+  ]
+
+  paths.forEach(function (d) {
+    const path = document.createElementNS(svgNamespace, 'path')
+    path.setAttribute('d', d)
+    path.setAttribute('stroke', '#CBD5E1')
+    path.setAttribute('stroke-width', '5.33333')
+    path.setAttribute('stroke-linecap', 'round')
+    path.setAttribute('stroke-linejoin', 'round')
+    svg.appendChild(path)
+  })
+
+  return svg
+}
+
+function createImage (src: string | null | undefined, alt = ''): HTMLElement {
+  if (src) {
+    const img = document.createElement('img')
+    img.className = 'social-pane__header-hero'
+    img.src = src
+    img.alt = alt
+    img.width = 180
+    img.height = 180
+    img.loading = 'eager'
+    return img
+  }
+
+  const fallback = document.createElement('div')
+  fallback.className = 'social-pane__header-hero-alt flex-center'
+  fallback.setAttribute('role', 'img')
+  fallback.setAttribute('aria-label', alt)
+  fallback.tabIndex = 0
+
+  const icon = document.createElement('span')
+  icon.className = 'social-pane__header-hero-icon'
+  icon.appendChild(personInCircleIcon())
+  fallback.appendChild(icon)
+
+  return fallback
+}
+
+function createHeader(context: any, s: any, canEdit = false): HTMLElement {
+  const dom = context.dom
+  const kb = context.session.store
+  const header = document.createElement('header')
+  header.className = 'social-pane__header'
+  const renderHeader = function () {
+    header.replaceChildren()
+
+    if (canEdit) {
+      header.appendChild(createEditProfileDetailsButton({
+        dom,
+        store: kb,
+        subject: s,
+        header,
+        onSaved: renderHeader
+      }))
+    }
+
+    const profileData = selectProfileData(context, s)
+    if (profileData) {
+      header.appendChild(createImage(profileData.imageUrl, profileData.name))
+    }
+
+    const name = profileData?.name || '???'
+    const h1 = dom.createElement('h1')
+    h1.classList.add('social-pane__header-name')
+    h1.appendChild(dom.createTextNode(name))
+    header.appendChild(h1)
+
+    appendProfileLinks(header, dom, kb, s)
+  }
+
+  renderHeader()
+
+  return header
+}
