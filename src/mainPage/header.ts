@@ -1,13 +1,24 @@
 import { authSession, authn, store } from 'solid-logic'
-import { icons, widgets, utils } from 'solid-ui'
+import { widgets, utils } from 'solid-ui'
 import 'solid-ui/components/header'
-import type { Header, HeaderMenuItem, HeaderAccountMenuItem, HeaderAuthState } from 'solid-ui/components/header'
+import { Header } from 'solid-ui/components/header'
+import type { HeaderMenuItem, HeaderAccountMenuItem, HeaderAuthState } from 'solid-ui/components/header'
 import { OutlineManager } from '../outline/manager'
 import { LiveStore } from 'rdflib'
+import helpIconSvg from '../icons/help.svg?raw'
+import loginIconSvg from '../icons/person.svg?raw'
+import signOutIconSvg from '../icons/signOut.svg?raw'
+import defaultAvatarIconSvg from '../icons/personInCircle.svg?raw'
+import signupIconPng from '../icons/signup.png'
+import { createUiIcon } from '../icons/iconHelper'
 /**
  * menu icons
 */
-const HELP_MENU_ICON = icons.iconBase + 'noun_help.svg'
+const HELP_MENU_ICON = createUiIcon(helpIconSvg, 'Help Icon', '#ffffff')
+const LOGIN_ICON = createUiIcon(loginIconSvg, 'LogIn Icon', '#ffffff')
+const SIGNUP_ICON = signupIconPng
+const LOGOUT_ICON = createUiIcon(signOutIconSvg, 'LogOut Icon', '#000000')
+const DEFAULT_AVATAR_ICON = createUiIcon(defaultAvatarIconSvg, 'Default Avatar Icon', '#6A7282')
 const SOLID_ICON_URL = 'https://solidproject.org/assets/img/solid-emblem.svg'
 /**
  * menu elements
@@ -141,6 +152,10 @@ export async function refreshHeader (outliner: OutlineManager, headerElement?: H
   header.logoutLabel = headerOptions.logoutLabel
   header.accountLabel = headerOptions.accountLabel
   header.accountAvatar = headerOptions.accountAvatar
+  header.accountAvatarFallback = headerOptions.accountAvatarFallback
+  header.loginIcon = headerOptions.loginIcon
+  header.signUpIcon = headerOptions.signUpIcon
+  header.logoutIcon = headerOptions.logoutIcon
 
   return header
 }
@@ -169,7 +184,11 @@ function setHeaderOptions (outliner: OutlineManager) {
     } as HeaderMenuItem,
     logoutLabel: SIGN_OUT_MENU_ITEM,
     accountLabel: isAuthenticated ? ACCOUNT_MENU_LABEL : '',
-    accountAvatar: isAuthenticated ? widgets.findImage(currentUser) : undefined
+    accountAvatar: isAuthenticated ? widgets.findImage(currentUser) : undefined,
+    accountAvatarFallback: DEFAULT_AVATAR_ICON,
+    loginIcon: LOGIN_ICON,
+    signUpIcon: SIGNUP_ICON,
+    logoutIcon: LOGOUT_ICON
   }
 
   return headerOptions

@@ -22,6 +22,12 @@ const common = {
         use: ['style-loader', 'css-loader'],
       },
       {
+        test: /\.svg$/i,
+        resourceQuery: /raw/,
+        type: 'javascript/auto',
+        use: 'raw-loader'
+      },
+      {
         test: /\.(png|jpe?g|gif|webp|avif|svg)$/i,
         type: 'asset/resource'
       },

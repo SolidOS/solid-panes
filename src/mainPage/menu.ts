@@ -3,6 +3,8 @@ import { OutlineManager } from '../outline/manager'
 import { authSession, authn } from 'solid-logic'
 import { NamedNode } from 'rdflib'
 import { loadProfileFromURI } from '../profileUtils/ownerProfile'
+import menuIcon from '../icons/menu.svg?raw'
+import { createUiIcon } from '../icons/iconHelper'
 
 type MenuItem = {
   id?: string
@@ -13,6 +15,7 @@ type MenuItem = {
   onclick: () => void | Promise<void>
 }
 
+const MENU_ICON = createUiIcon(menuIcon, 'Menu Icon', '#ffffff')
 const MENU_COLLAPSED_KEY = 'solid-panes-menu-collapsed'
 let menuCollapsed = false
 
@@ -123,7 +126,16 @@ const ensureMenuSkeleton = () => {
     toggle.className = 'menu-toggle'
     toggle.type = 'button'
     toggle.setAttribute('aria-label', 'Toggle navigation menu')
-    toggle.textContent = '\u2630'
+    const toggleImg = document.createElement('img')
+    toggleImg.src = MENU_ICON
+    toggleImg.alt = ''
+    toggleImg.className = 'menu-toggle-icon'
+    toggleImg.setAttribute('aria-hidden', 'true')
+    toggle.appendChild(toggleImg)
+    const toggleLabel = document.createElement('span')
+    toggleLabel.id = 'MenuToggleLabel'
+    toggleLabel.className = 'menu-toggle-label'
+    toggle.appendChild(toggleLabel)
     root.insertBefore(toggle, root.firstChild)
   }
 
@@ -220,12 +232,20 @@ const setActiveMenuItem = (container: HTMLElement, paneName?: string) => {
     menuItems[0].classList.add('menu-item-active')
     menuItems[0].setAttribute('aria-current', 'page')
     container.dataset.activePaneName = menuItems[0].dataset.paneName || ''
+    updateToggleLabel(menuItems[0])
     return
   }
 
   if (paneName) {
     container.dataset.activePaneName = paneName
   }
+  updateToggleLabel(activeItem)
+}
+
+const updateToggleLabel = (activeItem?: HTMLButtonElement): void => {
+  const toggleLabel = document.getElementById('MenuToggleLabel')
+  if (!toggleLabel) return
+  toggleLabel.textContent = activeItem?.querySelector('.menu-item-label')?.textContent || ''
 }
 
 const renderMenuItems = async (subject: NamedNode, outliner: OutlineManager, container: HTMLElement) => {
