@@ -2,9 +2,13 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding-top: 0.75rem;
   min-height: 0;
   overflow-y: auto;
+}
+
+.app-nav.mobile-hidden .menu-content,
+.app-nav.mobile-visible .menu-content {
+  padding-top: 0.75rem;
 }
 
 .menu-footer {
@@ -133,6 +137,12 @@
   box-shadow: none;
   overflow: hidden;
   padding-top: 3.75rem;
+}
+
+.app-nav.mobile-hidden .menu-content,
+.app-nav.mobile-visible .menu-content {
+  flex: 1;
+  min-height: 0;
 }
 
 .app-nav.mobile-visible {
