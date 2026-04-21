@@ -366,11 +366,13 @@ export default function (context) {
     const panes = [
       {
         paneName: 'profile',
+        subject,
         label: 'Profile',
         icon: UI.icons.iconBase + 'noun_15059.svg'
       },
       {
         paneName: 'social', // loads socialPane
+        subject,
         label: 'Friends',
         icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif'
       }
@@ -2335,8 +2337,11 @@ export default function (context) {
     ) {
       const stateObj = pane ? { paneName: pane.name } : {}
       try {
-        // can fail if different origin
-        dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+        const currentUrl = new URL(document.location.href)
+        const targetUrl = new URL(subject.uri, document.location.href)
+        if (currentUrl.origin === targetUrl.origin) {
+          dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+        }
       } catch (e) {
         console.log(e)
       }
