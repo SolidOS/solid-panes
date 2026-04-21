@@ -24,7 +24,7 @@ import dokieliPane from './dokieli/dokieliPane.js'
 import folderPane from 'folder-pane'
 import { classInstancePane } from './classInstancePane.js'
 import { slideshowPane } from './slideshow/slideshowPane.js'
-import { socialPane } from './socialPane.js'
+import { socialPane } from './social/socialPane'
 import humanReadablePane from './humanReadablePane.js'
 
 import { dataContentPane } from './dataContentPane.js'
