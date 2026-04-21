@@ -2,6 +2,25 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-top: 0.75rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.menu-footer {
+  width: 100%;
+  padding: 1rem;
+  border-top: 1px solid var(--color-border, #d1d1d1);
+  font-size: 0.875rem;
+  color: var(--color-text-muted, #555);
+  line-height: 1.4;
+  background: inherit;
+}
+
+.app-nav.collapsed .menu-footer {
+  display: none;
+  text-align: center;
+  padding: 0.75rem 0;
 }
 
 .menu-item {
@@ -45,7 +64,7 @@
 .menu-toggle {
   position: fixed;
   top: 0.5rem;
-  left: 2.75rem;
+  left: 1rem;
   z-index: 300;
   display: inline-flex;
   align-items: center;
@@ -67,24 +86,88 @@
 }
 
 .app-nav {
-  position: relative;
-}
-
-.app-nav.mobile-hidden {
-  transform: translateX(-100%);
-  transition: transform 0.25s ease-in-out;
   position: fixed;
   left: 0;
-  top: 4.5rem;
+  top: 0;
   bottom: 0;
-  z-index: 110;
+  width: min(18rem, 320px);
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+  background: var(--color-background);
+  z-index: 10;
+}
+
+.app-nav.mobile-hidden,
+.app-nav.mobile-visible {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: min(80vw, 320px);
+  height: 100vh;
+  min-height: 100vh;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease-in-out;
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-background);
+  border-right: none;
+  box-shadow: none;
+  overflow: hidden;
+  padding-top: 3.75rem;
 }
 
 .app-nav.mobile-visible {
   transform: translateX(0);
-  display: block;
   visibility: visible;
+  background: var(--color-background);
+}
+
+.menu-header {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  align-items: center;
+  justify-content: flex-start;
+  background-color: #42345a !important;
+  color: #ffffff;
+  font-weight: 600;
+  min-height: 3.75rem;
+  height: 3.75rem;
+  box-sizing: border-box;
+  width: 100%;
+  z-index: 1000;
+  border-right: none;
+  box-shadow: none;
+}
+
+.app-nav.mobile-hidden .menu-header,
+.app-nav.mobile-visible .menu-header {
+  display: flex;
+}
+
+.menu-header-title {
+  font-size: 1.25rem;
+  color: #ffffff;
+}
+
+.menu-close {
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding-left: 1.25rem;
+  line-height: 1;
+}
+
+.menu-close:hover,
+.menu-close:focus {
+  opacity: 0.85;
 }
 
 .app-nav.collapsed {
@@ -110,7 +193,7 @@
 .menu-collapse {
   position: fixed;
   left: 3rem;
-  bottom: 5rem;
+  bottom: 8rem;
   z-index: 320;
   width: 1.25rem;
   height: 1.25rem;
@@ -120,9 +203,10 @@
   border: 1px solid var(--color-border);
   border-radius: 999px;
   color: var(--color-text);
-  font-size: 0.75rem;
+  font-size: 1.3rem;
   line-height: 1;
   cursor: pointer;
+  box-shadow: 0 1px 4px rgba(124,77,255,0.12);
 }
 
 @media (max-width: 768px) {
