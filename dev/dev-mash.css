@@ -51,6 +51,17 @@ html, body {
   display: flex;
 }
 
+#MainContent > #NavMenu {
+  flex: 0 0 auto;
+}
+
+#MainContent > #GlobalDashboard,
+#MainContent > #OutlineView {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
 #PageFooter {
   flex-shrink: 0;
 }

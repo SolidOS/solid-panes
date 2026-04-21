@@ -1,0 +1,469 @@
+.social-pane {
+  display: block;
+  color: #333;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  min-width: 100%;
+  box-sizing: border-box;
+  max-width: none;
+  margin: 0;
+}
+
+.social-pane__header-section {
+  background: var(--gray-100, #F3F4F6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.social-pane__header {
+  position: relative;
+  width: 100%;
+}
+
+.social-pane__edit-button {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #1f2937;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.social-pane__edit-button:hover {
+  background: #f8fafc;
+}
+
+.social-pane__dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 0.45);
+}
+
+.social-pane__dialog {
+  width: min(32rem, 100%);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  border-radius: 1rem;
+  background: #fff;
+  color: #111827;
+  padding: 1.25rem;
+  box-shadow: 0 20px 45px rgb(15 23 42 / 0.25);
+}
+
+.social-pane__dialog-title {
+  margin: 0 0 0.5rem;
+}
+
+.social-pane__dialog-hint {
+  margin: 0 0 1rem;
+  color: #4b5563;
+}
+
+.social-pane__dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.social-pane__dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.social-pane__dialog-label {
+  font-weight: 600;
+}
+
+.social-pane__dialog-input {
+  width: 100%;
+  min-height: 4.5rem;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  font: inherit;
+  resize: vertical;
+}
+
+.social-pane__dialog-error {
+  min-height: 1.25rem;
+  margin: 0;
+  color: #b91c1c;
+}
+
+.social-pane__dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.social-pane__dialog-button {
+  border-radius: 0.75rem;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.social-pane__dialog-button--secondary {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #1f2937;
+}
+
+.social-pane__dialog-button--primary {
+  border: 1px solid #0f766e;
+  background: #0f766e;
+  color: #fff;
+}
+
+.social-pane__dialog-button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.social-pane__header-name {
+  color: var(--color-text-heading, #000);
+  font-size: var(--font-size-xxl, 1.75rem); /* 28px */
+  font-weight: var(--font-weight-bold, 600);
+  margin: 0;
+  padding: 0;
+  text-indent: 0;
+  line-height: 1.2;
+  text-align: center;
+  transform: none;
+}
+
+.social-pane__header-hero {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--border-radius-full, 0.625rem); /* 10px */;
+  border: var(--border-width-sm, 0.1rem) solid var(--color-primary, #7C4DFF);
+  background: lightgray 50% / cover no-repeat;
+  background-position: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.social-pane__header-hero-icon {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--border-radius-base);
+  background: var(--color-card-bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.social-pane__header-hero-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.social-pane__header-avatar {
+  grid-area: avatar;
+  flex: 0 0 auto;
+}
+
+
+.social-pane .social-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+}
+
+.social-pane .social-primary {
+  flex: 1 1 70%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.social-pane .social-nav {
+  display: block;
+  width: 100%;
+  background-color: #eee;
+  border: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+}
+
+.social-pane .social-toolbar {
+  flex: 0 0 30%;
+  min-width: 14rem;
+  width: 30%;
+  background-color: #eee;
+  border: 0;
+  padding: 0.5em;
+  box-sizing: border-box;
+}
+
+.social-pane .social-content {
+  display: block;
+  width: 100%;
+}
+
+.social-pane .social-main {
+  display: table;
+  background-color: #fff;
+  color: #000;
+  border: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.social-pane .social-friends-list {
+  width: 100%;
+}
+
+.social-pane .social-friends-grid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+  gap: 0.75rem;
+}
+
+.social-pane .social-friends-grid > tr {
+  display: inline-table;
+  width: calc(50% - 0.375rem);
+  table-layout: fixed;
+  box-sizing: border-box;
+}
+
+.social-pane .social-friends-grid > tr,
+.social-pane .social-friend-card {
+  border: 1px solid #d8d8d8;
+  background: #fff;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
+  transition: box-shadow 140ms ease, border-color 140ms ease, transform 140ms ease;
+}
+
+.social-pane .social-friends-grid > tr:hover,
+.social-pane .social-friend-card:hover {
+  border-color: #c4c4c4;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 0.1);
+  transform: translateY(-1px);
+}
+
+.social-pane .social-friends-grid > tr td,
+.social-pane .social-friend-card td {
+  background: transparent;
+}
+
+.social-pane .social-friends-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: #f1f1f1;
+  caption-side: top;
+}
+
+.social-pane .social-friends-header-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #202;
+}
+
+.social-pane .social-friends-header-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.social-pane .social-friends-header-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem !important;
+  min-width: 1.5rem !important;
+  height: 1.5rem !important;
+  padding: 0.125rem !important;
+  margin: 0 !important;
+  border-width: 0 !important;
+}
+
+.social-pane .social-friends-header-actions button img {
+  width: 1em !important;
+  height: 1em !important;
+}
+
+.social-pane .social-pic {
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.social-pane .social-nav h3 {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* From tabbedtab.css */
+/* ***************** Social Pane **********/
+
+div.social-pane {
+  padding-top: 0;
+  padding-bottom: 0;
+  margin: 0;
+}
+
+img.foafPic {
+  width: 100%;
+  border: none;
+  margin: 0;
+  padding: 0;
+  /*float:right; */
+}
+
+div.mildNotice {
+  border: dashed 0.1em #777;
+  margin: 1em;
+  padding: 1em;
+  width: 80%; /* float: right; */
+  background-color: #ffe;
+}
+
+.friendBox {
+  /* height: 4em; */
+  border-top: solid 0.01em #ccc;
+  margin: 0;
+  padding: 0.3em;
+  /* float: left; */
+}
+.friendBoxBig {
+  height: 20em;
+  border-top: solid 0.01em #202; /* float: left; */
+}
+
+.social-pane a {
+  color: #3b5998;
+  text-decoration: none;
+  font-weight: bold;
+}
+.social-pane a:link {
+  color: #3b5998;
+  text-decoration: none;
+  font-weight: bold;
+}
+.social-pane a:visited {
+  color: #3b5998;
+  text-decoration: none;
+  font-weight: bold;
+}
+.social-pane a:hover {
+  color: #3b5998;
+  text-decoration: underline;
+  font-weight: bold;
+}
+.social-pane a:active {
+  color: #888;
+  text-decoration: none;
+}
+
+img.foafThumb {
+  height: 3em;
+  border: 0px;
+  margin: 0.1em;
+  padding: 0.1em;
+  vertical-align: middle;
+} /* Thumbnail of a fiend etc */
+
+.friendBox .confirmed {
+  font-weight: bold;
+}
+
+table.inputForm {
+  font-size: 100%;
+}
+
+.mainBlock {
+  background: #fff;
+  color: #000;
+  float: left;
+  width: 46%;
+  margin: 0;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+  padding: 0;
+}
+
+.navBlock {
+  background-color: #eee;
+  float: left;
+  width: 25%;
+  border: 0;
+  padding: 0.5em;
+  margin: 0;
+}
+
+.navBlock .navSection {
+  border: solid 0.05em gray;
+  padding: 0.5em;
+  border-radius: 0.5em; /* CSS3: border-radius: .4em; */
+}
+
+div.social-pane h2 {
+  color: #202;
+}
+div.social-pane h3 {
+  color: #202;
+}
+
+div.social_linkButton {
+  width: 80%;
+  background-color: #fff;
+  border: solid 0.05em #ccc;
+  margin-top: 0.1em;
+  margin-bottom: 0.1em;
+  padding: 0.1em;
+  text-align: center;
+}
+
+@media (max-width: 600px) {
+  .social-pane .social-layout,
+  .social-pane .social-primary {
+    display: block;
+  }
+
+  .social-pane .social-friends-grid > tr {
+    width: 100%;
+  }
+
+  .social-pane .social-nav,
+  .social-pane .social-toolbar,
+  .social-pane .social-content,
+  .social-pane .social-main {
+    width: 100%;
+  }
+}
