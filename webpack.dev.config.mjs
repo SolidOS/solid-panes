@@ -57,6 +57,10 @@ export default [
           use: ['style-loader', 'css-loader']
         },
         {
+          test: /\.(png|jpe?g|gif|webp|avif|svg)$/i,
+          type: 'asset/resource'
+        },
+        {
           test: /\.ttl$/,
           use: 'raw-loader'
         }
