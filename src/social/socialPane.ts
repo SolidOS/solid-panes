@@ -13,9 +13,15 @@ import { icons, utils, ns, log, widgets } from 'solid-ui'
 import { authn } from 'solid-logic'
 import { LiveStore, NamedNode, Statement } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
-import { createAddMeToYourFriendsButton } from 'profile-pane'
-import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
-import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
+import { locationIcon } from './icons'
+import {
+  createAllFriendsSection,
+  createHeaderSection,
+  createMutualSection,
+  HeaderControls,
+  SocialHeaderElement
+} from './socialSections'
+import type { ViewerMode } from './socialSections'
 
 
 export const socialPane = {
@@ -202,8 +208,8 @@ export const socialPane = {
     // Do I have a public profile document?
     let profile: NamedNode | null = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
     let editable = false
-    let incoming: boolean | NamedNode[]
-    let outgoing: boolean | NamedNode[]
+    let incoming: boolean | NamedNode[] = false
+    let outgoing: boolean | NamedNode[] = false
 
     const structure = socialPane.appendChild(dom.createElement('div'))
     structure.className = 'social-layout'
@@ -231,53 +237,12 @@ export const socialPane = {
     mutualTab.setAttribute('role', 'tab')
     mutualTab.setAttribute('aria-controls', 'social-panel-mutual')
 
-    const mutualFriends = primary.appendChild(dom.createElement('section'))
-    mutualFriends.className = 'social-pane__mutual-friends social-primary__panel'
-    mutualFriends.id = 'social-panel-mutual'
-    mutualFriends.setAttribute('role', 'tabpanel')
-    mutualFriends.setAttribute('aria-labelledby', 'social-tab-mutual')
-    const mutualContent = mutualFriends.appendChild(dom.createElement('div'))
-    mutualContent.className = 'social-main social-main--mutual'
-
-    const allFriends = primary.appendChild(dom.createElement('section'))
-    allFriends.className = 'social-pane__all-friends social-primary__panel'
-    allFriends.id = 'social-panel-all-friends'
-    allFriends.setAttribute('role', 'tabpanel')
-    allFriends.setAttribute('aria-labelledby', 'social-tab-all-friends')
-
-    const setActivePanel = function (panel: 'mutual' | 'all-friends') {
-      const showMutual = panel === 'mutual'
-      mutualTab.classList.toggle('social-primary__tab--active', showMutual)
-      mutualTab.setAttribute('aria-selected', String(showMutual))
-      mutualTab.tabIndex = showMutual ? 0 : -1
-
-      allFriendsTab.classList.toggle('social-primary__tab--active', !showMutual)
-      allFriendsTab.setAttribute('aria-selected', String(!showMutual))
-      allFriendsTab.tabIndex = showMutual ? -1 : 0
-
-      mutualFriends.classList.toggle('social-primary__panel--active', showMutual)
-      mutualFriends.setAttribute('aria-hidden', String(!showMutual))
-
-      allFriends.classList.toggle('social-primary__panel--active', !showMutual)
-      allFriends.setAttribute('aria-hidden', String(showMutual))
-    }
-
-    const applyViewerMode = function (mode: ViewerMode) {
-      const showMutualTab = mode === 'authenticated'
-      mutualTab.hidden = !showMutualTab
-      setActivePanel('all-friends')
-    }
-
-    mutualTab.addEventListener('click', function () {
-      setActivePanel('mutual')
-    })
-
-    allFriendsTab.addEventListener('click', function () {
-      setActivePanel('all-friends')
-    })
-
-    const mainTable = allFriends.appendChild(dom.createElement('table'))
-    mainTable.className = 'social-main'
+    const mutualConnections = me && !thisIsYou ? uniqueNodes(common(uniqueFriends, myFriends)) : []
+    let mutualFriends: HTMLElement
+    let mutualContent: HTMLElement
+    let allFriends: HTMLElement
+    let mainTable: HTMLTableElement
+    let friendsList: HTMLElement
 
     if (me) {
       // The definition of FOAF personal profile document is ..
@@ -332,75 +297,6 @@ export const socialPane = {
           if (!profile) profile = outgoingSt[0].why
         }
 
-        const relationshipSummary = dom.createElement('div')
-        relationshipSummary.className = 'social-mutual-summary'
-        mutualContent.appendChild(relationshipSummary)
-
-        const youAndThem = function () {
-          relationshipSummary.appendChild(link(text('You'), meUri))
-          relationshipSummary.appendChild(text(' and '))
-          relationshipSummary.appendChild(link(text(familiar), s.uri))
-        }
-
-        if (!incoming) {
-          if (!outgoing) {
-            youAndThem()
-            relationshipSummary.appendChild(text(' have not said you know each other.'))
-          } else {
-            relationshipSummary.appendChild(link(text('You'), meUri))
-            relationshipSummary.appendChild(text(' know '))
-            relationshipSummary.appendChild(link(text(familiar), s.uri))
-            relationshipSummary.appendChild(text(' (unconfirmed)'))
-          }
-        } else {
-          if (!outgoing) {
-            relationshipSummary.appendChild(link(text(familiar), s.uri))
-            relationshipSummary.appendChild(text(' knows '))
-            relationshipSummary.appendChild(link(text('you'), meUri))
-            relationshipSummary.appendChild(text(' (unconfirmed).')) // @@
-            relationshipSummary.appendChild(text(' confirm you know '))
-            relationshipSummary.appendChild(link(text(familiar), s.uri))
-            relationshipSummary.appendChild(text('.'))
-          } else {
-            youAndThem()
-            relationshipSummary.appendChild(text(' say you know each other.'))
-          }
-        }
-
-        if (editable) {
-          const f = buildCheckboxForm(
-            'You know ' + familiar,
-            new Statement(me, knows, s, profile ?? undefined),
-            outgoing
-          )
-          mutualContent.appendChild(f)
-        } // editable
-
-        // //////////////// Mutual friends
-        if (friends) {
-          if (myFriends.length) {
-            const mutualConnections = uniqueNodes(common(uniqueFriends, myFriends))
-            const mutualConnectionsSummary = dom.createElement('div')
-            mutualConnectionsSummary.className = 'social-mutual-summary'
-            mutualContent.appendChild(mutualConnectionsSummary)
-            mutualConnectionsSummary.appendChild(
-              dom.createTextNode(
-                'You' +
-                  (familiar ? ' and ' + familiar : '') +
-                  ' know' +
-                  people(mutualConnections.length) +
-                  ' found in common'
-              )
-            )
-            if (mutualConnections) {
-              for (let i = 0; i < mutualConnections.length; i++) {
-                mutualConnectionsSummary.appendChild(
-                  dom.createTextNode(',  ' + utils.label(mutualConnections[i]))
-                )
-              }
-            }
-          }
-        } // friends
       } // About someone else
     } // me is defined
     // End of you and s
@@ -410,7 +306,7 @@ export const socialPane = {
       viewerMode
     }
 
-    const header = createHeader(context, s, headerControls, {
+    const header = createHeaderSection(context, s, headerControls, {
       friendCount: uniqueFriends.length,
       mutualFriendCount,
       onSelectFriends: function () {
@@ -421,6 +317,8 @@ export const socialPane = {
             setActivePanel('mutual')
           }
         : undefined
+    }, function () {
+      return selectProfileData(context, s)
     })
     header.classList.add('social-pane__header-section')
     socialPane.prepend(header)
@@ -482,56 +380,85 @@ export const socialPane = {
       return suffix
     }
 
-    // List all x such that s knows x.
-    const friendsList = widgets.attachmentList(dom, s, mainTable, {
-      doc: profile,
-      modify: !!editable,
-      predicate: foaf('knows'),
-      noun: 'friend',
+    const mutualSection = me && !thisIsYou
+      ? createMutualSection({
+          dom,
+          subject: s,
+          familiar,
+          me,
+          meUri,
+          incoming,
+          outgoing,
+          editable,
+          profile,
+          knows,
+          mutualConnections,
+          link,
+          text,
+          people,
+          buildCheckboxForm
+        })
+      : {
+          section: dom.createElement('section'),
+          content: dom.createElement('div')
+        }
+
+    mutualFriends = mutualSection.section
+    mutualContent = mutualSection.content
+    if (!mutualFriends.className) {
+      mutualFriends.className = 'social-pane__mutual-friends social-primary__panel'
+      mutualFriends.id = 'social-panel-mutual'
+      mutualFriends.setAttribute('role', 'tabpanel')
+      mutualFriends.setAttribute('aria-labelledby', 'social-tab-mutual')
+      mutualContent.className = 'social-main social-main--mutual'
+      mutualFriends.appendChild(mutualContent)
+    }
+    primary.appendChild(mutualFriends)
+
+    const allFriendsSection = createAllFriendsSection({
+      dom,
+      subject: s,
+      profile,
+      editable: !!editable,
       renderSupportingInfo,
       renderNameSuffix
     })
-    friendsList.classList.add('social-friends-list')
-    friendsList.style.marginTop = '0'
-    const friendsListRow = friendsList.querySelector('tr')
-    const friendsListPromptCell = friendsListRow?.children?.[0]
-    const friendsListRightCell = friendsListRow?.children?.[1]
-    const friendsHeaderActions = dom.createElement('div')
-    friendsHeaderActions.className = 'social-friends-header-actions'
 
-    if (friendsListPromptCell instanceof HTMLElement) {
-      while (friendsListPromptCell.firstChild) {
-        friendsHeaderActions.appendChild(friendsListPromptCell.firstChild)
-      }
-      friendsListPromptCell.remove()
+    allFriends = allFriendsSection.section
+    mainTable = allFriendsSection.mainTable
+    friendsList = allFriendsSection.friendsList
+    primary.appendChild(allFriends)
+
+    const setActivePanel = function (panel: 'mutual' | 'all-friends') {
+      const showMutual = panel === 'mutual'
+      mutualTab.classList.toggle('social-primary__tab--active', showMutual)
+      mutualTab.setAttribute('aria-selected', String(showMutual))
+      mutualTab.tabIndex = showMutual ? 0 : -1
+
+      allFriendsTab.classList.toggle('social-primary__tab--active', !showMutual)
+      allFriendsTab.setAttribute('aria-selected', String(!showMutual))
+      allFriendsTab.tabIndex = showMutual ? -1 : 0
+
+      mutualFriends.classList.toggle('social-primary__panel--active', showMutual)
+      mutualFriends.setAttribute('aria-hidden', String(!showMutual))
+
+      allFriends.classList.toggle('social-primary__panel--active', !showMutual)
+      allFriends.setAttribute('aria-hidden', String(showMutual))
     }
 
-    if (friendsHeaderActions.childNodes.length > 0) {
-      const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
-      friendDropButtons.forEach((button) => {
-        button.setAttribute('title', 'Drop friend here')
-        button.setAttribute('aria-label', 'Drop friend here')
-        const buttonImages = button.querySelectorAll('img')
-        buttonImages.forEach((image) => {
-          image.setAttribute('title', 'Drop friend here')
-          image.setAttribute('alt', 'Drop friend here')
-        })
-      })
-
-      const friendsActionsRow = dom.createElement('div')
-      friendsActionsRow.className = 'social-friends-header-actions social-friends-header-actions--standalone'
-      friendsActionsRow.appendChild(friendsHeaderActions)
-      allFriends.prepend(friendsActionsRow)
+    const applyViewerMode = function (mode: ViewerMode) {
+      const showMutualTab = mode === 'authenticated'
+      mutualTab.hidden = !showMutualTab
+      setActivePanel('all-friends')
     }
 
-    if (friendsListRightCell instanceof HTMLTableCellElement) {
-      friendsListRightCell.colSpan = 2
-    }
+    mutualTab.addEventListener('click', function () {
+      setActivePanel('mutual')
+    })
 
-    const friendsItemsTable = friendsList.querySelector('td table')
-    if (friendsItemsTable instanceof HTMLTableElement) {
-      friendsItemsTable.classList.add('social-friends-grid')
-    }
+    allFriendsTab.addEventListener('click', function () {
+      setActivePanel('all-friends')
+    })
 
     const refreshFriendsList = function () {
       const refresh = (friendsList as HTMLTableElement & { refresh?: () => void }).refresh
@@ -858,167 +785,7 @@ export function selectProfileData(context: DataBrowserContext, subject: NamedNod
     }
 }
 
-function createImage (src: string | null | undefined, alt = ''): HTMLElement {
-  if (src) {
-    const img = document.createElement('img')
-    img.className = 'social-pane__header-hero'
-    img.src = src
-    img.alt = alt
-    img.width = 180
-    img.height = 180
-    img.loading = 'eager'
-    return img
-  }
-
-  const fallback = document.createElement('div')
-  fallback.className = 'social-pane__header-hero-alt flex-center'
-  fallback.setAttribute('role', 'img')
-  fallback.setAttribute('aria-label', alt)
-  fallback.tabIndex = 0
-
-  const icon = document.createElement('span')
-  icon.className = 'social-pane__header-hero-icon'
-  icon.innerHTML = personInCircleIconSvg
-  fallback.appendChild(icon)
-
-  return fallback
-}
-
-type HeaderControls = {
-  canEdit: boolean,
-  viewerMode: ViewerMode
-}
-
-type SocialHeaderElement = HTMLElement & {
-  refreshSocialHeader?: (controls: HeaderControls) => void
-}
-
-function createHeader(
-  context: any,
-  s: any,
-  controls: HeaderControls,
-  stats: {
-    friendCount: number,
-    mutualFriendCount: number | null,
-    onSelectFriends?: () => void,
-    onSelectMutual?: () => void
-  } = { friendCount: 0, mutualFriendCount: null }
-): HTMLElement {
-  const dom = context.dom
-  const kb = context.session.store
-  const header = document.createElement('header') as SocialHeaderElement
-  header.className = 'social-pane__header'
-  let headerControls = controls
-  const renderHeader = function () {
-    header.replaceChildren()
-
-    if (headerControls.canEdit) {
-      header.appendChild(createEditProfileDetailsButton({
-        dom,
-        store: kb,
-        subject: s,
-        header,
-        onSaved: renderHeader
-      }))
-    } else if (headerControls.viewerMode === 'authenticated') {
-      const addToFriendsButton = createAddMeToYourFriendsButton(s, context)
-      addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
-      header.appendChild(addToFriendsButton)
-    }
-
-    const profileData = selectProfileData(context, s)
-    const headerContent = dom.createElement('div')
-    headerContent.className = 'social-pane__header-content'
-    header.appendChild(headerContent)
-
-    const headerMedia = dom.createElement('div')
-    headerMedia.className = 'social-pane__header-media'
-    headerContent.appendChild(headerMedia)
-
-    if (profileData) {
-      headerMedia.appendChild(createImage(profileData.imageUrl, profileData.name))
-    }
-
-    const headerDetails = dom.createElement('div')
-    headerDetails.className = 'social-pane__header-details'
-    headerContent.appendChild(headerDetails)
-
-    const headerSummary = dom.createElement('div')
-    headerSummary.className = 'social-pane__header-summary'
-    headerDetails.appendChild(headerSummary)
-
-    const name = profileData?.name || '???'
-    const h1 = dom.createElement('h1')
-    h1.classList.add('social-pane__header-name')
-    h1.appendChild(dom.createTextNode(name))
-    headerSummary.appendChild(h1)
-
-    const jobAndOrganization = [profileData?.jobTitle, profileData?.organization].filter(Boolean).join(' | ')
-    if (jobAndOrganization) {
-      const jobLine = dom.createElement('div')
-      jobLine.className = 'social-pane__header-job-org'
-      jobLine.textContent = jobAndOrganization
-      headerSummary.appendChild(jobLine)
-    }
-
-    if (profileData?.location) {
-      const locationLine = dom.createElement('div')
-      locationLine.className = 'social-pane__header-location'
-
-      const locationIconSpan = dom.createElement('span')
-      locationIconSpan.className = 'social-pane__header-location-icon'
-      locationIconSpan.innerHTML = locationIcon
-      locationLine.appendChild(locationIconSpan)
-      locationLine.appendChild(dom.createTextNode(profileData.location))
-
-      headerSummary.appendChild(locationLine)
-    }
-
-    const statsRow = dom.createElement('div')
-    statsRow.className = 'social-pane__header-stats'
-
-    const friendCount = dom.createElement('button')
-    friendCount.className = 'social-pane__header-stat'
-    friendCount.type = 'button'
-    const friendCountLabel = dom.createElement('span')
-    friendCountLabel.className = 'social-pane__header-stat-label'
-    friendCountLabel.textContent = `${stats.friendCount} friend${stats.friendCount === 1 ? '' : 's'}`
-    friendCount.appendChild(friendCountLabel)
-    if (stats.onSelectFriends) {
-      friendCount.addEventListener('click', stats.onSelectFriends)
-    }
-    statsRow.appendChild(friendCount)
-
-    if (typeof stats.mutualFriendCount === 'number') {
-      const mutualCount = dom.createElement('button')
-      mutualCount.className = 'social-pane__header-stat'
-      mutualCount.type = 'button'
-      const mutualCountLabel = dom.createElement('span')
-      mutualCountLabel.className = 'social-pane__header-stat-label'
-      mutualCountLabel.textContent = `${stats.mutualFriendCount} mutual friend${stats.mutualFriendCount === 1 ? '' : 's'}`
-      mutualCount.appendChild(mutualCountLabel)
-      if (stats.onSelectMutual) {
-        mutualCount.addEventListener('click', stats.onSelectMutual)
-      }
-      statsRow.appendChild(mutualCount)
-    }
-
-    headerSummary.appendChild(statsRow)
-
-    appendProfileLinks(headerMedia, dom, kb, s)
-  }
-
-  header.refreshSocialHeader = function (nextControls: HeaderControls) {
-    headerControls = nextControls
-    renderHeader()
-  }
-
-  renderHeader()
-
-  return header
-}
-
-export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
+export type { ViewerMode } from './socialSections'
 
 function getViewerMode(subject: NamedNode, currentUser: unknown = authn.currentUser()): ViewerMode {
   const currentUserUri =
