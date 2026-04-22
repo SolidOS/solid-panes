@@ -184,7 +184,7 @@ export function appendProfileLinks (
       anchor.setAttribute('href', uri)
 
       const item = dom.createElement('div')
-      item.className = 'social_linkButton'
+      item.className = 'social-pane__link-button'
       item.appendChild(anchor)
       webLinksSection.appendChild(item)
     }
@@ -215,17 +215,17 @@ export function createEditProfileDetailsButton (
   const openDialog = () => {
     const initialValues = readProfileLinkValues(store, subject)
     const overlay = dom.createElement('div')
-    overlay.className = 'social-pane__dialog-backdrop'
+    overlay.classList.add('social-pane__dialog-backdrop', 'flex-center')
 
     const dialog = dom.createElement('div')
-    dialog.className = 'social-pane__dialog'
+    dialog.classList.add('social-pane__dialog')
     dialog.setAttribute('role', 'dialog')
     dialog.setAttribute('aria-modal', 'true')
     dialog.setAttribute('aria-label', 'Edit profile links')
     overlay.appendChild(dialog)
 
     const dialogHeader = dom.createElement('div')
-    dialogHeader.className = 'social-pane__dialog-header'
+    dialogHeader.classList.add('social-pane__dialog-header')
     dialog.appendChild(dialogHeader)
 
     const title = dom.createElement('h2')
@@ -246,7 +246,7 @@ export function createEditProfileDetailsButton (
     dialog.appendChild(hint)
 
     const form = dom.createElement('form')
-    form.className = 'social-pane__dialog-form'
+    form.classList.add('social-pane__dialog-form', 'flex-column')
     dialog.appendChild(form)
 
     const errorMessage = dom.createElement('p')
@@ -255,7 +255,7 @@ export function createEditProfileDetailsButton (
     const fields = new Map<ProfileLinkField['key'], HTMLInputElement>()
     for (const field of profileLinkFields) {
       const fieldWrapper = dom.createElement('label')
-      fieldWrapper.className = 'social-pane__dialog-field'
+      fieldWrapper.classList.add('social-pane__dialog-field', 'flex-column')
 
       const fieldLabel = dom.createElement('span')
       fieldLabel.className = 'social-pane__dialog-label'
@@ -263,7 +263,7 @@ export function createEditProfileDetailsButton (
       fieldWrapper.appendChild(fieldLabel)
 
       const input = dom.createElement('input')
-      input.className = 'social-pane__dialog-input'
+      input.classList.add('social-pane__dialog-input', 'input')
       input.type = 'url'
       input.placeholder = field.placeholder
       input.value = initialValues[field.key].split('\n')[0] || ''

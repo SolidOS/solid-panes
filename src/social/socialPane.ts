@@ -192,7 +192,7 @@ export const socialPane = {
     const outliner = context.getOutliner(dom)
     const kb = context.session.store
     const socialPane = dom.createElement('div')
-    socialPane.classList.add('social-pane', 'flex-column', 'gap-lg', 'p-lg')
+    socialPane.classList.add('social-pane', 'flex-column', 'gap-xxs', 'p-lg')
     const foaf = ns.foaf
     const vcard = ns.vcard
     const me = authn.currentUser()
@@ -229,7 +229,7 @@ export const socialPane = {
     primary.className = 'social-primary'
 
     const tabs = primary.appendChild(dom.createElement('div'))
-    tabs.className = 'social-primary__tabs'
+    tabs.classList.add('social-primary__tabs', 'flex-center')
     tabs.setAttribute('role', 'tablist')
     tabs.setAttribute('aria-label', 'Social sections')
 
@@ -240,6 +240,8 @@ export const socialPane = {
     allFriendsTab.textContent = 'All Friends'
     allFriendsTab.setAttribute('role', 'tab')
     allFriendsTab.setAttribute('aria-controls', 'social-panel-all-friends')
+    allFriendsTab.setAttribute('aria-selected', 'true')
+    allFriendsTab.tabIndex = 0
 
     const mutualTab = tabs.appendChild(dom.createElement('button'))
     mutualTab.className = 'social-primary__tab'
@@ -248,6 +250,8 @@ export const socialPane = {
     mutualTab.textContent = 'Mutual'
     mutualTab.setAttribute('role', 'tab')
     mutualTab.setAttribute('aria-controls', 'social-panel-mutual')
+    mutualTab.setAttribute('aria-selected', 'false')
+    mutualTab.tabIndex = -1
 
     if (me) {
       // The definition of FOAF personal profile document is ..
@@ -324,7 +328,7 @@ export const socialPane = {
     }, function () {
       return selectProfileData(context, s)
     })
-    header.classList.add('social-pane__header-section')
+    header.classList.add('social-pane__header-section', 'flex-column')
     socialPane.prepend(header)
 
     // div.appendChild(dom.createTextNode(plural(friends.length, 'acquaintance') +'. '))
@@ -451,6 +455,8 @@ export const socialPane = {
       allFriends.classList.toggle('social-primary__panel--active', !showMutual)
       allFriends.setAttribute('aria-hidden', String(showMutual))
     }
+
+    setActivePanel('all-friends')
 
     const applyViewerMode = function (mode: ViewerMode) {
       const showMutualTab = mode === 'authenticated'

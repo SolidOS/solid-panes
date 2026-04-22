@@ -84,7 +84,7 @@ export function createHeaderSection (
     headerContent.appendChild(headerDetails)
 
     const headerSummary = dom.createElement('div')
-    headerSummary.className = 'social-pane__header-summary'
+    headerSummary.classList.add('social-pane__header-summary', 'flex-column')
     headerDetails.appendChild(headerSummary)
 
     const name = profileData?.name || '???'
@@ -106,7 +106,7 @@ export function createHeaderSection (
       locationLine.className = 'social-pane__header-location'
 
       const locationIconSpan = dom.createElement('span')
-      locationIconSpan.className = 'social-pane__header-location-icon'
+      locationIconSpan.classList.add('social-pane__header-location-icon', 'inline-flex-row')
       locationIconSpan.innerHTML = locationIcon
       locationLine.appendChild(locationIconSpan)
       locationLine.appendChild(dom.createTextNode(profileData.location))
@@ -176,7 +176,7 @@ function createImage (src: string | null | undefined, alt = ''): HTMLElement {
   fallback.tabIndex = 0
 
   const icon = document.createElement('span')
-  icon.className = 'social-pane__header-hero-icon'
+  icon.classList.add('social-pane__header-hero-icon', 'inline-flex-row')
   icon.innerHTML = personInCircleIconSvg
   fallback.appendChild(icon)
 
@@ -236,10 +236,10 @@ export function createMutualSection (options: {
   mutualSection.setAttribute('aria-labelledby', 'social-tab-mutual')
 
   const mutualContent = mutualSection.appendChild(dom.createElement('div'))
-  mutualContent.className = 'social-main social-main--mutual'
+  mutualContent.classList.add('social-main', 'social-main--mutual', 'flex-column')
 
   const relationshipSummary = dom.createElement('div')
-  relationshipSummary.className = 'social-mutual-summary'
+  relationshipSummary.classList.add('social-mutual-summary', 'flex-column')
   mutualContent.appendChild(relationshipSummary)
 
   const youAndThem = function () {
@@ -262,7 +262,7 @@ export function createMutualSection (options: {
     relationshipSummary.classList.add('social-mutual-summary--confirm')
 
     const incomingLine = relationshipSummary.appendChild(dom.createElement('div'))
-    incomingLine.className = 'social-mutual-summary-line'
+    incomingLine.classList.add('social-mutual-summary-line', 'flex-center')
     incomingLine.appendChild(link(text(familiar), subject.uri))
     incomingLine.appendChild(text(' knows '))
     incomingLine.appendChild(link(text('you'), meUri))
@@ -379,7 +379,7 @@ export function createAllFriendsSection (options: {
   const friendsListPromptCell = friendsListRow?.children?.[0]
   const friendsListRightCell = friendsListRow?.children?.[1]
   const friendsHeaderActions = dom.createElement('div')
-  friendsHeaderActions.className = 'social-friends-header-actions'
+  friendsHeaderActions.classList.add('social-friends-header-actions')
 
   if (friendsListPromptCell instanceof HTMLElement) {
     while (friendsListPromptCell.firstChild) {
