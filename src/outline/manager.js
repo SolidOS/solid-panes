@@ -363,6 +363,7 @@ export default function (context) {
   this.getDashboard = globalAppTabs
 
   async function getDashboardItems (subject) {
+    const div = dom.createElement('div')
     const panes = [
       {
         paneName: 'profile',
@@ -480,6 +481,25 @@ export default function (context) {
           icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
         }
       })
+    }
+
+    async function getAddressBooks () {
+      try {
+        const context = await UI.login.findAppInstances(
+          { me, div, dom },
+          ns.vcard('AddressBook')
+        )
+        return (context.instances || []).map((book, index) => ({
+          paneName: 'contact',
+          tabName: `contact-${index}`,
+          label: 'Contacts',
+          subject: book,
+          icon: UI.icons.iconBase + 'noun_15695.svg'
+        }))
+      } catch (err) {
+        console.error('oops in globalAppTabs AddressBook')
+      }
+      return []
     }
   }
   this.getDashboardItems = getDashboardItems
@@ -740,6 +760,7 @@ export default function (context) {
                   const second = containingTable.firstChild.nextSibling
                   const row = dom.createElement('tr')
                   const cell = row.appendChild(dom.createElement('td'))
+                  cell.setAttribute('colspan', '2')
                   cell.appendChild(paneDiv)
                   if (second) containingTable.insertBefore(row, second)
                   else containingTable.appendChild(row)
@@ -909,6 +930,7 @@ export default function (context) {
 
           const row = dom.createElement('tr')
           const cell = row.appendChild(dom.createElement('td'))
+          cell.setAttribute('colspan', '2')
           cell.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&
