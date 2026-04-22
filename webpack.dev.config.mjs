@@ -1,5 +1,9 @@
+import path from 'path'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 import NodePolyfillPlugin from 'node-polyfill-webpack-plugin'
+
+const workspaceSrc = path.resolve(process.cwd(), 'src')
+const workspaceDev = path.resolve(process.cwd(), 'dev')
 
 export default [
   {
@@ -24,7 +28,7 @@ export default [
       rules: [
         {
           test: /\.(mjs|js)$/,
-          exclude: /(node_modules)/,
+          include: [workspaceSrc, workspaceDev],
           use: {
             loader: 'babel-loader',
             options: {
@@ -34,7 +38,7 @@ export default [
         },
         {
           test: /\.ts$/,
-          exclude: /node_modules/,
+          include: [workspaceSrc, workspaceDev],
           use: {
             loader: 'ts-loader',
             options: {
