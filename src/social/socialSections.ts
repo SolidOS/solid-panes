@@ -36,7 +36,7 @@ export type FriendRowRenderers = {
   renderNameSuffix: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null
 }
 
-export function createHeaderSection(
+export function createHeaderSection (
   context: DataBrowserContext,
   subject: NamedNode,
   controls: HeaderControls,
@@ -157,7 +157,7 @@ export function createHeaderSection(
   return header
 }
 
-function createImage(src: string | null | undefined, alt = ''): HTMLElement {
+function createImage (src: string | null | undefined, alt = ''): HTMLElement {
   if (src) {
     const img = document.createElement('img')
     img.className = 'social-pane__header-hero'
@@ -183,7 +183,7 @@ function createImage(src: string | null | undefined, alt = ''): HTMLElement {
   return fallback
 }
 
-export function createMutualSection(options: {
+export function createMutualSection (options: {
   dom: HTMLDocument,
   subject: NamedNode,
   familiar: string,
@@ -337,7 +337,7 @@ export function createMutualSection(options: {
   return { section: mutualSection, content: mutualContent, refreshMutualFriends }
 }
 
-export function createAllFriendsSection(options: {
+export function createAllFriendsSection (options: {
   dom: HTMLDocument,
   subject: NamedNode,
   profile: NamedNode | null,

@@ -7,10 +7,10 @@ ns.foaf('homepage'),
 ns.foaf('weblog'),
 ns.foaf('workplaceHomepage'),
 ns.foaf('schoolHomepage')
-] and put an edit button at the top left corner of the header 
- that when you click it pops up so you can enter this information 
- and save it to the Webid. You can look in 
- Dev2025/profile-pane/src/sections/heading/mutations to see how 
+] and put an edit button at the top left corner of the header
+ that when you click it pops up so you can enter this information
+ and save it to the Webid. You can look in
+ Dev2025/profile-pane/src/sections/heading/mutations to see how
  to write this data in the profile. */
 type ProfileLinkField = {
   key: 'homepage' | 'weblog' | 'workplaceHomepage' | 'schoolHomepage'

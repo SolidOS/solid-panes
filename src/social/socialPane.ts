@@ -24,7 +24,6 @@ import {
 } from './socialSections'
 import type { ViewerMode } from './socialSections'
 
-
 export const socialPane = {
   icon: icons.originalIconBase + 'foaf/foafTiny.gif',
 
@@ -177,7 +176,7 @@ export const socialPane = {
               }
             })
           } catch (e) {
-              log.alert('Delete fails:' + e)
+            log.alert('Delete fails:' + e)
             input.checked = true // Rollback UI
             // return
           }
@@ -187,13 +186,6 @@ export const socialPane = {
       input.addEventListener('click', boxHandler, false)
       return f
     }
-
-    const oneFriend = function (friend: NamedNode, _confirmed: boolean) {
-      return widgets.personTR(dom, ns.foaf('knows'), friend, {})
-    }
-
-    // Retained for future reactivation of the older triage-based friends rendering.
-    void oneFriend
 
     // ////////// Body of render():
 
@@ -257,12 +249,6 @@ export const socialPane = {
     mutualTab.setAttribute('role', 'tab')
     mutualTab.setAttribute('aria-controls', 'social-panel-mutual')
 
-    let mutualFriends: HTMLElement
-    let mutualContent: HTMLElement
-    let allFriends: HTMLElement
-    let mainTable: HTMLTableElement
-    let friendsList: HTMLElement
-
     if (me) {
       // The definition of FOAF personal profile document is ..
       const works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
@@ -315,7 +301,6 @@ export const socialPane = {
           outgoing = true
           if (!profile) profile = outgoingSt[0].why
         }
-
       } // About someone else
     } // me is defined
     // End of you and s
@@ -333,8 +318,8 @@ export const socialPane = {
       },
       onSelectMutual: typeof mutualFriendCount === 'number'
         ? function () {
-            setActivePanel('mutual')
-          }
+          setActivePanel('mutual')
+        }
         : undefined
     }, function () {
       return selectProfileData(context, s)
@@ -401,32 +386,32 @@ export const socialPane = {
 
     const mutualSection = me && !thisIsYou
       ? createMutualSection({
-          dom,
-          subject: s,
-          familiar,
-          me,
-          meUri,
-          incoming,
-          outgoing,
-          editable,
-          profile,
-          knows,
-          mutualConnections,
-          link,
-          text,
-          people,
-          buildCheckboxForm,
-          renderSupportingInfo,
-          renderNameSuffix
-        })
+        dom,
+        subject: s,
+        familiar,
+        me,
+        meUri,
+        incoming,
+        outgoing,
+        editable,
+        profile,
+        knows,
+        mutualConnections,
+        link,
+        text,
+        people,
+        buildCheckboxForm,
+        renderSupportingInfo,
+        renderNameSuffix
+      })
       : {
           section: dom.createElement('section'),
           content: dom.createElement('div'),
           refreshMutualFriends: function () {}
         }
 
-    mutualFriends = mutualSection.section
-    mutualContent = mutualSection.content
+    const mutualFriends = mutualSection.section
+    const mutualContent = mutualSection.content
     if (!mutualFriends.className) {
       mutualFriends.className = 'social-pane__mutual-friends social-primary__panel'
       mutualFriends.id = 'social-panel-mutual'
@@ -446,9 +431,8 @@ export const socialPane = {
       renderNameSuffix
     })
 
-    allFriends = allFriendsSection.section
-    mainTable = allFriendsSection.mainTable
-    friendsList = allFriendsSection.friendsList
+    const allFriends = allFriendsSection.section
+    const friendsList = allFriendsSection.friendsList
     primary.appendChild(allFriends)
 
     const setActivePanel = function (panel: 'mutual' | 'all-friends') {
@@ -493,7 +477,7 @@ export const socialPane = {
       mutualSection.refreshMutualFriends()
     }
 
-    void (async () => {
+    ;(async () => {
       try {
         for await (const streamedFriends of streamFriends(context, s)) {
           friendDetailsByUri.clear()
@@ -508,86 +492,10 @@ export const socialPane = {
       }
     })()
 
-    // Figure out which are reciprocated:
-    // @@ Does not look up profiles
-    // Does distinguish reciprocated from unreciprocated friendships
-    //
-    function _triageFriends (subject: NamedNode) {
-      const outgoingFriends: NamedNode[] = kb.each(subject, foaf('knows'))
-      const incomingFriends: NamedNode[] = kb.each(undefined, foaf('knows'), subject) // @@ have to load the friends
-      const confirmed: NamedNode[] = []
-      const unconfirmed: NamedNode[] = []
-      const requests: NamedNode[] = []
-
-      for (let i = 0; i < outgoingFriends.length; i++) {
-        const friend = outgoingFriends[i]
-        let found = false
-        for (let j = 0; j < incomingFriends.length; j++) {
-          if (incomingFriends[j].sameTerm(friend)) {
-            found = true
-            break
-          }
-        }
-        if (found) confirmed.push(friend)
-        else unconfirmed.push(friend)
-      } // outgoing
-
-      for (let i = 0; i < incomingFriends.length; i++) {
-        const friend = incomingFriends[i]
-        let found = false
-        for (let j = 0; j < outgoingFriends.length; j++) {
-          if (outgoingFriends[j].sameTerm(friend)) {
-            found = true
-            break
-          }
-        }
-        if (!found) requests.push(friend)
-      } // incoming
-
-      const cases = [
-        ['Acquaintances', outgoingFriends],
-        ['Mentioned as acquaintances by: ', requests]
-      ] as Array<[string, NamedNode[]]>
-      for (let i = 0; i < cases.length; i++) {
-        const thisCase = cases[i]
-        const friends = thisCase[1]
-        if (friends.length === 0) continue // Skip empty sections (sure?)
-
-        const h3 = dom.createElement('h3')
-        h3.textContent = thisCase[0]
-        const htr = dom.createElement('tr')
-        htr.appendChild(h3)
-        mainTable.appendChild(htr)
-
-        const items: Array<[string, NamedNode]> = []
-        for (let j9 = 0; j9 < friends.length; j9++) {
-          items.push([utils.label(friends[j9]), friends[j9]])
-        }
-        items.sort()
-        let last: NamedNode | null = null
-        let friendNode: NamedNode
-        for (let j7 = 0; j7 < items.length; j7++) {
-          friendNode = items[j7][1]
-          if (last && friendNode.sameTerm(last)) continue // unique
-          last = friendNode
-          if (utils.label(friendNode) !== '...') {
-            // This check is to avoid bnodes with no labels attached
-            // appearing in the friends list with "..." - Oshani
-            mainTable.appendChild(oneFriend(friendNode, false))
-          }
-        }
-      }
-    }
-
-    // Retained intentionally for later use without affecting the current render path.
-    void _triageFriends
-
     /* if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
       triageFriends(s)
     } */
     // //////////////////////////////////// Basic info on left
-
-    
 
     const preds2: NamedNode[] = [ns.foaf('openid'), ns.foaf('nick')]
     for (let i2 = 0; i2 < preds2.length; i2++) {
@@ -604,7 +512,7 @@ export const socialPane = {
 
     applyViewerMode('anonymous')
 
-    void authn.checkUser()
+    authn.checkUser()
       .then(webId => {
         const confirmedViewerMode = getViewerMode(s, webId)
         applyViewerMode(confirmedViewerMode)
@@ -651,7 +559,6 @@ export interface FriendDetails extends ProfileDetails {
   subjectNode: NamedNode
 }
 
-
 /* pronounsAsText and formatLocation were copied from HeadingSection selectors */
 export function pronounsAsText (store: LiveStore, subject: NamedNode): string {
   let pronouns = store.anyJS(subject, ns.solid('preferredSubjectPronoun')) || ''
@@ -664,13 +571,13 @@ export function pronounsAsText (store: LiveStore, subject: NamedNode): string {
   return pronouns || ''
 }
 
-function formatLocation(countryName: string | void, locality: string | void) {
+function formatLocation (countryName: string | void, locality: string | void) {
   return countryName && locality
     ? `${locality}, ${countryName}`
     : countryName || locality || null
 }
 
-function toFriendDetails(store: any, friendNode: NamedNode): FriendDetails {
+function toFriendDetails (store: any, friendNode: NamedNode): FriendDetails {
   const name =
     store.anyValue(friendNode, ns.vcard('fn')) ||
     store.anyValue(friendNode, ns.foaf('name')) ||
@@ -696,7 +603,7 @@ function toFriendDetails(store: any, friendNode: NamedNode): FriendDetails {
 
   const location = formatLocation(countryName, locality)
   const pronouns = pronounsAsText(store, friendNode)
-    
+
   return {
     url: friendNode.value,
     imageUrl: imageSrc,
@@ -711,7 +618,7 @@ function toFriendDetails(store: any, friendNode: NamedNode): FriendDetails {
   }
 }
 
-export async function * streamFriends(
+export async function * streamFriends (
   context: DataBrowserContext,
   subject: NamedNode,
   batchSize = FRIEND_BATCH_SIZE
@@ -761,7 +668,7 @@ export async function * streamFriends(
   }
 }
 
-export async function extractFriends(context: DataBrowserContext, subject: NamedNode): Promise<FriendDetails[] | null> {
+export async function extractFriends (context: DataBrowserContext, subject: NamedNode): Promise<FriendDetails[] | null> {
   let latestFriends: FriendDetails[] | null = null
 
   for await (const friends of streamFriends(context, subject)) {
@@ -771,50 +678,50 @@ export async function extractFriends(context: DataBrowserContext, subject: Named
   return latestFriends
 }
 
-export function selectProfileData(context: DataBrowserContext, subject: NamedNode): ProfileDetails | null {
+export function selectProfileData (context: DataBrowserContext, subject: NamedNode): ProfileDetails | null {
   const store = context.session.store
 
   const name =
       store.anyValue(subject, ns.vcard('fn')) ||
       store.anyValue(subject, ns.foaf('name')) ||
       undefined
-    const nickname =
+  const nickname =
       store.anyValue(subject, ns.vcard('nickname')) ||
       store.anyValue(subject, ns.foaf('nick')) ||
       undefined
-    const dateOfBirth = store.anyValue(subject, ns.vcard('bday')) || undefined
-    const imageSrc = widgets.findImage(subject)
-    const jobTitle = store.anyValue(subject, ns.vcard('role')) || undefined
-    const orgName = store.anyValue(subject, ns.vcard('organization-name')) || undefined
-    const primaryAddressEntryNode = store.any(subject, ns.vcard('hasAddress')) as NamedNode | null
-    const address: NamedNode | null = primaryAddressEntryNode || null
-    const countryName =
+  const dateOfBirth = store.anyValue(subject, ns.vcard('bday')) || undefined
+  const imageSrc = widgets.findImage(subject)
+  const jobTitle = store.anyValue(subject, ns.vcard('role')) || undefined
+  const orgName = store.anyValue(subject, ns.vcard('organization-name')) || undefined
+  const primaryAddressEntryNode = store.any(subject, ns.vcard('hasAddress')) as NamedNode | null
+  const address: NamedNode | null = primaryAddressEntryNode || null
+  const countryName =
         address != null
           ? store.anyValue(address, ns.vcard('country-name'))
           : undefined
-    const locality =
+  const locality =
       address != null
         ? store.anyValue(address, ns.vcard('locality'))
         : undefined
 
-    const location = formatLocation(countryName, locality)
-    const pronouns = pronounsAsText(store, subject)
-    return {
-      url: subject.value,
-      imageUrl: imageSrc,
-      name,
-      nickname,
-      jobTitle,
-      organization: orgName,
-      birthdate: dateOfBirth,
-      location,
-      pronouns
-    }
+  const location = formatLocation(countryName, locality)
+  const pronouns = pronounsAsText(store, subject)
+  return {
+    url: subject.value,
+    imageUrl: imageSrc,
+    name,
+    nickname,
+    jobTitle,
+    organization: orgName,
+    birthdate: dateOfBirth,
+    location,
+    pronouns
+  }
 }
 
 export type { ViewerMode } from './socialSections'
 
-function getViewerMode(subject: NamedNode, currentUser: unknown = authn.currentUser()): ViewerMode {
+function getViewerMode (subject: NamedNode, currentUser: unknown = authn.currentUser()): ViewerMode {
   const currentUserUri =
     typeof currentUser === 'string'
       ? currentUser
@@ -828,4 +735,3 @@ function getViewerMode(subject: NamedNode, currentUser: unknown = authn.currentU
   if (currentUserUri && currentUserUri !== subject.value) mode = 'authenticated'
   return mode
 }
-
