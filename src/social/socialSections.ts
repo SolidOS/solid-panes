@@ -328,7 +328,17 @@ export function createMutualSection (options: {
         return leftLabel.localeCompare(rightLabel)
       })
 
-      utils.syncTableToArray(mutualFriendsTable, sortedMutualConnections, createMutualRow)
+      utils.syncTableToArray(
+        mutualFriendsTable,
+        sortedMutualConnections,
+        createMutualRow,
+        function (row, thing) {
+          const replacement = createMutualRow(thing)
+          row.parentNode?.replaceChild(replacement, row)
+          ;(replacement as HTMLTableRowElement & { subject?: NamedNode }).subject = thing
+          return replacement
+        }
+      )
     }
 
     refreshMutualFriends()
