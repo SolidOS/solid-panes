@@ -334,8 +334,6 @@ export function createMutualSection (options: {
         createMutualRow,
         function (row, thing) {
           const replacement = createMutualRow(thing)
-          row.parentNode?.replaceChild(replacement, row)
-          ;(replacement as HTMLTableRowElement & { subject?: NamedNode }).subject = thing
           return replacement
         }
       )
