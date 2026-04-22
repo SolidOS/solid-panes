@@ -13,6 +13,7 @@ import { icons, utils, ns, log, widgets } from 'solid-ui'
 import { authn } from 'solid-logic'
 import { LiveStore, NamedNode, Statement } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
+import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
 
@@ -49,6 +50,17 @@ export const socialPane = {
         }
       }
       return both
+    }
+
+    const uniqueNodes = function (nodes: NamedNode[]) {
+      const seen = new Set<string>()
+      const unique: NamedNode[] = []
+      for (const node of nodes) {
+        if (!node?.value || seen.has(node.value)) continue
+        seen.add(node.value)
+        unique.push(node)
+      }
+      return unique
     }
 
     const people = function (n: number) {
@@ -182,6 +194,10 @@ export const socialPane = {
       kb.anyValue(s, foaf('name')) ||
       kb.anyValue(s, vcard('fn'))
     const friends = kb.each(s, knows)
+    const uniqueFriends = uniqueNodes(friends as NamedNode[])
+    const myFriends = me ? uniqueNodes(kb.each(me, foaf('knows')) as NamedNode[]) : []
+    const mutualFriendCount = me && !thisIsYou ? uniqueNodes(common(uniqueFriends, myFriends)).length : null
+    const viewerMode = getViewerMode(s, me)
 
     // Do I have a public profile document?
     let profile: NamedNode | null = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
@@ -362,9 +378,8 @@ export const socialPane = {
 
         // //////////////// Mutual friends
         if (friends) {
-          const myFriends = kb.each(me, foaf('knows'))
           if (myFriends.length) {
-            const mutualConnections = common(friends, myFriends)
+            const mutualConnections = uniqueNodes(common(uniqueFriends, myFriends))
             const mutualConnectionsSummary = dom.createElement('div')
             mutualConnectionsSummary.className = 'social-mutual-summary'
             mutualContent.appendChild(mutualConnectionsSummary)
@@ -390,7 +405,23 @@ export const socialPane = {
     } // me is defined
     // End of you and s
 
-    const header = createHeader(context, s, Boolean(thisIsYou && editable))
+    let headerControls: HeaderControls = {
+      canEdit: viewerMode === 'owner',
+      viewerMode
+    }
+
+    const header = createHeader(context, s, headerControls, {
+      friendCount: uniqueFriends.length,
+      mutualFriendCount,
+      onSelectFriends: function () {
+        setActivePanel('all-friends')
+      },
+      onSelectMutual: typeof mutualFriendCount === 'number'
+        ? function () {
+            setActivePanel('mutual')
+          }
+        : undefined
+    })
     header.classList.add('social-pane__header-section')
     socialPane.prepend(header)
 
@@ -416,7 +447,7 @@ export const socialPane = {
       })
     }
 
-    hydrateFriendDetailsCache(friends as NamedNode[])
+    hydrateFriendDetailsCache(uniqueFriends)
 
     const renderSupportingInfo = function (target: NamedNode, renderDom: HTMLDocument) {
       const friend = friendDetailsByUri.get(target.value)
@@ -476,6 +507,17 @@ export const socialPane = {
     }
 
     if (friendsHeaderActions.childNodes.length > 0) {
+      const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
+      friendDropButtons.forEach((button) => {
+        button.setAttribute('title', 'Drop friend here')
+        button.setAttribute('aria-label', 'Drop friend here')
+        const buttonImages = button.querySelectorAll('img')
+        buttonImages.forEach((image) => {
+          image.setAttribute('title', 'Drop friend here')
+          image.setAttribute('alt', 'Drop friend here')
+        })
+      })
+
       const friendsActionsRow = dom.createElement('div')
       friendsActionsRow.className = 'social-friends-header-actions social-friends-header-actions--standalone'
       friendsActionsRow.appendChild(friendsHeaderActions)
@@ -610,10 +652,23 @@ export const socialPane = {
 
     void authn.checkUser()
       .then(webId => {
-        applyViewerMode(getViewerMode(s, webId))
+        const confirmedViewerMode = getViewerMode(s, webId)
+        applyViewerMode(confirmedViewerMode)
+        headerControls = {
+          ...headerControls,
+          canEdit: confirmedViewerMode === 'owner',
+          viewerMode: confirmedViewerMode
+        }
+        ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
       .catch(() => {
         applyViewerMode('anonymous')
+        headerControls = {
+          ...headerControls,
+          canEdit: false,
+          viewerMode: 'anonymous'
+        }
+        ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
 
     return socialPane
@@ -829,15 +884,35 @@ function createImage (src: string | null | undefined, alt = ''): HTMLElement {
   return fallback
 }
 
-function createHeader(context: any, s: any, canEdit = false): HTMLElement {
+type HeaderControls = {
+  canEdit: boolean,
+  viewerMode: ViewerMode
+}
+
+type SocialHeaderElement = HTMLElement & {
+  refreshSocialHeader?: (controls: HeaderControls) => void
+}
+
+function createHeader(
+  context: any,
+  s: any,
+  controls: HeaderControls,
+  stats: {
+    friendCount: number,
+    mutualFriendCount: number | null,
+    onSelectFriends?: () => void,
+    onSelectMutual?: () => void
+  } = { friendCount: 0, mutualFriendCount: null }
+): HTMLElement {
   const dom = context.dom
   const kb = context.session.store
-  const header = document.createElement('header')
+  const header = document.createElement('header') as SocialHeaderElement
   header.className = 'social-pane__header'
+  let headerControls = controls
   const renderHeader = function () {
     header.replaceChildren()
 
-    if (canEdit) {
+    if (headerControls.canEdit) {
       header.appendChild(createEditProfileDetailsButton({
         dom,
         store: kb,
@@ -845,6 +920,10 @@ function createHeader(context: any, s: any, canEdit = false): HTMLElement {
         header,
         onSaved: renderHeader
       }))
+    } else if (headerControls.viewerMode === 'authenticated') {
+      const addToFriendsButton = createAddMeToYourFriendsButton(s, context)
+      addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
+      header.appendChild(addToFriendsButton)
     }
 
     const profileData = selectProfileData(context, s)
@@ -852,21 +931,86 @@ function createHeader(context: any, s: any, canEdit = false): HTMLElement {
     headerContent.className = 'social-pane__header-content'
     header.appendChild(headerContent)
 
+    const headerMedia = dom.createElement('div')
+    headerMedia.className = 'social-pane__header-media'
+    headerContent.appendChild(headerMedia)
+
     if (profileData) {
-      headerContent.appendChild(createImage(profileData.imageUrl, profileData.name))
+      headerMedia.appendChild(createImage(profileData.imageUrl, profileData.name))
     }
 
     const headerDetails = dom.createElement('div')
     headerDetails.className = 'social-pane__header-details'
     headerContent.appendChild(headerDetails)
 
+    const headerSummary = dom.createElement('div')
+    headerSummary.className = 'social-pane__header-summary'
+    headerDetails.appendChild(headerSummary)
+
     const name = profileData?.name || '???'
     const h1 = dom.createElement('h1')
     h1.classList.add('social-pane__header-name')
     h1.appendChild(dom.createTextNode(name))
-    headerDetails.appendChild(h1)
+    headerSummary.appendChild(h1)
 
-    appendProfileLinks(headerDetails, dom, kb, s)
+    const jobAndOrganization = [profileData?.jobTitle, profileData?.organization].filter(Boolean).join(' | ')
+    if (jobAndOrganization) {
+      const jobLine = dom.createElement('div')
+      jobLine.className = 'social-pane__header-job-org'
+      jobLine.textContent = jobAndOrganization
+      headerSummary.appendChild(jobLine)
+    }
+
+    if (profileData?.location) {
+      const locationLine = dom.createElement('div')
+      locationLine.className = 'social-pane__header-location'
+
+      const locationIconSpan = dom.createElement('span')
+      locationIconSpan.className = 'social-pane__header-location-icon'
+      locationIconSpan.innerHTML = locationIcon
+      locationLine.appendChild(locationIconSpan)
+      locationLine.appendChild(dom.createTextNode(profileData.location))
+
+      headerSummary.appendChild(locationLine)
+    }
+
+    const statsRow = dom.createElement('div')
+    statsRow.className = 'social-pane__header-stats'
+
+    const friendCount = dom.createElement('button')
+    friendCount.className = 'social-pane__header-stat'
+    friendCount.type = 'button'
+    const friendCountLabel = dom.createElement('span')
+    friendCountLabel.className = 'social-pane__header-stat-label'
+    friendCountLabel.textContent = `${stats.friendCount} friend${stats.friendCount === 1 ? '' : 's'}`
+    friendCount.appendChild(friendCountLabel)
+    if (stats.onSelectFriends) {
+      friendCount.addEventListener('click', stats.onSelectFriends)
+    }
+    statsRow.appendChild(friendCount)
+
+    if (typeof stats.mutualFriendCount === 'number') {
+      const mutualCount = dom.createElement('button')
+      mutualCount.className = 'social-pane__header-stat'
+      mutualCount.type = 'button'
+      const mutualCountLabel = dom.createElement('span')
+      mutualCountLabel.className = 'social-pane__header-stat-label'
+      mutualCountLabel.textContent = `${stats.mutualFriendCount} mutual friend${stats.mutualFriendCount === 1 ? '' : 's'}`
+      mutualCount.appendChild(mutualCountLabel)
+      if (stats.onSelectMutual) {
+        mutualCount.addEventListener('click', stats.onSelectMutual)
+      }
+      statsRow.appendChild(mutualCount)
+    }
+
+    headerSummary.appendChild(statsRow)
+
+    appendProfileLinks(headerMedia, dom, kb, s)
+  }
+
+  header.refreshSocialHeader = function (nextControls: HeaderControls) {
+    headerControls = nextControls
+    renderHeader()
   }
 
   renderHeader()
