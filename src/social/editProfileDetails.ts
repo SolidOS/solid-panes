@@ -146,6 +146,9 @@ export function appendProfileLinks (
   store: LiveStore,
   subject: NamedNode
 ): void {
+  const webLinksSection = dom.createElement('section')
+  webLinksSection.className = 'social-profile-links'
+  container.appendChild(webLinksSection)
   for (const field of profileLinkFields) {
     const statements = store.statementsMatching(subject, field.predicate)
     if (statements.length === 0) continue
@@ -182,7 +185,7 @@ export function appendProfileLinks (
       const item = dom.createElement('div')
       item.className = 'social_linkButton'
       item.appendChild(anchor)
-      container.appendChild(item)
+      webLinksSection.appendChild(item)
     }
   }
 }

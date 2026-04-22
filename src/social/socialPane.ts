@@ -14,6 +14,7 @@ import { authn } from 'solid-logic'
 import { LiveStore, NamedNode, Statement } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
 import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
+import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
 
 
 export const socialPane = {
@@ -192,13 +193,74 @@ export const socialPane = {
     structure.className = 'social-layout'
     const primary = structure.appendChild(dom.createElement('div'))
     primary.className = 'social-primary'
-    const left = primary.appendChild(dom.createElement('section'))
-    left.className = 'social-pane__header-section'
-    const middle = primary.appendChild(dom.createElement('div'))
-    middle.className = 'social-content'
 
-    const tools = left
-    const mainTable = middle.appendChild(dom.createElement('table'))
+    const tabs = primary.appendChild(dom.createElement('div'))
+    tabs.className = 'social-primary__tabs'
+    tabs.setAttribute('role', 'tablist')
+    tabs.setAttribute('aria-label', 'Social sections')
+
+    const allFriendsTab = tabs.appendChild(dom.createElement('button'))
+    allFriendsTab.className = 'social-primary__tab'
+    allFriendsTab.type = 'button'
+    allFriendsTab.id = 'social-tab-all-friends'
+    allFriendsTab.textContent = 'All Friends'
+    allFriendsTab.setAttribute('role', 'tab')
+    allFriendsTab.setAttribute('aria-controls', 'social-panel-all-friends')
+
+    const mutualTab = tabs.appendChild(dom.createElement('button'))
+    mutualTab.className = 'social-primary__tab'
+    mutualTab.type = 'button'
+    mutualTab.id = 'social-tab-mutual'
+    mutualTab.textContent = 'Mutual'
+    mutualTab.setAttribute('role', 'tab')
+    mutualTab.setAttribute('aria-controls', 'social-panel-mutual')
+
+    const mutualFriends = primary.appendChild(dom.createElement('section'))
+    mutualFriends.className = 'social-pane__mutual-friends social-primary__panel'
+    mutualFriends.id = 'social-panel-mutual'
+    mutualFriends.setAttribute('role', 'tabpanel')
+    mutualFriends.setAttribute('aria-labelledby', 'social-tab-mutual')
+    const mutualContent = mutualFriends.appendChild(dom.createElement('div'))
+    mutualContent.className = 'social-main social-main--mutual'
+
+    const allFriends = primary.appendChild(dom.createElement('section'))
+    allFriends.className = 'social-pane__all-friends social-primary__panel'
+    allFriends.id = 'social-panel-all-friends'
+    allFriends.setAttribute('role', 'tabpanel')
+    allFriends.setAttribute('aria-labelledby', 'social-tab-all-friends')
+
+    const setActivePanel = function (panel: 'mutual' | 'all-friends') {
+      const showMutual = panel === 'mutual'
+      mutualTab.classList.toggle('social-primary__tab--active', showMutual)
+      mutualTab.setAttribute('aria-selected', String(showMutual))
+      mutualTab.tabIndex = showMutual ? 0 : -1
+
+      allFriendsTab.classList.toggle('social-primary__tab--active', !showMutual)
+      allFriendsTab.setAttribute('aria-selected', String(!showMutual))
+      allFriendsTab.tabIndex = showMutual ? -1 : 0
+
+      mutualFriends.classList.toggle('social-primary__panel--active', showMutual)
+      mutualFriends.setAttribute('aria-hidden', String(!showMutual))
+
+      allFriends.classList.toggle('social-primary__panel--active', !showMutual)
+      allFriends.setAttribute('aria-hidden', String(showMutual))
+    }
+
+    const applyViewerMode = function (mode: ViewerMode) {
+      const showMutualTab = mode === 'authenticated'
+      mutualTab.hidden = !showMutualTab
+      setActivePanel('all-friends')
+    }
+
+    mutualTab.addEventListener('click', function () {
+      setActivePanel('mutual')
+    })
+
+    allFriendsTab.addEventListener('click', function () {
+      setActivePanel('all-friends')
+    })
+
+    const mainTable = allFriends.appendChild(dom.createElement('table'))
     mainTable.className = 'social-main'
 
     if (me) {
@@ -245,10 +307,6 @@ export const socialPane = {
         // This is about someone else
         // My relationship with this person
 
-        const h3 = dom.createElement('h3')
-        h3.appendChild(dom.createTextNode('You and ' + familiar))
-        tools.appendChild(h3)
-
         const cme = kb.canon(me)
         incoming = kb.whether(s, knows, cme)
         outgoing = false
@@ -258,37 +316,38 @@ export const socialPane = {
           if (!profile) profile = outgoingSt[0].why
         }
 
-        const tr = dom.createElement('tr')
-        tools.appendChild(tr)
+        const relationshipSummary = dom.createElement('div')
+        relationshipSummary.className = 'social-mutual-summary'
+        mutualContent.appendChild(relationshipSummary)
 
         const youAndThem = function () {
-          tr.appendChild(link(text('You'), meUri))
-          tr.appendChild(text(' and '))
-          tr.appendChild(link(text(familiar), s.uri))
+          relationshipSummary.appendChild(link(text('You'), meUri))
+          relationshipSummary.appendChild(text(' and '))
+          relationshipSummary.appendChild(link(text(familiar), s.uri))
         }
 
         if (!incoming) {
           if (!outgoing) {
             youAndThem()
-            tr.appendChild(text(' have not said you know each other.'))
+            relationshipSummary.appendChild(text(' have not said you know each other.'))
           } else {
-            tr.appendChild(link(text('You'), meUri))
-            tr.appendChild(text(' know '))
-            tr.appendChild(link(text(familiar), s.uri))
-            tr.appendChild(text(' (unconfirmed)'))
+            relationshipSummary.appendChild(link(text('You'), meUri))
+            relationshipSummary.appendChild(text(' know '))
+            relationshipSummary.appendChild(link(text(familiar), s.uri))
+            relationshipSummary.appendChild(text(' (unconfirmed)'))
           }
         } else {
           if (!outgoing) {
-            tr.appendChild(link(text(familiar), s.uri))
-            tr.appendChild(text(' knows '))
-            tr.appendChild(link(text('you'), meUri))
-            tr.appendChild(text(' (unconfirmed).')) // @@
-            tr.appendChild(text(' confirm you know '))
-            tr.appendChild(link(text(familiar), s.uri))
-            tr.appendChild(text('.'))
+            relationshipSummary.appendChild(link(text(familiar), s.uri))
+            relationshipSummary.appendChild(text(' knows '))
+            relationshipSummary.appendChild(link(text('you'), meUri))
+            relationshipSummary.appendChild(text(' (unconfirmed).')) // @@
+            relationshipSummary.appendChild(text(' confirm you know '))
+            relationshipSummary.appendChild(link(text(familiar), s.uri))
+            relationshipSummary.appendChild(text('.'))
           } else {
             youAndThem()
-            tr.appendChild(text(' say you know each other.'))
+            relationshipSummary.appendChild(text(' say you know each other.'))
           }
         }
 
@@ -298,35 +357,34 @@ export const socialPane = {
             new Statement(me, knows, s, profile ?? undefined),
             outgoing
           )
-          tools.appendChild(f)
+          mutualContent.appendChild(f)
         } // editable
 
         // //////////////// Mutual friends
         if (friends) {
           const myFriends = kb.each(me, foaf('knows'))
           if (myFriends.length) {
-            const mutualFriends = common(friends, myFriends)
-            const tr = dom.createElement('tr')
-            tools.appendChild(tr)
-            tr.appendChild(
+            const mutualConnections = common(friends, myFriends)
+            const mutualConnectionsSummary = dom.createElement('div')
+            mutualConnectionsSummary.className = 'social-mutual-summary'
+            mutualContent.appendChild(mutualConnectionsSummary)
+            mutualConnectionsSummary.appendChild(
               dom.createTextNode(
                 'You' +
                   (familiar ? ' and ' + familiar : '') +
                   ' know' +
-                  people(mutualFriends.length) +
+                  people(mutualConnections.length) +
                   ' found in common'
               )
             )
-            if (mutualFriends) {
-              for (let i = 0; i < mutualFriends.length; i++) {
-                tr.appendChild(
-                  dom.createTextNode(',  ' + utils.label(mutualFriends[i]))
+            if (mutualConnections) {
+              for (let i = 0; i < mutualConnections.length; i++) {
+                mutualConnectionsSummary.appendChild(
+                  dom.createTextNode(',  ' + utils.label(mutualConnections[i]))
                 )
               }
             }
           }
-          const tr = dom.createElement('tr')
-          tools.appendChild(tr)
         } // friends
       } // About someone else
     } // me is defined
@@ -364,23 +422,33 @@ export const socialPane = {
       const friend = friendDetailsByUri.get(target.value)
       if (!friend) return null
 
-      const lines = [
-        [friend.jobTitle, friend.organization].filter(Boolean).join(' | '),
-        friend.location || ''
-      ].filter(Boolean)
-
-      if (lines.length === 0) return null
-
       const container = renderDom.createElement('div')
-      for (let index = 0; index < lines.length; index++) {
-        const line = container.appendChild(renderDom.createElement('div'))
-        line.textContent = lines[index]
+      const jobAndOrganization = [friend.jobTitle, friend.organization].filter(Boolean).join(' | ')
+      if (jobAndOrganization) {
+        const jobLine = container.appendChild(renderDom.createElement('div'))
+        jobLine.className = 'social-friend-job-org'
+        jobLine.textContent = jobAndOrganization
       }
+
+      if (friend.location) {
+        const locationLine = container.appendChild(renderDom.createElement('div'))
+        locationLine.className = 'social-friend-location'
+        locationLine.innerHTML = `${locationIcon} ${friend.location}`
+      }
+
+      if (!container.childNodes.length) return null
+
       return container
     }
 
-    const renderNameSuffix = function (target: NamedNode, _renderDom: HTMLDocument) {
-      return friendDetailsByUri.get(target.value)?.pronouns || null
+    const renderNameSuffix = function (target: NamedNode, renderDom: HTMLDocument) {
+      const pronouns = friendDetailsByUri.get(target.value)?.pronouns
+      if (!pronouns) return null
+
+      const suffix = renderDom.createElement('span')
+      suffix.className = 'social-friend-pronouns'
+      suffix.textContent = `(${pronouns})`
+      return suffix
     }
 
     // List all x such that s knows x.
@@ -393,17 +461,10 @@ export const socialPane = {
       renderNameSuffix
     })
     friendsList.classList.add('social-friends-list')
+    friendsList.style.marginTop = '0'
     const friendsListRow = friendsList.querySelector('tr')
     const friendsListPromptCell = friendsListRow?.children?.[0]
     const friendsListRightCell = friendsListRow?.children?.[1]
-    const friendsHeader = dom.createElement('caption')
-    friendsHeader.className = 'social-friends-header'
-
-    const friendsHeaderTitle = dom.createElement('span')
-    friendsHeaderTitle.className = 'social-friends-header-title'
-    friendsHeaderTitle.textContent = 'Friends'
-    friendsHeader.appendChild(friendsHeaderTitle)
-
     const friendsHeaderActions = dom.createElement('div')
     friendsHeaderActions.className = 'social-friends-header-actions'
 
@@ -415,13 +476,15 @@ export const socialPane = {
     }
 
     if (friendsHeaderActions.childNodes.length > 0) {
-      friendsHeader.appendChild(friendsHeaderActions)
+      const friendsActionsRow = dom.createElement('div')
+      friendsActionsRow.className = 'social-friends-header-actions social-friends-header-actions--standalone'
+      friendsActionsRow.appendChild(friendsHeaderActions)
+      allFriends.prepend(friendsActionsRow)
     }
 
     if (friendsListRightCell instanceof HTMLTableCellElement) {
       friendsListRightCell.colSpan = 2
     }
-    friendsList.prepend(friendsHeader)
 
     const friendsItemsTable = friendsList.querySelector('td table')
     if (friendsItemsTable instanceof HTMLTableElement) {
@@ -537,11 +600,21 @@ export const socialPane = {
       if (sts2.length === 0) {
         // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
       } else {
-        outliner.appendPropertyTRs(tools, sts2, false, function (_pred) {
+        outliner.appendPropertyTRs(mutualContent, sts2, false, function (_pred) {
           return true
         })
       }
     }
+
+    applyViewerMode('anonymous')
+
+    void authn.checkUser()
+      .then(webId => {
+        applyViewerMode(getViewerMode(s, webId))
+      })
+      .catch(() => {
+        applyViewerMode('anonymous')
+      })
 
     return socialPane
   } // render()
@@ -730,36 +803,6 @@ export function selectProfileData(context: DataBrowserContext, subject: NamedNod
     }
 }
 
-export function personInCircleIcon (): SVGSVGElement {
-  const svgNamespace = 'http://www.w3.org/2000/svg'
-  const svg = document.createElementNS(svgNamespace, 'svg')
-  svg.setAttribute('xmlns', svgNamespace)
-  svg.setAttribute('width', '64')
-  svg.setAttribute('height', '64')
-  svg.setAttribute('viewBox', '0 0 64 64')
-  svg.setAttribute('fill', 'none')
-  svg.setAttribute('aria-hidden', 'true')
-  svg.setAttribute('focusable', 'false')
-
-  const paths = [
-    'M32.0007 58.6666C46.7282 58.6666 58.6673 46.7275 58.6673 31.9999C58.6673 17.2723 46.7282 5.33325 32.0007 5.33325C17.2731 5.33325 5.33398 17.2723 5.33398 31.9999C5.33398 46.7275 17.2731 58.6666 32.0007 58.6666Z',
-    'M32 34.6667C36.4183 34.6667 40 31.085 40 26.6667C40 22.2485 36.4183 18.6667 32 18.6667C27.5817 18.6667 24 22.2485 24 26.6667C24 31.085 27.5817 34.6667 32 34.6667Z',
-    'M18.666 55.0986V50.6666C18.666 49.2521 19.2279 47.8955 20.2281 46.8954C21.2283 45.8952 22.5849 45.3333 23.9993 45.3333H39.9993C41.4138 45.3333 42.7704 45.8952 43.7706 46.8954C44.7708 47.8955 45.3327 49.2521 45.3327 50.6666V55.0986'
-  ]
-
-  paths.forEach(function (d) {
-    const path = document.createElementNS(svgNamespace, 'path')
-    path.setAttribute('d', d)
-    path.setAttribute('stroke', '#CBD5E1')
-    path.setAttribute('stroke-width', '5.33333')
-    path.setAttribute('stroke-linecap', 'round')
-    path.setAttribute('stroke-linejoin', 'round')
-    svg.appendChild(path)
-  })
-
-  return svg
-}
-
 function createImage (src: string | null | undefined, alt = ''): HTMLElement {
   if (src) {
     const img = document.createElement('img')
@@ -780,7 +823,7 @@ function createImage (src: string | null | undefined, alt = ''): HTMLElement {
 
   const icon = document.createElement('span')
   icon.className = 'social-pane__header-hero-icon'
-  icon.appendChild(personInCircleIcon())
+  icon.innerHTML = personInCircleIconSvg
   fallback.appendChild(icon)
 
   return fallback
@@ -805,20 +848,46 @@ function createHeader(context: any, s: any, canEdit = false): HTMLElement {
     }
 
     const profileData = selectProfileData(context, s)
+    const headerContent = dom.createElement('div')
+    headerContent.className = 'social-pane__header-content'
+    header.appendChild(headerContent)
+
     if (profileData) {
-      header.appendChild(createImage(profileData.imageUrl, profileData.name))
+      headerContent.appendChild(createImage(profileData.imageUrl, profileData.name))
     }
+
+    const headerDetails = dom.createElement('div')
+    headerDetails.className = 'social-pane__header-details'
+    headerContent.appendChild(headerDetails)
 
     const name = profileData?.name || '???'
     const h1 = dom.createElement('h1')
     h1.classList.add('social-pane__header-name')
     h1.appendChild(dom.createTextNode(name))
-    header.appendChild(h1)
+    headerDetails.appendChild(h1)
 
-    appendProfileLinks(header, dom, kb, s)
+    appendProfileLinks(headerDetails, dom, kb, s)
   }
 
   renderHeader()
 
   return header
 }
+
+export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
+
+function getViewerMode(subject: NamedNode, currentUser: unknown = authn.currentUser()): ViewerMode {
+  const currentUserUri =
+    typeof currentUser === 'string'
+      ? currentUser
+      : typeof currentUser === 'object' && currentUser !== null
+        ? ((currentUser as { value?: string, uri?: string }).value ||
+            (currentUser as { value?: string, uri?: string }).uri ||
+            null)
+        : null
+  let mode: ViewerMode = 'anonymous'
+  if (currentUserUri === subject.value) mode = 'owner'
+  if (currentUserUri && currentUserUri !== subject.value) mode = 'authenticated'
+  return mode
+}
+
