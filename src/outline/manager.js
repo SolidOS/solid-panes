@@ -491,30 +491,42 @@ export default function (context) {
    * @param {string} [options.pane] To open a specific dashboard pane
    * @returns {Promise<void>}
    */
+  function closeDashboard () {
+    const dashboardContainer = getDashboardContainer()
+    const outlineContainer = getOutlineContainer()
+    dashboardContainer.innerHTML = ''
+    hideGlobalContainer(dashboardContainer)
+    showGlobalContainer(outlineContainer)
+  }
+
+  // Register the closeDashboard listener only once
+  authSession.events.on('logout', closeDashboard)
+
+  function showGlobalContainer (container) {
+    container.removeAttribute('hidden')
+    container.style.display = ''
+  }
+
+  function hideGlobalContainer (container) {
+    container.setAttribute('hidden', '')
+    container.style.display = 'none'
+  }
+
   async function showDashboard (subject, options = {}) {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
 
-    function showContainer (container) {
-      container.removeAttribute('hidden')
-      container.style.display = ''
-    }
-
-    function hideContainer (container) {
-      container.setAttribute('hidden', '')
-      container.style.display = 'none'
-    }
-
-    // reuse existing dashboard if already rendered for the requested pane
+    // reuse existing dashboard if already rendered for the same pane and subject
     if (dashboardContainer.childNodes.length > 0) {
       const existingDashboard = dashboardContainer.firstElementChild
       if (
         existingDashboard &&
         options.pane &&
-        existingDashboard.dataset.globalPaneName === options.pane
+        existingDashboard.dataset.globalPaneName === options.pane &&
+        existingDashboard.dataset.subject === (subject && subject.value || '')
       ) {
-        hideContainer(outlineContainer)
-        showContainer(dashboardContainer)
+        hideGlobalContainer(outlineContainer)
+        showGlobalContainer(dashboardContainer)
         return
       }
       dashboardContainer.innerHTML = ''
@@ -529,18 +541,15 @@ export default function (context) {
       }
     )
 
-    // close the dashboard if user log out
     authSession.events.on('logout', closeDashboard)
+    if (subject && subject.value) {
+      dashboard.dataset.subject = subject.value
+    }
 
     // finally - switch to showing dashboard
-    hideContainer(outlineContainer)
-    showContainer(dashboardContainer)
+    hideGlobalContainer(outlineContainer)
+    showGlobalContainer(dashboardContainer)
     dashboardContainer.appendChild(dashboard)
-
-    function closeDashboard () {
-      hideContainer(dashboardContainer)
-      showContainer(outlineContainer)
-    }
   }
   this.showDashboard = showDashboard
 

@@ -124,8 +124,9 @@ function attachHeaderListeners (header: ManagedHeader) {
       // Do not navigate to the profile after logout.
     } else if (detail?.action === 'show-profile') {
       // TODO see if this can be consolidated
-      if (authn.currentUser()) {
-        outliner.showDashboard({ pane: 'profile' })
+      const currentUser = authn.currentUser()
+      if (currentUser) {
+        outliner.showDashboard(currentUser, { pane: 'profile' })
       }
     }
   })
