@@ -31,6 +31,11 @@ export type HeaderProfileData = {
   location?: string | null
 } | null
 
+export type FriendRowRenderers = {
+  renderSupportingInfo: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null,
+  renderNameSuffix: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null
+}
+
 export function createHeaderSection(
   context: DataBrowserContext,
   subject: NamedNode,
@@ -193,8 +198,15 @@ export function createMutualSection(options: {
   link: (contents: Node, uri: string | null | undefined) => Node,
   text: (value: string) => Text,
   people: (count: number) => string,
-  buildCheckboxForm: (label: string, statement: Statement, state: boolean) => HTMLElement
-}): { section: HTMLElement, content: HTMLElement } {
+  buildCheckboxForm: (
+    label: string | Node,
+    statement: Statement,
+    state: boolean,
+    options?: { disabled?: boolean, disabledTitle?: string }
+  ) => HTMLElement,
+  renderSupportingInfo: FriendRowRenderers['renderSupportingInfo'],
+  renderNameSuffix: FriendRowRenderers['renderNameSuffix']
+}): { section: HTMLElement, content: HTMLElement, refreshMutualFriends: () => void } {
   const {
     dom,
     subject,
@@ -210,8 +222,12 @@ export function createMutualSection(options: {
     link,
     text,
     people,
-    buildCheckboxForm
+    buildCheckboxForm,
+    renderSupportingInfo,
+    renderNameSuffix
   } = options
+
+  let refreshMutualFriends = function () {}
 
   const mutualSection = dom.createElement('section')
   mutualSection.className = 'social-pane__mutual-friends social-primary__panel'
@@ -243,24 +259,36 @@ export function createMutualSection(options: {
       relationshipSummary.appendChild(text(' (unconfirmed)'))
     }
   } else if (!outgoing) {
-    relationshipSummary.appendChild(link(text(familiar), subject.uri))
-    relationshipSummary.appendChild(text(' knows '))
-    relationshipSummary.appendChild(link(text('you'), meUri))
-    relationshipSummary.appendChild(text(' (unconfirmed).'))
-    relationshipSummary.appendChild(text(' confirm you know '))
-    relationshipSummary.appendChild(link(text(familiar), subject.uri))
-    relationshipSummary.appendChild(text('.'))
+    relationshipSummary.classList.add('social-mutual-summary--confirm')
+
+    const incomingLine = relationshipSummary.appendChild(dom.createElement('div'))
+    incomingLine.className = 'social-mutual-summary-line'
+    incomingLine.appendChild(link(text(familiar), subject.uri))
+    incomingLine.appendChild(text(' knows '))
+    incomingLine.appendChild(link(text('you'), meUri))
+    incomingLine.appendChild(text(' (unconfirmed).'))
   } else {
     youAndThem()
     relationshipSummary.appendChild(text(' say you know each other.'))
   }
 
-  if (editable) {
+  const shouldShowCheckboxPreview = editable || (Boolean(incoming) && !outgoing)
+  if (shouldShowCheckboxPreview) {
+    const confirmLabel = dom.createElement('span')
+    confirmLabel.appendChild(text('Confirm you know '))
+    confirmLabel.appendChild(link(text(familiar), subject.uri))
+
     const relationshipForm = buildCheckboxForm(
-      'You know ' + familiar,
+      confirmLabel,
       new Statement(me, knows, subject, profile ?? undefined),
-      Boolean(outgoing)
+      Boolean(outgoing),
+      {
+        disabled: !editable,
+        disabledTitle: !editable ? 'Your profile is not editable' : undefined
+      }
     )
+    relationshipForm.classList.add('social-mutual-checkbox-form')
+
     mutualContent.appendChild(relationshipForm)
   }
 
@@ -282,9 +310,31 @@ export function createMutualSection(options: {
         dom.createTextNode(',  ' + utils.label(mutualConnection))
       )
     })
+
+    const mutualFriendsTable = mutualContent.appendChild(dom.createElement('table'))
+    mutualFriendsTable.className = 'social-main social-friends-list social-friends-grid'
+
+    const createMutualRow = function (target: NamedNode) {
+      return widgets.personTR(dom, ns.foaf('knows'), target, {
+        renderSupportingInfo,
+        renderNameSuffix
+      })
+    }
+
+    refreshMutualFriends = function () {
+      const sortedMutualConnections = [...mutualConnections].sort((left, right) => {
+        const leftLabel = utils.label(left) || left.value
+        const rightLabel = utils.label(right) || right.value
+        return leftLabel.localeCompare(rightLabel)
+      })
+
+      utils.syncTableToArray(mutualFriendsTable, sortedMutualConnections, createMutualRow)
+    }
+
+    refreshMutualFriends()
   }
 
-  return { section: mutualSection, content: mutualContent }
+  return { section: mutualSection, content: mutualContent, refreshMutualFriends }
 }
 
 export function createAllFriendsSection(options: {

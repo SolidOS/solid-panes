@@ -17,6 +17,7 @@ import { locationIcon } from './icons'
 import {
   createAllFriendsSection,
   createHeaderSection,
+  FriendRowRenderers,
   createMutualSection,
   HeaderControls,
   SocialHeaderElement
@@ -88,16 +89,32 @@ export const socialPane = {
       return dom.createTextNode(str)
     }
 
-    const buildCheckboxForm = function (lab: string, statement: Statement, state: boolean) {
+    const buildCheckboxForm = function (
+      lab: string | Node,
+      statement: Statement,
+      state: boolean,
+      options: { disabled?: boolean, disabledTitle?: string } = {}
+    ) {
       const f = dom.createElement('form')
       const label = dom.createElement('label')
       const input = dom.createElement('input')
       const tx = dom.createElement('span')
       tx.className = 'question'
-      tx.textContent = lab
+      if (typeof lab === 'string') {
+        tx.textContent = lab
+      } else {
+        tx.appendChild(lab)
+      }
       input.setAttribute('type', 'checkbox')
-      label.appendChild(input)
+      if (options.disabled) {
+        input.disabled = true
+        if (options.disabledTitle) {
+          input.title = options.disabledTitle
+          input.setAttribute('aria-label', options.disabledTitle)
+        }
+      }
       label.appendChild(tx)
+      label.appendChild(input)
       f.appendChild(label)
       const boxHandler = function (this: HTMLInputElement, _e: Event) {
         // alert('Should be greyed out')
@@ -202,7 +219,10 @@ export const socialPane = {
     const friends = kb.each(s, knows)
     const uniqueFriends = uniqueNodes(friends as NamedNode[])
     const myFriends = me ? uniqueNodes(kb.each(me, foaf('knows')) as NamedNode[]) : []
-    const mutualFriendCount = me && !thisIsYou ? uniqueNodes(common(uniqueFriends, myFriends)).length : null
+    const mutualConnections = me && !thisIsYou
+      ? uniqueNodes(common(uniqueFriends, myFriends)).filter(friend => !kb.sameThings(friend, me))
+      : []
+    const mutualFriendCount = me && !thisIsYou ? mutualConnections.length : null
     const viewerMode = getViewerMode(s, me)
 
     // Do I have a public profile document?
@@ -237,7 +257,6 @@ export const socialPane = {
     mutualTab.setAttribute('role', 'tab')
     mutualTab.setAttribute('aria-controls', 'social-panel-mutual')
 
-    const mutualConnections = me && !thisIsYou ? uniqueNodes(common(uniqueFriends, myFriends)) : []
     let mutualFriends: HTMLElement
     let mutualContent: HTMLElement
     let allFriends: HTMLElement
@@ -347,7 +366,7 @@ export const socialPane = {
 
     hydrateFriendDetailsCache(uniqueFriends)
 
-    const renderSupportingInfo = function (target: NamedNode, renderDom: HTMLDocument) {
+    const renderSupportingInfo: FriendRowRenderers['renderSupportingInfo'] = function (target: NamedNode, renderDom: HTMLDocument) {
       const friend = friendDetailsByUri.get(target.value)
       if (!friend) return null
 
@@ -370,7 +389,7 @@ export const socialPane = {
       return container
     }
 
-    const renderNameSuffix = function (target: NamedNode, renderDom: HTMLDocument) {
+    const renderNameSuffix: FriendRowRenderers['renderNameSuffix'] = function (target: NamedNode, renderDom: HTMLDocument) {
       const pronouns = friendDetailsByUri.get(target.value)?.pronouns
       if (!pronouns) return null
 
@@ -396,11 +415,14 @@ export const socialPane = {
           link,
           text,
           people,
-          buildCheckboxForm
+          buildCheckboxForm,
+          renderSupportingInfo,
+          renderNameSuffix
         })
       : {
           section: dom.createElement('section'),
-          content: dom.createElement('div')
+          content: dom.createElement('div'),
+          refreshMutualFriends: function () {}
         }
 
     mutualFriends = mutualSection.section
@@ -467,6 +489,10 @@ export const socialPane = {
       refresh.call(friendsList)
     }
 
+    const refreshMutualFriends = function () {
+      mutualSection.refreshMutualFriends()
+    }
+
     void (async () => {
       try {
         for await (const streamedFriends of streamFriends(context, s)) {
@@ -475,6 +501,7 @@ export const socialPane = {
             friendDetailsByUri.set(friend.url, friend)
           })
           refreshFriendsList()
+          refreshMutualFriends()
         }
       } catch {
         // Keep the initial snapshot if async friend loading fails.

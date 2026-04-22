@@ -491,8 +491,75 @@
 }
 
 .social-pane .social-main--mutual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   margin-top: 1em;
   margin-bottom: 1em;
+  padding: 1rem;
+  border-radius: 0.75rem;
+}
+
+.social-pane .social-mutual-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.social-pane .social-mutual-summary-line {
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.social-pane .social-mutual-summary-line--action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.social-pane .social-mutual-confirm-prompt {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem;
+  font-weight: 600;
+}
+
+.social-pane .social-pane__friend-action--inline {
+  position: static;
+  top: auto;
+  right: auto;
+  z-index: auto;
+  align-self: flex-start;
+}
+
+.social-pane .social-mutual-checkbox-form {
+  display: block;
+  margin: 0;
+}
+
+.social-pane .social-mutual-checkbox-form label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #374151;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.social-pane .social-mutual-checkbox-form input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  accent-color: #7c3aed;
+}
+
+.social-pane .social-mutual-checkbox-form input[type='checkbox']:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .social-pane .social-friends-list {
