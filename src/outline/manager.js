@@ -551,9 +551,6 @@ export default function (context) {
       // onClose: closeDashboard
     })
 
-    // close the dashboard if user log out
-    authSession.events.on('logout', closeDashboard)
-
     // finally - switch to showing dashboard
     hideGlobalContainer(outlineContainer)
     showGlobalContainer(dashboardContainer)
