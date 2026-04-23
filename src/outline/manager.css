@@ -63,6 +63,7 @@
 
 .tableFullWidth {
   width: 100%;
+  background: var(--color-background, #F8F9FB) !important;
 }
 
 .placeholderTable {

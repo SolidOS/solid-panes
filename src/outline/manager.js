@@ -811,8 +811,9 @@ export default function (context) {
     const td = tr.appendChild(dom.createElement('td'))
     td.setAttribute(
       'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;' +
-        'display:flex; justify-content: space-between; flex-direction: row;'
+      'margin: 0.2em; border: none; padding-top: 0; padding-bottom: 0; vertical-align: top;' +
+        'display:flex; justify-content: space-between; flex-direction: row;' +
+        'background-color: var(--color-background, #F8F9FB);'
     )
     td.setAttribute('notSelectable', 'true')
     td.setAttribute('about', subject.toNT())
@@ -839,7 +840,8 @@ export default function (context) {
       const strong = header.appendChild(dom.createElement('h1'))
       strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
       strong.style =
-        'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
+        'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;' +
+        'background-color: var(--color-background, #F8F9FB);'
       UI.widgets.makeDraggable(strong, subject)
     }
 
@@ -930,6 +932,7 @@ export default function (context) {
           cell.setAttribute('colspan', '2')
           cell.style.textAlign = 'left'
           cell.style.width = '100%'
+          cell.style.backgroundColor = 'var(--color-background, #F8F9FB)'
           cell.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&

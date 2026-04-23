@@ -11,7 +11,7 @@
 }
 
 .social-pane__header-section {
-  background: var(--gray-100, #F3F4F6);
+  background:white;
 }
 
 .social-pane__header {
@@ -34,6 +34,8 @@
   width: 180px;
   gap: var(--spacing-base, 0.5rem);
   overflow: visible;
+  border: var(--border-width-sm, 0.1rem) solid var(--color-primary, #7C4DFF);
+  border-radius: var(--border-radius-full, 0.625rem);
 }
 
 .social-pane__header-details {
@@ -334,7 +336,7 @@
 .social-pane__header-hero-icon {
   width: 11.25rem;
   height: 11.25rem;
-  border-radius: var(--border-radius-base);
+  border-radius: var(--border-radius-full, 0.625rem) !important;
   background: var(--color-card-bg);
   line-height: 0;
   flex-shrink: 0;
