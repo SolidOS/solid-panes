@@ -9,6 +9,7 @@ import helpIconSvg from '../icons/help.svg?raw'
 import loginIconSvg from '../icons/person.svg?raw'
 import signOutIconSvg from '../icons/signOut.svg?raw'
 import defaultAvatarIconSvg from '../icons/personInCircle.svg?raw'
+import downArrowIconSvg from '../icons/downArrow.svg?raw'
 import signupIconPng from '../icons/signup.png'
 import { createUiIcon } from '../icons/iconHelper'
 import { setActiveMenuPane } from './menu'
@@ -20,6 +21,7 @@ const LOGIN_ICON = createUiIcon(loginIconSvg, 'LogIn Icon', '#ffffff')
 const SIGNUP_ICON = signupIconPng
 const LOGOUT_ICON = createUiIcon(signOutIconSvg, 'LogOut Icon', '#000000')
 const DEFAULT_AVATAR_ICON = createUiIcon(defaultAvatarIconSvg, 'Default Avatar Icon', '#6A7282')
+const DOWN_ARROW_ICON = createUiIcon(downArrowIconSvg, 'Down Arrow Icon', '#ffffff')
 const SOLID_ICON_URL = 'https://solidproject.org/assets/img/solid-emblem.svg'
 /**
  * menu elements
@@ -27,7 +29,6 @@ const SOLID_ICON_URL = 'https://solidproject.org/assets/img/solid-emblem.svg'
 const SIGN_IN_MENU_ITEM = 'Log In'
 const SIGN_OUT_MENU_ITEM = 'Log Out'
 const SIGN_UP_MENU_ITEM = 'Sign Up'
-const ACCOUNT_MENU_LABEL = '▼'
 const SIGN_UP__MENU_LINK = 'https://solidproject.org/get_a_pod'
 
 // data structure extracted for solid-ui-header binding
@@ -153,7 +154,7 @@ export async function refreshHeader (outliner: OutlineManager, headerElement?: H
   header.signUpAction = headerOptions.signUpAction
   header.accountMenu = await setUserMenu()
   header.logoutLabel = headerOptions.logoutLabel
-  header.accountLabel = headerOptions.accountLabel
+  header.accountIcon = headerOptions.accountIcon
   header.accountAvatar = headerOptions.accountAvatar
   header.accountAvatarFallback = headerOptions.accountAvatarFallback
   header.loginIcon = headerOptions.loginIcon
@@ -186,7 +187,7 @@ function setHeaderOptions (outliner: OutlineManager) {
       url: SIGN_UP__MENU_LINK,
     } as HeaderMenuItem,
     logoutLabel: SIGN_OUT_MENU_ITEM,
-    accountLabel: isAuthenticated ? ACCOUNT_MENU_LABEL : '',
+    accountIcon: isAuthenticated ? DOWN_ARROW_ICON : '',
     accountAvatar: isAuthenticated ? widgets.findImage(currentUser) : undefined,
     accountAvatarFallback: DEFAULT_AVATAR_ICON,
     loginIcon: LOGIN_ICON,
