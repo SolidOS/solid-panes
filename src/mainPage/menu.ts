@@ -458,7 +458,7 @@ async function openDashboardPane (subject, outliner: any, pane: string): Promise
         throw new Error('Unable to load profile: missing RDF store or fetcher')
       }
       const fallbackUri = sym(window.location.href)
-      subject = await loadProfileFromURI(fallbackUri, store, fetcher)
+      subject = await loadProfileFromURI(subject || fallbackUri, store, fetcher)
     }
   }
   outliner.showDashboard(subject, {
