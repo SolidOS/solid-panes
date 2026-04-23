@@ -3,8 +3,7 @@
    Outline Mode Manager
 */
 import * as paneRegistry from 'pane-registry'
-// Previous import kept as reference per request:
-// import './manager.css'
+import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
@@ -13,6 +12,15 @@ import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { getNameOfPodOwner } from '../profileUtils/ownerProfile'
+import personIcon from '../icons/person.svg'
+import friendsIcon from '../icons/friends.svg'
+import folderIcon from '../icons/folder.svg'
+import dashboardIcon from '../icons/dashboard.svg'
+
+const PERSON_ICON = personIcon
+const FRIENDS_ICON = friendsIcon
+const FOLDER_ICON = folderIcon
+const DASHBOARD_ICON = dashboardIcon
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -358,13 +366,13 @@ export default function (context) {
         paneName: 'profile',
         subject: me,
         label: 'Your profile',
-        icon: UI.icons.iconBase + 'noun_15059.svg'
+        icon: PERSON_ICON
       },
       {
         paneName: 'social', // loads socialPane
         subject: me,
         label: 'Your friends',
-        icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif'
+        icon: FRIENDS_ICON
       }
     ]
 
@@ -383,7 +391,7 @@ export default function (context) {
       {
         paneName: 'home',
         label: 'Your dashboard',
-        icon: UI.icons.iconBase + 'noun_547570.svg'
+        icon: DASHBOARD_ICON
       },
       {
         paneName: 'basicPreferences',
@@ -462,7 +470,7 @@ export default function (context) {
             tabName: `folder-${index}`,
             label,
             subject: pod,
-            icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
+            icon: FOLDER_ICON
           }
         })
       )
