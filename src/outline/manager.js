@@ -589,7 +589,7 @@ export default function (context) {
         existingDashboard &&
         options.pane &&
         existingDashboard.dataset.globalPaneName === options.pane &&
-        existingDashboard.dataset.subject === (subject && subject.value || '')
+          existingDashboard.dataset.subject === ((subject && subject.value) || '')
       ) {
         hideGlobalContainer(outlineContainer)
         showGlobalContainer(dashboardContainer)
