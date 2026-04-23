@@ -59,6 +59,8 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
   updateCollapseButtonPosition(navMenu, collapseBtn)
 }
 
+const isLoggedIn = (): boolean => Boolean(authSession?.info?.isLoggedIn)
+
 const ensureMenuSkeleton = () => {
   menuCollapsed = loadMenuCollapsedState()
   const root = document.querySelector('[role="main"]') || document.body
@@ -69,6 +71,8 @@ const ensureMenuSkeleton = () => {
     navMenu.id = 'NavMenu'
     navMenu.className = 'app-nav'
     navMenu.setAttribute('aria-label', 'App navigation')
+    navMenu.hidden = true
+    navMenu.style.display = 'none'
 
     const headerEl = document.createElement('div')
     headerEl.className = 'menu-header'
@@ -126,6 +130,7 @@ const ensureMenuSkeleton = () => {
     toggle.className = 'menu-toggle'
     toggle.type = 'button'
     toggle.setAttribute('aria-label', 'Toggle navigation menu')
+    toggle.hidden = true
     const toggleImg = document.createElement('img')
     toggleImg.src = MENU_ICON
     toggleImg.alt = ''
@@ -263,6 +268,19 @@ export const refreshMenu = (layout: 'mobile' | 'desktop') => {
 
   if (!navMenu || !toggle || !overlay || !collapseBtn) return
 
+  const loggedIn = isLoggedIn()
+  if (!loggedIn) {
+    navMenu.hidden = true
+    navMenu.style.display = 'none'
+    toggle.hidden = true
+    toggle.style.display = 'none'
+    collapseBtn.hidden = true
+    collapseBtn.style.display = 'none'
+    overlay.hidden = true
+    overlay.style.display = 'none'
+    return
+  }
+
   if (layout === 'mobile') {
     navMenu.classList.add('mobile-hidden')
     navMenu.classList.remove('mobile-visible')
@@ -328,7 +346,6 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
   }
 
   if (menuToggle) {
-    menuToggle.hidden = false
     menuToggle.addEventListener('click', () => {
       if (navMenu?.classList.contains('mobile-visible')) {
         closeMobileMenu()
@@ -345,6 +362,28 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
     })
   }
 
+  const updateMenuVisibility = () => {
+    const loggedIn = isLoggedIn()
+    if (navMenu) {
+      navMenu.hidden = !loggedIn
+      navMenu.style.display = loggedIn ? '' : 'none'
+    }
+    if (menuToggle) {
+      menuToggle.hidden = !loggedIn
+      menuToggle.style.display = loggedIn ? '' : 'none'
+    }
+    if (collapseBtn) {
+      collapseBtn.hidden = !loggedIn
+      collapseBtn.style.display = loggedIn ? '' : 'none'
+    }
+    if (menuOverlay) {
+      menuOverlay.hidden = !loggedIn
+      menuOverlay.style.display = loggedIn ? '' : 'none'
+    }
+  }
+
+  updateMenuVisibility()
+
   if (menuOverlay) {
     menuOverlay.addEventListener('click', closeMobileMenu)
   }
@@ -355,16 +394,32 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
   }
 
   if (navMenuContent) {
-    await renderMenuItems(subject, outliner, navMenuContent)
+    updateMenuVisibility()
+    const loggedIn = isLoggedIn()
+    if (loggedIn) {
+      await renderMenuItems(subject, outliner, navMenuContent)
+    }
 
     if (!navMenuContent.dataset.authEventsBound) {
       const refreshMenuItems = async () => {
         await renderMenuItems(subject, outliner, navMenuContent)
       }
 
-      authSession.events.on('login', refreshMenuItems)
-      authSession.events.on('logout', refreshMenuItems)
-      authSession.events.on('sessionRestore', refreshMenuItems)
+      authSession.events.on('login', () => {
+        updateMenuVisibility()
+        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+        refreshMenuItems()
+      })
+      authSession.events.on('logout', () => {
+        updateMenuVisibility()
+        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+        refreshMenuItems()
+      })
+      authSession.events.on('sessionRestore', () => {
+        updateMenuVisibility()
+        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+        refreshMenuItems()
+      })
       navMenuContent.dataset.authEventsBound = 'true'
     }
 
