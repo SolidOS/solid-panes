@@ -675,7 +675,14 @@ export default function (context) {
         relevantPanes.forEach((pane, index) => {
           const label = pane.label(subject, context)
 
-          const iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+          let iconSrc = ''
+          if (pane.name === 'profile') {
+            iconSrc = PERSON_ICON
+          } else if (pane.name === 'social') {
+            iconSrc = FRIENDS_ICON
+          } else {
+            iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+          }
           const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
 
           // Handle async icon functions

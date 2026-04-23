@@ -31,14 +31,11 @@
 
 .paneShown {
   width: 24px;
+  border: none !important;
   border-radius: var(--border-radius-md, 0.5rem);
-  border-top: solid #222 var(--border-width-sm, 0.1rem);
-  border-left: solid #222 var(--border-width-sm, 0.1rem);
-  border-bottom: solid #eee var(--border-width-sm, 0.1rem);
-  border-right: solid #eee var(--border-width-sm, 0.1rem);
   margin-left: var(--spacing-small, 0.1rem);
   padding: 0.188rem; /* 3px */
-  background-color: #ffd;
+  background-color: var(--header-menu-item-hover, #e6dcff) !important;
 }
 
 .paneHidden {
