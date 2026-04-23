@@ -322,8 +322,8 @@
 }
 
 .social-pane__header-hero {
-  width: 11.25rem;
-  height: 11.25rem;
+  width: 140px;
+  height: 140px;
   border-radius: var(--border-radius-full, 0.625rem); /* 10px */;
   border: var(--border-width-sm, 0.1rem) solid var(--color-primary, #7C4DFF);
   background: var(--gray-200, #E5E7EB) 50% / cover no-repeat;
@@ -333,8 +333,8 @@
 }
 
 .social-pane__header-hero-icon {
-  width: 11.25rem;
-  height: 11.25rem;
+  width: 140px;
+  height: 140px;
   border-radius: var(--border-radius-full, 0.625rem) !important;
   border: var(--border-width-sm, 0.1rem) solid var(--color-primary, #7C4DFF);
   background: var(--color-card-bg);
