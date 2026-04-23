@@ -40,7 +40,7 @@ export const socialPane = {
     }
     return null
   },
-  global: true, // doe snot add it to the nav tray in OutlineView
+  global: false,
 
   render: function (s, context) {
     const dom = context.dom
