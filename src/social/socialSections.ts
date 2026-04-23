@@ -210,29 +210,19 @@ export function createMutualSection (options: {
     dom,
     subject,
     familiar,
-    me,
     meUri,
     incoming,
     outgoing,
-    editable,
-    profile,
-    knows,
     mutualConnections,
     link,
     text,
-    buildCheckboxForm,
     renderSupportingInfo,
     renderNameSuffix
   } = options
 
   // Mutual confirm UI is intentionally hidden for now.
-  // Keep these references and the commented blocks below so the checkbox flow
-  // can be restored later without reshaping the call contract first.
-  void me
-  void editable
-  void profile
-  void knows
-  void buildCheckboxForm
+  // The related options remain in the function contract so that block can be
+  // restored later without reshaping callers.
 
   let refreshMutualFriends = function () {}
 
