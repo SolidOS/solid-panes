@@ -2,7 +2,7 @@
   display: block;
   background: var(--color-background, #F8F9FB);
   border-radius: var(--border-radius-base, 0.3125rem);
-  overflow: hidden;
+  overflow: visible;
   width: 100%;
   min-width: 100%;
   box-sizing: border-box;
@@ -34,7 +34,6 @@
   width: 180px;
   gap: var(--spacing-base, 0.5rem);
   overflow: visible;
-  border: var(--border-width-sm, 0.1rem) solid var(--color-primary, #7C4DFF);
   border-radius: var(--border-radius-full, 0.625rem);
 }
 
@@ -337,6 +336,7 @@
   width: 11.25rem;
   height: 11.25rem;
   border-radius: var(--border-radius-full, 0.625rem) !important;
+  border: var(--border-width-sm, 0.1rem) solid var(--color-primary, #7C4DFF);
   background: var(--color-card-bg);
   line-height: 0;
   flex-shrink: 0;
@@ -578,7 +578,7 @@
   border: 1px solid var(--gray-200, #E5E7EB);
   background: var(--white, #fff);
   border-radius: var(--border-radius-lg, 0.75rem);
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.08);
   transition: box-shadow 140ms ease, border-color 140ms ease, transform 140ms ease;
 }
@@ -592,16 +592,34 @@
 
 .social-pane .social-friends-grid > tr td,
 .social-pane .social-friend-card td {
-  background: transparent;
+  background: var(--color-background, #F8F9FB);
 }
 
-/* change the style of the name in the friend card */
+.social-pane .social-friends-grid td > div > div {
+  min-width: 18rem !important;
+  max-width: min(90vw, 26rem) !important;
+  width: auto !important;
+  white-space: normal !important;
+}
+
+.social-pane .social-friends-grid td > div > div button {
+  white-space: normal !important;
+}
+
+/* change the style of the name / label in the friend card */
 .social-pane .social-friends-grid > tr > td:nth-child(2) > div:first-child > span {
+  display: inline-block;
+  width: min(20rem, 100%);
+  max-width: 100%;
+  vertical-align: text-top;
   font-size: var(--font-size-lg, 1.125rem); /* 18px */
   font-weight: var(--font-weight-bold, 600); /* new design uses 600 */
   line-height: var(--line-height-tight);
   margin-top: 0;
   margin-bottom: var(--spacing-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .social-pane .social-friend-pronouns {
