@@ -383,6 +383,10 @@ export function createAllFriendsSection (options: {
     const friendsActionsRow = dom.createElement('div')
     friendsActionsRow.className = 'social-friends-header-actions social-friends-header-actions--standalone'
     friendsActionsRow.appendChild(friendsHeaderActions)
+    const dropHint = dom.createElement('span')
+    dropHint.className = 'social-friends-header-hint'
+    dropHint.textContent = 'Drag a WebId on the target to add a friend.'
+    friendsActionsRow.appendChild(dropHint)
     allFriends.prepend(friendsActionsRow)
   }
 

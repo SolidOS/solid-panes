@@ -651,8 +651,16 @@
 
 .social-pane .social-friends-header-actions--standalone {
   display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.75rem);
   justify-content: flex-start;
   padding: 0.7rem 1rem 0;
+}
+
+.social-pane .social-friends-header-hint {
+  color: var(--color-text-secondary, #4A5565);
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.4;
 }
 
 .social-pane .social-friends-header-actions button {
