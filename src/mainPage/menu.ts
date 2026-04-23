@@ -1,7 +1,7 @@
 import './menu.css'
 import { OutlineManager } from '../outline/manager'
 import { authSession, authn } from 'solid-logic'
-import { NamedNode } from 'rdflib'
+import { NamedNode, sym } from 'rdflib'
 import { loadProfileFromURI } from '../profileUtils/ownerProfile'
 import menuIcon from '../icons/menu.svg?raw'
 import { createUiIcon } from '../icons/iconHelper'
@@ -457,7 +457,8 @@ async function openDashboardPane (subject, outliner: any, pane: string): Promise
       if (!store || !fetcher) {
         throw new Error('Unable to load profile: missing RDF store or fetcher')
       }
-      subject = await loadProfileFromURI(subject, store, fetcher)
+      const fallbackUri = sym(window.location.href)
+      subject = await loadProfileFromURI(fallbackUri, store, fetcher)
     }
   }
   outliner.showDashboard(subject, {
