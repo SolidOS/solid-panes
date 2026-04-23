@@ -190,6 +190,9 @@ export const socialPane = {
 
     const thisIsYou = me && kb.sameThings(me, s)
 
+    console.log('----- me ', me)
+    console.log('----- subject ', s)
+
     const knows = foaf('knows')
     //        var givenName = kb.sym('http://www.w3.org/2000/10/swap/pim/contact#givenName')
     const familiar =
@@ -246,6 +249,7 @@ export const socialPane = {
     if (me) {
       // The definition of FOAF personal profile document is ..
       const works = kb.each(undefined, foaf('primaryTopic'), me) // having me as primary topic
+      console.log('----- works ', works)
       let message = ''
       for (let i = 0; i < works.length; i++) {
         if (
@@ -257,6 +261,8 @@ export const socialPane = {
         ) {
           const doc = works[i]
           editable = outliner.UserInput.sparqler.editable(doc.uri, kb)
+          console.log('----- doc ', doc)
+          console.log('----- editable ', editable)
           if (!editable) {
             message +=
               'Your profile <' +
@@ -378,6 +384,7 @@ export const socialPane = {
       return suffix
     }
 
+    const sEditable = outliner.UserInput.sparqler.editable(s.uri, kb)
     const mutualSection = me && !thisIsYou
       ? createMutualSection({
         dom,
@@ -387,7 +394,7 @@ export const socialPane = {
         meUri,
         incoming,
         outgoing,
-        editable,
+        editable: !!sEditable,
         profile,
         knows,
         mutualConnections,
@@ -415,11 +422,12 @@ export const socialPane = {
     }
     primary.appendChild(mutualFriends)
 
+    console.log('----- editable upon tab ', sEditable)
     const allFriendsSection = createAllFriendsSection({
       dom,
       subject: s,
       profile,
-      editable: !!editable,
+      editable: !!sEditable,
       renderSupportingInfo,
       renderNameSuffix
     })

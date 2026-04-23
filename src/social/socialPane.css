@@ -493,7 +493,6 @@
 
 .social-pane .social-mutual-summary {
   gap: var(--spacing-base, 0.5rem);
-  margin-bottom: var(--spacing-md, 1.25rem);
 }
 
 .social-pane .social-mutual-summary-line {
@@ -501,6 +500,7 @@
   font-size: var(--font-size-sm, 0.95rem);
   line-height: var(--line-height-base, 1.5);
   justify-content: flex-start;
+  padding: 1rem;
 }
 
 .social-pane .social-mutual-summary-line--action {
