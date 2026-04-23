@@ -249,6 +249,12 @@ const setActiveMenuItem = (container: HTMLElement, paneName?: string) => {
   updateToggleLabel(activeItem)
 }
 
+export const setActiveMenuPane = (paneName?: string): void => {
+  const navMenuContent = document.getElementById('NavMenuContent') as HTMLElement | null
+  if (!navMenuContent) return
+  setActiveMenuItem(navMenuContent, paneName)
+}
+
 const updateToggleLabel = (activeItem?: HTMLButtonElement): void => {
   const toggleLabel = document.getElementById('MenuToggleLabel')
   if (!toggleLabel) return

@@ -11,6 +11,7 @@ import signOutIconSvg from '../icons/signOut.svg?raw'
 import defaultAvatarIconSvg from '../icons/personInCircle.svg?raw'
 import signupIconPng from '../icons/signup.png'
 import { createUiIcon } from '../icons/iconHelper'
+import { setActiveMenuPane } from './menu'
 /**
  * menu icons
 */
@@ -127,6 +128,7 @@ function attachHeaderListeners (header: ManagedHeader) {
       const currentUser = authn.currentUser()
       if (currentUser) {
         outliner.showDashboard(currentUser, { pane: 'profile' })
+        setActiveMenuPane('profile')
       }
     }
   })
