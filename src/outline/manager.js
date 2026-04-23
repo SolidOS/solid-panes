@@ -3,7 +3,8 @@
    Outline Mode Manager
 */
 import * as paneRegistry from 'pane-registry'
-import './manager.css'
+// Previous import kept as reference per request:
+// import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
@@ -412,19 +413,51 @@ export default function (context) {
     return panes
 
     async function getPods (subject, me) {
-      let webId
-      if (me) { // if I am logged in, I continue
-        webId = me
-        try {
-          // need to make sure that profile is loaded
-          await kb.fetcher.load(me.doc())
-        } catch (err) {
-          console.error('Unable to load profile', err)
-          return []
-        }
-      } else { // if I am not logged in, I find teh webId
-        webId = await loadProfileFromURI(subject)
+      // Previous behavior (kept here for reference): when logged in, we only
+      // loaded storages from the logged-in WebID, which could hide the viewed
+      // profile's storage in mixed-profile browsing scenarios.
+      //
+      // let webId
+      // if (me) {
+      //   webId = me
+      //   try {
+      //     await kb.fetcher.load(me.doc())
+      //   } catch (err) {
+      //     console.error('Unable to load profile', err)
+      //     return []
+      //   }
+      // } else {
+      //   webId = await loadProfileFromURI(subject, kb, kb.fetcher)
+      // }
+      // let pods = kb.each(webId, ns.space('storage'), null, webId.doc())
+
+      // New behavior: merge storages from both the logged-in profile and the
+      // currently viewed profile so both can appear in the left menu.
+      const webIds = []
+
+      if (me && me.termType === 'NamedNode') {
+        webIds.push(me)
       }
+
+      try {
+        // Also include the profile being viewed, so when I view someone else's
+        // profile while logged in I can still see both storages in the menu.
+        const subjectWebId = await loadProfileFromURI(subject, kb, kb.fetcher)
+        if (
+          subjectWebId &&
+          subjectWebId.termType === 'NamedNode' &&
+          !webIds.find(node => node.equals(subjectWebId))
+        ) {
+          webIds.push(subjectWebId)
+        }
+      } catch (err) {
+        console.error('Unable to resolve subject profile', err)
+      }
+
+      if (!webIds.length) {
+        return []
+      }
+
       async function addPodStorage (pod) { // namedNode
         await loadContainerRepresentation(pod)
         if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
@@ -443,8 +476,18 @@ export default function (context) {
         }
         // TODO should url.origin be added to pods list when there are no pim:Storage ???
       }
-      // load pod's storages from profile
-      let pods = kb.each(webId, ns.space('storage'), null, webId.doc())
+
+      // New behavior continued: resolve and aggregate storages from each WebID.
+      let pods = []
+      for (const webId of webIds) {
+        try {
+          await kb.fetcher.load(webId.doc())
+          pods = pods.concat(kb.each(webId, ns.space('storage'), null, webId.doc()))
+        } catch (err) {
+          console.error('Unable to load profile', err)
+        }
+      }
+
       await Promise.all(
         pods.map(async (pod) => {
           // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
@@ -472,7 +515,10 @@ export default function (context) {
       if (!pods.length) return []
       return pods.map((pod, index) => {
         function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-        const label = split(webId).startsWith(split(pod)) ? 'Storage' : split(pod)
+        // Previous label logic kept as reference (single-webId flow):
+        // const label = split(webId).startsWith(split(pod)) ? 'Storage' : split(pod)
+        const meWebId = me && me.termType === 'NamedNode' ? me : null
+        const label = meWebId && split(meWebId).startsWith(split(pod)) ? 'Storage' : split(pod)
         return {
           paneName: 'folder',
           tabName: `folder-${index}`,
@@ -761,6 +807,8 @@ export default function (context) {
                   const row = dom.createElement('tr')
                   const cell = row.appendChild(dom.createElement('td'))
                   cell.setAttribute('colspan', '2')
+                  cell.style.textAlign = 'left'
+                  cell.style.width = '100%'
                   cell.appendChild(paneDiv)
                   if (second) containingTable.insertBefore(row, second)
                   else containingTable.appendChild(row)
@@ -931,6 +979,8 @@ export default function (context) {
           const row = dom.createElement('tr')
           const cell = row.appendChild(dom.createElement('td'))
           cell.setAttribute('colspan', '2')
+          cell.style.textAlign = 'left'
+          cell.style.width = '100%'
           cell.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&
