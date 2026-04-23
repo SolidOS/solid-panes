@@ -12,7 +12,7 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { loadProfileFromURI } from '../profileUtils/ownerProfile'
+import { getNameOfPodOwner } from '../profileUtils/ownerProfile'
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -423,10 +423,12 @@ export default function (context) {
       }
       // load pod's storages from profile
       let pods = kb.each(me, ns.space('storage'), null, me.doc())
-      pods.map(async (pod) => {
-        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-        await loadContainerRepresentation(pod)
-      })
+      await Promise.all(
+        pods.map(async (pod) => {
+          // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
+          await loadContainerRepresentation(pod)
+        })
+      )
 
       try {
         // if uri then SolidOS is a browse.html web app
@@ -446,17 +448,24 @@ export default function (context) {
       }
       pods = uniques(pods)
       if (!pods.length) return []
-      return pods.map((pod, index) => {
-        function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-        const label = split(me).startsWith(split(pod)) ? 'Your storage' : split(pod)
-        return {
-          paneName: 'folder',
-          tabName: `folder-${index}`,
-          label,
-          subject: pod,
-          icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
-        }
-      })
+      return Promise.all(
+        pods.map(async (pod, index) => {
+          function split (item) { return item.uri.split('//')[1].slice(0, -1) }
+          const ownerName = (await getNameOfPodOwner(pod, kb, sf)) || ''
+          const label = split(me).startsWith(split(pod))
+            ? 'Your storage'
+            : ownerName.trim() !== ''
+              ? ownerName + '\'s storage'
+              : split(pod)
+          return {
+            paneName: 'folder',
+            tabName: `folder-${index}`,
+            label,
+            subject: pod,
+            icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
+          }
+        })
+      )
     }
 
     async function getAddressBooks () {

@@ -56,6 +56,37 @@ export async function loadProfileFromURI (
   return uri
 }
 
+export async function getNameOfPodOwner (
+  pod: NamedNode,
+  store: IndexedFormula,
+  fetcher: Fetcher
+): Promise<String> {
+  // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
+  const webId = sym(`${pod.uri}${DEFAULT_PROFILE_PATH}`)
+  try {
+    await fetcher.load(webId)
+    return getName(store, webId)
+  } catch (err) {
+    // continue
+  }
+
+  // we try a prefixed pod structure
+  try {
+    const uriUrl = new URL(pod.uri)
+    const pathSegments = uriUrl.pathname.split('/').filter(Boolean)
+    if (pathSegments.length > 0) {
+      const derivedPod = `${uriUrl.origin}/${pathSegments[0]}/`
+      const derivedWebId = sym(`${derivedPod}${DEFAULT_PROFILE_PATH}`)
+      await fetcher.load(derivedWebId)
+      return getName(store, derivedWebId)
+    }
+  } catch (err) {
+    // continue
+  }
+
+  return ''
+}
+
 export function getName (store: IndexedFormula, ownersProfile: NamedNode): string {
   return (
     store.anyValue(ownersProfile, ns.vcard('fn'), null, ownersProfile.doc()) ||
