@@ -560,6 +560,12 @@ export default function (context) {
    * @returns {HTMLElement}
    */
   function getOrCreateContainer (id) {
+    const containerHost =
+      document.getElementById('app-view') ||
+      document.getElementById('MainContent') ||
+      document.querySelector('[role="main"]') ||
+      document.body
+
     // OutlineView is a table
     if (id === 'OutlineView') {
       const existingOutline = document.getElementById('OutlineView')
@@ -567,13 +573,12 @@ export default function (context) {
         return existingOutline
       }
 
-      const outlineHost = document.getElementById('app-view')
-      if (outlineHost) {
+      if (containerHost) {
         const OutlineView = document.createElement('table')
         OutlineView.id = 'OutlineView'
         OutlineView.classList.add('outline-view')
         OutlineView.setAttribute('aria-label', 'Resource browser')
-        outlineHost.appendChild(OutlineView)
+        containerHost.appendChild(OutlineView)
         return OutlineView
       }
     }
@@ -586,9 +591,7 @@ export default function (context) {
         GlobalDashboard.id = id
         GlobalDashboard.setAttribute('aria-label', 'Dashboard')
         GlobalDashboard.classList.add('global-dashboard')
-        const dashboardHost =
-          document.getElementById('app-view')
-        return dashboardHost.appendChild(GlobalDashboard)
+        return containerHost.appendChild(GlobalDashboard)
       })()
     )
   }
