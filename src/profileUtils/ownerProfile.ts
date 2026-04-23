@@ -60,7 +60,7 @@ export async function getNameOfPodOwner (
   pod: NamedNode,
   store: IndexedFormula,
   fetcher: Fetcher
-): Promise<String> {
+): Promise<string> {
   // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
   const webId = sym(`${pod.uri}${DEFAULT_PROFILE_PATH}`)
   try {
