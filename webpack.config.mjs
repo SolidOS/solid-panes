@@ -79,6 +79,14 @@ const normalConfig = {
             return path.resolve('dist', relPath)
           },
         },
+        {
+          from: path.resolve(process.cwd(), 'src/icons'),
+          to: path.resolve(process.cwd(), 'dist/icons'),
+          globOptions: {
+            ignore: ['**/*.ts'],
+          },
+          noErrorOnMissing: true,
+        },
       ],
     }),
   ],
@@ -112,6 +120,14 @@ const minConfig = {
             const relPath = path.relative(path.resolve('src'), absoluteFilename)
             return path.resolve('dist', relPath)
           },
+        },
+        {
+          from: path.resolve(process.cwd(), 'src/icons'),
+          to: path.resolve(process.cwd(), 'dist/icons'),
+          globOptions: {
+            ignore: ['**/*.ts'],
+          },
+          noErrorOnMissing: true,
         },
       ],
     }),
