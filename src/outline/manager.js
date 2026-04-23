@@ -311,11 +311,15 @@ export default function (context) {
    * @param {Function} [options.onClose] If given, will present an X for the dashboard, and call this method when clicked
    * @returns Promise<{Element}> - the div that holds the dashboard
    */
-  async function globalAppTabs (subject, options = {}) {
+  async function globalAppTabs (options = {}) {
     console.log('globalAppTabs @@')
     const div = dom.createElement('div')
     const me = authn.currentUser()
-    const items = await getDashboardItems(subject)
+    if (!me) {
+      alert('Must be logged in for this')
+      throw new Error('Not logged in')
+    }
+    const items = await getDashboardItems()
 
     const selectedItem = options.selectedTab
       ? items.find(
@@ -329,29 +333,11 @@ export default function (context) {
 
     div.dataset.globalPaneName = selectedItem.tabName || selectedItem.paneName
 
-    if (typeof options.onClose === 'function') {
-      const closeButton = dom.createElement('button')
-      closeButton.type = 'button'
-      closeButton.className = 'dashboard-close'
-      closeButton.textContent = '×'
-      closeButton.addEventListener('click', options.onClose)
-      div.appendChild(closeButton)
-    }
-
     const content = div.appendChild(dom.createElement('div'))
-    const webId = subject || selectedItem.subject || me
-    if (!webId) {
-      const message = dom.createElement('div')
-      message.textContent =
-        'Unable to display this dashboard item because no profile is loaded.'
-      content.appendChild(message)
-      return div
-    }
-
     const pane = paneRegistry.byName(selectedItem.paneName) // 20190701
     const table = content.appendChild(dom.createElement('table'))
     thisOutline.GotoSubject(
-      webId,
+      selectedItem.subject || me,
       true,
       pane,
       false,
@@ -363,30 +349,26 @@ export default function (context) {
   }
   this.getDashboard = globalAppTabs
 
-  async function getDashboardItems (subject) {
+  async function getDashboardItems () {
+    const me = authn.currentUser()
+    if (!me) return []
     const div = dom.createElement('div')
     const panes = [
       {
         paneName: 'profile',
-        subject,
-        label: 'Profile',
+        subject: me,
+        label: 'Your profile',
         icon: UI.icons.iconBase + 'noun_15059.svg'
       },
       {
         paneName: 'social', // loads socialPane
-        subject,
-        label: 'Friends',
+        subject: me,
+        label: 'Your friends',
         icon: UI.icons.originalIconBase + 'foaf/foafTiny.gif'
       }
     ]
 
-    // if we are not logged in, we get the webId from the URI
-    const me = authn.currentUser()
-    if (!me) {
-      return panes
-    }
-
-    const [pods] = await Promise.all([getPods(subject, me)])
+    const [pods] = await Promise.all([getPods()])
 
     panes.push(...pods)
 
@@ -400,64 +382,19 @@ export default function (context) {
       */
       {
         paneName: 'home',
-        label: 'Stuff',
+        label: 'Your dashboard',
         icon: UI.icons.iconBase + 'noun_547570.svg'
       },
       {
         paneName: 'basicPreferences',
-        label: 'Preferences',
+        label: 'Your preferences',
         icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg'
       }
     )
 
     return panes
 
-    async function getPods (subject, me) {
-      // Previous behavior (kept here for reference): when logged in, we only
-      // loaded storages from the logged-in WebID, which could hide the viewed
-      // profile's storage in mixed-profile browsing scenarios.
-      //
-      // let webId
-      // if (me) {
-      //   webId = me
-      //   try {
-      //     await kb.fetcher.load(me.doc())
-      //   } catch (err) {
-      //     console.error('Unable to load profile', err)
-      //     return []
-      //   }
-      // } else {
-      //   webId = await loadProfileFromURI(subject, kb, kb.fetcher)
-      // }
-      // let pods = kb.each(webId, ns.space('storage'), null, webId.doc())
-
-      // New behavior: merge storages from both the logged-in profile and the
-      // currently viewed profile so both can appear in the left menu.
-      const webIds = []
-
-      if (me && me.termType === 'NamedNode') {
-        webIds.push(me)
-      }
-
-      try {
-        // Also include the profile being viewed, so when I view someone else's
-        // profile while logged in I can still see both storages in the menu.
-        const subjectWebId = await loadProfileFromURI(subject, kb, kb.fetcher)
-        if (
-          subjectWebId &&
-          subjectWebId.termType === 'NamedNode' &&
-          !webIds.find(node => node.equals(subjectWebId))
-        ) {
-          webIds.push(subjectWebId)
-        }
-      } catch (err) {
-        console.error('Unable to resolve subject profile', err)
-      }
-
-      if (!webIds.length) {
-        return []
-      }
-
+    async function getPods () {
       async function addPodStorage (pod) { // namedNode
         await loadContainerRepresentation(pod)
         if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
@@ -477,23 +414,19 @@ export default function (context) {
         // TODO should url.origin be added to pods list when there are no pim:Storage ???
       }
 
-      // New behavior continued: resolve and aggregate storages from each WebID.
-      let pods = []
-      for (const webId of webIds) {
-        try {
-          await kb.fetcher.load(webId.doc())
-          pods = pods.concat(kb.each(webId, ns.space('storage'), null, webId.doc()))
-        } catch (err) {
-          console.error('Unable to load profile', err)
-        }
+      try {
+        // need to make sure that profile is loaded
+        await kb.fetcher.load(me.doc())
+      } catch (err) {
+        console.error('Unable to load profile', err)
+        return []
       }
-
-      await Promise.all(
-        pods.map(async (pod) => {
-          // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-          await loadContainerRepresentation(pod)
-        })
-      )
+      // load pod's storages from profile
+      let pods = kb.each(me, ns.space('storage'), null, me.doc())
+      pods.map(async (pod) => {
+        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
+        await loadContainerRepresentation(pod)
+      })
 
       try {
         // if uri then SolidOS is a browse.html web app
@@ -515,10 +448,7 @@ export default function (context) {
       if (!pods.length) return []
       return pods.map((pod, index) => {
         function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-        // Previous label logic kept as reference (single-webId flow):
-        // const label = split(webId).startsWith(split(pod)) ? 'Storage' : split(pod)
-        const meWebId = me && me.termType === 'NamedNode' ? me : null
-        const label = meWebId && split(meWebId).startsWith(split(pod)) ? 'Storage' : split(pod)
+        const label = split(me).startsWith(split(pod)) ? 'Your storage' : split(pod)
         return {
           paneName: 'folder',
           tabName: `folder-${index}`,
@@ -552,7 +482,7 @@ export default function (context) {
 
   /**
    * Call this method to show the global dashboard.
-   * @param {NamedNode} [subject] The subject form the URI
+   *
    * @param {Object} [options] A set of options that can be passed
    * @param {string} [options.pane] To open a specific dashboard pane
    * @returns {Promise<void>}
@@ -598,19 +528,14 @@ export default function (context) {
       dashboardContainer.innerHTML = ''
     }
 
-    // create a new dashboard view without tab navigation
-    const dashboard = await globalAppTabs(
-      subject,
-      {
-        selectedTab: options.pane,
-        // onClose: closeDashboard -> we do not need to close tabs anymore
-      }
-    )
+    // create a new dashboard if not already present
+    const dashboard = await globalAppTabs({
+      selectedTab: options.pane,
+      // onClose: closeDashboard
+    })
 
+    // close the dashboard if user log out
     authSession.events.on('logout', closeDashboard)
-    if (subject && subject.value) {
-      dashboard.dataset.subject = subject.value
-    }
 
     // finally - switch to showing dashboard
     hideGlobalContainer(outlineContainer)
@@ -634,32 +559,36 @@ export default function (context) {
    * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
-  function getOrCreateContainer (id, ariaLabel) {
-    if (id === 'outline') {
-      const existingOutline = document.getElementById('outline')
+  function getOrCreateContainer (id) {
+    // OutlineView is a table
+    if (id === 'OutlineView') {
+      const existingOutline = document.getElementById('OutlineView')
       if (existingOutline) {
         return existingOutline
       }
 
-      const outlineHost = document.getElementById('OutlineView')
+      const outlineHost = document.getElementById('app-view')
       if (outlineHost) {
-        const outlineTable = document.createElement('table')
-        outlineTable.id = 'outline'
-        outlineTable.style.width = '100%'
-        outlineHost.appendChild(outlineTable)
-        return outlineTable
+        const OutlineView = document.createElement('table')
+        OutlineView.id = 'OutlineView'
+        OutlineView.classList.add('outline-view')
+        OutlineView.setAttribute('aria-label', 'Resource browser')
+        outlineHost.appendChild(OutlineView)
+        return OutlineView
       }
     }
 
+    // or we deal with the section GlobalDashboard
     return (
       document.getElementById(id) ||
       (() => {
-        const container = document.createElement('section')
-        container.id = id
-        if (ariaLabel) container.setAttribute('aria-label', ariaLabel)
-        const mainContainer =
-          document.querySelector('[role="main"]') || document.body
-        return mainContainer.appendChild(container)
+        const GlobalDashboard = document.createElement('section')
+        GlobalDashboard.id = id
+        GlobalDashboard.setAttribute('aria-label', 'Dashboard')
+        GlobalDashboard.classList.add('global-dashboard')
+        const dashboardHost =
+          document.getElementById('app-view')
+        return dashboardHost.appendChild(GlobalDashboard)
       })()
     )
   }
@@ -2379,7 +2308,7 @@ export default function (context) {
   @param table   -- option  -- default is an HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || getOutlineContainer() // if does not exist create a compatible host in the current shell
+    table = table || getOutlineContainer('OutlineView') // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'
