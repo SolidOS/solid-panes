@@ -233,17 +233,19 @@ const setActiveMenuItem = (container: HTMLElement, paneName?: string) => {
     }
   })
 
-  if (!activeItem && menuItems[0]) {
-    menuItems[0].classList.add('menu-item-active')
-    menuItems[0].setAttribute('aria-current', 'page')
-    container.dataset.activePaneName = menuItems[0].dataset.paneName || ''
-    updateToggleLabel(menuItems[0])
-    return
+  if (paneName) {
+    if (!activeItem && menuItems[0]) {
+      // If an explicit pane name is provided but does not match any menu
+      // item, fall back to clearing selection rather than selecting the first item.
+      container.dataset.activePaneName = ''
+    } else {
+      container.dataset.activePaneName = paneName
+    }
+  } else {
+    // If there is no active pane, do not auto-select the first menu item.
+    container.dataset.activePaneName = ''
   }
 
-  if (paneName) {
-    container.dataset.activePaneName = paneName
-  }
   updateToggleLabel(activeItem)
 }
 
