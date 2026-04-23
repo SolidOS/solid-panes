@@ -225,6 +225,15 @@ export function createMutualSection (options: {
     renderNameSuffix
   } = options
 
+  // Mutual confirm UI is intentionally hidden for now.
+  // Keep these references and the commented blocks below so the checkbox flow
+  // can be restored later without reshaping the call contract first.
+  void me
+  void editable
+  void profile
+  void knows
+  void buildCheckboxForm
+
   let refreshMutualFriends = function () {}
 
   const mutualSection = dom.createElement('section')
@@ -240,22 +249,33 @@ export function createMutualSection (options: {
   relationshipSummary.classList.add('social-mutual-summary', 'flex-column')
   mutualContent.appendChild(relationshipSummary)
 
+  const createRelationshipLine = function () {
+    const line = relationshipSummary.appendChild(dom.createElement('div'))
+    line.classList.add('social-mutual-summary-line')
+    return line
+  }
+
   const youAndThem = function () {
-    relationshipSummary.appendChild(link(text('You'), meUri))
-    relationshipSummary.appendChild(text(' and '))
-    relationshipSummary.appendChild(link(text(familiar), subject.uri))
+    const line = createRelationshipLine()
+    line.appendChild(link(text('You'), meUri))
+    line.appendChild(text(' and '))
+    line.appendChild(link(text(familiar), subject.uri))
+    return line
   }
 
   if (!incoming) {
     if (!outgoing) {
-      youAndThem()
-      relationshipSummary.appendChild(text(' have not said you know each other.'))
+      const line = youAndThem()
+      line.appendChild(text(' have not said you know each other.'))
+    /* NOTE: hiding the outgoing-only unconfirmed message for now.
     } else {
       relationshipSummary.appendChild(link(text('You'), meUri))
       relationshipSummary.appendChild(text(' know '))
       relationshipSummary.appendChild(link(text(familiar), subject.uri))
       relationshipSummary.appendChild(text(' (unconfirmed)'))
+    */
     }
+  /* NOTE: hiding the incoming-only unconfirmed message for now.
   } else if (!outgoing) {
     relationshipSummary.classList.add('social-mutual-summary--confirm')
 
@@ -265,11 +285,13 @@ export function createMutualSection (options: {
     incomingLine.appendChild(text(' knows '))
     incomingLine.appendChild(link(text('you'), meUri))
     incomingLine.appendChild(text(' (unconfirmed).'))
+  */
   } else {
-    youAndThem()
-    relationshipSummary.appendChild(text(' say you know each other.'))
+    const line = youAndThem()
+    line.appendChild(text(' say you know each other.'))
   }
 
+  /* NOTE: hiding the confirm-friend checkbox for now.
   const shouldShowCheckboxPreview = editable || (Boolean(incoming) && !outgoing)
   if (shouldShowCheckboxPreview) {
     const confirmLabel = dom.createElement('span')
@@ -289,6 +311,7 @@ export function createMutualSection (options: {
 
     mutualContent.appendChild(relationshipForm)
   }
+  */
 
   if (mutualConnections.length) {
     const mutualFriendsTable = mutualContent.appendChild(dom.createElement('table'))
