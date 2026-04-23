@@ -73,7 +73,7 @@
     "pane-registry": "^3.1.0",
     "profile-pane": "^3.1.5",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "^3.0.6",
+    "solid-ui": "^3.1.0",
     "source-pane": "^3.0.2"
   },
   "overrides": {
