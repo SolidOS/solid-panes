@@ -166,6 +166,7 @@ const humanReadablePane = {
 
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
+    const isPlainText = ct === 'text/plain'
 
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
@@ -175,6 +176,7 @@ const humanReadablePane = {
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
     div.setAttribute('class', 'docView')
+    div.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
 
     // render markdown to html in a DIV element
     const renderMarkdownContent = function (frame) {
@@ -185,26 +187,49 @@ const humanReadablePane = {
         const clean = DOMPurify.sanitize(res)
         frame.innerHTML = clean
         frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
+        frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'
       })
     }
 
+    // render plain text in a PRE element
+    const renderPlainTextContent = function (frame) {
+      kb.fetcher.webOperation('GET', subject.uri).then(response => {
+        const plainText = response.responseText
+        const lines = Math.min(30, plainText.split(/\n/).length + 5)
+        frame.textContent = plainText
+        frame.setAttribute('class', 'doc')
+        frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto; font-family: monospace; white-space: pre-wrap; word-wrap: break-word;`)
+      }).catch(error => {
+        console.error('Error fetching plain text content:', error)
+        frame.textContent = 'Error loading content'
+      })
+    }
+
     const setIframeAttributes = (frame, lines) => {
       frame.setAttribute('src', subject.uri)
       frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', `border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
+      frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
     }
 
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
       const frame = myDocument.createElement('DIV')
       renderMarkdownContent(frame)
-      const tr = myDocument.createElement('TR')
-      tr.appendChild(frame)
-      div.appendChild(tr)
+      const frameContainer = myDocument.createElement('div')
+      frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+      frameContainer.appendChild(frame)
+      div.appendChild(frameContainer)
+    } else if (isPlainText) {
+      // For plain text, use a PRE element and render the content
+      const frame = myDocument.createElement('PRE')
+      renderPlainTextContent(frame)
+      const frameContainer = myDocument.createElement('div')
+      frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+      frameContainer.appendChild(frame)
+      div.appendChild(frameContainer)
     } else {
       // For other content types, use IFRAME
       const frame = myDocument.createElement('IFRAME')
@@ -232,9 +257,10 @@ const humanReadablePane = {
         setIframeAttributes(frame, 30)
       })
 
-      const tr = myDocument.createElement('TR')
-      tr.appendChild(frame)
-      div.appendChild(tr)
+      const frameContainer = myDocument.createElement('div')
+      frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+      frameContainer.appendChild(frame)
+      div.appendChild(frameContainer)
     }
 
     return div
