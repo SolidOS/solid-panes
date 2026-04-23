@@ -197,7 +197,6 @@ export function createMutualSection (options: {
   mutualConnections: NamedNode[],
   link: (contents: Node, uri: string | null | undefined) => Node,
   text: (value: string) => Text,
-  people: (count: number) => string,
   buildCheckboxForm: (
     label: string | Node,
     statement: Statement,
@@ -221,7 +220,6 @@ export function createMutualSection (options: {
     mutualConnections,
     link,
     text,
-    people,
     buildCheckboxForm,
     renderSupportingInfo,
     renderNameSuffix
@@ -262,7 +260,7 @@ export function createMutualSection (options: {
     relationshipSummary.classList.add('social-mutual-summary--confirm')
 
     const incomingLine = relationshipSummary.appendChild(dom.createElement('div'))
-    incomingLine.classList.add('social-mutual-summary-line', 'flex-center')
+    incomingLine.classList.add('social-mutual-summary-line')
     incomingLine.appendChild(link(text(familiar), subject.uri))
     incomingLine.appendChild(text(' knows '))
     incomingLine.appendChild(link(text('you'), meUri))
@@ -293,24 +291,6 @@ export function createMutualSection (options: {
   }
 
   if (mutualConnections.length) {
-    const mutualConnectionsSummary = dom.createElement('div')
-    mutualConnectionsSummary.className = 'social-mutual-summary'
-    mutualContent.appendChild(mutualConnectionsSummary)
-    mutualConnectionsSummary.appendChild(
-      dom.createTextNode(
-        'You' +
-          (familiar ? ' and ' + familiar : '') +
-          ' know' +
-          people(mutualConnections.length) +
-          ' found in common'
-      )
-    )
-    mutualConnections.forEach((mutualConnection) => {
-      mutualConnectionsSummary.appendChild(
-        dom.createTextNode(',  ' + utils.label(mutualConnection))
-      )
-    })
-
     const mutualFriendsTable = mutualContent.appendChild(dom.createElement('table'))
     mutualFriendsTable.className = 'social-main social-friends-list social-friends-grid'
 
@@ -403,6 +383,10 @@ export function createAllFriendsSection (options: {
     const friendsActionsRow = dom.createElement('div')
     friendsActionsRow.className = 'social-friends-header-actions social-friends-header-actions--standalone'
     friendsActionsRow.appendChild(friendsHeaderActions)
+    const dropHint = dom.createElement('span')
+    dropHint.className = 'social-friends-header-hint'
+    dropHint.textContent = 'Drag a WebId on the target to add a friend.'
+    friendsActionsRow.appendChild(dropHint)
     allFriends.prepend(friendsActionsRow)
   }
 

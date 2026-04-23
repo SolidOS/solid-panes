@@ -434,6 +434,7 @@
 .social-pane .social-primary__panel--active {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
   border: 0;
   border-bottom: var(--border-width-sm, 0.1rem) solid transparent;
   transition: opacity 180ms ease, transform 180ms ease;
@@ -497,6 +498,7 @@
   color: var(--slate-700, #314158);
   font-size: var(--font-size-sm, 0.95rem);
   line-height: var(--line-height-base, 1.5);
+  justify-content: flex-start;
 }
 
 .social-pane .social-mutual-summary-line--action {
@@ -593,7 +595,7 @@
 
 /* change the style of the name in the friend card */
 .social-pane .social-friends-grid > tr > td:nth-child(2) > div:first-child > span {
-  font-size: 1.5em; /* 24px */
+  font-size: var(--font-size-lg, 1.125rem); /* 18px */
   font-weight: var(--font-weight-bold, 600); /* new design uses 600 */
   line-height: var(--line-height-tight);
   margin-top: 0;
@@ -613,7 +615,7 @@
   width: 100%;
   white-space: normal;
   color: var(--color-text-subheading, #101828);
-  font-size: var(--font-size-base, 1rem);
+  font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-medium, 500);
   line-height: 1.25;
   text-align: left;
@@ -649,8 +651,16 @@
 
 .social-pane .social-friends-header-actions--standalone {
   display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.75rem);
   justify-content: flex-start;
   padding: 0.7rem 1rem 0;
+}
+
+.social-pane .social-friends-header-hint {
+  color: var(--color-text-secondary, #4A5565);
+  font-size: var(--font-size-sm, 0.875rem);
+  line-height: 1.4;
 }
 
 .social-pane .social-friends-header-actions button {

@@ -288,7 +288,7 @@ export function createEditProfileDetailsButton (
     const saveButton = dom.createElement('button')
     saveButton.type = 'submit'
     saveButton.className = 'social-pane__dialog-button btn-primary'
-    saveButton.textContent = 'Save'
+    saveButton.textContent = 'Save Changes'
     actions.appendChild(saveButton)
 
     const closeDialog = () => {

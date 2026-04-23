@@ -69,13 +69,6 @@ export const socialPane = {
       return unique
     }
 
-    const people = function (n: number) {
-      let res = ' '
-      res += n || 'no'
-      if (n === 1) return res + ' person'
-      return res + ' people'
-    }
-
     const link = function (contents: Node, uri: string | null | undefined) {
       if (!uri) return contents
       const a = dom.createElement('a')
@@ -116,9 +109,7 @@ export const socialPane = {
       label.appendChild(input)
       f.appendChild(label)
       const boxHandler = function (this: HTMLInputElement, _e: Event) {
-        // alert('Should be greyed out')
         if (this.checked) {
-          // Add link
           try {
             outliner.UserInput.sparqler.insert_statement(statement, function (
               uri,
@@ -150,7 +141,6 @@ export const socialPane = {
             tx.className = 'question'
           }
         } else {
-          // Remove link
           try {
             outliner.UserInput.sparqler.delete_statement(statement, function (
               uri,
@@ -403,7 +393,6 @@ export const socialPane = {
         mutualConnections,
         link,
         text,
-        people,
         buildCheckboxForm,
         renderSupportingInfo,
         renderNameSuffix
