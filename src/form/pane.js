@@ -6,8 +6,6 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
-import '../styles/formPane.css'
-
 const ns = UI.ns
 
 export const formPane = {
@@ -29,16 +27,15 @@ export const formPane = {
     const kb = context.session.store
     const dom = context.dom
 
-    const mention = function mention (message, className) {
+    const mention = function complain (message, style) {
       const pre = dom.createElement('p')
-      pre.classList.add('formPaneMessage')
-      pre.classList.add(className || 'formPaneMessageInfo')
+      pre.setAttribute('style', style || 'color: grey; background-color: white')
       box.appendChild(pre).textContent = message
       return pre
     }
 
-    const complain = function complain (message) {
-      mention(message, 'formPaneMessageError')
+    const complain = function complain (message, style) {
+      mention(message, 'style', style || 'color: grey; background-color: #fdd;')
     }
 
     const complainIfBad = function (ok, body) {
@@ -106,11 +103,7 @@ export const formPane = {
                   complainIfBad
                 )
               )
-<<<<<<< HEAD
-              e.classList.add('formPaneEditButton')
-=======
               e.setAttribute('style', 'margin-left: auto; display: block;')
->>>>>>> main
             }
           }
           const anchor = dom.createElement('a')

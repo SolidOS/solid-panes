@@ -84,9 +84,6 @@ async function renderPane (uri: string) {
     store.fetcher.load(doc).then(resolve, reject)
   })
 
-<<<<<<< HEAD
-  const context = {
-=======
   const devEnvironment : RenderEnvironment = {
     layout: 'desktop', // or 'mobile'
     layoutPreference: 'desktop', // or 'mobile' or 'auto'
@@ -95,7 +92,6 @@ async function renderPane (uri: string) {
     viewport: { width: 800, height: 480 } // this is the default viewport for the browser window
   }
   const context : DataBrowserContext = {
->>>>>>> main
     // see https://github.com/solidos/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
     dom: document,
     getOutliner,

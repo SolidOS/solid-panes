@@ -198,8 +198,6 @@ export default function (context) {
     const td = dom.createElement('td')
     td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
-<<<<<<< HEAD
-=======
     td.style.margin = '0.2em'
     if (!obj) {
       td.textContent = 'No object available.'
@@ -208,7 +206,6 @@ export default function (context) {
     td.style.border = 'none'
     td.style.padding = '0'
     td.style.verticalAlign = 'top'
->>>>>>> main
     const theClass = 'obj'
 
     // set about and put 'expand' icon

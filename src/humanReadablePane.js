@@ -7,7 +7,6 @@ import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import './styles/humanReadablePane.css'
 
 // Helper function to check if a URI has a markdown file extension
 const isMarkdownFile = (uri) => {
@@ -179,11 +178,6 @@ const humanReadablePane = {
     div.setAttribute('class', 'docView')
     div.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
 
-    const setFrameDisplayStyles = function (frame, lines) {
-      frame.classList.add('doc', 'humanReadableFrame')
-      frame.style.setProperty('--human-readable-height', `${lines}em`)
-    }
-
     // render markdown to html in a DIV element
     const renderMarkdownContent = function (frame) {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
@@ -192,12 +186,8 @@ const humanReadablePane = {
         const res = marked.parse(markdownText)
         const clean = DOMPurify.sanitize(res)
         frame.innerHTML = clean
-<<<<<<< HEAD
-        setFrameDisplayStyles(frame, lines)
-=======
         frame.setAttribute('class', 'doc')
         frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
->>>>>>> main
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'
@@ -220,23 +210,14 @@ const humanReadablePane = {
 
     const setIframeAttributes = (frame, lines) => {
       frame.setAttribute('src', subject.uri)
-<<<<<<< HEAD
-      setFrameDisplayStyles(frame, lines)
-=======
       frame.setAttribute('class', 'doc')
       frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
->>>>>>> main
     }
 
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
-      const frame = myDocument.createElement('div')
+      const frame = myDocument.createElement('DIV')
       renderMarkdownContent(frame)
-<<<<<<< HEAD
-      const tr = myDocument.createElement('tr')
-      tr.appendChild(frame)
-      div.appendChild(tr)
-=======
       const frameContainer = myDocument.createElement('div')
       frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
       frameContainer.appendChild(frame)
@@ -249,10 +230,9 @@ const humanReadablePane = {
       frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
->>>>>>> main
     } else {
       // For other content types, use IFRAME
-      const frame = myDocument.createElement('iframe')
+      const frame = myDocument.createElement('IFRAME')
 
       // Apply sandbox for HTML/XHTML
       if (ct === 'text/html' || ct === 'application/xhtml+xml') {
@@ -277,14 +257,10 @@ const humanReadablePane = {
         setIframeAttributes(frame, 30)
       })
 
-<<<<<<< HEAD
-      div.appendChild(frame)
-=======
       const frameContainer = myDocument.createElement('div')
       frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
->>>>>>> main
     }
 
     return div
