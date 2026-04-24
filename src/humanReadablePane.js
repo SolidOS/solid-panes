@@ -7,6 +7,7 @@ import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import './styles/humanReadablePane.css'
 
 // Helper function to check if a URI has a markdown file extension
 const isMarkdownFile = (uri) => {
@@ -178,6 +179,11 @@ const humanReadablePane = {
     div.setAttribute('class', 'docView')
     div.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
 
+    const setFrameDisplayStyles = function (frame, lines) {
+      frame.classList.add('doc', 'humanReadableFrame')
+      frame.style.setProperty('--human-readable-height', `${lines}em`)
+    }
+
     // render markdown to html in a DIV element
     const renderMarkdownContent = function (frame) {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
@@ -216,7 +222,7 @@ const humanReadablePane = {
 
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
-      const frame = myDocument.createElement('DIV')
+      const frame = myDocument.createElement('div')
       renderMarkdownContent(frame)
       const frameContainer = myDocument.createElement('div')
       frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
@@ -232,7 +238,7 @@ const humanReadablePane = {
       div.appendChild(frameContainer)
     } else {
       // For other content types, use IFRAME
-      const frame = myDocument.createElement('IFRAME')
+      const frame = myDocument.createElement('iframe')
 
       // Apply sandbox for HTML/XHTML
       if (ct === 'text/html' || ct === 'application/xhtml+xml') {

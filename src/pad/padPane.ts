@@ -394,7 +394,7 @@ const paneDef: PaneDefinition = {
         // give the user links to the new app
 
         const p = div.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'font-size: 140%;')
+        p.classList.add('padPaneSuccess')
         p.innerHTML =
           'Your <a href=\'' +
           newIndexDoc.uri +
@@ -420,7 +420,7 @@ const paneDef: PaneDefinition = {
 
       const title =
         store.any(subject, ns.dc('title')) || store.any(subject, ns.vcard('fn'))
-      if (paneOptions.solo && typeof window !== 'undefined' && title) {
+      if (paneOptions?.solo && typeof window !== 'undefined' && title) {
         window.document.title = title.value
       }
       options.exists = exists
