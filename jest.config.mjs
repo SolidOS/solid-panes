@@ -3,6 +3,7 @@ export default {
   coverageDirectory: 'coverage',
   preset: 'ts-jest/presets/js-with-babel',
   testEnvironment: 'jsdom',
+  setupFiles: ['./test/helpers/globals.js'],
   testEnvironmentOptions: {
     customExportConditions: ['node']
   },
@@ -15,6 +16,9 @@ export default {
     '^SolidLogic$': 'solid-logic',
     '^UI$': 'solid-ui',
     '^\\$rdf$': 'rdflib',
+    '\\.svg\\?raw$': '<rootDir>/test/__mocks__/fileMock.js',
+    '\\.(svg)$': '<rootDir>/test/__mocks__/fileMock.js',
+    '\\.(png|jpe?g|gif|webp|avif)$': '<rootDir>/test/__mocks__/fileMock.js',
     '\\.css$': '<rootDir>/test/__mocks__/styleMock.js'
   },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],

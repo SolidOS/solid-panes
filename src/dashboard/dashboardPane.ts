@@ -46,14 +46,24 @@ function buildPage (
   container: HTMLElement,
   webId: NamedNode | null,
   context: DataBrowserContext,
-  subject: NamedNode
+  subject: NamedNode | null
 ) {
-  // if uri then SolidOS is a browse.html web app
   const uri = (new URL(window.location.href)).searchParams.get('uri')
-  if (webId && (uri || webId.site().uri === subject.site().uri)) {
+
+  if (uri && webId) {
     return buildDashboard(container, context)
   }
-  return buildHomePage(container, subject)
+
+  if (!uri && subject) {
+    return buildHomePage(container, subject)
+  }
+
+  if (!uri && !subject && webId) {
+    return buildDashboard(container, context)
+  }
+
+  const fallbackSubject = subject || webId || store.sym(window.location.href)
+  return buildHomePage(container, fallbackSubject)
 }
 
 function buildDashboard (container: HTMLElement, context: DataBrowserContext) {

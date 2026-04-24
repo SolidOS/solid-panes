@@ -64,7 +64,7 @@ export const slideshowPane = {
           const objectURL = URL.createObjectURL(myBlob)
           img.setAttribute('src', objectURL) // w640 h480 //
         })
-      img.setAttribute('width', '100%')
+      img.style.width = '100%'
       figure.appendChild(dom.createElement('figcaption'))
     }
     const options = { dom }
