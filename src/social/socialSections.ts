@@ -53,6 +53,9 @@ export function createHeaderSection (
     header.replaceChildren()
     const profileData = getProfileData()
 
+    const headerContent = dom.createElement('div')
+    headerContent.className = 'social-pane__header-content'
+
     if (headerControls.canEdit) {
       header.appendChild(createEditProfileDetailsButton({
         dom,
@@ -64,11 +67,10 @@ export function createHeaderSection (
     } else if (headerControls.viewerMode === 'authenticated') {
       const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
       addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
-      header.appendChild(addToFriendsButton)
+      // header.appendChild(addToFriendsButton)
+      headerContent.appendChild(addToFriendsButton)
     }
 
-    const headerContent = dom.createElement('div')
-    headerContent.className = 'social-pane__header-content'
     header.appendChild(headerContent)
 
     const headerMedia = dom.createElement('div')
