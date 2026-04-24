@@ -240,11 +240,6 @@ export function createEditProfileDetailsButton (
     closeIconButton.innerHTML = closeIcon
     dialogHeader.appendChild(closeIconButton)
 
-    const hint = dom.createElement('p')
-    hint.className = 'social-pane__dialog-hint'
-    hint.textContent = 'Enter one URL per line for each field.'
-    dialog.appendChild(hint)
-
     const form = dom.createElement('form')
     form.classList.add('social-pane__dialog-form', 'flex-column')
     dialog.appendChild(form)
