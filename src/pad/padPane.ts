@@ -2,7 +2,11 @@ import { icons, ns, pad, widgets, login } from 'solid-ui'
 import { authn, AppDetails } from 'solid-logic'
 import { graph, log, NamedNode, Namespace, sym, serialize, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+<<<<<<< HEAD
 import '../styles/padPane.css'
+=======
+import './padPane.css'
+>>>>>>> main
 /*   pad Pane
  **
  */
@@ -17,6 +21,7 @@ const paneDef: PaneDefinition = {
 
   // Does the subject deserve an pad pane?
   label: function (subject, context) {
+    // @ts-ignore
     const t = (context.session.store as Store).findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
       return 'pad'
@@ -27,6 +32,7 @@ const paneDef: PaneDefinition = {
   mintClass: ns.pad('Notepad'),
 
   mintNew: function (context, newPaneOptions: any) {
+    // @ts-ignore
     const store = context.session.store as Store
     const updater = store.updater
     if (newPaneOptions.me && !newPaneOptions.me.uri) {
@@ -78,6 +84,7 @@ const paneDef: PaneDefinition = {
   // @@ TODO Set better type for paneOptions
   render: function (subject, context, paneOptions: any) {
     const dom = context.dom
+    // @ts-ignore
     const store = context.session.store as Store
     // Utility functions
     const complainIfBad = function (ok: boolean, message: string) {
@@ -515,6 +522,7 @@ const paneDef: PaneDefinition = {
     const div = dom.createElement('div')
 
     //  Build the DOM
+<<<<<<< HEAD
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.classList.add('padPaneTable')
 
@@ -533,16 +541,52 @@ const paneDef: PaneDefinition = {
     const naviMiddle3 = naviMiddle.appendChild(dom.createElement('td'))
 
     const naviStatus = structure.appendChild(dom.createElement('tr')) // status etc
+=======
+    const structure = div.appendChild(dom.createElement('div')) // responsive flex layout
+    structure.className = 'pad-layout'
+
+    const naviLoginoutTR = structure.appendChild(dom.createElement('div'))
+    naviLoginoutTR.className = 'pad-row'
+    naviLoginoutTR.appendChild(dom.createElement('div')) // naviLoginout1
+    naviLoginoutTR.appendChild(dom.createElement('div'))
+    naviLoginoutTR.appendChild(dom.createElement('div'))
+
+    const naviTop = structure.appendChild(dom.createElement('div')) // stuff
+    naviTop.className = 'pad-row'
+    const naviMain = naviTop.appendChild(dom.createElement('div'))
+    naviMain.className = 'pad-main'
+
+    const naviMiddle = structure.appendChild(dom.createElement('div')) // controls
+    naviMiddle.className = 'pad-row pad-controls'
+    const naviMiddle1 = naviMiddle.appendChild(dom.createElement('div'))
+    naviMiddle1.className = 'pad-cell'
+    const naviMiddle2 = naviMiddle.appendChild(dom.createElement('div'))
+    naviMiddle2.className = 'pad-cell'
+    const naviMiddle3 = naviMiddle.appendChild(dom.createElement('div'))
+    naviMiddle3.className = 'pad-cell'
+
+    const naviStatus = structure.appendChild(dom.createElement('div')) // status etc
+    naviStatus.className = 'pad-row'
+>>>>>>> main
     const statusArea = naviStatus.appendChild(dom.createElement('div'))
 
-    const naviSpawn = structure.appendChild(dom.createElement('tr')) // create new
+    const naviSpawn = structure.appendChild(dom.createElement('div')) // create new
+    naviSpawn.className = 'pad-row'
     const spawnArea = naviSpawn.appendChild(dom.createElement('div'))
 
+<<<<<<< HEAD
     const naviMenu = structure.appendChild(dom.createElement('tr'))
     naviMenu.classList.add('naviMenu')
     naviMenu.appendChild(dom.createElement('td')) // naviLeft
     naviMenu.appendChild(dom.createElement('td'))
     naviMenu.appendChild(dom.createElement('td'))
+=======
+    const naviMenu = structure.appendChild(dom.createElement('div'))
+    naviMenu.setAttribute('class', 'pad-row naviMenu')
+    naviMenu.appendChild(dom.createElement('div')) // naviLeft
+    naviMenu.appendChild(dom.createElement('div'))
+    naviMenu.appendChild(dom.createElement('div'))
+>>>>>>> main
 
     const options: any = { statusArea, timingArea: naviMiddle1 }
 

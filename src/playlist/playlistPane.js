@@ -100,18 +100,14 @@ export default {
       div.setAttribute('class', 'imageView')
       img = myDocument.createElement('IFRAME')
       img.setAttribute('src', uri)
-      img.setAttribute('width', 560)
-      img.setAttribute('height', 315)
       img.setAttribute('frameborder', 0)
-      img.setAttribute('style', 'max-width: 850px; max-height: 100%;')
+      img.setAttribute('style', 'width: 100%; aspect-ratio: 16/9; max-width: 100%; border: 0;')
       img.setAttribute('allowfullscreen', 'true')
     } else {
       div.setAttribute('class', 'imageView')
       img = myDocument.createElement('IMG')
       img.setAttribute('src', obj.value)
-      img.setAttribute('width', 560)
-      img.setAttribute('height', 315)
-      img.setAttribute('style', 'max-width: 560; max-height: 315;')
+      img.setAttribute('style', 'max-width: 100%; height: auto;')
     }
 
     let descDiv

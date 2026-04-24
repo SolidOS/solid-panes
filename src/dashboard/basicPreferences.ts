@@ -15,6 +15,7 @@ export const basicPreferencesPane: PaneDefinition = {
   // The subject should be the logged in user.
   render: (subject, context) => {
     const dom = context.dom
+    // @ts-ignore
     const store = context.session.store as Store
 
     function complainIfBad (ok: Boolean, mess: any) {

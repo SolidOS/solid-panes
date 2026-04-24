@@ -106,7 +106,11 @@ export const formPane = {
                   complainIfBad
                 )
               )
+<<<<<<< HEAD
               e.classList.add('formPaneEditButton')
+=======
+              e.setAttribute('style', 'margin-left: auto; display: block;')
+>>>>>>> main
             }
           }
           const anchor = dom.createElement('a')

@@ -21,6 +21,7 @@ const pane: PaneDefinition = {
 
   render: function (subject, context) {
     const dom = context.dom
+    // @ts-ignore
     const store = context.session.store as Store
     const canonizedSubject = store.canon(subject) as BlankNode | NamedNode | Variable
     const types = store.findTypeURIs(canonizedSubject)

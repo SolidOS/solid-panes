@@ -22,6 +22,16 @@ const common = {
         use: ['style-loader', 'css-loader'],
       },
       {
+        test: /\.svg$/i,
+        resourceQuery: /raw/,
+        type: 'javascript/auto',
+        use: 'raw-loader'
+      },
+      {
+        test: /\.(png|jpe?g|gif|webp|avif|svg)$/i,
+        type: 'asset/resource'
+      },
+      {
         test: /\.ttl$/i,
         type: 'asset/source'
       }
@@ -38,7 +48,7 @@ const common = {
     'solid-logic': 'SolidLogic',
     SolidLogic: 'SolidLogic',
     'solid-ui': 'UI',
-    UI: 'UI',
+    UI: 'UI'
   },
   devtool: 'source-map',
 }
@@ -55,7 +65,6 @@ const normalConfig = {
       export: 'default',
     },
     globalObject: 'this',
-    clean: true,
   },
   plugins: [
     ...(common.plugins || []),
@@ -68,6 +77,14 @@ const normalConfig = {
             const relPath = path.relative(path.resolve('src'), absoluteFilename)
             return path.resolve('dist', relPath)
           },
+        },
+        {
+          from: path.resolve(process.cwd(), 'src/icons'),
+          to: path.resolve(process.cwd(), 'dist/icons'),
+          globOptions: {
+            ignore: ['**/*.ts'],
+          },
+          noErrorOnMissing: true,
         },
       ],
     }),
@@ -102,6 +119,14 @@ const minConfig = {
             const relPath = path.relative(path.resolve('src'), absoluteFilename)
             return path.resolve('dist', relPath)
           },
+        },
+        {
+          from: path.resolve(process.cwd(), 'src/icons'),
+          to: path.resolve(process.cwd(), 'dist/icons'),
+          globOptions: {
+            ignore: ['**/*.ts'],
+          },
+          noErrorOnMissing: true,
         },
       ],
     }),
