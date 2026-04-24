@@ -607,27 +607,28 @@
 }
 
 /* change the style of the name / label in the friend card */
-.social-pane .social-friends-grid > tr > td:nth-child(2) > div:first-child > span {
+.social-pane .social-friends-grid > tr > td:nth-child(2) > div:first-child > span:first-of-type {
   display: inline-block;
-  width: min(20rem, 100%);
-  max-width: 100%;
+  max-width: min(20rem, 100%);
   vertical-align: text-top;
   font-size: var(--font-size-lg, 1.125rem); /* 18px */
   font-weight: var(--font-weight-bold, 600); /* new design uses 600 */
   line-height: var(--line-height-tight);
   margin-top: 0;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .social-pane .social-friend-pronouns {
+  display: inline;
+  margin-left: var(--spacing-xs, 0.25rem);
   color: var(--color-text-secondary, #4A5565);
   font-size: var(--font-size-sm, 0.875rem); /* 14px */
   font-weight: var(--font-weight-regular, 400);
   line-height: 1.2;
-  text-align: center;
+  text-align: left;
 }
 
 .social-pane .social-friend-job-org {
