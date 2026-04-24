@@ -45,7 +45,7 @@ export function createHeaderSection (
 ): SocialHeaderElement {
   const dom = context.dom
   const kb = context.session.store
-  const header = document.createElement('header') as SocialHeaderElement
+  const header = dom.createElement('header') as SocialHeaderElement
   header.className = 'social-pane__header'
   let headerControls = controls
 
@@ -78,7 +78,7 @@ export function createHeaderSection (
     headerContent.appendChild(headerMedia)
 
     if (profileData) {
-      headerMedia.appendChild(createImage(profileData.imageUrl, profileData.name))
+      headerMedia.appendChild(createImage(dom, profileData.imageUrl, profileData.name))
     }
 
     const headerDetails = dom.createElement('div')
@@ -159,9 +159,9 @@ export function createHeaderSection (
   return header
 }
 
-function createImage (src: string | null | undefined, alt = ''): HTMLElement {
+function createImage (dom: HTMLDocument, src: string | null | undefined, alt = ''): HTMLElement {
   if (src) {
-    const img = document.createElement('img')
+    const img = dom.createElement('img')
     img.className = 'social-pane__header-hero'
     img.src = src
     img.alt = alt
@@ -171,13 +171,13 @@ function createImage (src: string | null | undefined, alt = ''): HTMLElement {
     return img
   }
 
-  const fallback = document.createElement('div')
+  const fallback = dom.createElement('div')
   fallback.className = 'social-pane__header-hero-alt flex-center'
   fallback.setAttribute('role', 'img')
   fallback.setAttribute('aria-label', alt)
   fallback.tabIndex = 0
 
-  const icon = document.createElement('span')
+  const icon = dom.createElement('span')
   icon.classList.add('social-pane__header-hero-icon', 'inline-flex-row')
   icon.innerHTML = personInCircleIconSvg
   fallback.appendChild(icon)
