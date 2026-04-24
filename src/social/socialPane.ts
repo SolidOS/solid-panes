@@ -406,6 +406,11 @@ export const socialPane = {
 
     const mutualFriends = mutualSection.section
     const mutualContent = mutualSection.content
+    if (me && !thisIsYou) {
+      mutualFriends.setAttribute('style', 'display: none')
+    } else {
+      mutualFriends.setAttribute('style', 'display: block')
+    }
     if (!mutualFriends.className) {
       mutualFriends.className = 'social-pane__mutual-friends social-primary__panel'
       mutualFriends.id = 'social-panel-mutual'
