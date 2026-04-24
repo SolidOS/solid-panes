@@ -8,10 +8,66 @@
 */
 
 :root {
+  /* New Design: Colors (possibly change to primary secondary etc for now add here  */
+  /* Adding used for comment so we can decide later */
+  --gray-50: #F9FAFB; /* Used for: background of dialog buttons */
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB; /* Used for: border of sections */
+  --gray-300: #D1D5DC; /* Used for: text */
+  --gray-400: #99A1AF; /* Used for: input borders */
+  --gray-500: #6A7282; /* Used for: text */
+  --gray-600: #4A5565; /* Used for: text  */
+  --gray-700: #364153; /* Used for: text */
+  --gray-800: #1E2939; /* Used for: text  */
+  --gray-900: #101828; /* Used for: text  */
+  --purple-500: #AD46FF;
+  --red-600: #B00020; /* Used for: error text */
+  --slate-50: #F8FAFC;
+  --slate-200: #E2E8F0; /* Used for: border of sections */
+  --slate-400: #90A1B9; /* Used for: edit dialog cancel */
+  --slate-500: #62748E; /* Used for: text */
+  --slate-700: #314158; /* Used for: side menu bar text */
+  --slate-800: #1D293D; /* Used for: text and top header background */
+  --slate-900: #0F172B; /* Used for: text  */
+  --utility-colours-body-grey: #666; /* used in header drop down behind the picture */
+  --lavender-200: #E4DBFE; /* background of Follow button  and side menu active button */
+  --lavender-300: #e6dcff;
+  --lavender-400: #cbb9ff;
+  --lavender-500: #b295ff;
+  --lavender-700: #9672ff;
+  --lavender-900: #7c4cff;
+  --grey-purple-200: #d8d6db;
+  --grey-purple-300: #b1acb7;
+  --grey-purple-500: #878192;
+  --grey-purple-700: #5e546d;
+  --grey-purple-900: #332746; /* Used for: header background */
+  --orange-200: #ffefdd;
+  --orange-300: #ffdeba;
+  --orange-400: #ffce97;
+  --orange-500: #ffbd74;
+  --orange-600: #ffad4f;
+  --pink-500: #ffdde6;
+  --pink-600: #ffbbcd;
+  --pink-700: #ff98b3;
+  --pink-800: #ff769a;
+  --pink-900: #ff5180;
+  --yellow-700: #A65F00;
+  --black: #000;  /* Used for: text heading */
+  --white: #FFF;
+
   /* Background and Text */
-  --color-background: white;
-  --color-text: ##1A1A1A;
-  --color-text-secondary: #666;
+  --color-background-old: #FFFFFF; /* White */
+  --color-background: #F8F9FB; /* Light grey for overall background */
+  --color-background-row-default: white;
+  --color-background-row-alternate: #f0f0f0;
+  --color-text: #1A1A1A; /* Used in login button */
+  --color-text-primary: var(--gray-700, #364153); /* new design */
+  --color-text-secondary-old: #666;
+  --color-text-secondary: var(--gray-600, #4A5565);
+  --color-text-heading: var(--black, #000000); /* New design uses pure black for headings */
+  --color-text-subheading: var(--gray-900, #101828); /* new design */
+  --color-text-strong: var(--slate-900, #0F172B); /* new design */
+  --color-text-strong-secondary: var(--slate-800, #1D293D); /* new design */
   --color-text-light: #aaa;
   --color-text-link: #3B5998;
   --color-text-link-visited: #3B5998;
@@ -23,12 +79,25 @@
   --color-text-blue: #004;
   --color-text-brown: #440;
   
+  /* Header */
+  --color-header-row-bg: var(--grey-purple-900, #332746);
+  --color-header-text: var(--white, #fff);
+  --color-header-menu-separator-line: var(--slate-200, #E2E8F0);
+  --color-header-menu-item-hover: var(--lavender-300, #e6dcff);
+  --color-header-menu-item-selected: var(--lavender-400, #cbb9ff);
+  --color-header-menu-loggedin-bg: var(--grey-purple-700, #5e546d);
+  --color-header-button-text: var(--slate-900, #0F172B);
+  --color-header-button-detail-text: var(--gray-400, #99A1AF);
+  --color-header-shadow: 2px 6px 10px 0 rgba(0, 0, 0, 0.4), 2px 8px 24px 0 rgba(0, 0, 0, 0.19);
+  
   /* Borders */
-  --color-border: #ccc;
+  --color-border: var(--gray-200, #E5E7EB); /* Used in login button */
+  --color-border-lighter: var(--slate-200, #E2E8F0);
   --color-border-dark: #777;
-  --color-border-darker: #444;
+  --color-border-darker: var(--gray-600, #4A5565); /* old #444 */
   --color-border-light: #aaa;
   --color-border-pale: #eee;
+  --color-border-accent: #88c;
   
   /* Status Colors */
   --color-selected-bg: #8F3;
@@ -97,7 +166,7 @@
   /* Menu and Tab Colors */
   --color-menu-bg: #FFFFFF;
   --color-menu-item-text: #654d6c;
-  --color-menu-item-active: #D1C6DA;
+  --color-menu-item-active: #D1C6DA; /* can be replaced with --color-header-menu-item-selected? */
   --color-view-tab-bg: #fff;
   --color-view-window-bg: #ccc;
   --color-query-select-bg: #ccc;
@@ -123,53 +192,100 @@
   /* Typography */
   --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-family-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-size-base: 100%;
+  --font-size-base-old: 100%;
+  --font-size-base: 1rem;      /* 16px */
   --font-size-strong: 120%;
   --font-weight-normal: normal;
-  --font-weight-bold: bold;
+  --font-weight-md: 500; /* New design uses 500 for body text was normal */
+  --font-weight-bold-old: bold;
+  --font-weight-bold: 600; /* New design uses 600 for headings was 700 */
+  --font-weight-xbold: 700; /* New design uses 700 for strong text was bold */
   --line-height-base: 1.5;
   --line-height-tight: 1.4;
   --line-height-loose: 1.6;
   --letter-spacing-wide: 0.025em;
-  --font-size-sm: 0.875rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  
+  --font-size-xxs: 0.75rem; /* 12px */
+  --font-size-xs: 0.813rem; /* 13px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-md: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem; /* 18px */
+  --font-size-xl-old: 1.25rem; /* 20px */
+  --font-size-xl: 1.375rem;     /* 22px */
+  --font-size-xxl: 1.75rem;    /* 28px */
+
   /* Spacing and Sizing */
   --spacing-tiny: 0.05em;
   --spacing-small: 0.1em;
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 0.75em;
-  --spacing-base: 0.5em;
-  --spacing-md: 1em;
-  --spacing-lg: 1.5em;
-  --spacing-xl: 2em;
-  --spacing-2xl: 3em;
-  --border-width-thin: 1px;
+  --spacing-xxxs: 0.2rem; /* was em */
+  --spacing-xxs-old: 0.3rem; /* was em */
+  --spacing-xxs: 0.3125rem;  /* 5px */
+  --spacing-2xs: 0.625rem; /* 10px new design uses this */
+  --spacing-xs-old: 0.5rem;
+  --spacing-xs: 0.75rem;   /* 12px new design uses this */
+  --spacing-sm-old: 0.75rem; /* was em */
+  --spacing-sm: 0.938rem;  /* 15px new design uses this */
+  --spacing-btn: 0.7rem; /* was em */
+  --spacing-base: 0.5rem; /* was em */
+  --spacing-md-old: 1rem; /* was em */
+  --spacing-md: 1.25rem;   /* 20px new design uses this */
+  --spacing-lg-old: 1.5rem; /* was em */
+  --spacing-lg: 1.5625rem;   /* 25px new design uses this */
+  --spacing-xl: 2rem; /* was em */
+  --spacing-1xl: 2.5rem; /* 40px new design uses this */
+  --spacing-2xl: 3rem; /* was em */
+  --border-width-xthin: 0.05rem; /* was em */
+  --border-width-thin-old: 1px;
+  --border-width-thin: 0.1rem; /* changed from 1px */
+  --border-width-sm: 0.1rem; /* was em */
   --border-width-medium: 2px;
   --border-width-bold: 5px;
-  --border-radius-base: 0.5em;
-  --border-radius-lg: 0.75em;
-  --border-radius-full: 1em;
+   
+
+  --border-radius-xs: 0.1rem; /* 2px Extra small border radius was em */
+  --border-radius-sm: 0.2rem; /* 4px Small border radius was em */
+  --border-radius-base-old: 0.5em;
+  --border-radius-base: 0.3125rem; /* 5px  Base border radius */
+  --border-radius-md: 0.5rem; /* 8px Medium border radius */
+  --border-radius-lg: 0.75rem; /* 12px Large border radius was em */
+  --border-radius-full-old: 1em;
+  --border-radius-full: 0.625rem;  /* 10px */
+
   
+  /* icons */
+  --icon-xxxs: 0.75rem; /* 12px new design uses this */
+  --icon-xxs: 1rem; /* 16px new design uses this */
+  --icon-xs: 1.5rem; /* 24px new design uses this */
+  --icon-sm: 1.8rem; /* 28px new design uses this */
+  --icon-base: 2rem; /* 32px new design uses this */
+  --icon-md: 2.5rem; /* 40px new design uses this */
+  --icon-xl: 3.1rem; /* 50px new design uses this */
+
   /* Primary/Accent Colors */
   --color-primary: #7C4DFF;
   --color-primary-alpha: rgba(124, 77, 255, 0.25);
   --color-primary-alpha-light: rgba(124, 77, 255, 0.1);
   --color-secondary: #0077B6;
   --color-accent: #FFD600;
-  --color-error: #B00020;
+  --color-error: #B00020; /* USed in login button */
   --color-success: #00C853;
   
   /* Card/Section Backgrounds */
-  --color-card-bg: #FFFFFF;
-  --color-section-bg: #F5F5F5;
+  --color-section-bg-old: #F5F5F5; /* Light grey for outer sections */
+  --color-section-bg: #FFFFFF; /* White for outer sections to match new design */
+
+  --color-card-bg: #FFFFFF; /* White for inner cards */
   --color-zebra-stripe: rgba(0, 0, 0, 0.02);
   --color-hover-bg: rgba(0, 0, 0, 0.05);
   
   /* Shadows */
   --box-shadow: 0 2px 8px rgba(124,77,255,0.08);
-  --box-shadow-sm: 0 1px 4px rgba(124,77,255,0.12);
+  --box-shadow-sm: 0 1px 4px rgba(124,77,255,0.12); /* Used in login button */
+  --box-shadow-active: 0 1px 2px rgba(124, 77, 255, 0.2);
+  --box-shadow-focus: 0 0 0 5px rgba(124, 77, 255, 0.25);
+  --box-shadow-hover: 0 2px 4px rgba(124, 77, 255, 0.2);
+  --box-shadow-modal: 0 2px 10px rgba(0, 0, 0, 0.3);
+  --box-shadow-overlay: 0 4px 24px rgba(0, 0, 0, 0.2);
+  --box-shadow-popup: 0 0.5em 0.9em rgba(0, 0, 0, 0.2);
   
   /* Accessibility */
   --min-touch-target: 44px;
@@ -183,11 +299,13 @@
   
   /* Overlay and Modal */
   --overlay-bg: rgba(0, 0, 0, 0.5);
+  --overlay-bg-muted: rgba(0, 0, 0, 0.3);
   --z-index-modal: 9999;
   --z-index-skip-links: 1000;
   
   /* Opacity */
   --opacity-disabled: 0.6;
+  --opacity-input-disabled: 0.75;
   
   /* Layout Values */
   --max-width-readable: 65ch;

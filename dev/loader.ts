@@ -2,17 +2,73 @@
 import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
 import { solidLogicSingleton, store, authSession } from 'solid-logic'
-import { getOutliner } from '../src'
+import { getOutliner, initMainPage, refreshUI } from '../src'
 import Pane from 'profile-pane'
 import './dev-mash.css'
+import { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 
 // Add custom properties to the Window interface for TypeScript
 declare global {
   interface Window {
     logout: () => void;
     login: () => Promise<void>;
+    renderMainPage: typeof renderMainPage;
     renderPane: typeof renderPane;
+    setLayout: (layout: 'mobile' | 'desktop') => Promise<void>;
     Pane: typeof Pane;
+  }
+}
+
+const DEFAULT_URI = 'https://testingsolidos.solidcommunity.net/profile/card#me'
+
+function getEnvironment (layout: 'mobile' | 'desktop' = 'desktop'): RenderEnvironment {
+  return {
+    layout,
+    layoutPreference: layout,
+    inputMode: 'pointer',
+    theme: 'light',
+    viewport: layout === 'mobile'
+      ? { width: 375, height: 812 }
+      : { width: 1280, height: 800 }
+  }
+}
+
+async function renderMainPage (uri: string = DEFAULT_URI, layout: 'mobile' | 'desktop' = 'desktop') {
+  await initMainPage(store as any, uri, getEnvironment(layout))
+}
+
+async function setLayout (layout: 'mobile' | 'desktop') {
+  const outliner = getOutliner(document)
+  outliner.context = outliner.context || {}
+  outliner.context.environment = {
+    ...(outliner.context.environment || {}),
+    ...getEnvironment(layout)
+  }
+  await refreshUI(outliner)
+}
+
+function addLayoutButtons () {
+  let controls = document.getElementById('layoutControls')
+  if (!controls) {
+    controls = document.createElement('div')
+    controls.id = 'layoutControls'
+    controls.style.margin = '0.5rem 0'
+    const title = document.createElement('strong')
+    title.textContent = 'Menu layout preview: '
+    controls.appendChild(title)
+
+    const desktopButton = document.createElement('button')
+    desktopButton.textContent = 'Desktop'
+    desktopButton.onclick = () => setLayout('desktop')
+    controls.appendChild(desktopButton)
+
+    const mobileButton = document.createElement('button')
+    mobileButton.textContent = 'Mobile'
+    mobileButton.style.marginLeft = '0.5rem'
+    mobileButton.onclick = () => setLayout('mobile')
+    controls.appendChild(mobileButton)
+
+    document.body.insertBefore(controls, document.body.firstChild)
   }
 }
 
@@ -27,7 +83,15 @@ async function renderPane (uri: string) {
   await new Promise((resolve, reject) => {
     store.fetcher.load(doc).then(resolve, reject)
   })
-  const context = {
+
+  const devEnvironment : RenderEnvironment = {
+    layout: 'desktop', // or 'mobile'
+    layoutPreference: 'desktop', // or 'mobile' or 'auto'
+    inputMode: 'pointer', // or 'touch'
+    theme: 'light', // or 'dark'
+    viewport: { width: 800, height: 480 } // this is the default viewport for the browser window
+  }
+  const context : DataBrowserContext = {
     // see https://github.com/solidos/solid-panes/blob/005f90295d83e499fd626bd84aeb3df10135d5c1/src/index.ts#L30-L34
     dom: document,
     getOutliner,
@@ -35,7 +99,8 @@ async function renderPane (uri: string) {
       store: store,
       paneRegistry,
       logic: solidLogicSingleton
-    }
+    },
+    environment: devEnvironment
   }
 
   console.log(subject, context)
@@ -82,7 +147,8 @@ window.onload = async () => {
       loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
     }
   }
-  renderPane('https://testingsolidos.solidcommunity.net/profile/card#me')
+  addLayoutButtons()
+  await renderMainPage(DEFAULT_URI, 'desktop')
 }
 window.logout = () => {
   authSession.logout()
@@ -104,4 +170,6 @@ window.login = async function () {
   }
 };
 (window as any).renderPane = renderPane
+;(window as any).renderMainPage = renderMainPage
+;(window as any).setLayout = setLayout
 console.log("Pane at runtime:", Pane); window.Pane = Pane;

@@ -557,9 +557,53 @@ export const schedulePane = {
     const showForms = function () {
       clearElement(naviCenter) // Remove refresh button if nec
       const div = naviMain
+
+      // form2 depends on sched:allDay; seed a local default for new polls
+      if (!kb.any(subject, ns.sched('allDay'))) {
+        kb.add(
+          subject,
+          ns.sched('allDay'),
+          $rdf.literal(
+            'true',
+            undefined,
+            $rdf.sym('http://www.w3.org/2001/XMLSchema#boolean')
+          ),
+          detailsDoc
+        )
+      }
+
       const wizard = true
       let currentSlide = 0
       let gotDoneButton = false
+
+      const hasFormControls = function (container) {
+        return !!container.querySelector('input, select, textarea, button')
+      }
+
+      const asBoolean = function (term, fallback) {
+        if (!term) return fallback
+        const value = (term.value || '').toLowerCase()
+        if (value === 'true' || value === '1') return true
+        if (value === 'false' || value === '0') return false
+        return fallback
+      }
+
+      const renderTimeProposalFallback = function (slide) {
+        const allDayValue = asBoolean(kb.any(subject, ns.sched('allDay')), true)
+        const fallbackForm = kb.sym(
+          formsURI + (allDayValue ? '#AllDayForm2' : '#NotAllDayForm2')
+        )
+        UI.widgets.appendForm(
+          document,
+          slide,
+          {},
+          subject,
+          fallbackForm,
+          detailsDoc,
+          complainIfBad
+        )
+      }
+
       if (wizard) {
         const forms = [form1, form2, form3]
         const slides = []
@@ -575,6 +619,12 @@ export const schedulePane = {
             detailsDoc,
             complainIfBad
           )
+
+          // Some stores end up with form2's ui:Options unresolved; force a usable input form.
+          if (f === 1 && !hasFormControls(slide)) {
+            renderTimeProposalFallback(slide)
+          }
+
           slides.push(slide)
         }
 
@@ -882,7 +932,7 @@ export const schedulePane = {
 
     // Read or create empty results file
     function getResults () {
-      fetcher.nowOrWhenFetched(resultsDoc.uri, (ok, body, response) => {
+      fetcher.nowOrWhenFetched(resultsDoc.uri, undefined, (ok, body, response) => {
         if (!ok) {
           if (response.status === 404) {
             // /  Check explicitly for 404 error
@@ -968,17 +1018,24 @@ export const schedulePane = {
       options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) {
         return kb.any(opt, ns.cal('dtstart'))
+      }).filter(function (time) {
+        return !!time
       })
 
       options.set_y = kb.each(subject, ns.sched('response'))
       options.set_y = options.set_y.map(function (resp) {
         return kb.any(resp, ns.dc('author'))
+      }).filter(function (author) {
+        return !!author
       })
 
       const possibleTimes = kb
         .each(invitation, ns.sched('option'))
         .map(function (opt) {
           return kb.any(opt, ns.cal('dtstart'))
+        })
+        .filter(function (time) {
+          return !!time
         })
 
       const displayTheMatrix = function () {
@@ -1055,6 +1112,7 @@ export const schedulePane = {
             } //  @@ may need that
             const selectOptions = {}
             const predicate = ns.sched('availabilty')
+            if (!x) return
             const cellSubject = dataPointForNT[x.toNT()]
             const selector = UI.widgets.makeSelectForOptions(
               dom,
@@ -1093,19 +1151,22 @@ export const schedulePane = {
           const dps = kb.each(myResponse, ns.sched('cell'))
           dps.forEach(function (dataPoint) {
             const time = kb.any(dataPoint, ns.cal('dtstart'))
+            if (!time) return
             dataPointForNT[time.toNT()] = dataPoint
           })
         }
         for (let j = 0; j < possibleTimes.length; j++) {
-          if (dataPointForNT[possibleTimes[j].toNT()]) continue
+          const possibleTime = possibleTimes[j]
+          if (!possibleTime) continue
+          if (dataPointForNT[possibleTime.toNT()]) continue
           const dataPoint = $rdf.sym(id + '_' + j)
           insertables.push(
             $rdf.st(myResponse, ns.sched('cell'), dataPoint, doc)
           )
           insertables.push(
-            $rdf.st(dataPoint, ns.cal('dtstart'), possibleTimes[j], doc)
+            $rdf.st(dataPoint, ns.cal('dtstart'), possibleTime, doc)
           ) // @@
-          dataPointForNT[possibleTimes[j].toNT()] = dataPoint
+          dataPointForNT[possibleTime.toNT()] = dataPoint
         }
         if (insertables.length) {
           kb.updater.update([], insertables, function (

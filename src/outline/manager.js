@@ -3,6 +3,7 @@
    Outline Mode Manager
 */
 import * as paneRegistry from 'pane-registry'
+import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
 import { authn, authSession, store } from 'solid-logic'
@@ -10,6 +11,16 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
+import { getNameOfPodOwner } from '../profileUtils/ownerProfile'
+import personIcon from '../icons/person.svg'
+import friendsIcon from '../icons/friends.svg'
+import folderIcon from '../icons/folder.svg'
+import dashboardIcon from '../icons/dashboard.svg'
+
+const PERSON_ICON = personIcon
+const FRIENDS_ICON = friendsIcon
+const FOLDER_ICON = folderIcon
+const DASHBOARD_ICON = dashboardIcon
 
 /* global alert XPathResult sourceWidget */
 // XPathResult?
@@ -20,6 +31,7 @@ export default function (context) {
   const dom = context.dom
 
   this.document = context.dom
+  this.context = context
   this.outlineIcons = outlineIcons
   this.labeller = this.labeller || {}
   this.labeller.LanguagePreference = '' // for now
@@ -45,6 +57,20 @@ export default function (context) {
   this.init = function () {
     const table = getOutlineContainer()
     table.outline = this
+  }
+
+  this.getLayoutMode = function () {
+    const envLayout = this.context?.environment?.layout
+    if (envLayout === 'mobile' || envLayout === 'desktop') return envLayout
+
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      const viewportWidth = Math.round(Math.min(window.innerWidth, window.visualViewport?.width || window.innerWidth))
+      const isTouchInput = window.matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0
+
+      return viewportWidth <= 768 || (isTouchInput && viewportWidth <= 1024) ? 'mobile' : 'desktop'
+    }
+
+    return 'desktop'
   }
 
   /** benchmark a function **/
@@ -170,11 +196,16 @@ export default function (context) {
     statement
   ) {
     const td = dom.createElement('td')
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
+    td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
+    td.style.margin = '0.2em'
+    if (!obj) {
+      td.textContent = 'No object available.'
+      return td
+    }
+    td.style.border = 'none'
+    td.style.padding = '0'
+    td.style.verticalAlign = 'top'
     const theClass = 'obj'
 
     // set about and put 'expand' icon
@@ -198,7 +229,6 @@ export default function (context) {
       ).addEventListener('click', expandMouseDownListener)
     }
     td.setAttribute('class', theClass) // this is how you find an object
-    // @@ TAKE CSS OUT OF STYLE SHEET
     if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
       td.className = 'undetermined'
     } // @@? why-timbl
@@ -249,10 +279,7 @@ export default function (context) {
     // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
 
     const labelTD = dom.createElement('TD')
-    labelTD.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
+    labelTD.classList.add('labelTD')
     labelTD.setAttribute('notSelectable', 'true')
     labelTD.appendChild(dom.createTextNode(lab))
     predicateTD.appendChild(labelTD)
@@ -302,41 +329,30 @@ export default function (context) {
     }
     const items = await getDashboardItems()
 
-    function renderTab (div, item) {
-      div.dataset.globalPaneName = item.tabName || item.paneName
-      div.textContent = item.label
-    }
-
-    function renderMain (containerDiv, item) {
-      // Items are pane names
-      const pane = paneRegistry.byName(item.paneName) // 20190701
-      containerDiv.innerHTML = ''
-      const table = containerDiv.appendChild(dom.createElement('table'))
-      const me = authn.currentUser()
-      thisOutline.GotoSubject(
-        item.subject || me,
-        true,
-        pane,
-        false,
-        undefined,
-        table
+    const selectedItem = options.selectedTab
+      ? items.find(
+        item => item.paneName === options.selectedTab || item.tabName === options.selectedTab
       )
+      : items[0]
+
+    if (!selectedItem) {
+      return div
     }
 
-    div.appendChild(
-      UI.tabs.tabWidget({
-        dom,
-        subject: me,
-        items,
-        renderMain,
-        renderTab,
-        ordered: true,
-        orientation: 0,
-        backgroundColor: '#eeeeee', // black?
-        selectedTab: options.selectedTab,
-        onClose: options.onClose
-      })
+    div.dataset.globalPaneName = selectedItem.tabName || selectedItem.paneName
+
+    const content = div.appendChild(dom.createElement('div'))
+    const pane = paneRegistry.byName(selectedItem.paneName) // 20190701
+    const table = content.appendChild(dom.createElement('table'))
+    thisOutline.GotoSubject(
+      selectedItem.subject || me,
+      true,
+      pane,
+      false,
+      undefined,
+      table
     )
+
     return div
   }
   this.getDashboard = globalAppTabs
@@ -345,31 +361,46 @@ export default function (context) {
     const me = authn.currentUser()
     if (!me) return []
     const div = dom.createElement('div')
-    const [books, pods] = await Promise.all([getAddressBooks(), getPods()])
-    return [
-      {
-        paneName: 'home',
-        label: 'Your stuff',
-        icon: UI.icons.iconBase + 'noun_547570.svg'
-      },
-      {
-        paneName: 'basicPreferences',
-        label: 'Preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_00000.svg'
-      },
+    const panes = [
       {
         paneName: 'profile',
-        label: 'Your Profile',
-        icon: UI.icons.iconBase + 'noun_15059.svg'
+        subject: me,
+        label: 'Your profile',
+        icon: PERSON_ICON
       },
+      {
+        paneName: 'social', // loads socialPane
+        subject: me,
+        label: 'Your friends',
+        icon: FRIENDS_ICON
+      }
+    ]
+
+    const [pods] = await Promise.all([getPods()])
+
+    panes.push(...pods)
+
+    panes.push(
+      /* not in use since redesign of profile-pane
       {
         paneName: 'editProfile',
         label: 'Edit your Profile',
         icon: UI.icons.iconBase + 'noun_492246.svg'
+      },
+      */
+      {
+        paneName: 'home',
+        label: 'Your dashboard',
+        icon: DASHBOARD_ICON
+      },
+      {
+        paneName: 'basicPreferences',
+        label: 'Your preferences',
+        icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg'
       }
-    ]
-      .concat(books)
-      .concat(pods)
+    )
+
+    return panes
 
     async function getPods () {
       async function addPodStorage (pod) { // namedNode
@@ -400,10 +431,12 @@ export default function (context) {
       }
       // load pod's storages from profile
       let pods = kb.each(me, ns.space('storage'), null, me.doc())
-      pods.map(async (pod) => {
-        // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-        await loadContainerRepresentation(pod)
-      })
+      await Promise.all(
+        pods.map(async (pod) => {
+          // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
+          await loadContainerRepresentation(pod)
+        })
+      )
 
       try {
         // if uri then SolidOS is a browse.html web app
@@ -423,17 +456,24 @@ export default function (context) {
       }
       pods = uniques(pods)
       if (!pods.length) return []
-      return pods.map((pod, index) => {
-        function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-        const label = split(me).startsWith(split(pod)) ? 'Your storage' : split(pod)
-        return {
-          paneName: 'folder',
-          tabName: `folder-${index}`,
-          label,
-          subject: pod,
-          icon: UI.icons.iconBase + 'noun_Cabinet_251723.svg'
-        }
-      })
+      return Promise.all(
+        pods.map(async (pod, index) => {
+          function split (item) { return item.uri.split('//')[1].slice(0, -1) }
+          const ownerName = (await getNameOfPodOwner(pod, kb, sf)) || ''
+          const label = split(me).startsWith(split(pod))
+            ? 'Your storage'
+            : ownerName.trim() !== ''
+              ? ownerName + '\'s storage'
+              : split(pod)
+          return {
+            paneName: 'folder',
+            tabName: `folder-${index}`,
+            label,
+            subject: pod,
+            icon: FOLDER_ICON
+          }
+        })
+      )
     }
 
     async function getAddressBooks () {
@@ -464,74 +504,108 @@ export default function (context) {
    * @param {string} [options.pane] To open a specific dashboard pane
    * @returns {Promise<void>}
    */
-  async function showDashboard (options = {}) {
+  function closeDashboard () {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
-    // reuse dashboard if already children already is inserted
-    if (dashboardContainer.childNodes.length > 0 && options.pane) {
-      outlineContainer.style.display = 'none'
-      dashboardContainer.style.display = 'inherit'
-      const tab = dashboardContainer.querySelector(
-        `[data-global-pane-name="${options.pane}"]`
-      )
-      if (tab) {
-        tab.click()
+    dashboardContainer.innerHTML = ''
+    hideGlobalContainer(dashboardContainer)
+    showGlobalContainer(outlineContainer)
+  }
+
+  // Register the closeDashboard listener only once
+  authSession.events.on('logout', closeDashboard)
+
+  function showGlobalContainer (container) {
+    container.removeAttribute('hidden')
+    container.style.display = ''
+  }
+
+  function hideGlobalContainer (container) {
+    container.setAttribute('hidden', '')
+    container.style.display = 'none'
+  }
+
+  async function showDashboard (subject, options = {}) {
+    const dashboardContainer = getDashboardContainer()
+    const outlineContainer = getOutlineContainer()
+
+    // reuse existing dashboard if already rendered for the same pane and subject
+    if (dashboardContainer.childNodes.length > 0) {
+      const existingDashboard = dashboardContainer.firstElementChild
+      if (
+        existingDashboard &&
+        options.pane &&
+        existingDashboard.dataset.globalPaneName === options.pane &&
+          existingDashboard.dataset.subject === ((subject && subject.value) || '')
+      ) {
+        hideGlobalContainer(outlineContainer)
+        showGlobalContainer(dashboardContainer)
         return
       }
-      console.warn(
-        'Did not find the referred tab in global dashboard, will open first one'
-      )
+      dashboardContainer.innerHTML = ''
     }
 
     // create a new dashboard if not already present
     const dashboard = await globalAppTabs({
       selectedTab: options.pane,
-      onClose: closeDashboard
+      // onClose: closeDashboard
     })
 
-    // close the dashboard if user log out
-    authSession.events.on('logout', closeDashboard)
-
     // finally - switch to showing dashboard
-    outlineContainer.style.display = 'none'
+    hideGlobalContainer(outlineContainer)
+    showGlobalContainer(dashboardContainer)
     dashboardContainer.appendChild(dashboard)
-    const tab = dashboardContainer.querySelector(
-      `[data-global-pane-name="${options.pane}"]`
-    )
-    if (tab) {
-      tab.click()
-    }
-
-    function closeDashboard () {
-      dashboardContainer.style.display = 'none'
-      outlineContainer.style.display = 'inherit'
-    }
   }
   this.showDashboard = showDashboard
 
   function getDashboardContainer () {
-    return getOrCreateContainer('GlobalDashboard')
+    return getOrCreateContainer('GlobalDashboard', 'Dashboard')
   }
 
   function getOutlineContainer () {
-    return getOrCreateContainer('outline')
+    return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
   /**
    * Get element with id or create a new on the fly with that id
    *
    * @param {string} id The ID of the element you want to get or create
+   * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
   function getOrCreateContainer (id) {
+    const containerHost =
+      document.getElementById('app-view') ||
+      document.getElementById('MainContent') ||
+      document.querySelector('[role="main"]') ||
+      document.body
+
+    // OutlineView is a table
+    if (id === 'OutlineView') {
+      const existingOutline = document.getElementById('OutlineView')
+      if (existingOutline) {
+        return existingOutline
+      }
+
+      if (containerHost) {
+        const OutlineView = document.createElement('table')
+        OutlineView.id = 'OutlineView'
+        OutlineView.classList.add('outline-view')
+        OutlineView.setAttribute('aria-label', 'Resource browser')
+        containerHost.appendChild(OutlineView)
+        return OutlineView
+      }
+    }
+
+    // or we deal with the section GlobalDashboard
     return (
       document.getElementById(id) ||
       (() => {
-        const dashboardContainer = document.createElement('div')
-        dashboardContainer.id = id
-        const mainContainer =
-          document.querySelector('[role="main"]') || document.body
-        return mainContainer.appendChild(dashboardContainer)
+        const GlobalDashboard = document.createElement('section')
+        GlobalDashboard.id = id
+        GlobalDashboard.setAttribute('aria-label', 'Dashboard')
+        GlobalDashboard.classList.add('global-dashboard')
+        return containerHost.appendChild(GlobalDashboard)
       })()
     )
   }
@@ -598,7 +672,14 @@ export default function (context) {
         relevantPanes.forEach((pane, index) => {
           const label = pane.label(subject, context)
 
-          const iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+          let iconSrc = ''
+          if (pane.name === 'profile') {
+            iconSrc = PERSON_ICON
+          } else if (pane.name === 'social') {
+            iconSrc = FRIENDS_ICON
+          } else {
+            iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+          }
           const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
 
           // Handle async icon functions
@@ -678,6 +759,9 @@ export default function (context) {
                   const second = containingTable.firstChild.nextSibling
                   const row = dom.createElement('tr')
                   const cell = row.appendChild(dom.createElement('td'))
+                  cell.setAttribute('colspan', '2')
+                  cell.style.textAlign = 'left'
+                  cell.style.width = '100%'
                   cell.appendChild(paneDiv)
                   if (second) containingTable.insertBefore(row, second)
                   else containingTable.appendChild(row)
@@ -731,8 +815,9 @@ export default function (context) {
     const td = tr.appendChild(dom.createElement('td'))
     td.setAttribute(
       'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;' +
-        'display:flex; justify-content: space-between; flex-direction: row;'
+      'margin: 0.2em; border: none; padding-top: 0; padding-bottom: 0; vertical-align: top;' +
+        'display:flex; justify-content: space-between; flex-direction: row;' +
+        'background-color: var(--color-background, #F8F9FB);'
     )
     td.setAttribute('notSelectable', 'true')
     td.setAttribute('about', subject.toNT())
@@ -759,7 +844,8 @@ export default function (context) {
       const strong = header.appendChild(dom.createElement('h1'))
       strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
       strong.style =
-        'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;'
+        'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;' +
+        'background-color: var(--color-background, #F8F9FB);'
       UI.widgets.makeDraggable(strong, subject)
     }
 
@@ -808,7 +894,7 @@ export default function (context) {
     const table = d.parentNode
     const par = table.parentNode
     const placeholder = dom.createElement('table')
-    placeholder.setAttribute('style', 'width: 100%;')
+    placeholder.classList.add('placeholderTable')
     par.replaceChild(placeholder, table)
     table.removeChild(d)
     par.replaceChild(table, placeholder) // Attempt to
@@ -827,7 +913,7 @@ export default function (context) {
     if (!table) {
       // Create a new property table
       table = dom.createElement('table')
-      table.setAttribute('style', 'width: 100%;')
+      table.classList.add('tableFullWidth')
       expandedHeaderTR(subject, pane, options).then(tr1 => {
         table.appendChild(tr1)
 
@@ -847,6 +933,10 @@ export default function (context) {
 
           const row = dom.createElement('tr')
           const cell = row.appendChild(dom.createElement('td'))
+          cell.setAttribute('colspan', '2')
+          cell.style.textAlign = 'left'
+          cell.style.width = '100%'
+          cell.style.backgroundColor = 'var(--color-background, #F8F9FB)'
           cell.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&
@@ -1580,7 +1670,7 @@ export default function (context) {
             outline.GotoSubject(object, true)
             /* //deal with this later
             deselectAll();
-            var newTr=dom.getElementById('outline').lastChild;
+            var newTr=dom.getElementById('OutlineView').lastChild;
             setSelected(newTr.firstChild.firstChild.childNodes[1].lastChild,true);
             function setSelectedAfterward(uri){
                 deselectAll();
@@ -2248,10 +2338,10 @@ export default function (context) {
   @param pane    -- optional -- pane to be used for expanded display
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
-  @param table   -- option  -- a table element in which to put the outline.
+  @param table   -- option  -- default is an HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || dom.getElementById('outline') // if does not exist just add one? nowhere to out it
+    table = table || getOutlineContainer('OutlineView') // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'
@@ -2290,8 +2380,11 @@ export default function (context) {
     ) {
       const stateObj = pane ? { paneName: pane.name } : {}
       try {
-        // can fail if different origin
-        dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+        const currentUrl = new URL(document.location.href)
+        const targetUrl = new URL(subject.uri, document.location.href)
+        if (currentUrl.origin === targetUrl.origin) {
+          dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+        }
       } catch (e) {
         console.log(e)
       }
@@ -2371,7 +2464,7 @@ export default function (context) {
     } else if (obj.termType === 'Collection') {
       // obj.elements is an array of the elements in the collection
       rep = dom.createElement('table')
-      rep.setAttribute('style', 'width: 100%;')
+      rep.classList.add('tableFullWidth')
       rep.setAttribute('about', obj.toNT())
       /* Not sure which looks best -- with or without. I think without
 
@@ -2383,10 +2476,7 @@ export default function (context) {
         const elt = obj.elements[i]
         const row = rep.appendChild(dom.createElement('tr'))
         const numcell = row.appendChild(dom.createElement('td'))
-        numcell.setAttribute(
-          'style',
-          'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-        )
+        numcell.classList.add('obj')
         numcell.setAttribute('notSelectable', 'false')
         numcell.setAttribute('about', obj.toNT())
         numcell.innerHTML = i + 1 + ')'

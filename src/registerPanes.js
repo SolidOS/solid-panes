@@ -24,7 +24,7 @@ import dokieliPane from './dokieli/dokieliPane.js'
 import folderPane from 'folder-pane'
 import { classInstancePane } from './classInstancePane.js'
 import { slideshowPane } from './slideshow/slideshowPane.js'
-import { socialPane } from './socialPane.js'
+import { socialPane } from './social/socialPane'
 import humanReadablePane from './humanReadablePane.js'
 
 import { dataContentPane } from './dataContentPane.js'
@@ -51,12 +51,12 @@ export function registerPanes (register) {
   const editProfileView = profilePane.editor
   if (!editProfileView) {
     console.log('@@@ editProfileView', 'profilePane is not providing an editor pane')
+  } else {
+    register(editProfileView) // Edit my profile.
   }
 
-  register(editProfileView) // Edit my profile.
-
   register(trustedApplications) // must be registered before basicPreferences
-  register(dashboardPane)
+  // register(dashboardPane)
   register(basicPreferences)
   register(issuePane)
   register(contactsPane)

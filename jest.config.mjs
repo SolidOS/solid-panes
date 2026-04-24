@@ -3,6 +3,7 @@ export default {
   coverageDirectory: 'coverage',
   preset: 'ts-jest/presets/js-with-babel',
   testEnvironment: 'jsdom',
+  setupFiles: ['./test/helpers/globals.js'],
   testEnvironmentOptions: {
     customExportConditions: ['node']
   },
@@ -11,6 +12,15 @@ export default {
     '^.+\\.[tj]sx?$': ['babel-jest', { configFile: './babel.config.mjs' }],
   },
   transformIgnorePatterns: ['/node_modules/(?!lit-html).+\\.js'],
+  moduleNameMapper: {
+    '^SolidLogic$': 'solid-logic',
+    '^UI$': 'solid-ui',
+    '^\\$rdf$': 'rdflib',
+    '\\.svg\\?raw$': '<rootDir>/test/__mocks__/fileMock.js',
+    '\\.(svg)$': '<rootDir>/test/__mocks__/fileMock.js',
+    '\\.(png|jpe?g|gif|webp|avif)$': '<rootDir>/test/__mocks__/fileMock.js',
+    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js'
+  },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
   roots: ['<rootDir>/src', '<rootDir>/test'],

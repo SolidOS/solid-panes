@@ -4,11 +4,18 @@
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
+<<<<<<< HEAD
 import { authSession, authn } from 'solid-logic'
 import { getOutliner } from '../index'
 import { createHeader } from './header'
+=======
+import { getOutliner, OutlineManager } from '../index'
+import { createHeader, refreshHeader } from './header'
+>>>>>>> main
 import { createFooter } from './footer'
+import { createLeftSideMenu, refreshMenu } from './menu'
 
+<<<<<<< HEAD
 export default async function initMainPage (store: LiveStore, uri?: string | NamedNode | null) {
   const outliner = getOutliner(document)
   const hasExplicitUriArg = uri !== undefined && uri !== null
@@ -56,8 +63,42 @@ export default async function initMainPage (store: LiveStore, uri?: string | Nam
     if (typeof uri === 'string') subject = store.sym(uri)
     outliner.GotoSubject(subject, true, undefined, true, undefined)
   }
+=======
+export { refreshMenu as updateMenuLayout } from './menu'
+export { refreshHeader } from './header'
+
+function ensureMainContent () {
+  let main = document.getElementById('MainContent') as HTMLElement | null
+  if (!main) {
+    main = document.createElement('main')
+    main.id = 'MainContent'
+    main.setAttribute('role', 'main')
+    main.setAttribute('tabindex', '-1')
+    main.setAttribute('aria-live', 'polite')
+    document.body.appendChild(main)
+  }
+  return main
+}
+
+export async function initMainPage (
+  store: LiveStore,
+  uri?: string | NamedNode | null,
+  environment?: any
+) {
+  ensureMainContent()
+  const outliner = getOutliner(document, environment)
+  uri = uri || window.location.href
+  const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
+  outliner.GotoSubject(subject, true, undefined, true, undefined)
+>>>>>>> main
 
   const header = await createHeader(store, outliner)
-  const footer = createFooter(store)
-  return Promise.all([header, footer])
+  const menu = createLeftSideMenu(subject, outliner)
+  const footer = menu.then(() => createFooter(store))
+  return Promise.all([header, menu, footer])
+}
+
+export async function refreshUI (outliner: OutlineManager) {
+  await refreshHeader(outliner)
+  refreshMenu(outliner.context.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
 }

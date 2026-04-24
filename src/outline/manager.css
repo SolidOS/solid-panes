@@ -1,0 +1,78 @@
+/* Styles extracted from manager.js */
+
+.obj {
+  margin: 0.2em;
+  border: none;
+  padding: 0;
+  vertical-align: top;
+}
+
+.pred, .pred.internal {
+  /* Add any specific styles for predicate TDs here */
+}
+
+.iconTD {
+  margin: 0.2em;
+  border: none;
+  padding: 0;
+  vertical-align: top;
+  width: 0px;
+}
+
+.labelTD {
+  width: 100%;
+}
+
+.paneIconTray {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.paneShown {
+  width: 24px;
+  border: none !important;
+  border-radius: var(--border-radius-md, 0.5rem);
+  margin-left: var(--spacing-small, 0.1rem);
+  padding: 0.188rem; /* 3px */
+  background-color: var(--header-menu-item-hover, #e6dcff) !important;
+}
+
+.paneHidden {
+  width: 24px;
+  border-radius: var(--border-radius-md, 0.5rem);
+  margin-left: var(--spacing-small, 0.1rem);
+  padding: 0.188rem; /* 3px */
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.strongHeader {
+  font-size: 150%;
+  margin: 0 0.6rem 0 0;
+  padding: 0.1rem 0.4rem;
+}
+
+.tableFullWidth {
+  width: 100%;
+  background: var(--color-background, #F8F9FB) !important;
+}
+
+.placeholderTable {
+  width: 100%;
+}
+
+.tdFlex {
+  margin: var(--spacing-xxxs, 0.2rem);
+  border: none;
+  padding: 0;
+  vertical-align: top;
+  display: flex;
+  justify-content: space-between;
+  flex-direction: row;
+}
