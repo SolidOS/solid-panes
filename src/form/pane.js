@@ -6,6 +6,7 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
+import './formPane.css'
 const ns = UI.ns
 
 export const formPane = {

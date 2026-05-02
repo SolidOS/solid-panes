@@ -7,6 +7,7 @@ import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import './humanReadablePane.css'
 
 // Helper function to check if a URI has a markdown file extension
 const isMarkdownFile = (uri) => {

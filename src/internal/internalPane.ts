@@ -8,7 +8,7 @@
 import { icons, ns, widgets } from 'solid-ui'
 import { BlankNode, IndexedFormula, literal, NamedNode, st, sym, Variable, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
-import '../styles/internalPane.css'
+import './internalPane.css'
 
 const pane: PaneDefinition = {
   icon: icons.originalIconBase + 'tango/22-emblem-system.png',

@@ -3,7 +3,7 @@
  **  This outline pane contains the document contents for an Image document
  */
 import * as UI from 'solid-ui'
-import './styles/imagePane.css'
+import './imagePane.css'
 
 export const imagePane = {
   icon: UI.icons.originalIconBase + 'tango/22-image-x-generic.png',
