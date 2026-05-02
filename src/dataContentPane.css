@@ -160,25 +160,26 @@ div.dataContentPane td.pred a {
 }
 
 div.dataContentPane[data-layout='mobile'] .dataContentPaneRootRow {
-  display: block;
+  display: flex;
+  align-items: flex-start;
   padding-bottom: 0.75rem;
 }
 
-div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tbody > tr > td,
-div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tr > td {
-  display: block;
-  width: 100%;
+div.dataContentPane[data-layout='mobile'] .dataContentPaneSubjectCell {
+  flex: 0 0 40%;
+  width: 40%;
+  max-width: 40%;
   box-sizing: border-box;
-  padding-right: 0.2em;
+  padding-right: 0.75rem;
+  padding-bottom: 0;
 }
 
-div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tbody > tr > td:first-child,
-div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tr > td:first-child {
-  width: 100%;
-  padding-bottom: 0.85rem;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+div.dataContentPane[data-layout='mobile'] .dataContentPaneDetailsCell {
+  flex: 0 0 60%;
+  width: 60%;
+  max-width: 60%;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable > tbody > tr,
