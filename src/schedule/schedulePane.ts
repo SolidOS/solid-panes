@@ -7,6 +7,8 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
+import type { DataBrowserContext } from 'pane-registry'
+import type { NamedNode, Node as RdflibNode, Statement, Variable } from 'rdflib'
 import formText from './formsForSchedule.ttl'
 import './schedulePane.css'
 import '../styles/utilities.css'
@@ -20,6 +22,47 @@ const possibleAvailabilities = [
   ns.sched('Yes')
 ]
 
+type AgendaTask = () => void
+
+type CopySpec = {
+  local: string
+  contentType: string
+}
+
+type MintOptions = {
+  newBase: string
+  useExisting?: NamedNode
+  noIndexHTML?: boolean
+  me?: NamedNode | null
+  newInstance?: NamedNode
+  thisInstance?: NamedNode
+}
+
+type MatrixOptionsLike = {
+  set_x: RdflibNode[]
+  set_y: RdflibNode[]
+  cellFunction?: (cell: HTMLElement, x: RdflibNode, y: RdflibNode, value: NamedNode | null) => string
+}
+
+type ResponseQueryVars = {
+  time: Variable
+  author: Variable
+  value: Variable
+  resp: Variable
+  cell: Variable
+}
+
+type LoginStatusBoxLike = {
+  refresh: () => void
+}
+
+function runNextAgendaItem (agenda: AgendaTask[]): void {
+  const nextTask = agenda.shift()
+  if (nextTask) {
+    nextTask()
+  }
+}
+
 export const schedulePane = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
@@ -28,7 +71,7 @@ export const schedulePane = {
   audience: [ns.solid('PowerUser')],
 
   // Does the subject deserve an Scheduler pane?
-  label: function (subject, context) {
+  label: function (subject: NamedNode, context: DataBrowserContext) {
     const kb = context.session.store
     const t = kb.findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) {
@@ -40,15 +83,15 @@ export const schedulePane = {
   //  Mint a new Schedule poll
   mintClass: ns.sched('SchedulableEvent'),
 
-  mintNew: function (context, options) {
-    return new Promise(function (resolve, reject) {
+  mintNew: function (context: DataBrowserContext, options: MintOptions) {
+    return new Promise<MintOptions>(function (resolve, reject) {
       const ns = UI.ns
       const kb = context.session.store
       let newBase = options.newBase
       const thisInstance =
         options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
-      const complainIfBad = function (ok, body) {
+      const complainIfBad = function (ok: boolean, body: string) {
         if (ok) return
         console.log(
           'Error in Schedule Pane: Error constructing new scheduler: ' + body
@@ -61,7 +104,7 @@ export const schedulePane = {
       // Two constiations of ACL for this app, public read and public read/write
       // In all cases owner has read write control
 
-      const genACLtext = function (docURI, aclURI, allWrite) {
+      const genACLtext = function (docURI: string, aclURI: string, allWrite: boolean) {
         const g = $rdf.graph()
         const auth = $rdf.Namespace('http://www.w3.org/ns/auth/acl#')
         let a = g.sym(aclURI + '#a1')
@@ -69,7 +112,7 @@ export const schedulePane = {
         const doc = g.sym(docURI)
         g.add(a, UI.ns.rdf('type'), auth('Authorization'), acl)
         g.add(a, auth('accessTo'), doc, acl)
-        g.add(a, auth('agent'), me, acl)
+        g.add(a, auth('agent'), me as NamedNode, acl)
         g.add(a, auth('mode'), auth('Read'), acl)
         g.add(a, auth('mode'), auth('Write'), acl)
         g.add(a, auth('mode'), auth('Control'), acl)
@@ -96,7 +139,7 @@ export const schedulePane = {
         const aclDoc = kb.any(
           kb.sym(docURI),
           kb.sym('http://www.iana.org/assignments/link-relations/acl')
-        ) // @@ check that this get set by web.js
+        ) as NamedNode | null // @@ check that this get set by web.js
 
         if (aclDoc) {
           // Great we already know where it is
@@ -121,7 +164,7 @@ export const schedulePane = {
               const aclDoc = kb.any(
                 kb.sym(docURI),
                 kb.sym('http://www.iana.org/assignments/link-relations/acl')
-              )
+              ) as NamedNode | null
 
               if (!aclDoc) {
                 // complainIfBad(false, "No Link rel=ACL header for " + docURI)
@@ -146,19 +189,28 @@ export const schedulePane = {
       const fetcher = kb.fetcher
       const updater = kb.updater
 
-      let me = options.me || authn.currentUser()
+      let me: NamedNode | null = options.me || authn.currentUser()
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
         return
       }
 
-      const base = thisInstance.dir().uri
-      let newDetailsDoc, newInstance // , newIndexDoc
+      const baseDir = thisInstance.dir()
+      if (!baseDir) {
+        throw new Error('Schedule pane needs a base directory to mint a new poll')
+      }
+      const base = baseDir.uri
+      let newDetailsDoc: NamedNode
+      let newInstance: NamedNode
 
       if (options.useExisting) {
         newInstance = options.useExisting
-        newBase = thisInstance.dir().uri
+        const existingBaseDir = thisInstance.dir()
+        if (!existingBaseDir) {
+          throw new Error('Existing schedule instance needs a containing directory')
+        }
+        newBase = existingBaseDir.uri
         newDetailsDoc = newInstance.doc()
         // newIndexDoc = null
         if (options.newBase) {
@@ -174,16 +226,16 @@ export const schedulePane = {
 
       const newResultsDoc = kb.sym(newBase + 'results.ttl')
 
-      const toBeCopied = options.noIndexHTML
-        ? {}
+      const toBeCopied: CopySpec[] = options.noIndexHTML
+        ? []
         : [{ local: 'index.html', contentType: 'text/html' }]
 
-      const agenda = []
+      const agenda: AgendaTask[] = []
 
       //   @@ This needs some form of visible progress bar
       for (let f = 0; f < toBeCopied.length; f++) {
         const item = toBeCopied[f]
-        const fun = function copyItem (item) {
+        const fun = function copyItem (item: CopySpec) {
           agenda.push(function () {
             const newURI = newBase + item.local
             console.log('Copying ' + base + item.local + ' to ' + newURI)
@@ -197,7 +249,7 @@ export const schedulePane = {
                   )
                   console.log('FAILED to set ACL ' + newURI + ' : ' + message)
                 } else {
-                  agenda.shift()() // beware too much nesting
+                  runNextAgendaItem(agenda) // beware too much nesting
                 }
               })
             }
@@ -210,7 +262,7 @@ export const schedulePane = {
               )
               .then(() => authn.checkUser())
               .then(webId => {
-                me = webId
+                me = webId as NamedNode | null
 
                 setThatACL()
               })
@@ -240,7 +292,15 @@ export const schedulePane = {
           kb.add(newInstance, ns.foaf('maker'), me, newDetailsDoc) // Uneditable - wh is allowed to edit this?
         }
 
-        kb.add(newInstance, ns.dc('created'), new Date(), newDetailsDoc)
+        kb.add(
+          newInstance,
+          ns.dc('created'),
+          $rdf.literal(
+            new Date().toISOString(),
+            $rdf.sym('http://www.w3.org/2001/XMLSchema#dateTime')
+          ),
+          newDetailsDoc
+        )
         kb.add(newInstance, ns.sched('resultsDocument'), newDetailsDoc)
 
         updater.put(
@@ -249,7 +309,7 @@ export const schedulePane = {
           'text/turtle',
           function (uri2, ok, message) {
             if (ok) {
-              agenda.shift()()
+              runNextAgendaItem(agenda)
             } else {
               complainIfBad(
                 ok,
@@ -276,7 +336,7 @@ export const schedulePane = {
             contentType: 'text/turtle'
           })
           .then(() => {
-            agenda.shift()()
+            runNextAgendaItem(agenda)
           })
           .catch(err => {
             complainIfBad(
@@ -292,7 +352,7 @@ export const schedulePane = {
             ok,
             'Failed to set Read-Write ACL on results file: ' + body
           )
-          if (ok) agenda.shift()()
+          if (ok) runNextAgendaItem(agenda)
         })
       })
 
@@ -302,7 +362,7 @@ export const schedulePane = {
             ok,
             'Failed to set read ACL on configuration file: ' + body
           )
-          if (ok) agenda.shift()()
+          if (ok) runNextAgendaItem(agenda)
         })
       })
 
@@ -313,13 +373,13 @@ export const schedulePane = {
         resolve(options)
       })
 
-      agenda.shift()()
+      runNextAgendaItem(agenda)
       // Created new data files.
     }) // promise
   }, // mintNew
 
   //  Render one meeting schedule poll
-  render: function (subject, context) {
+  render: function (subject: NamedNode, context: DataBrowserContext) {
     const dom = context.dom
     const kb = context.session.store
     const ns = UI.ns
@@ -335,6 +395,9 @@ export const schedulePane = {
     const thisInstance = subject
     const detailsDoc = subject.doc()
     const baseDir = detailsDoc.dir()
+    if (!baseDir) {
+      throw new Error('Schedule pane needs a containing directory for its details document')
+    }
     const base = baseDir.uri
 
     const resultsDoc = $rdf.sym(base + 'results.ttl')
@@ -375,10 +438,10 @@ export const schedulePane = {
       }
     }
 
-    let me
+    let me: NamedNode | null = null
 
     authn.checkUser().then(webId => {
-      me = webId
+      me = (webId as NamedNode | null) ?? null
 
       if (logInOutButton) {
         logInOutButton.refresh()
@@ -398,21 +461,28 @@ export const schedulePane = {
     const newInstanceButton = function () {
       const b = UI.login.newAppInstance(
         dom,
-        { noun: 'scheduler' },
-        initializeNewInstanceInWorkspace
+        { noun: 'scheduler', appPathSegment },
+        function (workspace: string | null, newBase: string) {
+          return initializeNewInstanceInWorkspace(
+            $rdf.sym(workspace || newBase)
+          )
+        }
       )
-      b.firstChild.classList.add('schedulePaneButton')
+      if (b.firstChild instanceof HTMLElement) {
+        b.firstChild.classList.add('schedulePaneButton')
+      }
       return b
     } // newInstanceButton
 
     // ///////////////////////  Create new document files for new instance of app
 
-    const initializeNewInstanceInWorkspace = function (ws) {
-      let newBase = kb.any(ws, ns.space('uriPrefix'))
-      if (!newBase) {
+    const initializeNewInstanceInWorkspace = function (ws: NamedNode) {
+      const uriPrefix = kb.any(ws, ns.space('uriPrefix'))
+      let newBase = ''
+      if (!uriPrefix) {
         newBase = ws.uri.split('#')[0]
       } else {
-        newBase = newBase.value
+        newBase = uriPrefix.value
       }
       if (newBase.slice(-1) !== '/') {
         $rdf.log.error(appPathSegment + ': No / at end of uriPrefix ' + newBase) // @@ paramater?
@@ -424,10 +494,13 @@ export const schedulePane = {
       initializeNewInstanceAtBase(thisInstance, newBase)
     }
 
-    const initializeNewInstanceAtBase = function (thisInstance, newBase) {
-      const options = { thisInstance, newBase }
-      this.mintNew(context, options)
+    const initializeNewInstanceAtBase = function (thisInstance: NamedNode, newBase: string) {
+      const options: MintOptions = { thisInstance, newBase }
+      schedulePane.mintNew(context, options)
         .then(function (options) {
+          if (!options.newInstance) {
+            throw new Error('New scheduler instance was not returned')
+          }
           const p = div.appendChild(dom.createElement('p'))
           p.setAttribute('style', 'font-size: 140%;')
           p.innerHTML =
@@ -488,7 +561,7 @@ export const schedulePane = {
           kb.holds(subject, ns.rdf('type'), ns.wf('TemplateInstance'))
         ) {
           // This is read-only example e.g. on github pages, etc
-          showBootstrap(div)
+          showBootstrap()
           return
         }
 
@@ -507,7 +580,7 @@ export const schedulePane = {
       clearElement(naviMain)
       const signonContext = { div, dom }
       UI.login.ensureLoggedIn(signonContext).then(context => {
-        me = context.me
+        me = context.me ?? null
         waitingForLogin = false // untested
         showAppropriateDisplay()
       })
@@ -518,8 +591,12 @@ export const schedulePane = {
       div.appendChild(
         UI.login.newAppInstance(
           dom,
-          { noun: 'poll' },
-          initializeNewInstanceInWorkspace
+          { noun: 'poll', appPathSegment },
+          function (workspace: string | null, newBase: string) {
+            return initializeNewInstanceInWorkspace(
+              $rdf.sym(workspace || newBase)
+            )
+          }
         )
       )
 
@@ -562,11 +639,7 @@ export const schedulePane = {
         kb.add(
           subject,
           ns.sched('allDay'),
-          $rdf.literal(
-            'true',
-            undefined,
-            $rdf.sym('http://www.w3.org/2001/XMLSchema#boolean')
-          ),
+          $rdf.literal('true', $rdf.sym('http://www.w3.org/2001/XMLSchema#boolean')),
           detailsDoc
         )
       }
@@ -605,7 +678,7 @@ export const schedulePane = {
 
       if (wizard) {
         const forms = [form1, form2, form3]
-        const slides = []
+        const slides: HTMLElement[] = []
         currentSlide = 0
         for (let f = 0; f < forms.length; f++) {
           const slide = dom.createElement('div')
@@ -713,7 +786,7 @@ export const schedulePane = {
       }
       // @@@  link config to results
 
-      const insertables = []
+      const insertables: Statement[] = []
       insertables.push(
         $rdf.st(
           subject,
@@ -723,7 +796,15 @@ export const schedulePane = {
         )
       )
       insertables.push(
-        $rdf.st(subject, ns.sched('ready'), new Date(), detailsDoc)
+        $rdf.st(
+          subject,
+          ns.sched('ready'),
+          $rdf.literal(
+            new Date().toISOString(),
+            $rdf.sym('http://www.w3.org/2001/XMLSchema#dateTime')
+          ),
+          detailsDoc
+        )
       )
       insertables.push(
         $rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)
@@ -775,7 +856,7 @@ export const schedulePane = {
             kb
               .each(subject, ns.sched('invitee'))
               .map(function (who) {
-                const mbox = kb.any(who, ns.foaf('mbox'))
+                    const mbox = kb.any(who as NamedNode, ns.foaf('mbox')) as NamedNode | null
                 return mbox ? mbox.uri.replace('mailto:', '') : ''
               })
               .join(',') +
@@ -983,7 +1064,7 @@ export const schedulePane = {
       const comment = kb.any(invitation, ns.cal('comment'))
       const location = kb.any(invitation, ns.cal('location'))
       const div = naviMain
-      if (title) div.appendChild(dom.createElement('h3')).textContent = title
+      if (title) div.appendChild(dom.createElement('h3')).textContent = title.value
       if (location) {
         div.appendChild(dom.createElement('address')).textContent =
           location.value
@@ -991,20 +1072,22 @@ export const schedulePane = {
       if (comment) {
         div.appendChild(dom.createElement('p')).textContent = comment.value
       }
-      const author = kb.any(invitation, ns.dc('author'))
+      const author = kb.any(invitation, ns.dc('author')) as NamedNode | null
       if (author) {
         const authorName = kb.any(author, ns.foaf('name'))
         if (authorName) {
-          div.appendChild(dom.createElement('p')).textContent = authorName
+          div.appendChild(dom.createElement('p')).textContent = authorName.value
         }
       }
 
-      const query = new $rdf.Query('Responses')
-      const v = {}
-      const vs = ['time', 'author', 'value', 'resp', 'cell']
-      vs.forEach(function (x) {
-        query.vars.push((v[x] = $rdf.variable(x)))
-      })
+      const query = new $rdf.Query('Responses', 0)
+      const v = {} as ResponseQueryVars
+      v.time = $rdf.variable('time')
+      v.author = $rdf.variable('author')
+      v.value = $rdf.variable('value')
+      v.resp = $rdf.variable('resp')
+      v.cell = $rdf.variable('cell')
+      query.vars.push(v.time, v.author, v.value, v.resp, v.cell)
       query.pat.add(invitation, ns.sched('response'), v.resp)
       query.pat.add(v.resp, ns.dc('author'), v.author)
       query.pat.add(v.resp, ns.sched('cell'), v.cell)
@@ -1013,17 +1096,17 @@ export const schedulePane = {
 
       // Sort by by person @@@
 
-      const options = {}
-      options.set_x = kb.each(subject, ns.sched('option')) // @@@@@ option -> dtstart in future
+      const options: MatrixOptionsLike = { set_x: [], set_y: [] }
+      options.set_x = kb.each(subject, ns.sched('option')) as RdflibNode[] // @@@@@ option -> dtstart in future
       options.set_x = options.set_x.map(function (opt) {
-        return kb.any(opt, ns.cal('dtstart'))
+        return kb.any(opt as NamedNode, ns.cal('dtstart'))
       }).filter(function (time) {
         return !!time
       })
 
-      options.set_y = kb.each(subject, ns.sched('response'))
+      options.set_y = kb.each(subject, ns.sched('response')) as RdflibNode[]
       options.set_y = options.set_y.map(function (resp) {
-        return kb.any(resp, ns.dc('author'))
+        return kb.any(resp as NamedNode, ns.dc('author'))
       }).filter(function (author) {
         return !!author
       })
@@ -1031,7 +1114,7 @@ export const schedulePane = {
       const possibleTimes = kb
         .each(invitation, ns.sched('option'))
         .map(function (opt) {
-          return kb.any(opt, ns.cal('dtstart'))
+          return kb.any(opt as NamedNode, ns.cal('dtstart'))
         })
         .filter(function (time) {
           return !!time
@@ -1084,11 +1167,14 @@ export const schedulePane = {
 
       // const me = authn.currentUser()
 
-      const dataPointForNT = []
+      const dataPointForNT: Record<string, NamedNode> = {}
 
       const loginContext = { div: naviCenter, dom }
       UI.login.ensureLoggedIn(loginContext).then(context => {
         const me = context.me
+        if (!me) {
+          return
+        }
         const doc = resultsDoc
         options.set_y = options.set_y.filter(function (z) {
           return !z.sameTerm(me)
@@ -1108,10 +1194,11 @@ export const schedulePane = {
           if (y.sameTerm(me)) {
             const callbackFunction = function () {
               refreshCellColor(cell, value)
+              return ''
             } //  @@ may need that
             const selectOptions = {}
             const predicate = ns.sched('availabilty')
-            if (!x) return
+            if (!x) return ''
             const cellSubject = dataPointForNT[x.toNT()]
             const selector = UI.widgets.makeSelectForOptions(
               dom,
@@ -1127,17 +1214,18 @@ export const schedulePane = {
           } else if (value !== null) {
             cell.textContent = UI.utils.label(value)
           }
+          return ''
         }
 
         const responses = kb.each(invitation, ns.sched('response'))
-        let myResponse = null
+        let myResponse: NamedNode | null = null
         responses.forEach(function (r) {
           if (kb.holds(r, ns.dc('author'), me)) {
-            myResponse = r
+            myResponse = r as NamedNode
           }
         })
 
-        const insertables = [] // list of statements to be stored
+        const insertables: Statement[] = [] // list of statements to be stored
 
         const id = UI.widgets.newThing(doc).uri
         if (myResponse === null) {
@@ -1149,9 +1237,9 @@ export const schedulePane = {
         } else {
           const dps = kb.each(myResponse, ns.sched('cell'))
           dps.forEach(function (dataPoint) {
-            const time = kb.any(dataPoint, ns.cal('dtstart'))
+            const time = kb.any(dataPoint as NamedNode, ns.cal('dtstart'))
             if (!time) return
-            dataPointForNT[time.toNT()] = dataPoint
+            dataPointForNT[time.toNT()] = dataPoint as NamedNode
           })
         }
         for (let j = 0; j < possibleTimes.length; j++) {
@@ -1188,7 +1276,7 @@ export const schedulePane = {
       // If I made this in the first place, allow me to edit it.
       // @@ optionally -- allows others to if according to original
       const instanceCreator = kb.any(subject, ns.foaf('maker')) // owner?
-      if (!instanceCreator || instanceCreator.sameTerm(me)) {
+      if (!instanceCreator || !me || instanceCreator.sameTerm(me)) {
         const editButton = dom.createElement('button')
         editButton.classList.add('schedulePaneButton')
         // editButton.textContent = '(Modify the poll)' // noun_344563.svg
@@ -1223,7 +1311,7 @@ export const schedulePane = {
     naviLoginoutTR.appendChild(dom.createElement('td'))
     naviLoginoutTR.appendChild(dom.createElement('td'))
 
-    const logInOutButton = null
+    const logInOutButton: LoginStatusBoxLike | null = null
     /*
     const logInOutButton = UI.login.loginStatusBox(dom, setUser)
     // floating divs lead to a mess

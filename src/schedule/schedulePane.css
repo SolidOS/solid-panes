@@ -8,7 +8,7 @@
 .schedulePaneButton {
   background-color: #eef;
   padding: var(--spacing-xs, 0.5em);
-  border: .5em solid white;
+  border: .5rem solid white;
   font-size: 100%;
 }
 
