@@ -1,7 +1,7 @@
 .internalPaneContent {
   background-color: #ddddff;
   padding: var(--spacing-xs, 0.5em);
-  border-radius: 1em;
+  border-radius: 1rem;
 }
 
 .internalPaneControls {
