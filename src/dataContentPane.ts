@@ -11,9 +11,62 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import type { DataBrowserContext } from 'pane-registry'
+import type {
+  BlankNode,
+  Formula,
+  NamedNode,
+  Node as RdflibNode,
+  Statement
+} from 'rdflib'
 import './dataContentPane.css'
 
 const ns = UI.ns
+
+type SubjectTerm = NamedNode | BlankNode
+type ObjectTerm = Statement['object'] | Formula
+
+type RootSubjectsResult = {
+  roots: SubjectTerm[]
+  subjects: Record<string, Statement[]>
+  loopBreakers?: Record<string, unknown>
+}
+
+type PredicateFilter = (predicate: NamedNode, inverse: boolean) => boolean
+
+type PropView = (obj: RdflibNode) => Node
+
+type AlternativePane = {
+  render: (subject: SubjectTerm) => HTMLElement
+}
+
+type OutlineManagerLike = {
+  appendPropertyTRs: (
+    parent: HTMLElement,
+    plist: Statement[],
+    inverse: boolean,
+    predicateFilter: PredicateFilter
+  ) => void
+  outlineObjectTD: (
+    obj: RdflibNode,
+    view?: PropView,
+    deleteNode?: Node,
+    statement?: Statement
+  ) => HTMLTableCellElement
+  outlineExpand: (
+    td: HTMLTableCellElement,
+    subject: SubjectTerm,
+    options?: { pane?: AlternativePane }
+  ) => void
+}
+
+type DataContentPaneLike = {
+  statementsAsTables: (
+    sts: Statement[],
+    context: DataBrowserContext,
+    initialRoots?: SubjectTerm[]
+  ) => HTMLTableElement
+}
 
 export const dataContentPane = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
@@ -22,7 +75,7 @@ export const dataContentPane = {
 
   audience: [ns.solid('Developer')],
 
-  label: function (subject, context) {
+  label: function (subject: NamedNode, context: DataBrowserContext) {
     if (
       'http://www.w3.org/2007/ont/link#ProtocolEvent' in
       context.session.store.findTypeURIs(subject)
@@ -58,42 +111,46 @@ export const dataContentPane = {
   its parent table, or pass the parent table (or current nesting
   depth) into objectTree() so the decision can be made reliably.
   can you help me fix this without removing the dark altering */
-  statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
+  statementsAsTables: function statementsAsTables (
+    sts: Statement[],
+    context: DataBrowserContext,
+    initialRoots?: SubjectTerm[]
+  ): HTMLTableElement {
     const myDocument = context.dom
     // const outliner = context.getOutliner(myDocument)
     const rep = myDocument.createElement('table')
     const sz = $rdf.Serializer(context.session.store)
-    const res = sz.rootSubjects(sts)
+    const res = sz.rootSubjects(sts) as RootSubjectsResult
     let roots = res.roots
     const subjects = res.subjects
-    const loopBreakers = res.loopBreakers
+    const loopBreakers = res.loopBreakers ?? {}
     for (const x in loopBreakers) {
       console.log('\tdataContentPane: loopbreaker:' + x)
     }
-    const doneBnodes = {} // For preventing looping
-    const referencedBnodes = {} // Bnodes which need to be named alas
+    const doneBnodes: Record<string, true | HTMLTableElement> = {}
+    const referencedBnodes: Record<string, true> = {}
 
-    // The property tree for a single subject or anonymous node
-    function propertyTree (subject, nestingLevel = 0) {
-      // print('Proprty tree for '+subject)
+    function propertyTree (
+      subject: SubjectTerm,
+      nestingLevel = 0
+    ): HTMLTableElement {
       const rep = myDocument.createElement('table')
-      let lastPred = null
-      const sts = subjects[sz.toStr(subject)] // relevant statements
-      if (!sts) {
-        // No statements in tree
-        rep.appendChild(myDocument.createTextNode('...')) // just empty bnode as object
+      let lastPred: string | null = null
+      const subjectStatements = subjects[sz.toStr(subject)]
+      if (!subjectStatements) {
+        rep.appendChild(myDocument.createTextNode('...'))
         return rep
       }
-      sts.sort()
+      subjectStatements.sort()
       let same = 0
-      let predicateTD // The cell which holds the predicate
-      for (let i = 0; i < sts.length; i++) {
-        const st = sts[i]
+      let predicateTD: HTMLTableCellElement | undefined
+      for (let i = 0; i < subjectStatements.length; i++) {
+        const st = subjectStatements[i]
         const tr = myDocument.createElement('tr')
         tr.classList.add('dataContentPaneTopAlignedRow')
         if (st.predicate.uri !== lastPred) {
           if (lastPred && same > 1) {
-            predicateTD.setAttribute('rowspan', '' + same)
+            predicateTD?.setAttribute('rowspan', '' + same)
           }
           predicateTD = myDocument.createElement('td')
           predicateTD.setAttribute('class', 'pred')
@@ -120,13 +177,13 @@ export const dataContentPane = {
         tr.appendChild(objectTD)
         rep.appendChild(tr)
       }
-      if (lastPred && same > 1) predicateTD.setAttribute('rowspan', '' + same)
+      if (lastPred && same > 1) predicateTD?.setAttribute('rowspan', '' + same)
       return rep
     }
 
-    // Convert a set of statements into a nested tree of tables
-    function objectTree (obj, nestingLevel = 0) {
-      let res, anchor
+    function objectTree (obj: ObjectTerm, nestingLevel = 0): Node {
+      let res: HTMLElement | HTMLTableElement | Text
+      let anchor: HTMLAnchorElement
       switch (obj.termType) {
         case 'NamedNode':
           anchor = myDocument.createElement('a')
@@ -151,60 +208,57 @@ export const dataContentPane = {
           ) {
             res = myDocument.createElement('div')
             res.classList.add('embeddedXHTML')
-            res.innerHTML = obj.value // Try that  @@@ beware embedded dangerous code
+            res.innerHTML = obj.value
             return res
           }
-          return myDocument.createTextNode(obj.value) // placeholder - could be smarter,
+          return myDocument.createTextNode(obj.value)
 
-        case 'BlankNode': {
+        case 'BlankNode':
           if (obj.toNT() in doneBnodes) {
-            // Break infinite recursion
             referencedBnodes[obj.toNT()] = true
-            const anchor = myDocument.createElement('a')
-            anchor.setAttribute('href', '#' + obj.toNT().slice(2))
-            anchor.setAttribute('class', 'bnodeRef')
-            anchor.textContent = '*' + obj.toNT().slice(3)
-            return anchor
+            const referenceAnchor = myDocument.createElement('a')
+            referenceAnchor.setAttribute('href', '#' + obj.toNT().slice(2))
+            referenceAnchor.setAttribute('class', 'bnodeRef')
+            referenceAnchor.textContent = '*' + obj.toNT().slice(3)
+            return referenceAnchor
           }
-          doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
+          doneBnodes[obj.toNT()] = true
           const newTable = propertyTree(obj, nestingLevel)
-          doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
+          doneBnodes[obj.toNT()] = newTable
           if (nestingLevel % 2 === 1) {
             newTable.classList.add('dataContentPaneNestedLight')
           } else {
             newTable.classList.add('dataContentPaneNestedDark')
           }
           return newTable
-        }
+
         case 'Collection':
           res = myDocument.createElement('table')
           res.setAttribute('class', 'collectionAsTables')
           for (let i = 0; i < obj.elements.length; i++) {
             const tr = myDocument.createElement('tr')
             res.appendChild(tr)
-            tr.appendChild(objectTree(obj.elements[i], nestingLevel + 1))
+            tr.appendChild(objectTree(obj.elements[i] as ObjectTerm, nestingLevel + 1))
           }
           return res
+
         case 'Graph':
-          res = context.session.paneRegistry
-            .byName('dataContents')
+          res = (context.session.paneRegistry
+            .byName('dataContents') as DataContentPaneLike)
             .statementsAsTables(obj.statements, context)
           res.setAttribute('class', 'nestedFormula')
           return res
+
         case 'Variable':
-          res = myDocument.createTextNode('?' + obj.uri)
-          return res
+          return myDocument.createTextNode('?' + obj.uri)
       }
       throw new Error('Unhandled node type: ' + obj.termType)
     }
 
-    // roots.sort()
-
     if (initialRoots) {
       roots = initialRoots.concat(
-        roots.filter(function (x) {
+        roots.filter(function (x: SubjectTerm) {
           for (let i = 0; i < initialRoots.length; i++) {
-            // Max 2
             if (x.sameTerm(initialRoots[i])) return false
           }
           return true
@@ -221,16 +275,15 @@ export const dataContentPane = {
       tr.appendChild(TDTree)
       const root = roots[i]
       if (root.termType === 'BlankNode') {
-        subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
+        subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root)))
       } else {
-        subjectTD.appendChild(objectTree(root, 0)) // won't have tree
+        subjectTD.appendChild(objectTree(root, 0))
       }
       TDTree.appendChild(propertyTree(root, 0))
     }
     for (const bNT in referencedBnodes) {
-      // Add number to refer to
       const table = doneBnodes[bNT]
-      // let tr = myDocument.createElement('tr')
+      if (table === true) continue
       const anchor = myDocument.createElement('a')
       anchor.setAttribute('id', bNT.slice(2))
       anchor.setAttribute('class', 'bnodeDef')
@@ -238,27 +291,31 @@ export const dataContentPane = {
       table.insertBefore(anchor, table.firstChild)
     }
     return rep
-  }, // statementsAsTables
-  // View the data in a file in user-friendly way
-  render: function (subject, context) {
+  },
+
+  render: function (
+    subject: NamedNode,
+    context: DataBrowserContext
+  ): HTMLDivElement {
     const myDocument = context.dom
 
     function alternativeRendering () {
       const sz = $rdf.Serializer(context.session.store)
-      const res = sz.rootSubjects(sts)
+      const res = sz.rootSubjects(sts) as RootSubjectsResult
       const roots = res.roots
-      const p = {}
-      p.render = function (s2) {
-        const div = myDocument.createElement('div')
-        div.setAttribute('class', 'withinDocumentPane')
-        const plist = kb.statementsMatching(s2, undefined, undefined, subject)
-        outliner.appendPropertyTRs(div, plist, false, function (
-          _pred,
-          _inverse
-        ) {
-          return true
-        })
-        return div
+      const p: AlternativePane = {
+        render: function (s2: SubjectTerm): HTMLElement {
+          const div = myDocument.createElement('div')
+          div.setAttribute('class', 'withinDocumentPane')
+          const plist = kb.statementsMatching(s2, undefined, undefined, subject)
+          outliner.appendPropertyTRs(div, plist, false, function (
+            _pred: NamedNode,
+            _inverse: boolean
+          ): boolean {
+            return true
+          })
+          return div
+        }
       }
       for (let i = 0; i < roots.length; i++) {
         const tr = myDocument.createElement('tr')
@@ -272,13 +329,14 @@ export const dataContentPane = {
     }
 
     function mainRendering () {
-      const initialRoots = [] // Ordering: start with stuff about this doc
+      const initialRoots: SubjectTerm[] = []
       if (kb.holds(subject, undefined, undefined, subject)) {
         initialRoots.push(subject)
       }
-      // Then about the primary topic of the document if any
       const ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
-      if (ps) initialRoots.push(ps)
+      if (ps && (ps.termType === 'NamedNode' || ps.termType === 'BlankNode')) {
+        initialRoots.push(ps as SubjectTerm)
+      }
       div.appendChild(
         context.session.paneRegistry
           .byName('dataContents')
@@ -286,17 +344,13 @@ export const dataContentPane = {
       )
     }
 
-    const outliner = context.getOutliner(myDocument)
+    const outliner = context.getOutliner(myDocument) as OutlineManagerLike
     const kb = context.session.store
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')
-    // Because of smushing etc, this will not be a copy of the original source
-    // We could instead either fetch and re-parse the source,
-    // or we could keep all the pre-smushed triples.
-    const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
+    const sts = kb.statementsMatching(undefined, undefined, undefined, subject)
 
-    // eslint-disable-next-line no-constant-condition
-    if (false) { // keep code
+    if (false) {
       alternativeRendering()
     } else {
       mainRendering()

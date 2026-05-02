@@ -27,7 +27,7 @@ import { slideshowPane } from './slideshow/slideshowPane.js'
 import { socialPane } from './social/socialPane'
 import humanReadablePane from './humanReadablePane.js'
 
-import { dataContentPane } from './dataContentPane.js'
+import { dataContentPane } from './dataContentPane'
 import sourcePane from 'source-pane'
 import { n3Pane } from './n3Pane.js'
 import { RDFXMLPane } from './RDFXMLPane.js'
