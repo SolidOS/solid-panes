@@ -56,6 +56,10 @@ type LoginStatusBoxLike = {
   refresh: () => void
 }
 
+type RenderEnvironmentLike = {
+  layout?: string
+}
+
 function runNextAgendaItem (agenda: AgendaTask[]): void {
   const nextTask = agenda.shift()
   if (nextTask) {
@@ -386,6 +390,11 @@ export const schedulePane = {
     const invitation = subject
     const appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
+    function applyEnvironmentAttributes (element: HTMLDivElement): void {
+      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      element.dataset.layout = environment.layout ?? 'desktop'
+    }
+
     // ////////////////////////////////////////////
 
     const fetcher = kb.fetcher
@@ -703,7 +712,6 @@ export const schedulePane = {
           const headingText = (heading.textContent || '').trim().toLowerCase()
           if (headingText === 'time proposals') {
             heading.classList.add('schedulePaneTimeProposalsHeading')
-            heading.parentElement?.classList.add('schedulePaneTimeProposalsHeadingBlock')
             heading.closest('.schedulePanePanelBox')?.classList.add(
               'schedulePaneTimeProposalsPanel'
             )
@@ -1379,13 +1387,10 @@ export const schedulePane = {
     } // showResults
 
     const div = dom.createElement('div')
+    div.classList.add('schedulePaneRoot')
+    applyEnvironmentAttributes(div)
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
     structure.classList.add('schedulePaneTable')
-
-    const naviLoginoutTR = structure.appendChild(dom.createElement('tr'))
-    naviLoginoutTR.appendChild(dom.createElement('td'))
-    naviLoginoutTR.appendChild(dom.createElement('td'))
-    naviLoginoutTR.appendChild(dom.createElement('td'))
 
     const logInOutButton: LoginStatusBoxLike | null = null
     /*

@@ -45,18 +45,18 @@
   border: none !important;
 }
 
+.schedulePaneTable .schedulePanePanelBox {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  margin-right: 0.5rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 @media (max-width: 1024px) {
   .schedulePaneTable .schedulePaneMainCell {
     padding-left: 0.5rem;
     padding-right: 0.5rem;
-    box-sizing: border-box;
-  }
-
-  .schedulePaneTable .schedulePanePanelBox {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    margin-right: 0.5rem;
-    max-width: 100%;
     box-sizing: border-box;
   }
 
@@ -93,7 +93,106 @@
   }
 }
 
-@media (max-width: 700px) {
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable {
+  min-width: 0;
+  width: 100%;
+  min-height: 0;
+  table-layout: fixed;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable td,
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable th {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneMainCell {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  box-sizing: border-box;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCompactFieldRow {
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCompactFieldRow .formFieldName {
+  width: auto !important;
+  min-width: 4.5rem;
+  flex: 0 1 5.5rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCompactFieldRow .formFieldValue {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCompactFieldRow .schedulePaneFormControl {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 0.2rem 0 0 !important;
+  font-size: var(--font-size-sm, 0.875rem);
+  padding: 0.35rem 0.45rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentRow {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentRow .formFieldName,
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentRow > div:first-child {
+  width: auto !important;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentRow .formFieldValue,
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentRow > div:last-child,
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentValue {
+  min-width: 0;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentRow .schedulePaneFormTextarea,
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneTable .schedulePaneCommentValue .schedulePaneFormTextarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+  font-size: var(--font-size-sm, 0.875rem);
+  padding: 0.35rem 0.45rem;
+  min-height: 5.5rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneButton {
+  padding: 0.4rem;
+  border-width: 0.2rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneButtonIcon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneNaviMenu {
+  padding-top: 1rem;
+}
+
+div.schedulePaneRoot[data-layout='mobile'] .schedulePaneCell {
+  padding: 0.2rem;
+}
+
+@media (max-width: 576px) {
   .schedulePaneTable {
     min-width: 0;
     width: 100%;
@@ -112,14 +211,6 @@
     padding-left: 0.5rem;
     padding-right: 0.5rem;
     box-sizing: border-box;
-  }
-
-  .schedulePaneTable .schedulePanePanelBox {
-    padding-left: 0.75rem !important;
-    padding-right: 0.75rem !important;
-    margin-right: 0.5rem;
-    box-sizing: border-box;
-    max-width: 100%;
   }
 
   .schedulePaneTable .schedulePaneCompactFieldRow {
