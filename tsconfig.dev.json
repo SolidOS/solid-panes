@@ -2,12 +2,11 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "rootDir": ".",
-    "baseUrl": ".",
     "preserveSymlinks": true,
     "paths": {
-      "rdflib": ["node_modules/rdflib"],
-      "solid-logic": ["node_modules/solid-logic"],
-      "solid-ui": ["node_modules/solid-ui"]
+      "rdflib": ["./node_modules/rdflib"],
+      "solid-logic": ["./node_modules/solid-logic"],
+      "solid-ui": ["./node_modules/solid-ui"]
     }
   },
   "include": ["dev/index.ts", "dev/**/*.ts", "typings/**/*"]
