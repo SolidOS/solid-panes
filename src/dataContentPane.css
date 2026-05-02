@@ -7,9 +7,9 @@ div.dataContentPane {
   border-left: solid 1px var(--color-data-pane-border-top, black);
   border-bottom: solid 1px var(--color-data-pane-border-side, #777);
   border-right: solid 1px var(--color-data-pane-border-side, #777);
-  padding: 0.5em;
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  padding: var(--spacing-base, 0.5rem);
+  margin-top: var(--spacing-base, 0.5rem);
+  margin-bottom: var(--spacing-base, 0.5rem);
 }
 
 div.dataContentPane table.dataContentPaneTable {
@@ -64,15 +64,15 @@ div.dataContentPane table.dataContentPanePropertyTable {
   border-left: solid 1px var(--color-data-pane-border-top, black);
   border-bottom: solid 1px var(--color-data-pane-border-side, #777);
   border-right: solid 1px var(--color-data-pane-border-side, #777);
-  padding: 0.5em;
-  border-radius: 0.5em;
+  padding: var(--spacing-base, 0.5rem);
+  border-radius: var(--border-radius-md, 0.5rem);
 }
 
 div.dataContentPane td {
-  padding-left: 0.2em;
-  padding-top: 0.1em;
-  padding-right: 0.2em;
-  padding-bottom: 0.05em;
+  padding-left: var(--spacing-xxxs, 0.2rem);
+  padding-top: var(--spacing-small, 0.1rem);
+  padding-right: var(--spacing-xxxs, 0.2rem);
+  padding-bottom: 0.05rem;
   vertical-align: top;
 }
 
@@ -82,9 +82,9 @@ div.dataContentPane table.dataContentPanePropertyTable td {
 }
 
 div.dataContentPane tr {
-  margin-bottom: 0.6em;
-  padding-top: 1em;
-  padding-bottom: 1em;
+  margin-bottom: var(--spacing-2xs, 0.625rem);
+  padding-top: var(--spacing-small, 0.1rem);
+  padding-bottom: var(--spacing-small, 0.1rem);
 }
 
 .dataContentPane a {
@@ -124,11 +124,11 @@ div.dataContentPane td.pred {
   min-width: 8.5rem;
   width: clamp(8.5rem, 18vw, 12rem);
   max-width: 12rem;
-  padding-right: 0.5rem;
+  padding-right: var(--spacing-base, 0.5rem);
 }
 
 div.dataContentPane .dataContentPaneTopAlignedRow > td:not(.pred) {
-  padding-left: 0.3rem;
+  padding-left: var(--spacing-xxs, 0.3125rem);
 }
 
 div.dataContentPane td.pred a {
@@ -136,11 +136,11 @@ div.dataContentPane td.pred a {
 }
 
 .dataContentPaneRowEven {
-  background-color: #f0f0f0;
+  background-color: var(--color-background-row-alternate, #f0f0f0);
 }
 
 .dataContentPaneRowOdd {
-  background-color: var(--color-background, white);
+  background-color: var(--color-background-row-default, white);
 }
 
 .dataContentPaneTopAlignedRow {
@@ -152,17 +152,17 @@ div.dataContentPane td.pred a {
 }
 
 .dataContentPaneNestedLight {
-  background-color: var(--color-background, white);
+  background-color: var(--color-background-row-default, white);
 }
 
 .dataContentPaneNestedDark {
-  background-color: #eee;
+  background-color: var(--color-background-row-alternate, #f0f0f0);
 }
 
 div.dataContentPane[data-layout='mobile'] .dataContentPaneRootRow {
   display: flex;
   align-items: flex-start;
-  padding-bottom: 0.75rem;
+  padding-bottom: var(--spacing-xs, 0.75rem);
 }
 
 div.dataContentPane[data-layout='mobile'] .dataContentPaneSubjectCell {
@@ -170,7 +170,7 @@ div.dataContentPane[data-layout='mobile'] .dataContentPaneSubjectCell {
   width: 40%;
   max-width: 40%;
   box-sizing: border-box;
-  padding-right: 0.75rem;
+  padding-right: var(--spacing-xs, 0.75rem);
   padding-bottom: 0;
 }
 
@@ -231,7 +231,7 @@ div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable td:
     flex: 0 0 40%;
     width: 40%;
     max-width: 40%;
-    padding-right: 0.75rem;
+    padding-right: var(--spacing-xs, 0.75rem);
     padding-bottom: 0;
     box-sizing: border-box;
   }
@@ -261,7 +261,7 @@ div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable td:
     min-width: 0;
     max-width: none;
     width: 100%;
-    padding-bottom: 0.1rem;
+    padding-bottom: var(--spacing-small, 0.1rem);
   }
 
   div.dataContentPane .dataContentPaneTopAlignedRow > td:not(.pred) {
