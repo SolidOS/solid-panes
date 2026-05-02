@@ -79,7 +79,7 @@ export const imagePane: ImagePane = {
     const img = myDocument.createElement('img')
 
     // get image with authenticated fetch
-    void store.fetcher._fetch(subject.uri)
+    store.fetcher._fetch(subject.uri)
       .then(function (response: Response) {
         return response.blob()
       })

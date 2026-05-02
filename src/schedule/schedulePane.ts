@@ -940,7 +940,7 @@ export const schedulePane = {
             kb
               .each(subject, ns.sched('invitee'))
               .map(function (who) {
-                    const mbox = kb.any(who as NamedNode, ns.foaf('mbox')) as NamedNode | null
+                const mbox = kb.any(who as NamedNode, ns.foaf('mbox')) as NamedNode | null
                 return mbox ? mbox.uri.replace('mailto:', '') : ''
               })
               .join(',') +

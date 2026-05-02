@@ -16,7 +16,6 @@ import type {
   BlankNode,
   Formula,
   NamedNode,
-  Node as RdflibNode,
   Statement
 } from 'rdflib'
 import './dataContentPane.css'
@@ -30,34 +29,6 @@ type RootSubjectsResult = {
   roots: SubjectTerm[]
   subjects: Record<string, Statement[]>
   loopBreakers?: Record<string, unknown>
-}
-
-type PredicateFilter = (predicate: NamedNode, inverse: boolean) => boolean
-
-type PropView = (obj: RdflibNode) => Node
-
-type AlternativePane = {
-  render: (subject: SubjectTerm) => HTMLElement
-}
-
-type OutlineManagerLike = {
-  appendPropertyTRs: (
-    parent: HTMLElement,
-    plist: Statement[],
-    inverse: boolean,
-    predicateFilter: PredicateFilter
-  ) => void
-  outlineObjectTD: (
-    obj: RdflibNode,
-    view?: PropView,
-    deleteNode?: Node,
-    statement?: Statement
-  ) => HTMLTableCellElement
-  outlineExpand: (
-    td: HTMLTableCellElement,
-    subject: SubjectTerm,
-    options?: { pane?: AlternativePane }
-  ) => void
 }
 
 type DataContentPaneLike = {
@@ -225,7 +196,7 @@ export const dataContentPane = {
           }
           return myDocument.createTextNode(obj.value)
 
-        case 'BlankNode':
+        case 'BlankNode': {
           if (obj.toNT() in doneBnodes) {
             referencedBnodes[obj.toNT()] = true
             const referenceAnchor = myDocument.createElement('a')
@@ -243,6 +214,7 @@ export const dataContentPane = {
             newTable.classList.add('dataContentPaneNestedDark')
           }
           return newTable
+        }
 
         case 'Collection':
           res = myDocument.createElement('table')
@@ -323,36 +295,9 @@ export const dataContentPane = {
       element.dataset.inputMode = environment.inputMode ?? 'pointer'
     }
 
-    function alternativeRendering () {
-      const sz = $rdf.Serializer(context.session.store)
-      const res = sz.rootSubjects(sts) as RootSubjectsResult
-      const roots = res.roots
-      const p: AlternativePane = {
-        render: function (s2: SubjectTerm): HTMLElement {
-          const div = myDocument.createElement('div')
-          div.setAttribute('class', 'withinDocumentPane')
-          const plist = kb.statementsMatching(s2, undefined, undefined, subject)
-          outliner.appendPropertyTRs(div, plist, false, function (
-            _pred: NamedNode,
-            _inverse: boolean
-          ): boolean {
-            return true
-          })
-          return div
-        }
-      }
-      for (let i = 0; i < roots.length; i++) {
-        const tr = myDocument.createElement('tr')
-        tr.classList.add('dataContentPaneTopAlignedRow')
-        const root = roots[i]
-        const td = outliner.outlineObjectTD(root, undefined, tr)
-        tr.appendChild(td)
-        div.appendChild(tr)
-        outliner.outlineExpand(td, root, { pane: p })
-      }
-    }
-
     function mainRendering () {
+      const kb = context.session.store
+      const sts = kb.statementsMatching(undefined, undefined, undefined, subject)
       const initialRoots: SubjectTerm[] = []
       if (kb.holds(subject, undefined, undefined, subject)) {
         initialRoots.push(subject)
@@ -361,6 +306,7 @@ export const dataContentPane = {
       if (ps && (ps.termType === 'NamedNode' || ps.termType === 'BlankNode')) {
         initialRoots.push(ps as SubjectTerm)
       }
+
       div.appendChild(
         context.session.paneRegistry
           .byName('dataContents')
@@ -368,18 +314,11 @@ export const dataContentPane = {
       )
     }
 
-    const outliner = context.getOutliner(myDocument) as OutlineManagerLike
-    const kb = context.session.store
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')
     applyEnvironmentAttributes(div)
-    const sts = kb.statementsMatching(undefined, undefined, undefined, subject)
 
-    if (false) {
-      alternativeRendering()
-    } else {
-      mainRendering()
-    }
+    mainRendering()
     return div
   }
 }
