@@ -68,6 +68,12 @@ type DataContentPaneLike = {
   ) => HTMLTableElement
 }
 
+type RenderEnvironmentLike = {
+  layout?: 'mobile' | 'desktop' | string
+  theme?: 'light' | 'dark' | string
+  inputMode?: 'pointer' | 'touch' | string
+}
+
 export const dataContentPane = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
 
@@ -119,6 +125,8 @@ export const dataContentPane = {
     const myDocument = context.dom
     // const outliner = context.getOutliner(myDocument)
     const rep = myDocument.createElement('table')
+    rep.classList.add('dataContentPaneTable', 'dataContentPaneRootTable')
+    const isMobileLayout = context.environment?.layout === 'mobile'
     const sz = $rdf.Serializer(context.session.store)
     const res = sz.rootSubjects(sts) as RootSubjectsResult
     let roots = res.roots
@@ -135,6 +143,7 @@ export const dataContentPane = {
       nestingLevel = 0
     ): HTMLTableElement {
       const rep = myDocument.createElement('table')
+      rep.classList.add('dataContentPaneTable', 'dataContentPanePropertyTable')
       let lastPred: string | null = null
       const subjectStatements = subjects[sz.toStr(subject)]
       if (!subjectStatements) {
@@ -147,13 +156,13 @@ export const dataContentPane = {
       for (let i = 0; i < subjectStatements.length; i++) {
         const st = subjectStatements[i]
         const tr = myDocument.createElement('tr')
-        tr.classList.add('dataContentPaneTopAlignedRow')
-        if (st.predicate.uri !== lastPred) {
-          if (lastPred && same > 1) {
+        tr.classList.add('dataContentPaneTopAlignedRow', 'dataContentPanePropertyRow')
+        if (st.predicate.uri !== lastPred || isMobileLayout) {
+          if (!isMobileLayout && lastPred && same > 1) {
             predicateTD?.setAttribute('rowspan', '' + same)
           }
           predicateTD = myDocument.createElement('td')
-          predicateTD.setAttribute('class', 'pred')
+          predicateTD.setAttribute('class', 'pred dataContentPanePredicateCell')
           const anchor = myDocument.createElement('a')
           anchor.setAttribute('href', st.predicate.uri)
           anchor.addEventListener(
@@ -173,11 +182,14 @@ export const dataContentPane = {
         }
         same++
         const objectTD = myDocument.createElement('td')
+        objectTD.classList.add('dataContentPaneValueCell')
         objectTD.appendChild(objectTree(st.object, nestingLevel + 1))
         tr.appendChild(objectTD)
         rep.appendChild(tr)
       }
-      if (lastPred && same > 1) predicateTD?.setAttribute('rowspan', '' + same)
+      if (!isMobileLayout && lastPred && same > 1) {
+        predicateTD?.setAttribute('rowspan', '' + same)
+      }
       return rep
     }
 
@@ -267,11 +279,16 @@ export const dataContentPane = {
     }
     for (let i = 0; i < roots.length; i++) {
       const tr = myDocument.createElement('tr')
-      tr.classList.add(i % 2 === 0 ? 'dataContentPaneRowEven' : 'dataContentPaneRowOdd')
+      tr.classList.add(
+        i % 2 === 0 ? 'dataContentPaneRowEven' : 'dataContentPaneRowOdd',
+        'dataContentPaneRootRow'
+      )
       rep.appendChild(tr)
       const subjectTD = myDocument.createElement('td')
+      subjectTD.classList.add('dataContentPaneSubjectCell')
       tr.appendChild(subjectTD)
       const TDTree = myDocument.createElement('td')
+      TDTree.classList.add('dataContentPaneDetailsCell')
       tr.appendChild(TDTree)
       const root = roots[i]
       if (root.termType === 'BlankNode') {
@@ -298,6 +315,13 @@ export const dataContentPane = {
     context: DataBrowserContext
   ): HTMLDivElement {
     const myDocument = context.dom
+
+    function applyEnvironmentAttributes (element: HTMLDivElement): void {
+      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      element.dataset.layout = environment.layout ?? 'desktop'
+      element.dataset.theme = environment.theme ?? 'light'
+      element.dataset.inputMode = environment.inputMode ?? 'pointer'
+    }
 
     function alternativeRendering () {
       const sz = $rdf.Serializer(context.session.store)
@@ -348,6 +372,7 @@ export const dataContentPane = {
     const kb = context.session.store
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'dataContentPane')
+    applyEnvironmentAttributes(div)
     const sts = kb.statementsMatching(undefined, undefined, undefined, subject)
 
     if (false) {

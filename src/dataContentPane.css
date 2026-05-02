@@ -12,6 +12,53 @@ div.dataContentPane {
   margin-bottom: 0.5em;
 }
 
+div.dataContentPane table.dataContentPaneTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+div.dataContentPane table.dataContentPaneRootTable {
+  table-layout: auto;
+}
+
+div.dataContentPane .dataContentPaneRootRow {
+  display: flex;
+  align-items: flex-start;
+}
+
+div.dataContentPane .dataContentPaneRootRow > td {
+  vertical-align: top;
+}
+
+div.dataContentPane .dataContentPaneSubjectCell {
+  flex: 0 0 auto;
+  width: clamp(7rem, 12%, 10rem);
+  padding-right: 0.8rem;
+}
+
+div.dataContentPane .dataContentPaneDetailsCell {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+div.dataContentPane .dataContentPaneSubjectCell,
+div.dataContentPane td.pred,
+div.dataContentPane .dataContentPaneTopAlignedRow > td:not(.pred),
+div.dataContentPane .dataContentPaneSubjectCell a,
+div.dataContentPane td.pred a,
+div.dataContentPane .dataContentPaneTopAlignedRow > td:not(.pred) a {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+div.dataContentPane table.dataContentPanePropertyTable {
+  table-layout: auto;
+  width: auto;
+  max-width: 100%;
+}
+
 .nestedFormula {
   border-top: solid 1px var(--color-data-pane-border-top, black);
   border-left: solid 1px var(--color-data-pane-border-top, black);
@@ -27,6 +74,11 @@ div.dataContentPane td {
   padding-right: 0.2em;
   padding-bottom: 0.05em;
   vertical-align: top;
+}
+
+div.dataContentPane table.dataContentPanePropertyTable td {
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
 }
 
 div.dataContentPane tr {
@@ -69,7 +121,14 @@ div.dataContentPane tr {
 }
 
 div.dataContentPane td.pred {
-  min-width: 12em;
+  min-width: 8.5rem;
+  width: clamp(8.5rem, 18vw, 12rem);
+  max-width: 12rem;
+  padding-right: 0.5rem;
+}
+
+div.dataContentPane .dataContentPaneTopAlignedRow > td:not(.pred) {
+  padding-left: 0.3rem;
 }
 
 div.dataContentPane td.pred a {
@@ -86,6 +145,10 @@ div.dataContentPane td.pred a {
 
 .dataContentPaneTopAlignedRow {
   vertical-align: top;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .dataContentPaneNestedLight {
@@ -94,4 +157,114 @@ div.dataContentPane td.pred a {
 
 .dataContentPaneNestedDark {
   background-color: #eee;
+}
+
+div.dataContentPane[data-layout='mobile'] .dataContentPaneRootRow {
+  display: block;
+  padding-bottom: 0.75rem;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tbody > tr > td,
+div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tr > td {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 0.2em;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tbody > tr > td:first-child,
+div.dataContentPane[data-layout='mobile'] table.dataContentPaneRootTable > tr > td:first-child {
+  width: 100%;
+  padding-bottom: 0.85rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable > tbody > tr,
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable > tr {
+  margin-bottom: 0;
+}
+
+div.dataContentPane[data-layout='mobile'] .dataContentPaneTopAlignedRow + .dataContentPaneTopAlignedRow {
+  margin-top: 0;
+}
+
+div.dataContentPane[data-layout='mobile'] .dataContentPaneTopAlignedRow {
+  display: block;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable,
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable > tbody {
+  display: block;
+  width: 100%;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable td {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable td.pred {
+  width: 100%;
+  min-width: 0;
+  padding-bottom: 0.1rem;
+}
+
+div.dataContentPane[data-layout='mobile'] table.dataContentPanePropertyTable td:not(.pred) {
+  padding-top: 0;
+  padding-left: 0.85rem;
+}
+
+@media (max-width: 700px) {
+  div.dataContentPane .dataContentPaneRootRow {
+    display: flex;
+    align-items: flex-start;
+  }
+
+  div.dataContentPane .dataContentPaneSubjectCell {
+    flex: 0 0 40%;
+    width: 40%;
+    max-width: 40%;
+    padding-right: 0.75rem;
+    padding-bottom: 0;
+    box-sizing: border-box;
+  }
+
+  div.dataContentPane .dataContentPaneDetailsCell {
+    flex: 0 0 60%;
+    width: 60%;
+    max-width: 60%;
+    box-sizing: border-box;
+  }
+
+  div.dataContentPane .dataContentPaneTopAlignedRow {
+    display: block;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  div.dataContentPane .dataContentPaneTopAlignedRow > td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  div.dataContentPane .dataContentPaneTopAlignedRow > td.pred {
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    padding-bottom: 0.1rem;
+  }
+
+  div.dataContentPane .dataContentPaneTopAlignedRow > td:not(.pred) {
+    padding-top: 0;
+    padding-left: 0.85rem;
+  }
 }
