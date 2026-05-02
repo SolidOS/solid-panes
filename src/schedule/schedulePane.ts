@@ -676,6 +676,77 @@ export const schedulePane = {
         )
       }
 
+      const annotateRenderedForm = function (
+        container: HTMLElement,
+        includePrimaryFields: boolean = false
+      ) {
+        const controls = Array.from(
+          container.querySelectorAll('input, select, textarea')
+        ) as HTMLElement[]
+        controls.forEach(control => {
+          control.classList.add('schedulePaneFormControl')
+          if (control.tagName.toLowerCase() === 'textarea') {
+            control.classList.add('schedulePaneFormTextarea')
+          }
+        })
+
+        const borderedPanels = Array.from(
+          container.querySelectorAll('div[style*="border: 0.05em solid"]')
+        ) as HTMLElement[]
+        borderedPanels.forEach(panel => {
+          panel.classList.add('schedulePanePanelBox')
+        })
+
+        const headings = Array.from(container.querySelectorAll('h3')) as HTMLElement[]
+        headings.forEach(heading => {
+          heading.classList.add('schedulePaneFormHeading')
+          const headingText = (heading.textContent || '').trim().toLowerCase()
+          if (headingText === 'time proposals') {
+            heading.classList.add('schedulePaneTimeProposalsHeading')
+            heading.parentElement?.classList.add('schedulePaneTimeProposalsHeadingBlock')
+            heading.closest('.schedulePanePanelBox')?.classList.add(
+              'schedulePaneTimeProposalsPanel'
+            )
+          }
+        })
+
+        if (!includePrimaryFields) {
+          return
+        }
+
+        const labels = Array.from(container.querySelectorAll('.formFieldName'))
+        labels.forEach(labelElement => {
+          const row = labelElement.parentElement as HTMLElement | null
+          const labelText = (labelElement.textContent || '').trim().toLowerCase()
+          if (!row) return
+          if (labelText === 'summary' || labelText === 'location') {
+            row.classList.add('schedulePaneCompactFieldRow')
+          }
+          if (labelText === 'comment') {
+            row.classList.add('schedulePaneCommentRow')
+          }
+        })
+
+        const commentField = container.querySelector('textarea') as HTMLTextAreaElement | null
+        const commentFieldWrapper = commentField?.parentElement as HTMLElement | null
+        const commentValueCell = commentFieldWrapper?.parentElement as HTMLElement | null
+        const commentRow = commentValueCell?.parentElement as HTMLElement | null
+        if (commentRow) {
+          commentRow.classList.add('schedulePaneCommentRow')
+        }
+        if (commentValueCell) {
+          commentValueCell.classList.add('schedulePaneCommentValue')
+        }
+      }
+
+      const unwrapSlide = function (slide: HTMLElement) {
+        const firstElement = slide.firstElementChild as HTMLElement | null
+        if (!firstElement || slide.childElementCount !== 1) {
+          return slide
+        }
+        return firstElement
+      }
+
       if (wizard) {
         const forms = [form1, form2, form3]
         const slides: HTMLElement[] = []
@@ -691,13 +762,15 @@ export const schedulePane = {
             detailsDoc,
             complainIfBad
           )
+          annotateRenderedForm(slide, f === 0)
 
           // Some stores end up with form2's ui:Options unresolved; force a usable input form.
           if (f === 1 && !hasFormControls(slide)) {
             renderTimeProposalFallback(slide)
+            annotateRenderedForm(slide)
           }
 
-          slides.push(slide)
+          slides.push(unwrapSlide(slide))
         }
 
         const refresh = function () {
@@ -764,6 +837,7 @@ export const schedulePane = {
           detailsDoc,
           complainIfBad
         )
+        annotateRenderedForm(table, true)
         UI.widgets.appendForm(
           document,
           table,
@@ -773,6 +847,7 @@ export const schedulePane = {
           detailsDoc,
           complainIfBad
         )
+        annotateRenderedForm(table)
         UI.widgets.appendForm(
           document,
           table,
@@ -782,6 +857,7 @@ export const schedulePane = {
           detailsDoc,
           complainIfBad
         )
+        annotateRenderedForm(table)
         naviCenter.appendChild(doneButton) // could also check data shape
       }
       // @@@  link config to results
@@ -1322,6 +1398,7 @@ export const schedulePane = {
 
     const naviTop = structure.appendChild(dom.createElement('tr'))
     const naviMain = naviTop.appendChild(dom.createElement('td'))
+    naviMain.classList.add('schedulePaneMainCell')
     naviMain.setAttribute('colspan', '3')
 
     const naviMenu = structure.appendChild(dom.createElement('tr'))

@@ -1,29 +1,203 @@
 .schedulePaneTable {
   border-collapse: collapse;
   background-color: white;
-  min-width: 40em;
-  min-height: 13em;
+  min-width: 40rem;
+  min-height: 13rem;
 }
 
 .schedulePaneButton {
   background-color: #eef;
-  padding: var(--spacing-xs, 0.5em);
+  padding: var(--spacing-xs, 0.5rem);
   border: .5rem solid white;
   font-size: 100%;
 }
 
 .schedulePaneButtonIcon {
-  width: var(--icon-sm, 1.8em);
-  height: var(--icon-sm, 1.8em);
+  width: var(--icon-sm, 1.8rem);
+  height: var(--icon-sm, 1.8rem);
 }
 
 .schedulePaneNaviMenu {
   text-align: center;
   vertical-align: middle;
-  padding-top: 4em;
+  padding-top: 4rem;
 }
 
 .schedulePaneCell {
-  padding: var(--spacing-xs, 0.3em);
+  padding: var(--spacing-xs, 0.3rem);
   text-align: center;
+}
+
+.schedulePaneTable .schedulePaneFormHeading {
+  font-size: 110% !important;
+  font-weight: bold;
+  color: #888888;
+  padding: 0.2em;
+  margin: 0.7em 0 !important;
+}
+
+.schedulePaneTable .schedulePaneTimeProposalsHeading {
+  margin-bottom: 0 !important;
+}
+
+.schedulePaneTable .schedulePaneTimeProposalsPanel {
+  padding-bottom: 0.9rem !important;
+  border: none !important;
+}
+
+@media (max-width: 1024px) {
+  .schedulePaneTable .schedulePaneMainCell {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .schedulePaneTable .schedulePanePanelBox {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    margin-right: 0.5rem;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .schedulePaneTable .schedulePaneCommentRow {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .schedulePaneTable .schedulePaneCommentRow > div:first-child {
+    width: auto !important;
+    min-width: 4.5rem;
+    flex: 0 1 6rem;
+  }
+
+  .schedulePaneTable .schedulePaneCommentValue {
+    min-width: 0;
+    flex: 1 1 20rem;
+    width: auto;
+    padding-right: 0.25rem;
+    box-sizing: border-box;
+  }
+
+  .schedulePaneTable .schedulePaneCommentValue .schedulePaneFormTextarea,
+  .schedulePaneTable .schedulePaneCommentRow .schedulePaneFormTextarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin: 0.2rem 0 0 !important;
+    padding: 0.5rem 0.45rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .schedulePaneTable {
+    min-width: 0;
+    width: 100%;
+    min-height: 0;
+    table-layout: fixed;
+  }
+
+  .schedulePaneTable td,
+  .schedulePaneTable th {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .schedulePaneTable .schedulePaneMainCell {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .schedulePaneTable .schedulePanePanelBox {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    margin-right: 0.5rem;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .schedulePaneTable .schedulePaneCompactFieldRow {
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .schedulePaneTable .schedulePaneCompactFieldRow .formFieldName {
+    width: auto !important;
+    min-width: 4.5rem;
+    flex: 0 1 5.5rem;
+  }
+
+  .schedulePaneTable .schedulePaneCompactFieldRow .formFieldValue {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .schedulePaneTable .schedulePaneCompactFieldRow .schedulePaneFormControl {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin: 0.2rem 0 0 !important;
+    font-size: var(--font-size-sm, 0.875rem);
+    padding: 0.35rem 0.45rem;
+  }
+
+  .schedulePaneTable .schedulePaneCommentRow {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .schedulePaneTable .schedulePaneCommentRow .formFieldName,
+  .schedulePaneTable .schedulePaneCommentRow > div:first-child {
+    width: auto !important;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .schedulePaneTable .schedulePaneCommentRow .formFieldValue,
+  .schedulePaneTable .schedulePaneCommentRow > div:last-child,
+  .schedulePaneTable .schedulePaneCommentValue {
+    min-width: 0;
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .schedulePaneTable .schedulePaneCommentRow .schedulePaneFormTextarea,
+  .schedulePaneTable .schedulePaneCommentValue .schedulePaneFormTextarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin: 0 !important;
+    font-size: var(--font-size-sm, 0.875rem);
+    padding: 0.35rem 0.45rem;
+    min-height: 5.5rem;
+  }
+
+  .schedulePaneButton {
+    padding: 0.4rem;
+    border-width: 0.2rem;
+  }
+
+  .schedulePaneButtonIcon {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .schedulePaneNaviMenu {
+    padding-top: 1rem;
+  }
+
+  .schedulePaneCell {
+    padding: 0.2rem;
+  }
 }
