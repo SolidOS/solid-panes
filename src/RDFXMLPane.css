@@ -1,5 +1,5 @@
 .rdfxml-pane {
-	padding: 1em;
+	padding: 1rem;
 	border-top: solid 2px var(--color-data-pane-border-top, black);
 	border-left: solid 2px var(--color-data-pane-border-top, black);
 	border-bottom: solid 2px var(--color-data-pane-border-side, #777);
