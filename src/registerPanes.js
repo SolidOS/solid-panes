@@ -29,7 +29,7 @@ import humanReadablePane from './humanReadablePane.js'
 
 import { dataContentPane } from './dataContentPane'
 import sourcePane from 'source-pane'
-import { n3Pane } from './n3Pane.js'
+import { n3Pane } from './n3Pane'
 import { RDFXMLPane } from './RDFXMLPane.js'
 import { formPane } from './form/pane.js'
 import { tableViewPane } from './tableViewPane.js'
