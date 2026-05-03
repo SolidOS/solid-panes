@@ -1,8 +1,20 @@
+.n3-pane {
+	padding: 1em;
+	border-top: solid 1px var(--color-data-pane-border-top, black);
+	border-left: solid 1px var(--color-data-pane-border-top, black);
+	border-bottom: solid 1px var(--color-data-pane-border-side, #777);
+	border-right: solid 1px var(--color-data-pane-border-side, #777);
+	color: var(--color-text-blue, #004);
+	box-sizing: border-box;
+}
+
 .n3-pane__source {
 	overflow-x: auto;
 	max-width: 100%;
 	box-sizing: border-box;
 	font-family: monospace;
+	font-size: 120%;
+	margin: 0;
 	white-space: pre;
 }
 
