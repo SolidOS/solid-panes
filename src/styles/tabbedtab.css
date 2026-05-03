@@ -774,17 +774,6 @@ td.undetermined table {
   margin: 0.2em;
 }
 
-div.bottom-border {
-  border: 0.2em solid transparent;
-  width: 100%;
-}
-
-div.bottom-border-active {
-  cursor: copy;
-  border: 0.2em solid;
-  border-color: rgb(100%, 65%, 0%);
-}
-
 /* The thing below was for the kenny's orange bar*/
 /* @@@ This is not specific enough
 td{
