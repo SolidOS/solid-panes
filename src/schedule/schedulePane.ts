@@ -439,7 +439,7 @@ export const schedulePane = {
     const refreshCellColor = function (cell, value) {
       const bg = kb.any(value, UI.ns.ui('backgroundColor'))
       if (bg) {
-        cell.classList.add('schedulePaneCell')
+        cell.classList.add('schedule-pane__cell')
         cell.setAttribute(
           'style',
           'background-color: ' + bg + ';'
@@ -478,7 +478,7 @@ export const schedulePane = {
         }
       )
       if (b.firstChild instanceof HTMLElement) {
-        b.firstChild.classList.add('schedulePaneButton')
+        b.firstChild.classList.add('schedule-pane__button')
       }
       return b
     } // newInstanceButton
@@ -624,7 +624,7 @@ export const schedulePane = {
       div.appendChild(dom.createElement('br')) // @@
 
       const button = div.appendChild(dom.createElement('button'))
-      button.classList.add('schedulePaneButton')
+      button.classList.add('schedule-pane__button')
       button.textContent = 'Start new poll at this URI'
       button.addEventListener('click', function (_e) {
         let newBase = baseField.value
@@ -693,9 +693,9 @@ export const schedulePane = {
           container.querySelectorAll('input, select, textarea')
         ) as HTMLElement[]
         controls.forEach(control => {
-          control.classList.add('schedulePaneFormControl')
+          control.classList.add('schedule-pane__form-control')
           if (control.tagName.toLowerCase() === 'textarea') {
-            control.classList.add('schedulePaneFormTextarea')
+            control.classList.add('schedule-pane__form-control--textarea')
           }
         })
 
@@ -703,17 +703,17 @@ export const schedulePane = {
           container.querySelectorAll('div[style*="border: 0.05em solid"]')
         ) as HTMLElement[]
         borderedPanels.forEach(panel => {
-          panel.classList.add('schedulePanePanelBox')
+          panel.classList.add('schedule-pane__panel')
         })
 
         const headings = Array.from(container.querySelectorAll('h3')) as HTMLElement[]
         headings.forEach(heading => {
-          heading.classList.add('schedulePaneFormHeading')
+          heading.classList.add('schedule-pane__form-heading')
           const headingText = (heading.textContent || '').trim().toLowerCase()
           if (headingText === 'time proposals') {
-            heading.classList.add('schedulePaneTimeProposalsHeading')
-            heading.closest('.schedulePanePanelBox')?.classList.add(
-              'schedulePaneTimeProposalsPanel'
+            heading.classList.add('schedule-pane__form-heading--time-proposals')
+            heading.closest('.schedule-pane__panel')?.classList.add(
+              'schedule-pane__panel--time-proposals'
             )
           }
         })
@@ -728,10 +728,10 @@ export const schedulePane = {
           const labelText = (labelElement.textContent || '').trim().toLowerCase()
           if (!row) return
           if (labelText === 'summary' || labelText === 'location') {
-            row.classList.add('schedulePaneCompactFieldRow')
+            row.classList.add('schedule-pane__field-row--compact')
           }
           if (labelText === 'comment') {
-            row.classList.add('schedulePaneCommentRow')
+            row.classList.add('schedule-pane__field-row--comment')
           }
         })
 
@@ -740,10 +740,10 @@ export const schedulePane = {
         const commentValueCell = commentFieldWrapper?.parentElement as HTMLElement | null
         const commentRow = commentValueCell?.parentElement as HTMLElement | null
         if (commentRow) {
-          commentRow.classList.add('schedulePaneCommentRow')
+          commentRow.classList.add('schedule-pane__field-row--comment')
         }
         if (commentValueCell) {
-          commentValueCell.classList.add('schedulePaneCommentValue')
+          commentValueCell.classList.add('schedule-pane__field-value--comment')
         }
       }
 
@@ -802,7 +802,7 @@ export const schedulePane = {
           }
         }
         const b1 = clearElement(naviLeft).appendChild(dom.createElement('button'))
-        b1.classList.add('schedulePaneButton')
+        b1.classList.add('schedule-pane__button')
         b1.textContent = '<- go back'
         b1.addEventListener(
           'click',
@@ -818,7 +818,7 @@ export const schedulePane = {
         const b2 = clearElement(naviRight).appendChild(
           dom.createElement('button')
         )
-        b2.classList.add('schedulePaneButton')
+        b2.classList.add('schedule-pane__button')
         b2.textContent = 'continue ->'
         b2.addEventListener(
           'click',
@@ -894,7 +894,7 @@ export const schedulePane = {
         $rdf.st(subject, ns.sched('results'), resultsDoc, detailsDoc)
       ) // @@ also link in results
 
-      doneButton.classList.add('schedulePaneButton')
+      doneButton.classList.add('schedule-pane__button')
       doneButton.textContent = 'Go to poll'
       doneButton.addEventListener(
         'click',
@@ -923,10 +923,10 @@ export const schedulePane = {
       )
 
       const emailButton = dom.createElement('button')
-      emailButton.classList.add('schedulePaneButton')
+      emailButton.classList.add('schedule-pane__button')
       const emailIcon = emailButton.appendChild(dom.createElement('img'))
       emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
-      emailIcon.classList.add('schedulePaneButtonIcon')
+      emailIcon.classList.add('schedule-pane__button-icon')
       // emailButton.textContent = 'email invitations'
       emailButton.addEventListener(
         'click',
@@ -1220,11 +1220,11 @@ export const schedulePane = {
         matrix.setAttribute('class', 'matrix')
 
         const refreshButton = dom.createElement('button')
-        refreshButton.classList.add('schedulePaneButton')
+        refreshButton.classList.add('schedule-pane__button')
         // refreshButton.textContent = 'refresh' // noun_479395.svg
         const refreshIcon = dom.createElement('img')
         refreshIcon.setAttribute('src', UI.icons.iconBase + 'noun_479395.svg')
-        refreshIcon.classList.add('schedulePaneButtonIcon')
+        refreshIcon.classList.add('schedule-pane__button-icon')
         refreshButton.appendChild(refreshIcon)
         refreshButton.addEventListener(
           'click',
@@ -1362,11 +1362,11 @@ export const schedulePane = {
       const instanceCreator = kb.any(subject, ns.foaf('maker')) // owner?
       if (!instanceCreator || !me || instanceCreator.sameTerm(me)) {
         const editButton = dom.createElement('button')
-        editButton.classList.add('schedulePaneButton')
+        editButton.classList.add('schedule-pane__button')
         // editButton.textContent = '(Modify the poll)' // noun_344563.svg
         const editIcon = dom.createElement('img')
         editIcon.setAttribute('src', UI.icons.iconBase + 'noun_344563.svg')
-        editIcon.classList.add('schedulePaneButtonIcon')
+        editIcon.classList.add('schedule-pane__button-icon')
         editButton.appendChild(editIcon)
         editButton.addEventListener(
           'click',
@@ -1387,10 +1387,10 @@ export const schedulePane = {
     } // showResults
 
     const div = dom.createElement('div')
-    div.classList.add('schedulePaneRoot')
+    div.classList.add('schedule-pane')
     applyEnvironmentAttributes(div)
     const structure = div.appendChild(dom.createElement('table')) // @@ make responsive style
-    structure.classList.add('schedulePaneTable')
+    structure.classList.add('schedule-pane__table')
 
     const logInOutButton: LoginStatusBoxLike | null = null
     /*
@@ -1403,11 +1403,11 @@ export const schedulePane = {
 
     const naviTop = structure.appendChild(dom.createElement('tr'))
     const naviMain = naviTop.appendChild(dom.createElement('td'))
-    naviMain.classList.add('schedulePaneMainCell')
+    naviMain.classList.add('schedule-pane__main-cell')
     naviMain.setAttribute('colspan', '3')
 
     const naviMenu = structure.appendChild(dom.createElement('tr'))
-    naviMenu.classList.add('naviMenu', 'schedulePaneNaviMenu')
+    naviMenu.classList.add('naviMenu', 'schedule-pane__nav')
     const naviLeft = naviMenu.appendChild(dom.createElement('td'))
     const naviCenter = naviMenu.appendChild(dom.createElement('td'))
     const naviRight = naviMenu.appendChild(dom.createElement('td'))
