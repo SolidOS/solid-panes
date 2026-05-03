@@ -7,20 +7,48 @@ import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import type { DataBrowserContext } from 'pane-registry'
+import type { NamedNode } from 'rdflib'
 import './humanReadablePane.css'
 
 // Helper function to check if a URI has a markdown file extension
-const isMarkdownFile = (uri) => {
+type DokieliCacheValue = 'dokieli' | 'html'
+
+type HumanReadableIcon = string | Promise<string>
+
+type HumanReadablePaneDefinition = {
+  icon: (subject: NamedNode, context: DataBrowserContext) => HumanReadableIcon
+  name: string
+  label: (subject: NamedNode, context: DataBrowserContext) => 'view' | 'View' | null
+  render: (subject: NamedNode, context: DataBrowserContext) => HTMLDivElement
+}
+
+type RenderEnvironmentLike = {
+  layout?: 'mobile' | 'desktop' | string
+}
+
+const isMarkdownFile = (uri?: string | null): boolean => {
   if (!uri) return false
   const path = uri.split('?')[0].split('#')[0] // Remove query string and fragment
   return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(path)
 }
 
 // Cache for dokieli detection results (keyed by subject URI)
-const dokieliCache = new Map()
+const dokieliCache = new Map<string, DokieliCacheValue>()
 
-const humanReadablePane = {
-  icon: function (subject, context) {
+function applyFrameClasses (
+  frame: HTMLElement,
+  modifier: 'markdown' | 'plain-text' | 'iframe',
+  lines: number
+): void {
+  frame.className = ''
+  frame.classList.add('human-readable-pane__frame')
+  frame.classList.add(`human-readable-pane__frame--${modifier}`)
+  frame.style.setProperty('--human-readable-pane-height', `${lines}em`)
+}
+
+const humanReadablePane: HumanReadablePaneDefinition = {
+  icon: function (subject: NamedNode, context: DataBrowserContext): HumanReadableIcon {
     // Markdown files detected by extension
     if (subject && isMarkdownFile(subject.uri)) {
       return icons.iconBase + 'markdown.svg'
@@ -78,7 +106,10 @@ const humanReadablePane = {
 
   name: 'humanReadable',
 
-  label: function (subject, context) {
+  label: function (
+    subject: NamedNode,
+    context: DataBrowserContext
+  ): 'view' | 'View' | null {
     const kb = context.session.store
 
     //   See also the source pane, which has lower precedence.
@@ -94,7 +125,11 @@ const humanReadablePane = {
       'video/mp4'
     ]
 
-    const hasContentTypeIn = function (kb, x, displayables) {
+    const hasContentTypeIn = function (
+      kb: typeof context.session.store,
+      x: NamedNode,
+      displayables: string[]
+    ): boolean {
       const cts = kb.fetcher.getHeader(x, 'content-type')
       if (cts) {
         for (let j = 0; j < cts.length; j++) {
@@ -109,7 +144,11 @@ const humanReadablePane = {
     }
 
     // This data could come from a fetch OR from ldp container
-    const hasContentTypeIn2 = function (kb, x, displayables) {
+    const hasContentTypeIn2 = function (
+      kb: typeof context.session.store,
+      x: NamedNode,
+      displayables: string[]
+    ): boolean {
       const t = kb.findTypeURIs(x)
       for (let k = 0; k < displayables.length; k++) {
         if (Util.mediaTypeClass(displayables[k]).uri in t) {
@@ -157,10 +196,18 @@ const humanReadablePane = {
     return null
   },
 
-  render: function (subject, context) {
+  render: function (
+    subject: NamedNode,
+    context: DataBrowserContext
+  ): HTMLDivElement {
     const myDocument = context.dom
     const div = myDocument.createElement('div')
     const kb = context.session.store
+
+    function applyEnvironmentAttributes (element: HTMLDivElement): void {
+      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      element.dataset.layout = environment.layout ?? 'desktop'
+    }
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     const ct = cts ? cts[0].split(';', 1)[0].trim() : null // remove content-type parameters
@@ -176,19 +223,18 @@ const humanReadablePane = {
     }
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
-    div.setAttribute('class', 'docView')
-    div.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+    div.classList.add('human-readable-pane')
+    applyEnvironmentAttributes(div)
 
     // render markdown to html in a DIV element
-    const renderMarkdownContent = function (frame) {
+    const renderMarkdownContent = function (frame: HTMLDivElement) {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const markdownText = response.responseText
+        const markdownText = response.responseText ?? ''
         const lines = Math.min(30, markdownText.split(/\n/).length + 5)
-        const res = marked.parse(markdownText)
+        const res = marked.parse(markdownText, { async: false })
         const clean = DOMPurify.sanitize(res)
         frame.innerHTML = clean
-        frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
+        applyFrameClasses(frame, 'markdown', lines)
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'
@@ -196,44 +242,42 @@ const humanReadablePane = {
     }
 
     // render plain text in a PRE element
-    const renderPlainTextContent = function (frame) {
+    const renderPlainTextContent = function (frame: HTMLPreElement) {
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const plainText = response.responseText
+        const plainText = response.responseText ?? ''
         const lines = Math.min(30, plainText.split(/\n/).length + 5)
         frame.textContent = plainText
-        frame.setAttribute('class', 'doc')
-        frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto; font-family: monospace; white-space: pre-wrap; word-wrap: break-word;`)
+        applyFrameClasses(frame, 'plain-text', lines)
       }).catch(error => {
         console.error('Error fetching plain text content:', error)
         frame.textContent = 'Error loading content'
       })
     }
 
-    const setIframeAttributes = (frame, lines) => {
+    const setIframeAttributes = (frame: HTMLIFrameElement, lines: number) => {
       frame.setAttribute('src', subject.uri)
-      frame.setAttribute('class', 'doc')
-      frame.setAttribute('style', `display: block; border: 1px solid; padding: 1em; height: ${lines}em; max-width: 100%; width: 100%; box-sizing: border-box; resize: both; overflow: auto;`)
+      applyFrameClasses(frame, 'iframe', lines)
     }
 
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
-      const frame = myDocument.createElement('DIV')
+      const frame = myDocument.createElement('div')
       renderMarkdownContent(frame)
       const frameContainer = myDocument.createElement('div')
-      frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+      frameContainer.classList.add('human-readable-pane__container')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
     } else if (isPlainText) {
       // For plain text, use a PRE element and render the content
-      const frame = myDocument.createElement('PRE')
+      const frame = myDocument.createElement('pre')
       renderPlainTextContent(frame)
       const frameContainer = myDocument.createElement('div')
-      frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+      frameContainer.classList.add('human-readable-pane__container')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
     } else {
       // For other content types, use IFRAME
-      const frame = myDocument.createElement('IFRAME')
+      const frame = myDocument.createElement('iframe')
 
       // Apply sandbox for HTML/XHTML
       if (ct === 'text/html' || ct === 'application/xhtml+xml') {
@@ -242,7 +286,7 @@ const humanReadablePane = {
 
       // Fetch content to calculate lines dynamically
       kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const blobText = response.responseText
+        const blobText = response.responseText ?? ''
         const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
         const lines = Math.min(30, blobText.split(/\n/).length + newLines)
 
@@ -259,7 +303,7 @@ const humanReadablePane = {
       })
 
       const frameContainer = myDocument.createElement('div')
-      frameContainer.setAttribute('style', 'display: block; width: 100%; max-width: 100%; box-sizing: border-box;')
+      frameContainer.classList.add('human-readable-pane__container')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
     }
