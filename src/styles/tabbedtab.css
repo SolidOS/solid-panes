@@ -363,35 +363,9 @@ div.exceptionPane pre {
   display: inline;
 }
 
-div.n3Pane {
-  padding: 1em;
-  border-top: solid 1px black;
-  border-left: solid 1px black;
-  border-bottom: solid 1px #777;
-  border-right: solid 1px #777;
-  color: #004;
-}
-
 .imageView {
   border: 1em white;
   margin: 1em;
-}
-
-.n3Pane pre {
-  font-size: 120%;
-}
-
-.RDFXMLPane pre {
-  font-size: 120%;
-}
-
-div.RDFXMLPane {
-  padding: 1em;
-  border-top: solid 2px black;
-  border-left: solid 2px black;
-  border-bottom: solid 2px #777;
-  border-right: solid 2px #777;
-  color: #440;
 }
 
 /* Generic things useful anywhere */
