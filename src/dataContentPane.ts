@@ -11,7 +11,7 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
-import type { DataBrowserContext } from 'pane-registry'
+import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type {
   BlankNode,
   Formula,
@@ -37,12 +37,6 @@ type DataContentPaneLike = {
     context: DataBrowserContext,
     initialRoots?: SubjectTerm[]
   ) => HTMLTableElement
-}
-
-type RenderEnvironmentLike = {
-  layout?: 'mobile' | 'desktop' | string
-  theme?: 'light' | 'dark' | string
-  inputMode?: 'pointer' | 'touch' | string
 }
 
 export const dataContentPane = {
@@ -290,7 +284,7 @@ export const dataContentPane = {
     const myDocument = context.dom
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
-      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
       element.dataset.layout = environment.layout ?? 'desktop'
       element.dataset.theme = environment.theme ?? 'light'
       element.dataset.inputMode = environment.inputMode ?? 'pointer'

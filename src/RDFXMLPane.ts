@@ -7,7 +7,7 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
-import type { DataBrowserContext } from 'pane-registry'
+import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode, Statement } from 'rdflib'
 import './RDFXMLPane.css'
 
@@ -19,10 +19,6 @@ type RDFXMLPaneDefinition = {
   audience: NamedNode[]
   label: (subject: NamedNode, context: DataBrowserContext) => string | null
   render: (subject: NamedNode, context: DataBrowserContext) => HTMLDivElement
-}
-
-type RenderEnvironmentLike = {
-  layout?: 'mobile' | 'desktop'
 }
 
 function leadingIndentWidth (line: string): number {
@@ -79,7 +75,7 @@ export const RDFXMLPane: RDFXMLPaneDefinition = {
     const kb = context.session.store
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
-      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
       element.dataset.layout = environment.layout ?? 'desktop'
     }
 

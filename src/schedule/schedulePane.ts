@@ -7,7 +7,7 @@
 import * as UI from 'solid-ui'
 import { authn } from 'solid-logic'
 import * as $rdf from 'rdflib'
-import type { DataBrowserContext } from 'pane-registry'
+import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode, Node as RdflibNode, Statement, Variable } from 'rdflib'
 import formText from './formsForSchedule.ttl'
 import './schedulePane.css'
@@ -54,10 +54,6 @@ type ResponseQueryVars = {
 
 type LoginStatusBoxLike = {
   refresh: () => void
-}
-
-type RenderEnvironmentLike = {
-  layout?: string
 }
 
 function runNextAgendaItem (agenda: AgendaTask[]): void {
@@ -391,7 +387,7 @@ export const schedulePane = {
     const appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
-      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
       element.dataset.layout = environment.layout ?? 'desktop'
     }
 

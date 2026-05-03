@@ -7,7 +7,7 @@ import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
-import type { DataBrowserContext } from 'pane-registry'
+import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode } from 'rdflib'
 import './humanReadablePane.css'
 
@@ -21,10 +21,6 @@ type HumanReadablePaneDefinition = {
   name: string
   label: (subject: NamedNode, context: DataBrowserContext) => 'view' | 'View' | null
   render: (subject: NamedNode, context: DataBrowserContext) => HTMLDivElement
-}
-
-type RenderEnvironmentLike = {
-  layout?: 'mobile' | 'desktop' | string
 }
 
 const isMarkdownFile = (uri?: string | null): boolean => {
@@ -205,7 +201,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     const kb = context.session.store
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
-      const environment = (context.environment ?? {}) as RenderEnvironmentLike
+      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
       element.dataset.layout = environment.layout ?? 'desktop'
     }
 

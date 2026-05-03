@@ -9,6 +9,7 @@
  */
 
 import { aclControl, icons, ns } from 'solid-ui'
+import './sharingPane.css'
 
 const sharingPane = {
   icon: icons.iconBase + 'padlock-timbl.svg',
