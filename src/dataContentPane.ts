@@ -316,7 +316,7 @@ export const dataContentPane = {
     }
 
     const div = myDocument.createElement('div')
-    div.setAttribute('class', 'data-content-pane')
+    div.classList.add('dataContentPane', 'data-content-pane')
     applyEnvironmentAttributes(div)
 
     mainRendering()
