@@ -75,7 +75,7 @@ export const imagePane: ImagePane = {
     const myDocument = context.dom
     const store = context.session.store as ImageStore
     const div = myDocument.createElement('div')
-    div.setAttribute('class', 'imageView')
+    div.setAttribute('class', 'image-pane')
     const img = myDocument.createElement('img')
 
     // get image with authenticated fetch
@@ -87,7 +87,7 @@ export const imagePane: ImagePane = {
         const objectURL = URL.createObjectURL(myBlob)
         img.setAttribute('src', objectURL) // w640 h480 //
       })
-    img.classList.add('imagePaneViewImage')
+    img.classList.add('image-pane__image')
     div.appendChild(img)
     return div
   }
