@@ -2191,14 +2191,32 @@ export default function (context) {
       !UI.widgets.isVideo(subject)
     ) {
       const docUri = (subject.doc() && subject.doc().uri) ? subject.doc().uri : '' + subject.doc()
+      /* handle 401 errors more gracefully. For now just display a friendlier message
+         perhaps we can have a different page that gets shown in the future */
+      const unauthorizedOutlineMessage = function () {
+        const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+        return isRootResource
+          ? 'This root resource is not publicly readable. Try logging in or opening a profile document.'
+          : 'This resource is not publicly readable. Try logging in or opening a different public resource.'
+      }
+      const isUnauthorizedOutlineError = function (detail, errObj) {
+        const detailText = typeof detail === 'string' ? detail : String(detail || '')
+        return errObj?.status === 401 ||
+          errObj?.response?.status === 401 ||
+          detailText.includes('status: 401') ||
+          detailText.includes('status 401')
+      }
       const appendOutlineError = function (detail, errObj) {
         if (p.querySelector && docUri) {
           const existing = p.querySelector('[data-outline-error-for="' + docUri + '"]')
           if (existing) return
         }
+        const friendlyDetail = isUnauthorizedOutlineError(detail, errObj)
+          ? unauthorizedOutlineMessage()
+          : detail
         const message = UI.widgets.errorMessageBlock(
           dom,
-          detail,
+          friendlyDetail,
           '#fee',
           errObj instanceof Error ? errObj : undefined
         )
