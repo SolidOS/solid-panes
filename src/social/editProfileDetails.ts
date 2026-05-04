@@ -26,7 +26,6 @@ type EditProfileDetailsButtonOptions = {
   dom: HTMLDocument
   store: LiveStore
   subject: NamedNode
-  header: HTMLElement
   onSaved: () => void
 }
 
@@ -190,24 +189,26 @@ export function appendProfileLinks (
 
 export function createEditProfileDetailsButton (
   options: EditProfileDetailsButtonOptions
-): HTMLButtonElement {
-  const { dom, store, subject, header, onSaved } = options
-  const button = dom.createElement('button')
+): HTMLElement {
+  const { dom, store, subject, onSaved } = options
+  const button = dom.createElement('solid-ui-button')
   button.type = 'button'
-  button.className = 'social-pane__edit-button'
+  button.className = 'social-pane__edit-button profile__action-button profile__heading-action-button profile-action-text flex-center profile-section-collapsible__edit-button'
+  button.variant = 'secondary'
+  button.size = 'sm'
+
+  const label = dom.createElement('span')
+  label.className = 'profile-section-collapsible__edit-label social-pane__edit-button-label'
+  label.innerHTML = `${editIcon} Edit`
+  button.appendChild(label)
 
   const icon = dom.createElement('span')
-  icon.className = 'social-pane__edit-button-icon'
+  icon.className = 'profile-section-collapsible__edit-icon social-pane__edit-button-icon'
+  icon.setAttribute('aria-hidden', 'true')
   icon.innerHTML = editIcon
   button.appendChild(icon)
 
-  const label = dom.createElement('span')
-  label.className = 'social-pane__edit-button-label'
-  label.textContent = 'Edit'
-  button.appendChild(label)
-
   button.setAttribute('aria-label', 'Edit profile links')
-  header.style.position = 'relative'
 
   const openDialog = () => {
     const initialValues = readProfileLinkValues(store, subject)
@@ -281,16 +282,26 @@ export function createEditProfileDetailsButton (
         fieldLabel.textContent = field.label
         fieldHeader.appendChild(fieldLabel)
 
-        const addButton = dom.createElement('button')
+        const addButton = dom.createElement('solid-ui-button')
         addButton.type = 'button'
-        addButton.className = 'social-pane__dialog-row-button social-pane__dialog-row-button--add'
+        addButton.className = 'social-pane__dialog-row-button--add'
         addButton.setAttribute('aria-label', `Add another ${field.label.toLowerCase()}`)
+        addButton.variant = 'secondary'
+        addButton.size = 'sm'
+        const addButtonContent = dom.createElement('span')
+        addButtonContent.className = 'social-pane__add-more-content'
+        const addButtonInline = dom.createElement('span')
+        addButtonInline.className = 'social-pane__add-more-inline'
         const addButtonIcon = dom.createElement('span')
-        addButtonIcon.className = 'social-pane__dialog-row-button-icon social-pane__dialog-row-button-icon--add'
+        addButtonIcon.className = 'social-pane__add-more-icon'
         addButtonIcon.setAttribute('aria-hidden', 'true')
         addButtonIcon.innerHTML = plusIcon
-        addButton.appendChild(addButtonIcon)
-        addButton.appendChild(dom.createTextNode('Add More'))
+        const addButtonText = dom.createElement('span')
+        addButtonText.textContent = 'Add More'
+        addButtonInline.appendChild(addButtonIcon)
+        addButtonInline.appendChild(addButtonText)
+        addButtonContent.appendChild(addButtonInline)
+        addButton.appendChild(addButtonContent)
         addButton.addEventListener('click', () => {
           formState[field.key].push('')
           renderFields({ fieldKey: field.key, rowIndex: formState[field.key].length - 1 })
@@ -324,7 +335,7 @@ export function createEditProfileDetailsButton (
           removeButton.setAttribute('aria-label', `Remove ${field.label.toLowerCase()} ${index + 1}`)
           removeButton.setAttribute('title', 'Remove')
           removeButton.variant = 'icon'
-          removeButton.size = 'sm'
+          removeButton.size = 'md'
           const removeButtonIcon = dom.createElement('span')
           removeButtonIcon.className = 'social-pane__dialog-row-button-icon social-pane__dialog-row-button-icon--remove'
           removeButtonIcon.setAttribute('slot', 'icon')

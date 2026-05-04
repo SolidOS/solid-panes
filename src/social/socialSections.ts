@@ -4,6 +4,7 @@ import { Statement, NamedNode } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
 import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
+import { FriendshipTriage } from './triage'
 
 export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
 
@@ -57,18 +58,20 @@ export function createHeaderSection (
     const headerContent = dom.createElement('div')
     headerContent.className = 'social-pane__header-content'
 
+    const headerActions = dom.createElement('div')
+    headerActions.className = 'social-pane__header-actions profile__actions profile__heading-actions'
+
     if (headerControls.canEdit) {
-      header.appendChild(createEditProfileDetailsButton({
+      headerActions.appendChild(createEditProfileDetailsButton({
         dom,
         store: kb,
         subject,
-        header,
         onSaved: renderHeader
       }))
     } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
       const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
       addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
-      headerContent.appendChild(addToFriendsButton)
+      headerActions.appendChild(addToFriendsButton)
     }
 
     header.appendChild(headerContent)
@@ -84,6 +87,10 @@ export function createHeaderSection (
     const headerDetails = dom.createElement('div')
     headerDetails.className = 'social-pane__header-details'
     headerContent.appendChild(headerDetails)
+
+    if (headerActions.childNodes.length > 0) {
+      headerContent.appendChild(headerActions)
+    }
 
     const headerSummary = dom.createElement('div')
     headerSummary.classList.add('social-pane__header-summary', 'flex-column')
@@ -421,4 +428,104 @@ export function createAllFriendsSection (options: {
   }
 
   return { section: allFriends, mainTable, friendsList }
+}
+
+export function createRequestsSection (options: {
+  dom: HTMLDocument,
+  triage: FriendshipTriage,
+  renderSupportingInfo: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null,
+  renderNameSuffix: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null
+}): { section: HTMLElement, refreshRequests: (triage: FriendshipTriage) => void } {
+  const { dom, triage, renderSupportingInfo, renderNameSuffix } = options
+
+  const requestsSection = dom.createElement('section')
+  requestsSection.className = 'social-pane__requests social-primary__panel'
+  requestsSection.id = 'social-panel-requests'
+  requestsSection.setAttribute('role', 'tabpanel')
+  requestsSection.setAttribute('aria-labelledby', 'social-tab-requests')
+
+  const requestsContent = requestsSection.appendChild(dom.createElement('div'))
+  requestsContent.classList.add('social-main', 'social-main--requests', 'flex-column')
+
+  const note = requestsContent.appendChild(dom.createElement('p'))
+  note.className = 'social-requests__note'
+  note.textContent = 'Best effort preview: this view only reflects profile documents that are currently loaded. A dedicated inbox would still be needed for complete request discovery.'
+
+  const createRequestGroup = function (title: string, description: string, emptyText: string) {
+    const group = requestsContent.appendChild(dom.createElement('section'))
+    group.classList.add('social-requests__group', 'flex-column')
+
+    const header = group.appendChild(dom.createElement('div'))
+    header.className = 'social-requests__group-header'
+
+    const heading = header.appendChild(dom.createElement('h2'))
+    heading.className = 'social-requests__group-title'
+    heading.textContent = title
+
+    const blurb = header.appendChild(dom.createElement('p'))
+    blurb.className = 'social-requests__group-description'
+    blurb.textContent = description
+
+    const empty = group.appendChild(dom.createElement('p'))
+    empty.className = 'social-requests__empty'
+    empty.textContent = emptyText
+
+    const table = group.appendChild(dom.createElement('table'))
+    table.className = 'social-main social-friends-list social-friends-grid social-requests__table'
+
+    return { empty, table }
+  }
+
+  const incomingGroup = createRequestGroup(
+    'Incoming requests',
+    'People who say they know this profile, but have not been confirmed yet.',
+    'No incoming requests are visible from the currently loaded data.'
+  )
+  const pendingGroup = createRequestGroup(
+    'Awaiting confirmation',
+    'People this profile knows who have not linked back yet.',
+    'Nothing is waiting for confirmation right now.'
+  )
+
+  const createPersonRow = function (target: NamedNode) {
+    return widgets.personTR(dom, ns.foaf('knows'), target, {
+      renderSupportingInfo,
+      renderNameSuffix
+    })
+  }
+
+  const sortNodes = function (nodes: NamedNode[]) {
+    return [...nodes].sort((left, right) => {
+      const leftLabel = utils.label(left) || left.value
+      const rightLabel = utils.label(right) || right.value
+      return leftLabel.localeCompare(rightLabel)
+    })
+  }
+
+  const syncRequestGroup = function (
+    group: { empty: HTMLElement, table: HTMLTableElement },
+    nodes: NamedNode[]
+  ) {
+    const sortedNodes = sortNodes(nodes)
+    group.empty.hidden = sortedNodes.length > 0
+    group.table.hidden = sortedNodes.length === 0
+
+    utils.syncTableToArray(
+      group.table,
+      sortedNodes,
+      createPersonRow,
+      function (_row, thing) {
+        return createPersonRow(thing)
+      }
+    )
+  }
+
+  const refreshRequests = function (nextTriage: FriendshipTriage) {
+    syncRequestGroup(incomingGroup, nextTriage.requests)
+    syncRequestGroup(pendingGroup, nextTriage.unconfirmed)
+  }
+
+  refreshRequests(triage)
+
+  return { section: requestsSection, refreshRequests }
 }

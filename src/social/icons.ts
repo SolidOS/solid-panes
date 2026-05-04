@@ -18,9 +18,9 @@ export const personInCircleIcon = html`
 `
 export const editIcon = html`
   <svg xmlns="http://www.w3.org/2000/svg" 
-    width="20" 
-    height="20" 
-    viewBox="0 0 20 20" 
+    width="14" 
+    height="14" 
+    viewBox="3 3 14 14" 
     fill="none"
     aria-hidden="true" 
     focusable="false"
