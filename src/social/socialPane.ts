@@ -26,6 +26,20 @@ import {
 import type { ViewerMode } from './socialSections'
 import { FriendshipTriage, loadFriendshipTriage, triageFriends } from './triage'
 
+function applyEnvironmentAttributes (
+  element: HTMLElement,
+  context: DataBrowserContext
+): void {
+  const layout = context.environment?.layout ?? 'desktop'
+  const theme = context.environment?.theme ?? 'light'
+  const inputMode = context.environment?.inputMode ?? 'pointer'
+
+  element.classList.add('social-pane-host')
+  element.dataset.layout = layout
+  element.dataset.theme = theme
+  element.dataset.inputMode = inputMode
+}
+
 export const socialPane = {
   icon: icons.originalIconBase + 'foaf/foafTiny.gif',
 
@@ -189,6 +203,7 @@ export const socialPane = {
     const kb = context.session.store
     const socialPane = dom.createElement('div')
     socialPane.classList.add('social-pane', 'flex-column', 'gap-xxs', 'p-lg')
+    applyEnvironmentAttributes(socialPane, context)
     const foaf = ns.foaf
     const vcard = ns.vcard
     const me = authn.currentUser()
