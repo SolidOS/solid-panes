@@ -1,5 +1,4 @@
 # solid-panes
-
 A set of core solid-compatible applets based on solid-ui
 
 These are a set of interlinked applications, or parts of applications,
@@ -129,3 +128,7 @@ Consider assigning the class after appending newTable into
 its parent table, or pass the parent table (or current nesting depth) into objectTree() so the decision can be made reliably. can you help me fix this without removing the dark altering 
 
 * GPT-5.4 Model: Make this (n3Pane) look good on mobile by indenting the lines that wrap.
+
+* GPT-5.4 Model: Generate TypeScript types for the default pane. 
+
+* GPT-5.4 Model: Add a compatibility shim in the form pane for mixed `ui:Group` plus field typing.
