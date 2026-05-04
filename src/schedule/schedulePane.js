@@ -18,6 +18,23 @@ const possibleAvailabilities = [
   ns.sched('Yes')
 ]
 
+function resolveScheduleSubject (kb, subject) {
+  if (!subject || !subject.uri) {
+    return subject
+  }
+
+  const rewrittenUri = subject.uri.replace(
+    /index\.ttl#this$/,
+    'details.ttl#event'
+  )
+
+  if (rewrittenUri === subject.uri) {
+    return subject
+  }
+
+  return kb.sym(rewrittenUri)
+}
+
 export const schedulePane = {
   icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
 
@@ -27,8 +44,17 @@ export const schedulePane = {
 
   // Does the subject deserve an Scheduler pane?
   label: function (subject, context) {
+    let t = null
     const kb = context.session.store
-    const t = kb.findTypeURIs(subject)
+    /* Sometimes this pane gets created without an index.ttl#this
+       file, when useExisting is empty. Only details.ttl#event and
+       results.ttl get created. folder-pane hardcodes looking for
+       index.ttl#this */
+    t = kb.findTypeURIs(subject)
+    if (Object.keys(t).length === 0) {
+      const resolvedSubject = resolveScheduleSubject(kb, subject)
+      t = kb.findTypeURIs(resolvedSubject)
+    }
     if (t['http://www.w3.org/ns/pim/schedule#SchedulableEvent']) {
       return 'Scheduling poll'
     }
@@ -43,8 +69,6 @@ export const schedulePane = {
       const ns = UI.ns
       const kb = context.session.store
       let newBase = options.newBase
-      const thisInstance =
-        options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
       const complainIfBad = function (ok, body) {
         if (ok) return
@@ -151,25 +175,19 @@ export const schedulePane = {
         return
       }
 
-      const base = thisInstance.dir().uri
-      let newDetailsDoc, newInstance // , newIndexDoc
-
       if (options.useExisting) {
-        newInstance = options.useExisting
-        newBase = thisInstance.dir().uri
-        newDetailsDoc = newInstance.doc()
-        // newIndexDoc = null
         if (options.newBase) {
           throw new Error(
             'mint new scheduler: Illegal - have both new base and existing event'
           )
         }
-      } else {
-        newDetailsDoc = kb.sym(newBase + 'details.ttl')
-        // newIndexDoc = kb.sym(newBase + 'index.html')
-        newInstance = kb.sym(newDetailsDoc.uri + '#event')
+        newBase = options.useExisting.dir().uri
       }
 
+      const newIndexDoc = kb.sym(newBase + 'index.ttl')
+      const indexInstance = kb.sym(newBase + 'index.ttl#this')
+      const newDetailsDoc = kb.sym(newBase + 'details.ttl')
+      const newInstance = kb.sym(newDetailsDoc.uri + '#event')
       const newResultsDoc = kb.sym(newBase + 'results.ttl')
 
       const toBeCopied = options.noIndexHTML
@@ -184,7 +202,7 @@ export const schedulePane = {
         const fun = function copyItem (item) {
           agenda.push(function () {
             const newURI = newBase + item.local
-            console.log('Copying ' + base + item.local + ' to ' + newURI)
+            console.log('Copying ' + newBase + item.local + ' to ' + newURI)
 
             const setThatACL = function () {
               setACL2(newURI, false, function (ok, message) {
@@ -202,7 +220,7 @@ export const schedulePane = {
 
             kb.fetcher
               .webCopy(
-                base + item.local,
+                newBase + item.local,
                 newBase + item.local,
                 item.contentType
               )
@@ -214,17 +232,36 @@ export const schedulePane = {
               })
               .catch(err => {
                 console.log(
-                  'FAILED to copy ' + base + item.local + ' : ' + err.message
+                  'FAILED to copy ' + newBase + item.local + ' : ' + err.message
                 )
                 complainIfBad(
                   false,
-                  'FAILED to copy ' + base + item.local + ' : ' + err.message
+                  'FAILED to copy ' + newBase + item.local + ' : ' + err.message
                 )
               })
           })
         }
         fun(item)
       }
+
+      agenda.push(function createIndexFile () {
+        kb.add(indexInstance, ns.rdf('type'), ns.sched('SchedulableEvent'), newIndexDoc)
+        updater.put(
+          newIndexDoc,
+          kb.statementsMatching(undefined, undefined, undefined, newIndexDoc),
+          'text/turtle',
+          function (uri, ok, message) {
+            if (ok) {
+              agenda.shift()()
+            } else {
+              complainIfBad(
+                ok,
+                'FAILED to save index file at: ' + newIndexDoc + ' : ' + message
+              )
+            }
+          }
+        )
+      })
 
       agenda.push(function createDetailsFile () {
         kb.add(
@@ -321,7 +358,7 @@ export const schedulePane = {
     const dom = context.dom
     const kb = context.session.store
     const ns = UI.ns
-    const invitation = subject
+    const invitation = resolveScheduleSubject(kb, subject)
     const appPathSegment = 'app-when-can-we.w3.org' // how to allocate this string and connect to
 
     // ////////////////////////////////////////////
@@ -330,8 +367,8 @@ export const schedulePane = {
     const updater = kb.updater
     let waitingForLogin = false
 
-    const thisInstance = subject
-    const detailsDoc = subject.doc()
+    const thisInstance = invitation
+    const detailsDoc = invitation.doc()
     const baseDir = detailsDoc.dir()
     const base = baseDir.uri
 
