@@ -9,7 +9,8 @@ export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
 
 export type HeaderControls = {
   canEdit: boolean,
-  viewerMode: ViewerMode
+  viewerMode: ViewerMode,
+  showAddFriendAction?: boolean
 }
 
 export type SocialHeaderElement = HTMLElement & {
@@ -64,10 +65,9 @@ export function createHeaderSection (
         header,
         onSaved: renderHeader
       }))
-    } else if (headerControls.viewerMode === 'authenticated') {
+    } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
       const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
       addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
-      // header.appendChild(addToFriendsButton)
       headerContent.appendChild(addToFriendsButton)
     }
 
@@ -212,19 +212,20 @@ export function createMutualSection (options: {
     dom,
     subject,
     familiar,
+    me,
     meUri,
     incoming,
     outgoing,
+    editable,
+    profile,
+    knows,
     mutualConnections,
     link,
     text,
+    buildCheckboxForm,
     renderSupportingInfo,
     renderNameSuffix
   } = options
-
-  // Mutual confirm UI is intentionally hidden for now.
-  // The related options remain in the function contract so that block can be
-  // restored later without reshaping callers.
 
   let refreshMutualFriends = function () {}
 
@@ -259,15 +260,13 @@ export function createMutualSection (options: {
     if (!outgoing) {
       const line = youAndThem()
       line.appendChild(text(' have not said you know each other.'))
-    /* NOTE: hiding the outgoing-only unconfirmed message for now.
     } else {
-      relationshipSummary.appendChild(link(text('You'), meUri))
-      relationshipSummary.appendChild(text(' know '))
-      relationshipSummary.appendChild(link(text(familiar), subject.uri))
-      relationshipSummary.appendChild(text(' (unconfirmed)'))
-    */
+      const line = createRelationshipLine()
+      line.appendChild(link(text('You'), meUri))
+      line.appendChild(text(' know '))
+      line.appendChild(link(text(familiar), subject.uri))
+      line.appendChild(text(' (unconfirmed).'))
     }
-  /* NOTE: hiding the incoming-only unconfirmed message for now.
   } else if (!outgoing) {
     relationshipSummary.classList.add('social-mutual-summary--confirm')
 
@@ -277,16 +276,15 @@ export function createMutualSection (options: {
     incomingLine.appendChild(text(' knows '))
     incomingLine.appendChild(link(text('you'), meUri))
     incomingLine.appendChild(text(' (unconfirmed).'))
-  */
   } else {
     const line = youAndThem()
     line.appendChild(text(' say you know each other.'))
   }
 
-  /* NOTE: hiding the confirm-friend checkbox for now.
-  const shouldShowCheckboxPreview = editable || (Boolean(incoming) && !outgoing)
+  const shouldShowCheckboxPreview = Boolean(incoming) && !Boolean(outgoing)
   if (shouldShowCheckboxPreview) {
     const confirmLabel = dom.createElement('span')
+    confirmLabel.className = 'social-mutual-confirm-prompt'
     confirmLabel.appendChild(text('Confirm you know '))
     confirmLabel.appendChild(link(text(familiar), subject.uri))
 
@@ -303,7 +301,6 @@ export function createMutualSection (options: {
 
     mutualContent.appendChild(relationshipForm)
   }
-  */
 
   if (mutualConnections.length) {
     const mutualFriendsTable = mutualContent.appendChild(dom.createElement('table'))
@@ -376,15 +373,24 @@ export function createAllFriendsSection (options: {
   const friendsHeaderActions = dom.createElement('div')
   friendsHeaderActions.classList.add('social-friends-header-actions')
 
-  if (friendsListPromptCell instanceof HTMLElement) {
+  if (friendsListPromptCell instanceof HTMLTableCellElement) {
+    friendsListPromptCell.classList.add('social-friends-header-dropzone-cell')
+    const friendsHeaderDropzone = dom.createElement('table')
+    friendsHeaderDropzone.className = 'social-friends-header-dropzone'
+    friendsHeaderDropzone.setAttribute('role', 'presentation')
+    const friendsHeaderDropzoneBody = friendsHeaderDropzone.appendChild(dom.createElement('tbody'))
+    const friendsHeaderDropzoneRow = friendsHeaderDropzoneBody.appendChild(dom.createElement('tr'))
+    friendsHeaderDropzoneRow.appendChild(friendsListPromptCell)
+    friendsHeaderActions.appendChild(friendsHeaderDropzone)
+  } else if (friendsListPromptCell instanceof HTMLElement) {
     while (friendsListPromptCell.firstChild) {
       friendsHeaderActions.appendChild(friendsListPromptCell.firstChild)
     }
     friendsListPromptCell.remove()
   }
 
-  if (friendsHeaderActions.childNodes.length > 0) {
-    const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
+  const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
+  if (editable && friendDropButtons.length > 0) {
     friendDropButtons.forEach((button) => {
       button.setAttribute('title', 'Drop friend here')
       button.setAttribute('aria-label', 'Drop friend here')
