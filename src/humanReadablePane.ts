@@ -202,7 +202,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
       const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
-      element.dataset.layout = environment.layout ?? 'desktop'
+      element.dataset.mashlibLayout = environment.layout ?? 'desktop'
     }
 
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')

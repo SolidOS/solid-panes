@@ -22,13 +22,13 @@
 	white-space: pre;
 }
 
-.n3-pane[data-layout='mobile'] .n3-pane__source {
+.n3-pane[data-mashlib-layout='mobile'] .n3-pane__source {
 	overflow-wrap: anywhere;
 	word-break: break-word;
 	white-space: normal;
 }
 
-.n3-pane[data-layout='mobile'] .n3-pane__line {
+.n3-pane[data-mashlib-layout='mobile'] .n3-pane__line {
 	white-space: pre-wrap;
 	padding-left: var(--n3-indent, 0);
 	text-indent: calc(-1 * var(--n3-indent, 0));

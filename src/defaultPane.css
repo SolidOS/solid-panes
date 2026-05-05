@@ -54,23 +54,23 @@
 	grid-column: 1 / -1;
 }
 
-.defaultPane[data-layout='mobile'] > tr {
+.defaultPane[data-mashlib-layout='mobile'] > tr {
 	grid-template-columns: minmax(0, 1fr);
 }
 
-.defaultPane[data-layout='mobile'] > tr > td.pred,
-.defaultPane[data-layout='mobile'] > tr > td.obj {
+.defaultPane[data-mashlib-layout='mobile'] > tr > td.pred,
+.defaultPane[data-mashlib-layout='mobile'] > tr > td.obj {
 	display: block;
 	grid-column: 1;
 	width: 100%;
 	box-sizing: border-box;
 }
 
-.defaultPane[data-layout='mobile'] > tr > td.pred {
+.defaultPane[data-mashlib-layout='mobile'] > tr > td.pred {
 	padding-bottom: var(--spacing-small, 0.1rem);
 }
 
-.defaultPane[data-layout='mobile'] > tr > td.obj {
+.defaultPane[data-mashlib-layout='mobile'] > tr > td.obj {
 	padding-left: var(--default-pane-object-indent) !important;
 }
 

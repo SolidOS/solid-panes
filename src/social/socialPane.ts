@@ -35,7 +35,7 @@ function applyEnvironmentAttributes (
   const inputMode = context.environment?.inputMode ?? 'pointer'
 
   element.classList.add('social-pane-host')
-  element.dataset.layout = layout
+  element.dataset.mashlibLayout = layout
   element.dataset.theme = theme
   element.dataset.inputMode = inputMode
 }

@@ -67,24 +67,24 @@
   top: 0;
 }
 
-.formPane[data-layout='mobile'] .formPane__mobileTextareaRow {
+.formPane[data-mashlib-layout='mobile'] .formPane__mobileTextareaRow {
   flex-direction: column !important;
   align-items: stretch;
 }
 
-.formPane[data-layout='mobile'] .formPane__mobileTextareaLabel {
+.formPane[data-mashlib-layout='mobile'] .formPane__mobileTextareaLabel {
   width: auto !important;
   padding-bottom: 0;
 }
 
-.formPane[data-layout='mobile'] .formPane__mobileTextareaValue {
+.formPane[data-mashlib-layout='mobile'] .formPane__mobileTextareaValue {
   box-sizing: border-box;
   min-width: 0;
   padding-right: var(--spacing-sm, 0.75rem);
   width: 100%;
 }
 
-.formPane[data-layout='mobile'] .formPane__mobileTextareaValue textarea {
+.formPane[data-mashlib-layout='mobile'] .formPane__mobileTextareaValue textarea {
   box-sizing: border-box;
   margin-left: 0 !important;
   margin-right: 0 !important;

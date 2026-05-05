@@ -93,43 +93,43 @@
   }
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table {
   min-width: 0;
   width: 100%;
   min-height: 0;
   table-layout: fixed;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table td,
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table th {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table td,
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table th {
   min-width: 0;
   max-width: 100%;
   overflow-wrap: anywhere;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__main-cell {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__main-cell {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
   box-sizing: border-box;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact {
   align-items: flex-start;
   gap: 0.25rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .formFieldName {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .formFieldName {
   width: auto !important;
   min-width: 4.5rem;
   flex: 0 1 5.5rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .formFieldValue {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .formFieldValue {
   min-width: 0;
   flex: 1 1 auto;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .schedule-pane__form-control {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .schedule-pane__form-control {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
@@ -139,31 +139,31 @@ div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__fi
   padding: 0.35rem 0.45rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment {
   display: flex !important;
   flex-direction: column !important;
   align-items: stretch;
   gap: 0.25rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .formFieldName,
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment > div:first-child {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .formFieldName,
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment > div:first-child {
   width: auto !important;
   min-width: 0;
   flex: 0 0 auto;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .formFieldValue,
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment > div:last-child,
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-value--comment {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .formFieldValue,
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment > div:last-child,
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-value--comment {
   min-width: 0;
   display: block;
   flex: 1 1 auto;
   width: 100%;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .schedule-pane__form-control--textarea,
-div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-value--comment .schedule-pane__form-control--textarea {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .schedule-pane__form-control--textarea,
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__table .schedule-pane__field-value--comment .schedule-pane__form-control--textarea {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
@@ -174,21 +174,21 @@ div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__fi
   min-height: 5.5rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__button {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__button {
   padding: 0.4rem;
   border-width: 0.2rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__button-icon {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__button-icon {
   width: 1.35rem;
   height: 1.35rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__nav {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__nav {
   padding-top: 1rem;
 }
 
-div.schedule-pane[data-layout='mobile'] .schedule-pane__cell {
+div.schedule-pane[data-mashlib-layout='mobile'] .schedule-pane__cell {
   padding: 0.2rem;
 }
 
