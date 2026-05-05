@@ -132,3 +132,5 @@ its parent table, or pass the parent table (or current nesting depth) into objec
 * GPT-5.4 Model: Generate TypeScript types for the default pane. 
 
 * GPT-5.4 Model: Add a compatibility shim in the form pane for mixed `ui:Group` plus field typing.
+
+* AI GPT-5.4 Model: After friend is added when mutual checkbox is checked refresh mutual and header sections */
