@@ -288,7 +288,7 @@ export function createMutualSection (options: {
     line.appendChild(text(' say you know each other.'))
   }
 
-  const shouldShowCheckboxPreview = Boolean(incoming) && !Boolean(outgoing)
+  const shouldShowCheckboxPreview = Boolean(incoming) && !outgoing
   if (shouldShowCheckboxPreview) {
     const confirmLabel = dom.createElement('span')
     confirmLabel.className = 'social-mutual-confirm-prompt'
