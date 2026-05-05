@@ -33,17 +33,17 @@
 	white-space: pre;
 }
 
-.rdfxml-pane[data-mashlib-layout='mobile'] .rdfxml-pane__source {
+.rdfxml-pane[data-layout='mobile'] .rdfxml-pane__source {
 	overflow-wrap: anywhere;
 	word-break: break-word;
 	white-space: normal;
 }
 
-.rdfxml-pane[data-mashlib-layout='mobile'] .rdfxml-pane__line {
+.rdfxml-pane[data-layout='mobile'] .rdfxml-pane__line {
 	grid-template-columns: var(--rdfxml-indent, 0) minmax(0, 1fr);
 }
 
-.rdfxml-pane[data-mashlib-layout='mobile'] .rdfxml-pane__line-content {
+.rdfxml-pane[data-layout='mobile'] .rdfxml-pane__line-content {
 	white-space: pre-wrap;
 	overflow-wrap: anywhere;
 	word-break: break-word;

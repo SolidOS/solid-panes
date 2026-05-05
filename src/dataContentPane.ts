@@ -285,7 +285,7 @@ export const dataContentPane = {
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
       const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
-      element.dataset.mashlibLayout = environment.layout ?? 'desktop'
+      element.dataset.layout = environment.layout ?? 'desktop'
       element.dataset.theme = environment.theme ?? 'light'
       element.dataset.inputMode = environment.inputMode ?? 'pointer'
     }

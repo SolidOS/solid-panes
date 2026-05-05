@@ -72,7 +72,7 @@ export const n3Pane: N3PaneLike = {
 
     function applyEnvironmentAttributes (element: HTMLDivElement): void {
       const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
-      element.dataset.mashlibLayout = environment.layout ?? 'desktop'
+      element.dataset.layout = environment.layout ?? 'desktop'
     }
 
     const div = myDocument.createElement('div')
