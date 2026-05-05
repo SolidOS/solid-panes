@@ -162,44 +162,44 @@ export const formPane: PaneDefinition = {
         storeNode.uri,
         targetSubject as unknown as Parameters<typeof kb.fetcher.nowOrWhenFetched>[1],
         function (ok, body) {
-        if (!ok) return complain('Cannot load store ' + storeNode.uri + ': ' + body)
+          if (!ok) return complain('Cannot load store ' + storeNode.uri + ': ' + body)
 
-        //              Render the forms
+          //              Render the forms
 
-        const forms = UI.widgets.formsFor(targetSubject) as NamedNode[]
+          const forms = UI.widgets.formsFor(targetSubject) as NamedNode[]
 
-        // complain('Form for editing this form:');
-        for (const form of forms) {
-          normalizeAmbiguousFieldTypes(kb as never, form)
+          // complain('Form for editing this form:');
+          for (const form of forms) {
+            normalizeAmbiguousFieldTypes(kb as never, form)
 
-          const heading = dom.createElement('h4')
-          heading.classList.add('formPane__heading')
-          box.appendChild(heading)
-          /* The edit Form is not working in the local environment. it does not find 
+            const heading = dom.createElement('h4')
+            heading.classList.add('formPane__heading')
+            box.appendChild(heading)
+            /* The edit Form is not working in the local environment. it does not find
             the ui FormForm ontology. Need to research further and check in production. */
-          if (form.uri) {
-            const formStore = $rdf.Util.uri.document(form.uri)
-            if (formStore.uri !== form.uri) {
-              const editButton = box.appendChild(
-                UI.widgets.editFormButton(
-                  dom,
-                  box,
-                  form,
-                  formStore,
-                  complainIfBad
+            if (form.uri) {
+              const formStore = $rdf.Util.uri.document(form.uri)
+              if (formStore.uri !== form.uri) {
+                const editButton = box.appendChild(
+                  UI.widgets.editFormButton(
+                    dom,
+                    box,
+                    form,
+                    formStore,
+                    complainIfBad
+                  )
                 )
-              )
-              editButton.classList.add('formPane__editButton')
+                editButton.classList.add('formPane__editButton')
+              }
             }
-          }
 
-          const anchor = dom.createElement('a')
-          anchor.classList.add('formPane__headingLink')
-          anchor.setAttribute('href', form.uri)
-          heading.insertBefore(anchor, heading.firstChild)
-          anchor.textContent = UI.utils.label(form, true)
+            const anchor = dom.createElement('a')
+            anchor.classList.add('formPane__headingLink')
+            anchor.setAttribute('href', form.uri)
+            heading.insertBefore(anchor, heading.firstChild)
+            anchor.textContent = UI.utils.label(form, true)
 
-          /*  Keep tis as a reminder to let a New one have its URI given by user
+            /*  Keep tis as a reminder to let a New one have its URI given by user
           mention("Where will this information be stored?")
           const ele = dom.createElement('input');
           box.appendChild(ele);
@@ -210,17 +210,17 @@ export const formPane: PaneDefinition = {
           ele.value = store.uri
           */
 
-          UI.widgets.appendForm(
-            dom,
-            box,
-            {},
-            targetSubject,
-            form,
-            storeNode,
-            complainIfBad
-          )
-          tagMobileTextareaRows(box)
-        }
+            UI.widgets.appendForm(
+              dom,
+              box,
+              {},
+              targetSubject,
+              form,
+              storeNode,
+              complainIfBad
+            )
+            tagMobileTextareaRows(box)
+          }
         }
       ) // end: when store loded
     } // renderFormsFor
