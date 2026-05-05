@@ -1,6 +1,12 @@
 import { DataBrowserContext } from 'pane-registry'
-import { LiveStore, NamedNode } from 'rdflib'
+import { IndexedFormula, NamedNode } from 'rdflib'
 import { ns } from 'solid-ui'
+
+type FriendshipStore = IndexedFormula & {
+  fetcher?: {
+    load?: (target: NamedNode | string) => Promise<unknown>
+  }
+}
 
 export interface FriendshipTriage {
   acquaintances: NamedNode[]
@@ -23,7 +29,7 @@ function uniqueNamedNodes (nodes: NamedNode[]): NamedNode[] {
   return unique
 }
 
-export function triageFriends (store: LiveStore, subject: NamedNode): FriendshipTriage {
+export function triageFriends (store: FriendshipStore, subject: NamedNode): FriendshipTriage {
   const outgoingFriends = uniqueNamedNodes(store.each(subject, ns.foaf('knows')) as NamedNode[])
   const incomingFriends = uniqueNamedNodes(
     store.each(undefined, ns.foaf('knows'), subject) as NamedNode[]
@@ -60,10 +66,8 @@ export async function loadFriendshipTriage (
   context: DataBrowserContext,
   subject: NamedNode
 ): Promise<FriendshipTriage> {
-  const store = context.session.store
-  const fetcher = (store as LiveStore & {
-    fetcher?: { load?: (target: NamedNode | string) => Promise<unknown> }
-  }).fetcher
+  const store = context.session.store as FriendshipStore
+  const fetcher = store.fetcher
 
   if (!fetcher || typeof fetcher.load !== 'function') {
     return triageFriends(store, subject)
