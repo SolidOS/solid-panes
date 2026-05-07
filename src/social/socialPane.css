@@ -56,6 +56,17 @@
   flex-wrap: wrap;
 }
 
+.social-pane__header-actions--friend {
+  justify-content: center;
+}
+
+.social-pane__header-actions--friend > solid-ui-button {
+  margin-inline: auto;
+  --button-border-radius: var(--border-radius-md, 0.5rem);
+  --button-hover-text: var(--color-primary, #7C4DFF);
+  --button-hover-border: var(--color-primary, #7C4DFF);
+}
+
 .social-pane__header-summary {
   gap: var(--spacing-xs, 0.75rem);
   width: fit-content;
@@ -154,33 +165,6 @@
 .social-pane__edit-button .profile-section-collapsible__edit-icon svg path {
   fill: var(--color-primary, #7C4DFF);
   stroke: none;
-}
-
-.social-pane__friend-action {
-  position: static;
-  width: auto;
-  min-width: 0;
-  max-width: none;
-  padding: var(--spacing-xxs, 0.3125rem) var(--spacing-xs, 0.75rem);
-  gap: var(--spacing-xxs, 0.3125rem);
-  border-radius: var(--border-radius-md, 0.5rem);
-  border: 1px solid var(--color-primary, #7C4DFF);
-  background: transparent;
-  color: var(--color-primary, #7C4DFF);
-  cursor: pointer;
-  font: inherit;
-  font-weight: var(--font-weight-bold, 600);
-  font-size: var(--font-size-sm, 0.875rem);
-  line-height: 1.2;
-}
-
-.social-pane__friend-action:hover {
-  background: rgb(124 77 255 / 0.06);
-}
-
-.social-pane__friend-action:focus-visible {
-  outline: var(--border-width-medium, 2px) solid var(--color-primary, #7C4DFF);
-  outline-offset: 2px;
 }
 
 .social-pane__dialog-backdrop {
@@ -1059,6 +1043,16 @@ div.social-pane {
   margin-left: 0;
 }
 
+:is(.social-pane-host, .social-pane)[data-layout='mobile'] .social-pane__header-actions--friend {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  justify-self: stretch;
+  justify-content: center;
+  width: 100%;
+  margin-left: 0;
+  margin-top: 0.125rem;
+}
+
 :is(.social-pane-host, .social-pane)[data-layout='mobile'] .social-pane__header-summary {
   display: flex;
   flex-direction: column;
@@ -1135,12 +1129,6 @@ div.social-pane {
 :is(.social-pane-host, .social-pane)[data-layout='mobile'] :is(.social-pane__header-location, .social-pane__header-stat),
 :is(.social-pane-host, .social-pane)[data-layout='mobile'] .social-pane .social-friend-location {
   font-size: var(--font-size-xxs, 0.75rem);
-}
-
-:is(.social-pane-host, .social-pane)[data-layout='mobile'] .social-pane__friend-action {
-  padding: var(--spacing-xxxs, 0.2rem) var(--spacing-xxs-old, 0.3rem);
-  font-size: var(--font-size-xs, 0.813rem);
-  border-radius: var(--border-radius-base, 0.3125rem);
 }
 
 :is(.social-pane-host, .social-pane)[data-layout='mobile'] :is(.social-pane__edit-button-label, .social-pane__edit-button .profile-section-collapsible__edit-label) {
@@ -1258,6 +1246,16 @@ div.social-pane {
     margin-left: 0;
   }
 
+  .social-pane__header-actions--friend {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: stretch;
+    justify-content: center;
+    width: 100%;
+    margin-left: 0;
+    margin-top: 0.125rem;
+  }
+
   .social-pane__header-summary {
     display: flex;
     flex-direction: column;
@@ -1340,9 +1338,9 @@ div.social-pane {
   }
 
   .social-pane__friend-action {
-    padding: var(--spacing-xxxs, 0.2rem) var(--spacing-xxs-old, 0.3rem);
-    font-size: var(--font-size-xs, 0.813rem);
-    border-radius: var(--border-radius-base, 0.3125rem);
+    --button-padding-sm: var(--spacing-xxxs, 0.2rem) var(--spacing-xxs-old, 0.3rem);
+    --button-font-size-sm: var(--font-size-xs, 0.813rem);
+    --button-border-radius-sm: var(--border-radius-base, 0.3125rem);
   }
 
   .social-pane__edit-button-label,

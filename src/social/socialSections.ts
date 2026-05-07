@@ -1,5 +1,5 @@
-import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { DataBrowserContext } from 'pane-registry'
+import { createAddMeToYourFriendsButton } from 'profile-pane/lib/specialButtons/addMeToYourFriends'
 import { Statement, NamedNode } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
 import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
@@ -33,6 +33,10 @@ export type HeaderProfileData = {
   location?: string | null
 } | null
 
+type HeaderCallbacks = {
+  onAddFriendSuccess?: () => void
+}
+
 export type FriendRowRenderers = {
   renderSupportingInfo: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null,
   renderNameSuffix: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null
@@ -43,7 +47,8 @@ export function createHeaderSection (
   subject: NamedNode,
   controls: HeaderControls,
   stats: HeaderStats,
-  getProfileData: () => HeaderProfileData
+  getProfileData: () => HeaderProfileData,
+  callbacks: HeaderCallbacks = {}
 ): SocialHeaderElement {
   const dom = context.dom
   const kb = context.session.store
@@ -69,8 +74,9 @@ export function createHeaderSection (
         onSaved: renderHeader
       }))
     } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
+      headerActions.classList.add('social-pane__header-actions--friend')
       const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
-      addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
+      addToFriendsButton.classList.add('flex-center')
       headerActions.appendChild(addToFriendsButton)
     }
 
