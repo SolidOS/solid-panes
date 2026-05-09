@@ -142,8 +142,9 @@
 }
 
 .social-pane__edit-button-label {
-  display: inline;
-  transform: translateY(-0.125rem);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xxs, 0.3125rem);
 }
 
 .social-pane__edit-button .profile-section-collapsible__edit-icon,
@@ -157,7 +158,9 @@
 .social-pane__edit-button .profile-section-collapsible__edit-icon svg {
   width: 0.875rem;
   height: 0.875rem;
-  display: block;
+  display: inline-block;
+  flex: 0 0 auto;
+  vertical-align: middle;
 }
 
 .social-pane__edit-button-label svg path,
@@ -176,6 +179,7 @@
 }
 
 .social-pane__dialog {
+  position: relative;
   width: min(32rem, 100%);
   max-height: calc(100vh - 2rem);
   overflow: auto;
@@ -284,6 +288,28 @@
   min-height: 1.25rem;
   margin: 0;
   color: var(--color-warning, red);
+}
+
+.social-pane__dialog-saving-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  z-index: 10;
+}
+
+.social-pane__dialog-saving-overlay[hidden] {
+  display: none;
+}
+
+.social-pane__dialog.modal--saving .social-pane__dialog-form {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.social-pane__dialog .modal__saving-indicator {
+  gap: 0;
 }
 
 .social-pane__dialog-row-button-icon {
