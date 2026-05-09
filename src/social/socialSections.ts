@@ -102,7 +102,7 @@ export function createHeaderSection (
     headerSummary.classList.add('social-pane__header-summary', 'flex-column')
     headerDetails.appendChild(headerSummary)
 
-    const name = profileData?.name || '???'
+    const name = profileData?.name || utils.label(subject)
     const h1 = dom.createElement('h1')
     h1.classList.add('social-pane__header-name')
     h1.appendChild(dom.createTextNode(name))
