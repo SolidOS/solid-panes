@@ -553,12 +553,12 @@ export const socialPane = {
     }
 
     refreshRelationshipUi = function () {
+      rebuildMutualSection()
       headerControls = {
         ...headerControls,
         showAddFriendAction: shouldShowHeaderAddFriendAction(headerControls.viewerMode)
       }
       ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
-      rebuildMutualSection()
       requestsTriage = triageFriends(kb, s)
       requestsSection.refreshRequests(requestsTriage)
       setActivePanel(activePanel)
