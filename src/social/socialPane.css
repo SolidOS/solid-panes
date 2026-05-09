@@ -11,37 +11,7 @@
   max-width: none;
   margin: 0;
 }
-
-.social-pane__header-section {
-  background:white;
-}
-
-.social-pane__header {
-  width: 100%;
-}
-
 .social-pane__header-content {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-lg, 1.5625rem);
-  padding: 1.5rem 1.5rem 0.25rem;
-}
-
-.social-pane__header-media {
-  display: flex;
-  flex: 0 0 11.25rem;
-  flex-direction: column;
-  align-items: flex-start;
-  width: 11.25rem;
-  gap: var(--spacing-base, 0.5rem);
-  overflow: visible;
-  border-radius: var(--border-radius-full, 0.625rem);
-}
-
-.social-pane__header-details {
-  display: flex;
-  flex: 1 1 auto;
-  flex-direction: column;
   align-items: flex-start;
   gap: var(--spacing-xs, 0.75rem);
   min-width: 0;
