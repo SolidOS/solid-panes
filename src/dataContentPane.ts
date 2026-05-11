@@ -11,6 +11,7 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import DOMPurify from 'dompurify'
 import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type {
   BlankNode,
@@ -186,7 +187,7 @@ export const dataContentPane = {
           ) {
             res = myDocument.createElement('div')
             res.classList.add('embeddedXHTML')
-            res.innerHTML = obj.value
+            res.innerHTML = DOMPurify.sanitize(obj.value)
             return res
           }
           return myDocument.createTextNode(obj.value)
