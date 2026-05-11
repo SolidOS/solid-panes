@@ -11,6 +11,7 @@
   max-width: none;
   margin: 0;
 }
+
 .social-pane__header-content {
   align-items: flex-start;
   gap: var(--spacing-xs, 0.75rem);
