@@ -33,10 +33,6 @@ export type HeaderProfileData = {
   location?: string | null
 } | null
 
-type HeaderCallbacks = {
-  onAddFriendSuccess?: () => void
-}
-
 export type FriendRowRenderers = {
   renderSupportingInfo: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null,
   renderNameSuffix: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null
@@ -47,8 +43,7 @@ export function createHeaderSection (
   subject: NamedNode,
   controls: HeaderControls,
   stats: HeaderStats,
-  getProfileData: () => HeaderProfileData,
-  callbacks: HeaderCallbacks = {}
+  getProfileData: () => HeaderProfileData
 ): SocialHeaderElement {
   const dom = context.dom
   const kb = context.session.store

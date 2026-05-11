@@ -347,10 +347,6 @@ export const socialPane = {
         : undefined
     }, function () {
       return selectProfileData(context, s)
-    }, {
-      onAddFriendSuccess: function () {
-        refreshRelationshipUi()
-      }
     })
     header.classList.add('social-pane__header-section', 'flex-column')
     socialPane.prepend(header)
