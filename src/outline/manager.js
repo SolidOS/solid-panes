@@ -193,23 +193,29 @@ export default function (context) {
     obj,
     view,
     deleteNode,
-    statement
+    statement,
+    elementName,
+    source
   ) {
-    const td = dom.createElement('td')
+    const td = dom.createElement(elementName || 'td')
     td.classList.add('obj')
+    if (source) td.dataset.outlineSource = source
     td.setAttribute('notSelectable', 'false')
-    td.style.margin = '0.2em'
     if (!obj) {
       td.textContent = 'No object available.'
       return td
     }
-    td.style.border = 'none'
-    td.style.padding = '0'
-    td.style.verticalAlign = 'top'
-    const theClass = 'obj'
 
-    // set about and put 'expand' icon
-    if (
+    if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
+      td.classList.add('undetermined')
+    } // @@? why-timbl
+
+    if (!view) {
+      // view should be a function pointer
+      view = viewAsBoringDefault
+    }
+
+    const isExpandable =
       obj.termType === 'NamedNode' ||
       obj.termType === 'BlankNode' ||
       (obj.termType === 'Literal' &&
@@ -217,27 +223,26 @@ export default function (context) {
         (obj.value.slice(0, 6) === 'ftp://' ||
           obj.value.slice(0, 8) === 'https://' ||
           obj.value.slice(0, 7) === 'http://'))
-    ) {
-      td.setAttribute('about', obj.toNT())
-      td.appendChild(
-        UI.utils.AJARImage(
-          UI.icons.originalIconBase + 'tbl-expand-trans.png',
-          'expand',
-          undefined,
-          dom
-        )
-      ).addEventListener('click', expandMouseDownListener)
-    }
-    td.setAttribute('class', theClass) // this is how you find an object
-    if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
-      td.className = 'undetermined'
-    } // @@? why-timbl
 
-    if (!view) {
-      // view should be a function pointer
-      view = viewAsBoringDefault
+    if (isExpandable) {
+      // Use native <details>/<summary> for disclosure of the inlined sub-subject
+      td.setAttribute('about', obj.toNT())
+      const details = dom.createElement('details')
+      details.classList.add('obj-disclosure')
+      const summary = details.appendChild(dom.createElement('summary'))
+      summary.appendChild(view(obj))
+      const expanded = details.appendChild(dom.createElement('div'))
+      expanded.classList.add('obj-expanded')
+      details.addEventListener('toggle', () => {
+        if (details.open && !expanded.firstChild) {
+          // Lazy: fetch+render the sub-subject's property table on first open.
+          outlineExpand(expanded, obj, {})
+        }
+      })
+      td.appendChild(details)
+    } else {
+      td.appendChild(view(obj))
     }
-    td.appendChild(view(obj))
     if (deleteNode) {
       appendRemoveIcon(td, obj, deleteNode)
     }
@@ -258,9 +263,10 @@ export default function (context) {
     predicate,
     newTr,
     inverse,
-    internal
+    internal,
+    elementName
   ) {
-    const predicateTD = dom.createElement('TD')
+    const predicateTD = dom.createElement(elementName || 'TD')
     predicateTD.setAttribute('about', predicate.toNT())
     predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
 
@@ -278,7 +284,7 @@ export default function (context) {
     lab = lab ? lab.slice(0, 1).toUpperCase() + lab.slice(1) : '...'
     // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
 
-    const labelTD = dom.createElement('TD')
+    const labelTD = dom.createElement('span')
     labelTD.classList.add('labelTD')
     labelTD.setAttribute('notSelectable', 'true')
     labelTD.appendChild(dom.createTextNode(lab))
@@ -588,7 +594,7 @@ export default function (context) {
       }
 
       if (containerHost) {
-        const OutlineView = document.createElement('table')
+        const OutlineView = document.createElement('div')
         OutlineView.id = 'OutlineView'
         OutlineView.classList.add('outline-view')
         OutlineView.setAttribute('aria-label', 'Resource browser')
@@ -654,12 +660,12 @@ export default function (context) {
   async function expandedHeaderTR (subject, requiredPane, options) {
     async function renderPaneIconTray (td, options = {}) {
       const paneShownStyle =
-        'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
+        'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; padding: 3px; background-color:   #ffd;'
       const paneHiddenStyle =
-        'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
+        'width: 24px; border-radius: 0.5em; padding: 3px'
       const paneIconTray = td.appendChild(dom.createElement('nav'))
       paneIconTray.style =
-        'display:flex; justify-content: flex-start; align-items: center;'
+        'display:flex; justify-content: flex-start; align-items: center; gap: 1em; flex-wrap: wrap;'
 
       const relevantPanes = options.hideList
         ? []
@@ -700,13 +706,19 @@ export default function (context) {
             ico.addEventListener(
               'click',
               function (event) {
-                let containingTable
-                // Find the containing table for this subject
-                for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-                  if (containingTable.nodeName === 'TABLE') break
-                }
-                if (containingTable.nodeName !== 'TABLE') {
+                // Find the per-subject scaffold that holds [header, panes...].
+                // propertyTable() now builds this as <div class="tableFullWidth">, so
+                // we look for it first; fall back to the outer view / a real <table>
+                // for any legacy callers.
+                let containingTable = td.closest('.tableFullWidth, #OutlineView, .outline-view, table')
+                if (!containingTable) {
                   throw new Error('outline: internal error.')
+                }
+                // Find the subject's header row (direct child of containingTable) so
+                // panes get inserted immediately below their subject, not at the end.
+                let subjectRow = td
+                while (subjectRow && subjectRow.parentNode !== containingTable) {
+                  subjectRow = subjectRow.parentNode
                 }
                 const removePanes = function (specific) {
                   for (let d = containingTable.firstChild; d; d = d.nextSibling) {
@@ -740,7 +752,9 @@ export default function (context) {
                   try {
                     paneDiv = pane.render(subject, context, options)
                   } catch (e) {
-                    // Easier debugging for pane developers
+                    // Easier debugging for pane developers — log the Error
+                    // object so DevTools applies source maps to the stack.
+                    console.error(e)
                     paneDiv = dom.createElement('div')
                     paneDiv.setAttribute('class', 'exceptionPane')
                     const pre = dom.createElement('pre')
@@ -756,15 +770,18 @@ export default function (context) {
                   ) {
                     dom.getElementById('queryButton').removeAttribute('style')
                   }
-                  const second = containingTable.firstChild.nextSibling
-                  const row = dom.createElement('tr')
-                  const cell = row.appendChild(dom.createElement('td'))
-                  cell.setAttribute('colspan', '2')
-                  cell.style.textAlign = 'left'
-                  cell.style.width = '100%'
-                  cell.appendChild(paneDiv)
-                  if (second) containingTable.insertBefore(row, second)
-                  else containingTable.appendChild(row)
+                  const row = dom.createElement('div')
+                  row.style.textAlign = 'left'
+                  row.style.width = '100%'
+                  row.appendChild(paneDiv)
+                  // Insert directly after the subject's header row so panes stay grouped
+                  // with their subject (was: insertBefore second-child of the whole view).
+                  const insertAfter = subjectRow || containingTable.firstChild
+                  if (insertAfter && insertAfter.nextSibling) {
+                    containingTable.insertBefore(row, insertAfter.nextSibling)
+                  } else {
+                    containingTable.appendChild(row)
+                  }
                   row.pane = pane
                   row.paneButton = ico
                 }
@@ -806,22 +823,23 @@ export default function (context) {
       return paneIconTray
     } // renderPaneIconTray
 
-    // Body of expandedHeaderTR
-    const tr = dom.createElement('tr')
+    // Body of expandedHeaderTR.
+    // Despite the legacy name, this now returns a <div> (the outer scaffold is
+    // no longer a <table>) holding the pane-icon tray.
+    const tr = dom.createElement('div')
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
       tr.setAttribute('class', 'hoverControl')
     }
-    const td = tr.appendChild(dom.createElement('td'))
+    const td = tr.appendChild(dom.createElement('div'))
     td.setAttribute(
       'style',
-      'margin: 0.2em; border: none; padding-top: 0; padding-bottom: 0; vertical-align: top;' +
+      'margin: 0.2em;' +
         'display:flex; justify-content: space-between; flex-direction: row;' +
         'background-color: var(--color-background, #F8F9FB);'
     )
     td.setAttribute('notSelectable', 'true')
     td.setAttribute('about', subject.toNT())
-    td.setAttribute('colspan', '2')
 
     // Stuff at the right about the subject
     const header = td.appendChild(dom.createElement('div'))
@@ -911,8 +929,13 @@ export default function (context) {
     // if (!pane) pane = panes.defaultPane;
 
     if (!table) {
-      // Create a new property table
-      table = dom.createElement('table')
+      // Create a new property scaffold.
+      // The outer element is a <div>, not a <table>: this scaffold only ever
+      // holds a header (pane-icon tray) and a single full-width pane content
+      // row, so it does not need <table> semantics. Real tabular data
+      // (predicate/object rows) is rendered by individual panes in their own
+      // inner <table>.
+      table = dom.createElement('div')
       table.classList.add('tableFullWidth')
       expandedHeaderTR(subject, pane, options).then(tr1 => {
         table.appendChild(tr1)
@@ -923,7 +946,9 @@ export default function (context) {
             UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
             paneDiv = tr1.firstPane.render(subject, context, options)
           } catch (e) {
-            // Easier debugging for pane developers
+            // Easier debugging for pane developers — log the Error object so
+            // DevTools applies source maps to the stack.
+            console.error(e)
             paneDiv = dom.createElement('div')
             paneDiv.setAttribute('class', 'exceptionPane')
             const pre = dom.createElement('pre')
@@ -931,13 +956,11 @@ export default function (context) {
             pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
           }
 
-          const row = dom.createElement('tr')
-          const cell = row.appendChild(dom.createElement('td'))
-          cell.setAttribute('colspan', '2')
-          cell.style.textAlign = 'left'
-          cell.style.width = '100%'
-          cell.style.backgroundColor = 'var(--color-background, #F8F9FB)'
-          cell.appendChild(paneDiv)
+          const row = dom.createElement('div')
+          row.style.textAlign = 'left'
+          row.style.width = '100%'
+          row.style.backgroundColor = 'var(--color-background, #F8F9FB)'
+          row.appendChild(paneDiv)
           if (
             tr1.firstPane.requireQueryButton &&
             dom.getElementById('queryButton')
@@ -972,14 +995,19 @@ export default function (context) {
   this.propertyTR = propertyTR
 
   // / ////////// Property list
+  //
+  // Renders the subject's outgoing triples as a <dl class="property-list">
+  // containing one <dt> per predicate and one <dd> per object value, then
+  // appends that <dl> to `parent`. Earlier this function appended orphan
+  // <tr>s directly to `parent` (a <div>), which produced invalid markup.
   function appendPropertyTRs (parent, plist, inverse, predicateFilter) {
-    // UI.log.info('@appendPropertyTRs, 'this' is %s, dom is %s, '+ // Gives 'can't access dead object'
-    //                   'thisOutline.document is %s', this, dom.location, thisOutline.document.location);
-    // UI.log.info('@appendPropertyTRs, dom is now ' + this.document.location);
-    // UI.log.info('@appendPropertyTRs, dom is now ' + thisOutline.document.location);
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
-    let sel, j, k
+    const dl = dom.createElement('dl')
+    dl.classList.add('property-list')
+    if (inverse) dl.classList.add('property-list--inverse')
+    parent.appendChild(dl)
+    let sel
     if (inverse) {
       sel = function (x) {
         return x.subject
@@ -992,204 +1020,83 @@ export default function (context) {
       plist = plist.sort(UI.utils.RDFComparePredicateObject)
     }
 
+    const langPref = outline.labeller.LanguagePreference
+    const MAX_BEFORE_OVERFLOW = 10
+
     const max = plist.length
-    for (j = 0; j < max; j++) {
-      // squishing together equivalent properties I think
-      let s = plist[j]
-      //      if (s.object == parentSubject) continue; // that we knew
-
-      // Avoid predicates from other panes
-      if (predicateFilter && !predicateFilter(s.predicate, inverse)) continue
-
-      const tr = propertyTR(dom, s, inverse)
-      parent.appendChild(tr)
-      const predicateTD = tr.firstChild // we need to kludge the rowspan later
-
-      let defaultpropview = views.defaults[s.predicate.uri]
-
-      //   LANGUAGE PREFERENCES WAS AVAILABLE WITH FF EXTENSION - get from elsewhere?
-
-      let dups = 0 // How many rows have the same predicate, -1?
-      let langTagged = 0 // how many objects have language tags?
-      let myLang = 0 // Is there one I like?
-
-      for (
-        k = 0;
-        k + j < max && plist[j + k].predicate.sameTerm(s.predicate);
-        k++
-      ) {
-        if (k > 0 && sel(plist[j + k]).sameTerm(sel(plist[j + k - 1]))) dups++
-        if (sel(plist[j + k]).lang && outline.labeller.LanguagePreference) {
-          langTagged += 1
-          if (
-            sel(plist[j + k]).lang.indexOf(
-              outline.labeller.LanguagePreference
-            ) >= 0
-          ) {
-            myLang++
-          }
-        }
-      }
-
-      /* Display only the one in the preferred language
-          ONLY in the case (currently) when all the values are tagged.
-          Then we treat them as alternatives. */
-
-      if (myLang > 0 && langTagged === dups + 1) {
-        for (let k = j; k <= j + dups; k++) {
-          if (
-            outline.labeller.LanguagePreference &&
-            sel(plist[k]).lang.indexOf(outline.labeller.LanguagePreference) >= 0
-          ) {
-            tr.appendChild(
-              thisOutline.outlineObjectTD(
-                sel(plist[k]),
-                defaultpropview,
-                undefined,
-                s
-              )
-            )
-            break
-          }
-        }
-        j += dups // extra push
+    let j = 0
+    while (j < max) {
+      const s = plist[j]
+      if (predicateFilter && !predicateFilter(s.predicate, inverse)) {
+        j++
         continue
       }
 
-      tr.appendChild(
-        thisOutline.outlineObjectTD(sel(s), defaultpropview, undefined, s)
-      )
+      // Find the run of consecutive statements with the same predicate.
+      let runEnd = j
+      while (runEnd < max && plist[runEnd].predicate.sameTerm(s.predicate)) runEnd++
+      const run = plist.slice(j, runEnd)
 
-      /* Note: showNobj shows between n to 2n objects.
-       * This is to prevent the case where you have a long list of objects
-       * shown, and dangling at the end is '1 more' (which is easily ignored)
-       * Therefore more objects are shown than hidden.
-       */
+      // Emit the <dt> for this predicate.
+      const dt = thisOutline.outlinePredicateTD(s.predicate, null, inverse, false, 'dt')
+      dt.AJAR_statement = s
+      dt.AJAR_inverse = inverse
+      dl.appendChild(dt)
 
-      tr.showNobj = function (n) {
-        const predDups = k - dups
-        const show = 2 * n < predDups ? n : predDups
-        const showLaterArray = []
-        if (predDups !== 1) {
-          predicateTD.setAttribute(
-            'rowspan',
-            show === predDups ? predDups : n + 1
-          )
-          let l
-          if (show < predDups && show === 1) {
-            // what case is this...
-            predicateTD.setAttribute('rowspan', 2)
-          }
-          let displayed = 0 // The number of cells generated-1,
-          // all duplicate thing removed
-          for (l = 1; l < k; l++) {
-            // This detects the same things
-            if (
-              !kb
-                .canon(sel(plist[j + l]))
-                .sameTerm(kb.canon(sel(plist[j + l - 1])))
-            ) {
-              displayed++
-              s = plist[j + l]
-              defaultpropview = views.defaults[s.predicate.uri]
-              const trObj = dom.createElement('tr')
-              trObj.style.colspan = '1'
-              trObj.appendChild(
-                thisOutline.outlineObjectTD(
-                  sel(plist[j + l]),
-                  defaultpropview,
-                  undefined,
-                  s
-                )
-              )
-              trObj.AJAR_statement = s
-              trObj.AJAR_inverse = inverse
-              parent.appendChild(trObj)
-              if (displayed >= show) {
-                trObj.style.display = 'none'
-                showLaterArray.push(trObj)
-              }
-            } else {
-              // ToDo: show all the data sources of this statement
-              UI.log.info('there are duplicates here: %s', plist[j + l - 1])
-            }
-          }
-          // @@a quick fix on the messing problem.
-          if (show === predDups) {
-            predicateTD.setAttribute('rowspan', displayed + 1)
-          }
-        } // end of if (predDups!==1)
-
-        if (show < predDups) {
-          // Add the x more <TR> here
-          const moreTR = dom.createElement('tr')
-          const moreTD = moreTR.appendChild(dom.createElement('td'))
-          moreTD.setAttribute(
-            'style',
-            'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-          )
-          moreTD.setAttribute('notSelectable', 'false')
-          if (predDups > n) {
-            // what is this for??
-            const small = dom.createElement('a')
-            moreTD.appendChild(small)
-
-            const predToggle = (function (f) {
-              return f(predicateTD, k, dups, n)
-            })(function (predicateTD, k, dups, n) {
-              return function (display) {
-                small.innerHTML = ''
-                if (display === 'none') {
-                  small.appendChild(
-                    UI.utils.AJARImage(
-                      UI.icons.originalIconBase + 'tbl-more-trans.png',
-                      'more',
-                      'See all',
-                      dom
-                    )
-                  )
-                  small.appendChild(
-                    dom.createTextNode(predDups - n + ' more...')
-                  )
-                  predicateTD.setAttribute('rowspan', n + 1)
-                } else {
-                  small.appendChild(
-                    UI.utils.AJARImage(
-                      UI.icons.originalIconBase + 'tbl-shrink.png',
-                      '(less)',
-                      undefined,
-                      dom
-                    )
-                  )
-                  predicateTD.setAttribute('rowspan', predDups + 1)
-                }
-                for (let i = 0; i < showLaterArray.length; i++) {
-                  const trObj = showLaterArray[i]
-                  trObj.style.display = display
-                }
-              }
-            }) // ???
-            let current = 'none'
-            const toggleObj = function (event) {
-              predToggle(current)
-              current = current === 'none' ? '' : 'none'
-              if (event) event.stopPropagation()
-              return false // what is this for?
-            }
-            toggleObj()
-            small.addEventListener('click', toggleObj, false)
-          } // if(predDups>n)
-          parent.appendChild(moreTR)
-        } // if
-      } // tr.showNobj
-
-      tr.showAllobj = function () {
-        tr.showNobj(k - dups)
+      // Decide which values to show. Language preference: when every value is
+      // lang-tagged and at least one matches, show only the matching one(s).
+      let langTagged = 0
+      const matching = []
+      for (const st of run) {
+        if (sel(st).lang && langPref) {
+          langTagged++
+          if (sel(st).lang.indexOf(langPref) >= 0) matching.push(st)
+        }
+      }
+      let valuesToRender
+      let firstTag = 'predicate-row'
+      if (langPref && langTagged === run.length && matching.length > 0) {
+        valuesToRender = matching
+        firstTag = 'lang-preferred'
+      } else {
+        // De-duplicate exact same-term object values
+        const seen = new Set()
+        valuesToRender = run.filter(st => {
+          const key = sel(st).toNT()
+          if (seen.has(key)) return false
+          seen.add(key)
+          return true
+        })
       }
 
-      tr.showNobj(10)
+      const defaultpropview = views.defaults[s.predicate.uri]
+      const overflow = []
 
-      j += k - 1 // extra push
+      valuesToRender.forEach((st, idx) => {
+        const tag = idx === 0 ? firstTag : 'duplicate-pred-row'
+        const dd = thisOutline.outlineObjectTD(
+          sel(st), defaultpropview, undefined, st, 'dd', tag
+        )
+        if (idx < MAX_BEFORE_OVERFLOW) {
+          dl.appendChild(dd)
+        } else {
+          overflow.push(dd)
+        }
+      })
+
+      // If there's overflow, wrap the extras in a <details>/<summary> "+ N more"
+      // disclosure so the user can opt to see them all.
+      if (overflow.length > 0) {
+        const moreDd = dom.createElement('dd')
+        moreDd.classList.add('property-more')
+        const details = moreDd.appendChild(dom.createElement('details'))
+        const summary = details.appendChild(dom.createElement('summary'))
+        summary.textContent = '+ ' + overflow.length + ' more'
+        for (const dd of overflow) details.appendChild(dd)
+        dl.appendChild(moreDd)
+      }
+
+      j = runEnd
     }
   } //  appendPropertyTRs
 
@@ -1202,7 +1109,7 @@ export default function (context) {
   global.termWidget = termWidget
   termWidget.construct = function (dom) {
     dom = dom || document
-    const td = dom.createElement('TD')
+    const td = dom.createElement('span')
     td.setAttribute(
       'style',
       'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -2262,7 +2169,7 @@ export default function (context) {
       deleteNode = level.parentNode
     }
     thisOutline.replaceTD(
-      thisOutline.outlineObjectTD(subject, myview, deleteNode, statement),
+      thisOutline.outlineObjectTD(subject, myview, deleteNode, statement, undefined, 'collapse-replace'),
       level
     )
   } // outlineCollapse
@@ -2342,11 +2249,11 @@ export default function (context) {
     }
 
     function GotoSubjectDefault () {
-      const tr = dom.createElement('TR')
-      tr.style.verticalAlign = 'top'
-      table.appendChild(tr)
-      const td = thisOutline.outlineObjectTD(subject, undefined, tr)
-      tr.appendChild(td)
+      const row = dom.createElement('span')
+      row.classList.add('subject-row')
+      table.appendChild(row)
+      const td = thisOutline.outlineObjectTD(subject, undefined, row, undefined, 'div', 'subject-cell')
+      row.appendChild(td)
       return td
     }
 
@@ -2456,31 +2363,34 @@ export default function (context) {
         rep.appendChild(dom.createTextNode(UI.utils.label(obj)))
       }
     } else if (obj.termType === 'Collection') {
-      // obj.elements is an array of the elements in the collection
-      rep = dom.createElement('table')
-      rep.classList.add('tableFullWidth')
+      // An rdf:List is a one-dimensional ordered sequence. <ol>/<li> is the
+      // correct element: the browser provides automatic numbering, and
+      // assistive tech announces it as "list, N items" with positional cues.
+      rep = dom.createElement('ol')
+      rep.classList.add('rdf-collection')
       rep.setAttribute('about', obj.toNT())
-      /* Not sure which looks best -- with or without. I think without
-
-                var tr = rep.appendChild(document.createElement('tr'));
-                tr.appendChild(document.createTextNode(
-                        obj.elements.length ? '(' + obj.elements.length+')' : '(none)'));
-        */
-      for (let i = 0; i < obj.elements.length; i++) {
-        const elt = obj.elements[i]
-        const row = rep.appendChild(dom.createElement('tr'))
-        const numcell = row.appendChild(dom.createElement('td'))
-        numcell.classList.add('obj')
-        numcell.setAttribute('notSelectable', 'false')
-        numcell.setAttribute('about', obj.toNT())
-        numcell.innerHTML = i + 1 + ')'
-        row.appendChild(thisOutline.outlineObjectTD(elt))
+      for (const elt of obj.elements) {
+        const li = rep.appendChild(dom.createElement('li'))
+        li.setAttribute('about', obj.toNT())
+        li.appendChild(
+          thisOutline.outlineObjectTD(
+            elt, undefined, undefined, undefined, 'div', 'collection-element'
+          )
+        )
       }
     } else if (obj.termType === 'Graph') {
-      rep = paneRegistry
-        .byName('dataContentPane')
-        .statementsAsTables(obj.statements, context)
-      rep.setAttribute('class', 'nestedFormula')
+      // The pane is registered as 'dataContents' (not 'dataContentPane').
+      // Fall back to a plain text label if the lookup somehow fails so we
+      // don't crash the surrounding render.
+      const dataContents = paneRegistry.byName('dataContents')
+      if (dataContents && typeof dataContents.statementsAsTables === 'function') {
+        rep = dataContents.statementsAsTables(obj.statements, context)
+        rep.setAttribute('class', 'nestedFormula')
+      } else {
+        UI.log.warn('viewAsBoringDefault: dataContents pane not available for Graph value')
+        rep = dom.createElement('span')
+        rep.textContent = '[graph: ' + obj.statements.length + ' statement(s)]'
+      }
     } else {
       UI.log.error('Object ' + obj + ' has unknown term type: ' + obj.termType)
       rep = dom.createTextNode('[unknownTermType:' + obj.termType + ']')

@@ -45,7 +45,10 @@ export const dataContentPane = {
   statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
     const myDocument = context.dom
     // const outliner = context.getOutliner(myDocument)
-    const rep = myDocument.createElement('table')
+    // The outer container groups one block per "root" subject. Each block holds
+    // a subject label and a <dl class="property-list"> of its predicates/values.
+    const rep = myDocument.createElement('section')
+    rep.classList.add('data-content')
     const sz = $rdf.Serializer(context.session.store)
     const res = sz.rootSubjects(sts)
     let roots = res.roots
@@ -57,10 +60,12 @@ export const dataContentPane = {
     const doneBnodes = {} // For preventing looping
     const referencedBnodes = {} // Bnodes which need to be named alas
 
-    // The property tree for a single subject or anonymous node
+    // The property tree for a single subject or anonymous node. Returns a
+    // <dl class="property-list"> with one <dt> per predicate followed by one
+    // <dd> per value. Replaces the previous <table>/<tr>/<td> with rowspan.
     function propertyTree (subject) {
-      // print('Proprty tree for '+subject)
-      const rep = myDocument.createElement('table')
+      const rep = myDocument.createElement('dl')
+      rep.classList.add('property-list')
       let lastPred = null
       const sts = subjects[sz.toStr(subject)] // relevant statements
       if (!sts) {
@@ -69,17 +74,10 @@ export const dataContentPane = {
         return rep
       }
       sts.sort()
-      let same = 0
-      let predicateTD // The cell which holds the predicate
-      for (let i = 0; i < sts.length; i++) {
-        const st = sts[i]
-        const tr = myDocument.createElement('tr')
+      for (const st of sts) {
         if (st.predicate.uri !== lastPred) {
-          if (lastPred && same > 1) {
-            predicateTD.setAttribute('rowspan', '' + same)
-          }
-          predicateTD = myDocument.createElement('td')
-          predicateTD.setAttribute('class', 'pred')
+          const dt = myDocument.createElement('dt')
+          dt.classList.add('pred')
           const anchor = myDocument.createElement('a')
           anchor.setAttribute('href', st.predicate.uri)
           anchor.addEventListener(
@@ -92,18 +90,15 @@ export const dataContentPane = {
               UI.utils.predicateLabelForXML(st.predicate)
             )
           )
-          predicateTD.appendChild(anchor)
-          tr.appendChild(predicateTD)
+          dt.appendChild(anchor)
+          rep.appendChild(dt)
           lastPred = st.predicate.uri
-          same = 0
         }
-        same++
-        const objectTD = myDocument.createElement('td')
-        objectTD.appendChild(objectTree(st.object))
-        tr.appendChild(objectTD)
-        rep.appendChild(tr)
+        const dd = myDocument.createElement('dd')
+        dd.classList.add('obj')
+        dd.appendChild(objectTree(st.object))
+        rep.appendChild(dd)
       }
-      if (lastPred && same > 1) predicateTD.setAttribute('rowspan', '' + same)
       return rep
     }
 
@@ -150,26 +145,19 @@ export const dataContentPane = {
             return anchor
           }
           doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
-          const newTable = propertyTree(obj)
-          doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
-          if (
-            UI.utils.ancestor(newTable, 'TABLE') &&
-            UI.utils.ancestor(newTable, 'TABLE').style.backgroundColor ===
-            'white'
-          ) {
-            newTable.style.backgroundColor = '#eee'
-          } else {
-            newTable.style.backgroundColor = 'white'
-          }
-          return newTable
+          const newTree = propertyTree(obj)
+          newTree.classList.add('nestedBnode')
+          doneBnodes[obj.toNT()] = newTree // Track where we mentioned it first
+          return newTree
         }
         case 'Collection':
-          res = myDocument.createElement('table')
-          res.setAttribute('class', 'collectionAsTables')
-          for (let i = 0; i < obj.elements.length; i++) {
-            const tr = myDocument.createElement('tr')
-            res.appendChild(tr)
-            tr.appendChild(objectTree(obj.elements[i]))
+          // rdf:List → semantic ordered list with browser-provided numbering.
+          res = myDocument.createElement('ol')
+          res.classList.add('rdf-collection')
+          for (const elt of obj.elements) {
+            const li = myDocument.createElement('li')
+            li.appendChild(objectTree(elt))
+            res.appendChild(li)
           }
           return res
         case 'Graph':
@@ -199,20 +187,22 @@ export const dataContentPane = {
       )
     }
     for (let i = 0; i < roots.length; i++) {
-      const tr = myDocument.createElement('tr')
-      tr.setAttribute('style', `background-color: ${i % 2 === 0 ? '#f0f0f0' : 'white'};`)
-      rep.appendChild(tr)
-      const subjectTD = myDocument.createElement('td')
-      tr.appendChild(subjectTD)
-      const TDTree = myDocument.createElement('td')
-      tr.appendChild(TDTree)
+      const subjBlock = myDocument.createElement('section')
+      subjBlock.classList.add('data-content__subject')
+      // Alternating background as visual separator (was previously row striping).
+      if (i % 2 === 0) subjBlock.classList.add('data-content__subject--even')
+      rep.appendChild(subjBlock)
+
+      const subjLabel = myDocument.createElement('div')
+      subjLabel.classList.add('data-content__subject-label')
       const root = roots[i]
       if (root.termType === 'BlankNode') {
-        subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
+        subjLabel.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
       } else {
-        subjectTD.appendChild(objectTree(root)) // won't have tree
+        subjLabel.appendChild(objectTree(root)) // won't have tree
       }
-      TDTree.appendChild(propertyTree(root))
+      subjBlock.appendChild(subjLabel)
+      subjBlock.appendChild(propertyTree(root))
     }
     for (const bNT in referencedBnodes) {
       // Add number to refer to

@@ -900,6 +900,7 @@ export function UserInput (outline) {
               }
             })
           } catch (e) {
+            console.error(e)
             UI.log.error(
               'Exception trying to insert statement ' +
                 insertTr.AJAR_statement +
@@ -2327,6 +2328,7 @@ export function UserInput (outline) {
             })
           } catch (e) {
             // outline.UserInput.deleteTriple(newTd,true);
+            console.error(e)
             UI.log.error(
               'userinput.js (object): exception trying to insert statement ' +
                 s +
