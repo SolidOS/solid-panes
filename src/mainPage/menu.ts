@@ -72,7 +72,6 @@ const ensureMenuSkeleton = () => {
     navMenu.className = 'app-nav'
     navMenu.setAttribute('aria-label', 'App navigation')
     navMenu.hidden = true
-    navMenu.style.display = 'none'
 
     const headerEl = document.createElement('div')
     headerEl.className = 'menu-header'
@@ -293,17 +292,25 @@ export const refreshMenu = (layout: 'mobile' | 'desktop') => {
     navMenu.classList.add('mobile-hidden')
     navMenu.classList.remove('mobile-visible')
     toggle.hidden = false
+    toggle.style.display = ''
     collapseBtn.hidden = true
+    collapseBtn.style.display = 'none'
     overlay.hidden = true
+    overlay.style.display = 'none'
     navMenu.hidden = false
+    navMenu.style.display = ''
     navMenu.classList.remove('collapsed')
     toggle.setAttribute('aria-expanded', 'false')
   } else {
     navMenu.classList.remove('mobile-hidden', 'mobile-visible')
     toggle.hidden = true
+    toggle.style.display = 'none'
     collapseBtn.hidden = false
+    collapseBtn.style.display = ''
     overlay.hidden = true
+    overlay.style.display = 'none'
     navMenu.hidden = false
+    navMenu.style.display = ''
     applyMenuCollapsedState(navMenu)
     updateCollapseButtonPosition(navMenu, collapseBtn)
     toggle.setAttribute('aria-expanded', 'false')
@@ -321,16 +328,20 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
     if (!navMenu || !menuToggle || !menuOverlay) return
     navMenu.classList.remove('mobile-visible')
     navMenu.classList.add('mobile-hidden')
+    navMenu.style.display = ''
     menuToggle.setAttribute('aria-expanded', 'false')
     menuOverlay.hidden = true
+    menuOverlay.style.display = 'none'
   }
 
   const openMobileMenu = () => {
     if (!navMenu || !menuToggle || !menuOverlay) return
     navMenu.classList.remove('mobile-hidden')
     navMenu.classList.add('mobile-visible')
+    navMenu.style.display = ''
     menuToggle.setAttribute('aria-expanded', 'true')
     menuOverlay.hidden = false
+    menuOverlay.style.display = ''
   }
 
   const collapseBtn = document.getElementById('MenuCollapseBtn') as HTMLButtonElement | null
