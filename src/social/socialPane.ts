@@ -19,10 +19,26 @@ import {
   createHeaderSection,
   FriendRowRenderers,
   createMutualSection,
+  createRequestsSection,
   HeaderControls,
   SocialHeaderElement
 } from './socialSections'
 import type { ViewerMode } from './socialSections'
+import { FriendshipTriage, loadFriendshipTriage, triageFriends } from './triage'
+
+function applyEnvironmentAttributes (
+  element: HTMLElement,
+  context: DataBrowserContext
+): void {
+  const layout = context.environment?.layout ?? 'desktop'
+  const theme = context.environment?.theme ?? 'light'
+  const inputMode = context.environment?.inputMode ?? 'pointer'
+
+  element.classList.add('social-pane-host')
+  element.dataset.layout = layout
+  element.dataset.theme = theme
+  element.dataset.inputMode = inputMode
+}
 
 export const socialPane = {
   icon: icons.originalIconBase + 'foaf/foafTiny.gif',
@@ -81,6 +97,8 @@ export const socialPane = {
       return dom.createTextNode(str)
     }
 
+    let refreshRelationshipUi = function () {}
+
     const buildCheckboxForm = function (
       lab: string | Node,
       statement: Statement,
@@ -133,6 +151,7 @@ export const socialPane = {
                 statement.object,
                 statement.why
               )
+              refreshRelationshipUi()
             })
           } catch (e) {
             log.error('Data write fails:' + e)
@@ -163,6 +182,7 @@ export const socialPane = {
                   statement.object,
                   statement.why
                 )
+                refreshRelationshipUi()
               }
             })
           } catch (e) {
@@ -182,7 +202,8 @@ export const socialPane = {
     const outliner = context.getOutliner(dom)
     const kb = context.session.store
     const socialPane = dom.createElement('div')
-    socialPane.classList.add('social-pane', 'flex-column', 'gap-xxs', 'p-lg')
+    socialPane.classList.add('social-pane', 'flex-column', 'gap-xxs')
+    applyEnvironmentAttributes(socialPane, context)
     const foaf = ns.foaf
     const vcard = ns.vcard
     const me = authn.currentUser()
@@ -299,9 +320,18 @@ export const socialPane = {
     } // me is defined
     // End of you and s
 
+    const shouldShowHeaderAddFriendAction = (mode: ViewerMode) => {
+      return mode === 'authenticated' && !thisIsYou && !outgoing
+    }
+
+    const canEditOwnedProfile = viewerMode === 'owner' && editable
+    const canManageRelationship = viewerMode === 'authenticated' && !thisIsYou && editable && Boolean(profile)
+    const canModifyFriendsTab = canEditOwnedProfile
+
     let headerControls: HeaderControls = {
-      canEdit: viewerMode === 'owner',
-      viewerMode
+      canEdit: canEditOwnedProfile,
+      viewerMode,
+      showAddFriendAction: shouldShowHeaderAddFriendAction(viewerMode)
     }
 
     const header = createHeaderSection(context, s, headerControls, {
@@ -346,8 +376,8 @@ export const socialPane = {
     hydrateFriendDetailsCache(uniqueFriends)
 
     const renderSupportingInfo: FriendRowRenderers['renderSupportingInfo'] = function (target: NamedNode, renderDom: HTMLDocument) {
-      const friend = friendDetailsByUri.get(target.value)
-      if (!friend) return null
+      const friend = friendDetailsByUri.get(target.value) || toFriendDetails(kb, target)
+      friendDetailsByUri.set(target.value, friend)
 
       const container = renderDom.createElement('div')
       const jobAndOrganization = [friend.jobTitle, friend.organization].filter(Boolean).join(' | ')
@@ -369,7 +399,9 @@ export const socialPane = {
     }
 
     const renderNameSuffix: FriendRowRenderers['renderNameSuffix'] = function (target: NamedNode, renderDom: HTMLDocument) {
-      const pronouns = friendDetailsByUri.get(target.value)?.pronouns
+      const friend = friendDetailsByUri.get(target.value) || toFriendDetails(kb, target)
+      friendDetailsByUri.set(target.value, friend)
+      const pronouns = friend.pronouns
       if (!pronouns) return null
 
       const suffix = renderDom.createElement('span')
@@ -378,8 +410,7 @@ export const socialPane = {
       return suffix
     }
 
-    const sEditable = outliner.UserInput.sparqler.editable(s.uri, kb)
-    const mutualSection = me && !thisIsYou
+    let mutualSection = me && !thisIsYou
       ? createMutualSection({
         dom,
         subject: s,
@@ -388,7 +419,7 @@ export const socialPane = {
         meUri,
         incoming,
         outgoing,
-        editable: !!sEditable,
+        editable: canManageRelationship,
         profile,
         knows,
         mutualConnections,
@@ -404,13 +435,8 @@ export const socialPane = {
           refreshMutualFriends: function () {}
         }
 
-    const mutualFriends = mutualSection.section
-    const mutualContent = mutualSection.content
-    if (me && !thisIsYou) {
-      mutualFriends.setAttribute('style', 'display: none')
-    } else {
-      mutualFriends.setAttribute('style', 'display: block')
-    }
+    let mutualFriends = mutualSection.section
+    let mutualContent = mutualSection.content
     if (!mutualFriends.className) {
       mutualFriends.className = 'social-pane__mutual-friends social-primary__panel'
       mutualFriends.id = 'social-panel-mutual'
@@ -424,8 +450,8 @@ export const socialPane = {
     const allFriendsSection = createAllFriendsSection({
       dom,
       subject: s,
-      profile,
-      editable: !!sEditable,
+      profile: canModifyFriendsTab ? profile : null,
+      editable: canModifyFriendsTab,
       renderSupportingInfo,
       renderNameSuffix
     })
@@ -434,28 +460,117 @@ export const socialPane = {
     const friendsList = allFriendsSection.friendsList
     primary.appendChild(allFriends)
 
-    const setActivePanel = function (panel: 'mutual' | 'all-friends') {
+    let requestsTriage: FriendshipTriage = triageFriends(kb, s)
+    const requestsSection = createRequestsSection({
+      dom,
+      triage: requestsTriage,
+      renderSupportingInfo,
+      renderNameSuffix
+    })
+    const requestsPanel = requestsSection.section
+    primary.appendChild(requestsPanel)
+
+    const requestsTab = tabs.appendChild(dom.createElement('button'))
+    requestsTab.className = 'social-primary__tab'
+    requestsTab.type = 'button'
+    requestsTab.id = 'social-tab-requests'
+    requestsTab.textContent = 'Requests'
+    requestsTab.setAttribute('role', 'tab')
+    requestsTab.setAttribute('aria-controls', 'social-panel-requests')
+    requestsTab.setAttribute('aria-selected', 'false')
+    requestsTab.tabIndex = -1
+
+    type SocialPanel = 'mutual' | 'all-friends' | 'requests'
+    let activePanel: SocialPanel = 'all-friends'
+    let showRequestsTab = viewerMode === 'owner'
+
+    const setActivePanel = function (panel: SocialPanel) {
+      activePanel = panel
       const showMutual = panel === 'mutual'
+      const showAllFriends = panel === 'all-friends'
+      const showRequests = showRequestsTab && panel === 'requests'
       mutualTab.classList.toggle('social-primary__tab--active', showMutual)
       mutualTab.setAttribute('aria-selected', String(showMutual))
       mutualTab.tabIndex = showMutual ? 0 : -1
 
-      allFriendsTab.classList.toggle('social-primary__tab--active', !showMutual)
-      allFriendsTab.setAttribute('aria-selected', String(!showMutual))
-      allFriendsTab.tabIndex = showMutual ? -1 : 0
+      allFriendsTab.classList.toggle('social-primary__tab--active', showAllFriends)
+      allFriendsTab.setAttribute('aria-selected', String(showAllFriends))
+      allFriendsTab.tabIndex = showAllFriends ? 0 : -1
+
+      requestsTab.classList.toggle('social-primary__tab--active', showRequests)
+      requestsTab.setAttribute('aria-selected', String(showRequests))
+      requestsTab.tabIndex = showRequests ? 0 : -1
 
       mutualFriends.classList.toggle('social-primary__panel--active', showMutual)
       mutualFriends.setAttribute('aria-hidden', String(!showMutual))
 
-      allFriends.classList.toggle('social-primary__panel--active', !showMutual)
-      allFriends.setAttribute('aria-hidden', String(showMutual))
+      allFriends.classList.toggle('social-primary__panel--active', showAllFriends)
+      allFriends.setAttribute('aria-hidden', String(!showAllFriends))
+
+      requestsPanel.classList.toggle('social-primary__panel--active', showRequests)
+      requestsPanel.setAttribute('aria-hidden', String(!showRequests))
+      requestsPanel.hidden = !showRequestsTab || !showRequests
+    }
+    /* The following function was generated by AI GPT-5.4 Model
+       Prompt: After friend is added when mutual checkbox is checked refresh
+      mutual and header sections */
+    const rebuildMutualSection = function () {
+      if (!me || thisIsYou) return
+
+      const cme = kb.canon(me)
+      incoming = kb.whether(s, knows, cme)
+
+      const outgoingStatements = kb.statementsMatching(cme, knows, s)
+      outgoing = outgoingStatements.length > 0
+
+      const nextMutualSection = createMutualSection({
+        dom,
+        subject: s,
+        familiar,
+        me,
+        meUri,
+        incoming,
+        outgoing,
+        editable: canManageRelationship,
+        profile,
+        knows,
+        mutualConnections,
+        link,
+        text,
+        buildCheckboxForm,
+        renderSupportingInfo,
+        renderNameSuffix
+      })
+
+      mutualFriends.replaceWith(nextMutualSection.section)
+      mutualSection = nextMutualSection
+      mutualFriends = nextMutualSection.section
+      mutualContent = nextMutualSection.content
+    }
+
+    refreshRelationshipUi = function () {
+      rebuildMutualSection()
+      headerControls = {
+        ...headerControls,
+        showAddFriendAction: shouldShowHeaderAddFriendAction(headerControls.viewerMode)
+      }
+      ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
+      requestsTriage = triageFriends(kb, s)
+      requestsSection.refreshRequests(requestsTriage)
+      setActivePanel(activePanel)
     }
 
     setActivePanel('all-friends')
 
     const applyViewerMode = function (mode: ViewerMode) {
-      const showMutualTab = mode === 'authenticated'
+      const showMutualTab = mode === 'authenticated' && !thisIsYou
+      showRequestsTab = mode === 'owner'
       mutualTab.hidden = !showMutualTab
+      requestsTab.hidden = !showRequestsTab
+      if (!showRequestsTab && activePanel === 'requests') {
+        setActivePanel('all-friends')
+        return
+      }
       setActivePanel('all-friends')
     }
 
@@ -465,6 +580,10 @@ export const socialPane = {
 
     allFriendsTab.addEventListener('click', function () {
       setActivePanel('all-friends')
+    })
+
+    requestsTab.addEventListener('click', function () {
+      setActivePanel('requests')
     })
 
     const refreshFriendsList = function () {
@@ -493,23 +612,18 @@ export const socialPane = {
       }
     })()
 
-    /* if ($rdf.keepThisCodeForLaterButDisableFerossConstantConditionPolice) {
-      triageFriends(s)
-    } */
-    // //////////////////////////////////// Basic info on left
-
-    const preds2: NamedNode[] = [ns.foaf('openid'), ns.foaf('nick')]
-    for (let i2 = 0; i2 < preds2.length; i2++) {
-      const pred = preds2[i2]
-      const sts2 = kb.statementsMatching(s, pred)
-      if (sts2.length === 0) {
-        // if (editable) say("No home page set. Use the blue + icon at the bottom of the main view to add information.")
-      } else {
-        outliner.appendPropertyTRs(mutualContent, sts2, false, function (_pred) {
-          return true
-        })
+    ;(async () => {
+      try {
+        requestsTriage = await loadFriendshipTriage(context, s)
+        requestsSection.refreshRequests(requestsTriage)
+        refreshFriendsList()
+        refreshMutualFriends()
+      } catch {
+        // Keep the initial requests snapshot if additional loading fails.
       }
-    }
+    })()
+
+    // Older triage logic is preserved below as a reusable data helper.
 
     applyViewerMode('anonymous')
 
@@ -517,10 +631,12 @@ export const socialPane = {
       .then(webId => {
         const confirmedViewerMode = getViewerMode(s, webId)
         applyViewerMode(confirmedViewerMode)
+        const confirmedCanEditOwnedProfile = confirmedViewerMode === 'owner' && editable
         headerControls = {
           ...headerControls,
-          canEdit: confirmedViewerMode === 'owner',
-          viewerMode: confirmedViewerMode
+          canEdit: confirmedCanEditOwnedProfile,
+          viewerMode: confirmedViewerMode,
+          showAddFriendAction: shouldShowHeaderAddFriendAction(confirmedViewerMode)
         }
         ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
@@ -529,7 +645,8 @@ export const socialPane = {
         headerControls = {
           ...headerControls,
           canEdit: false,
-          viewerMode: 'anonymous'
+          viewerMode: 'anonymous',
+          showAddFriendAction: false
         }
         ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })

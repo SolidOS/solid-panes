@@ -394,7 +394,7 @@ const paneDef: PaneDefinition = {
         // give the user links to the new app
 
         const p = div.appendChild(dom.createElement('p'))
-        p.setAttribute('style', 'font-size: 140%;')
+        p.classList.add('pad-new-instance-message')
         p.innerHTML =
           'Your <a href=\'' +
           newIndexDoc.uri +

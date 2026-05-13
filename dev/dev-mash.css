@@ -682,10 +682,6 @@ div.exceptionPane pre {
   display: none;
 }
 
-.active {
-  /* display: visible; */
-}
-
 .submitRow {
   clear: both;
   height: 5em;
@@ -704,119 +700,17 @@ div.exceptionPane pre {
   display: inline;
 }
 
-/******************* CV Pane *****************/
-
-.CVclass {
-  background-color: var(--color-cv-pane-bg);
-}
-
-/******************* Data Content Pane *****************/
-
-div.dataContentPane {
-  border-top: solid 1px var(--color-data-pane-border-top);
-  border-left: solid 1px var(--color-data-pane-border-top);
-  border-bottom: solid 1px var(--color-data-pane-border-side);
-  border-right: solid 1px var(--color-data-pane-border-side);
-  padding: 0.5em; /* color: #404; */
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
-
-.nestedFormula {
-  border-top: solid 1px var(--color-data-pane-border-top);
-  border-left: solid 1px var(--color-data-pane-border-top);
-  border-bottom: solid 1px var(--color-data-pane-border-side);
-  border-right: solid 1px var(--color-data-pane-border-side);
-  padding: 0.5em;
-  border-radius: 0.5em;
-}
-
-div.dataContentPane td {
-  padding-left: 0.2em;
-  padding-top: 0.1em;
-  padding-right: 0.2em;
-  padding-bottom: 0.05em;
-  /*	        vertical-align: middle; /*@@ Lalana's request*/
-  vertical-align: top; /*@@ Tims's request*/
-  /* With middel, you can't tell what is with what */
-  /* background-color: white; */
-}
-
-div.dataContentPane tr {
-  margin-bottom: 0.6em;
-  padding-top: 1em;
-  padding-bottom: 1em;
-}
-
-.dataContentPane a {
-  color: var(--color-text-link);
-  text-decoration: none;
-  font-weight: bold;
-}
-.dataContentPane a:link {
-  color: var(--color-text-link);
-  text-decoration: none;
-  font-weight: bold;
-}
-.dataContentPane a:visited {
-  color: var(--color-text-link-visited);
-  text-decoration: none;
-  font-weight: bold;
-}
-.dataContentPane a:hover {
-  color: var(--color-text-link-hover);
-  text-decoration: underline;
-  font-weight: bold;
-}
-.dataContentPane a:active {
-  color: var(--color-text-link-active);
-  text-decoration: none;
-}
-
-.dataContentPane.embeddedText {
-  white-space: pre-wrap;
-}
-
-/* div.dataContentPane a { text-decoration: none; color: #006} /* Only very slightly blue */
-div.dataContentPane td.pred {
-  min-width: 12em;
-} /* Keep aligned with others better */
 div.dataContentPane td.pred a {
   color: var(--color-text-muted);
 } /* Greyish as form field names have less info value */
 
 /* .collectionAsTables  {border-right: green 1px; margin: 0.2em;} */
 
-div.n3Pane {
-  padding: 1em;
-  border-top: solid 1px var(--color-data-pane-border-top);
-  border-left: solid 1px var(--color-data-pane-border-top);
-  border-bottom: solid 1px var(--color-data-pane-border-side);
-  border-right: solid 1px var(--color-data-pane-border-side);
-  color: var(--color-text-blue);
-}
-
 .imageView {
   border: 1em var(--color-background);
   margin: 1em;
 }
 
-.n3Pane pre {
-  font-size: 120%;
-}
-
-.RDFXMLPane pre {
-  font-size: 120%;
-}
-
-div.RDFXMLPane {
-  padding: 1em;
-  border-top: solid 2px var(--color-data-pane-border-top);
-  border-left: solid 2px var(--color-data-pane-border-top);
-  border-bottom: solid 2px var(--color-data-pane-border-side);
-  border-right: solid 2px var(--color-data-pane-border-side);
-  color: var(--color-text-brown);
-}
 
 /* Generic things useful anywhere */
 
@@ -1684,28 +1578,6 @@ button:disabled, [role="button"][aria-disabled="true"] {
   opacity: 0.6;
   cursor: not-allowed;
   pointer-events: none;
-}
-
-/* Loading indicator accessibility */
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--color-border-pale);
-  border-top: 3px solid var(--color-primary);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .loading-spinner {
-    animation: none;
-    border-top-color: var(--color-primary);
-  }
 }
 /* copied from profile-pane */
 @media (prefers-reduced-motion: reduce) {

@@ -2098,14 +2098,39 @@ export default function (context) {
       !UI.widgets.isVideo(subject)
     ) {
       const docUri = (subject.doc() && subject.doc().uri) ? subject.doc().uri : '' + subject.doc()
+      /* handle auth errors more gracefully. For now just display a friendlier message
+         perhaps we can have a different page that gets shown in the future */
+      const outlineAuthMessage = function (statusCode) {
+        const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+        if (statusCode === 403) {
+          return isRootResource
+            ? 'This root resource is not accessible with your current permissions. Try logging in with an authorized account or opening a public profile document.'
+            : 'This resource is not accessible with your current permissions.'
+        }
+        return isRootResource
+          ? 'This root resource is not publicly readable. Try logging in or opening a profile document.'
+          : 'This resource is not publicly readable. Try logging in or opening a different public resource.'
+      }
+      const authErrorStatus = function (detail, errObj) {
+        const detailText = typeof detail === 'string' ? detail : String(detail || '')
+        const statusCode = errObj?.status || errObj?.response?.status
+        if (statusCode === 401 || statusCode === 403) return statusCode
+        if (detailText.includes('status: 403') || detailText.includes('status 403')) return 403
+        if (detailText.includes('status: 401') || detailText.includes('status 401')) return 401
+        return null
+      }
       const appendOutlineError = function (detail, errObj) {
         if (p.querySelector && docUri) {
           const existing = p.querySelector('[data-outline-error-for="' + docUri + '"]')
           if (existing) return
         }
+        const statusCode = authErrorStatus(detail, errObj)
+        const friendlyDetail = statusCode
+          ? outlineAuthMessage(statusCode)
+          : detail
         const message = UI.widgets.errorMessageBlock(
           dom,
-          detail,
+          friendlyDetail,
           '#fee',
           errObj instanceof Error ? errObj : undefined
         )

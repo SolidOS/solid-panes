@@ -1,0 +1,120 @@
+.formPane a {
+  color: var(--color-text-link, #3b5998);
+  text-decoration: none;
+}
+
+.formPane a:link {
+  color: var(--color-text-link, #3b5998);
+  text-decoration: none;
+}
+
+.formPane a:visited {
+  color: var(--color-text-link-visited, #3b5998);
+  text-decoration: none;
+}
+
+.formPane a:hover {
+  color: var(--color-text-link-hover, #3b5998);
+  font-weight: bold;
+}
+
+.formPane a:active {
+  color: var(--color-text-link-active, #888);
+  text-decoration: none;
+}
+
+.formPane__message,
+.formPaneMessage {
+  color: #666;
+  margin: var(--spacing-xs, 0.5em) 0;
+  padding: var(--spacing-xs, 0.35em) var(--spacing-xs, 0.5em);
+}
+
+.formPane__message--info {
+  background-color: var(--color-main-block-bg, #eee);
+}
+
+.formPane__message--error {
+  background-color: var(--color-log-error-bg, #fee);
+}
+
+.formPane__editButton {
+  margin-left: auto;
+  align-self: center;
+  padding: var(--spacing-xs, 0.5rem);
+  border: .5rem solid white;
+  font-size: 100%;
+  float: none;
+}
+
+.formPane .formPane__mobileTextareaValue > div {
+  display: block;
+  min-width: 0;
+  position: relative;
+}
+
+.formPane .formPane__mobileTextareaValue > div > textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  width: 100%;
+}
+
+.formPane .formPane__mobileTextareaValue > div > button[type='button'] {
+  float: none !important;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.formPane[data-layout='mobile'] .formPane__mobileTextareaRow {
+  flex-direction: column !important;
+  align-items: stretch;
+}
+
+.formPane[data-layout='mobile'] .formPane__mobileTextareaLabel {
+  width: auto !important;
+  padding-bottom: 0;
+}
+
+.formPane[data-layout='mobile'] .formPane__mobileTextareaValue {
+  box-sizing: border-box;
+  min-width: 0;
+  padding-right: var(--spacing-sm, 0.75rem);
+  width: 100%;
+}
+
+.formPane[data-layout='mobile'] .formPane__mobileTextareaValue textarea {
+  box-sizing: border-box;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  max-width: 100%;
+  width: 100%;
+}
+
+@media (max-width: 960px) {
+  .formPane .formPane__mobileTextareaRow {
+    flex-direction: column !important;
+    align-items: stretch;
+  }
+
+  .formPane .formPane__mobileTextareaLabel {
+    width: auto !important;
+    padding-bottom: 0;
+  }
+
+  .formPane .formPane__mobileTextareaValue {
+    box-sizing: border-box;
+    min-width: 0;
+    padding-right: var(--spacing-sm, 0.75rem);
+    width: 100%;
+  }
+
+  .formPane .formPane__mobileTextareaValue textarea {
+    box-sizing: border-box;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    max-width: 100%;
+    width: 100%;
+  }
+}
