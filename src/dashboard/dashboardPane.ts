@@ -1,11 +1,12 @@
-import { icons } from 'solid-ui'
+// icons import removed — using lucideIcons
 import { authn, authSession, store } from 'solid-logic'
 import { Fetcher, NamedNode } from 'rdflib'
 import { generateHomepage } from './homepage'
 import { DataBrowserContext, PaneDefinition } from 'pane-registry'
+import { lucideIcons } from '../icons/lucide'
 
 export const dashboardPane: PaneDefinition = {
-  icon: icons.iconBase + 'noun_547570.svg',
+  icon: lucideIcons.layoutDashboard,
   name: 'dashboard',
   label: subject => {
     if (subject.termType === 'NamedNode' && subject.uri === subject.site().uri) {

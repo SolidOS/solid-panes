@@ -3,9 +3,10 @@
  */
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import { lucideIcons } from '../icons/lucide'
 
 export default {
-  icon: UI.icons.iconBase + 'noun_1619.svg',
+  icon: lucideIcons.video,
 
   name: 'video',
 

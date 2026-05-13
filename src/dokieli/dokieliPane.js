@@ -12,9 +12,10 @@ import * as mime from 'mime-types'
 // const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
 
 import DOKIELI_TEMPLATE from './new.js' // Distributed with this library
+import { lucideIcons } from '../icons/lucide'
 
 export default {
-  icon: UI.icons.iconBase + 'dokieli-logo.png', // @@ improve? more like doccument?
+  icon: lucideIcons.filePen,
 
   name: 'Dokieli',
 

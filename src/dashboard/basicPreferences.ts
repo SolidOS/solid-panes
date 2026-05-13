@@ -1,11 +1,12 @@
 import { PaneDefinition } from 'pane-registry'
 import { IndexedFormula, NamedNode, parse, Store } from 'rdflib'
-import { icons, login, ns, widgets } from 'solid-ui'
+import { login, ns, widgets } from 'solid-ui'
 import ontologyData from './ontologyData.ttl'
 import preferencesFormText from './preferencesFormText.ttl'
+import { lucideIcons } from '../icons/lucide'
 
 export const basicPreferencesPane: PaneDefinition = {
-  icon: icons.iconBase + 'noun_Sliders_341315_000000.svg',
+  icon: lucideIcons.slidersHorizontal,
   name: 'basicPreferences',
   label: _subject => {
     return null

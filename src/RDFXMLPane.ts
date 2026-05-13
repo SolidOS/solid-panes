@@ -10,6 +10,7 @@ import * as $rdf from 'rdflib'
 import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode, Statement } from 'rdflib'
 import './RDFXMLPane.css'
+import { lucideIcons } from './icons/lucide'
 
 const ns = UI.ns
 
@@ -46,7 +47,7 @@ function trimLeadingIndent (line: string): string {
 }
 
 export const RDFXMLPane: RDFXMLPaneDefinition = {
-  icon: UI.icons.originalIconBase + '22-text-xml4.png',
+  icon: lucideIcons.code,
 
   name: 'RDFXML',
 

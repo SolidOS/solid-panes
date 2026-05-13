@@ -5,10 +5,11 @@
  */
 import { Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
-import { icons, ns, tabs, widgets } from 'solid-ui'
+import { ns, tabs, widgets } from 'solid-ui'
+import { lucideIcons } from '../icons/lucide'
 
 const TabbedPane: PaneDefinition = {
-  icon: icons.iconBase + 'noun_688606.svg',
+  icon: lucideIcons.appWindow,
 
   name: 'tabbed',
 

@@ -1,6 +1,7 @@
 // This is a system of tracking tooltip phrases used by the tabulator outliner
 
 import * as UI from 'solid-ui'
+import { lucideIcons } from '../icons/lucide'
 
 export const outlineIcons = {}
 
@@ -9,92 +10,67 @@ outlineIcons.tooltips = [] // look up tool tips from URL
 
 /// /////////////////////// Common icons
 
-outlineIcons.src.icon_expand =
-  UI.icons.originalIconBase + 'tbl-expand-trans.png'
-outlineIcons.src.icon_more = UI.icons.originalIconBase + 'tbl-more-trans.png' // looks just like expand, diff semantics
-// Icon.src.icon_expand = UI.icons.originalIconBase + 'clean/Icon.src.Icon.src.icon_expand.png';
-outlineIcons.src.icon_collapse = UI.icons.originalIconBase + 'tbl-collapse.png'
-outlineIcons.src.icon_internals =
-  UI.icons.originalIconBase + 'tango/22-emblem-system.png'
-outlineIcons.src.icon_instances =
-  UI.icons.originalIconBase + 'tango/22-folder-open.png'
-outlineIcons.src.icon_foaf = UI.icons.originalIconBase + 'foaf/foafTiny.gif'
-outlineIcons.src.icon_social = UI.icons.originalIconBase + 'social/social.gif'
-outlineIcons.src.icon_mb = UI.icons.originalIconBase + 'microblog/microblog.png'
-outlineIcons.src.icon_shrink = UI.icons.originalIconBase + 'tbl-shrink.png' // shrink list back up
-outlineIcons.src.icon_rows = UI.icons.originalIconBase + 'tbl-rows.png'
-// Icon.src.Icon.src.icon_columns = 'icons/tbl-columns.png';
+outlineIcons.src.icon_expand = lucideIcons.chevronRight
+outlineIcons.src.icon_more = lucideIcons.ellipsis
+outlineIcons.src.icon_collapse = lucideIcons.chevronDown
+outlineIcons.src.icon_internals = lucideIcons.slidersHorizontal
+outlineIcons.src.icon_instances = lucideIcons.folderOpen
+outlineIcons.src.icon_foaf = lucideIcons.usersRound
+outlineIcons.src.icon_social = lucideIcons.usersRound
+outlineIcons.src.icon_mb = lucideIcons.messageSquareText
+outlineIcons.src.icon_shrink = lucideIcons.chevronsUp
+outlineIcons.src.icon_rows = lucideIcons.table
 
 // Status balls:
 
-outlineIcons.src.icon_unrequested = UI.icons.originalIconBase + '16dot-blue.gif'
-// outlineIcons.src.Icon.src.icon_parse = UI.icons.originalIconBase + '18x18-white.gif';
-outlineIcons.src.icon_fetched = UI.icons.originalIconBase + '16dot-green.gif'
-outlineIcons.src.icon_failed = UI.icons.originalIconBase + '16dot-red.gif'
-outlineIcons.src.icon_requested = UI.icons.originalIconBase + '16dot-yellow.gif'
-// Icon.src.icon_maximize = UI.icons.originalIconBase + 'clean/Icon.src.Icon.src.icon_con_max.png';
+outlineIcons.src.icon_unrequested = lucideIcons.dotBlue
+outlineIcons.src.icon_fetched = lucideIcons.dotGreen
+outlineIcons.src.icon_failed = lucideIcons.dotRed
+outlineIcons.src.icon_requested = lucideIcons.dotYellow
 
 // Panes:
-outlineIcons.src.icon_CVPane = UI.icons.originalIconBase + 'CV.png'
-outlineIcons.src.icon_defaultPane = UI.icons.originalIconBase + 'about.png'
-outlineIcons.src.icon_visit =
-  UI.icons.originalIconBase + 'tango/22-text-x-generic.png'
-outlineIcons.src.icon_dataContents =
-  UI.icons.originalIconBase + 'rdf_flyer.24.gif' // @@ Bad .. find better
-outlineIcons.src.icon_n3Pane = UI.icons.originalIconBase + 'w3c/n3_smaller.png' // @@ Bad .. find better
-outlineIcons.src.icon_RDFXMLPane =
-  UI.icons.originalIconBase + '22-text-xml4.png' // @@ Bad .. find better
-outlineIcons.src.icon_imageContents =
-  UI.icons.originalIconBase + 'tango/22-image-x-generic.png'
-outlineIcons.src.icon_airPane = UI.icons.originalIconBase + '1pt5a.gif'
-outlineIcons.src.icon_LawPane = UI.icons.originalIconBase + 'law.jpg'
-outlineIcons.src.icon_pushbackPane = UI.icons.originalIconBase + 'pb-logo.png'
+outlineIcons.src.icon_CVPane = UI.icons.originalIconBase + 'CV.png' // legacy
+outlineIcons.src.icon_defaultPane = lucideIcons.info
+outlineIcons.src.icon_visit = lucideIcons.info
+outlineIcons.src.icon_dataContents = lucideIcons.code
+outlineIcons.src.icon_n3Pane = lucideIcons.braces
+outlineIcons.src.icon_RDFXMLPane = lucideIcons.code
+outlineIcons.src.icon_imageContents = lucideIcons.image
+outlineIcons.src.icon_airPane = UI.icons.originalIconBase + '1pt5a.gif' // legacy
+outlineIcons.src.icon_LawPane = UI.icons.originalIconBase + 'law.jpg' // legacy
+outlineIcons.src.icon_pushbackPane = UI.icons.originalIconBase + 'pb-logo.png' // legacy
 
 // For photo albums (By albert08@csail.mit.edu)
-outlineIcons.src.icon_photoPane = UI.icons.originalIconBase + 'photo_small.png'
-outlineIcons.src.icon_tagPane = UI.icons.originalIconBase + 'tag_small.png'
-outlineIcons.src.icon_TinyTag = UI.icons.originalIconBase + 'tag_tiny.png'
-outlineIcons.src.icon_photoBegin = UI.icons.originalIconBase + 'photo_begin.png'
-outlineIcons.src.icon_photoNext = UI.icons.originalIconBase + 'photo_next.png'
-outlineIcons.src.icon_photoBack = UI.icons.originalIconBase + 'photo_back.png'
-outlineIcons.src.icon_photoEnd = UI.icons.originalIconBase + 'photo_end.png'
-outlineIcons.src.icon_photoImportPane =
-  UI.icons.originalIconBase + 'flickr_small.png'
-// Icon.src.icon_CloseButton = UI.icons.originalIconBase + 'close_tiny.png';
-// Icon.src.icon_AddButton = UI.icons.originalIconBase + 'addphoto_tiny.png';
-
-// For that one we need a document with grid lines.  Make data-x-generix maybe
+outlineIcons.src.icon_photoPane = lucideIcons.image
+outlineIcons.src.icon_tagPane = UI.icons.originalIconBase + 'tag_small.png' // legacy
+outlineIcons.src.icon_TinyTag = UI.icons.originalIconBase + 'tag_tiny.png' // legacy
+outlineIcons.src.icon_photoBegin = UI.icons.originalIconBase + 'photo_begin.png' // legacy
+outlineIcons.src.icon_photoNext = UI.icons.originalIconBase + 'photo_next.png' // legacy
+outlineIcons.src.icon_photoBack = UI.icons.originalIconBase + 'photo_back.png' // legacy
+outlineIcons.src.icon_photoEnd = UI.icons.originalIconBase + 'photo_end.png' // legacy
+outlineIcons.src.icon_photoImportPane = UI.icons.originalIconBase + 'flickr_small.png' // legacy
 
 // actions for sources;
-outlineIcons.src.icon_retract = UI.icons.originalIconBase + 'retract.gif'
-outlineIcons.src.icon_refresh = UI.icons.originalIconBase + 'refresh.gif'
-outlineIcons.src.icon_optoff = UI.icons.originalIconBase + 'optional_off.PNG'
-outlineIcons.src.icon_opton = UI.icons.originalIconBase + 'optional_on.PNG'
-outlineIcons.src.icon_map = UI.icons.originalIconBase + 'compassrose.png'
-outlineIcons.src.icon_retracted = outlineIcons.src.icon_unrequested
+outlineIcons.src.icon_retract = UI.icons.originalIconBase + 'retract.gif' // legacy
+outlineIcons.src.icon_refresh = lucideIcons.refreshCw
+outlineIcons.src.icon_optoff = UI.icons.originalIconBase + 'optional_off.PNG' // legacy
+outlineIcons.src.icon_opton = UI.icons.originalIconBase + 'optional_on.PNG' // legacy
+outlineIcons.src.icon_map = lucideIcons.map
 outlineIcons.src.icon_retracted = outlineIcons.src.icon_unrequested
 
-outlineIcons.src.icon_time = UI.icons.originalIconBase + 'icons/Wclocksmall.png'
+outlineIcons.src.icon_time = UI.icons.originalIconBase + 'Wclocksmall.png' // legacy
 
 // Within outline mode:
 
-outlineIcons.src.icon_telephone =
-  UI.icons.originalIconBase + 'silk/telephone.png'
-outlineIcons.src.icon_time = UI.icons.originalIconBase + 'Wclocksmall.png'
-outlineIcons.src.icon_remove_node =
-  UI.icons.originalIconBase + 'tbl-x-small.png'
-outlineIcons.src.icon_add_triple =
-  UI.icons.originalIconBase + 'tango/22-list-add.png'
-outlineIcons.src.icon_add_new_triple =
-  UI.icons.originalIconBase + 'tango/22-list-add-new.png'
-outlineIcons.src.icon_show_choices =
-  UI.icons.originalIconBase + 'userinput_show_choices_temp.png' // looks just like collapse, diff smmantics
+outlineIcons.src.icon_telephone = UI.icons.originalIconBase + 'silk/telephone.png' // legacy
+outlineIcons.src.icon_remove_node = UI.icons.originalIconBase + 'tbl-x-small.png' // legacy
+outlineIcons.src.icon_add_triple = UI.icons.originalIconBase + 'tango/22-list-add.png' // legacy
+outlineIcons.src.icon_add_new_triple = UI.icons.originalIconBase + 'tango/22-list-add-new.png' // legacy
+outlineIcons.src.icon_show_choices = UI.icons.originalIconBase + 'userinput_show_choices_temp.png' // legacy
 
 // Inline Justification
-outlineIcons.src.icon_display_reasons =
-  UI.icons.originalIconBase + 'tango/22-help-browser.png'
-outlineIcons.tooltips[outlineIcons.src.icon_display_reasons] =
-  'Display explanations'
+outlineIcons.src.icon_display_reasons = lucideIcons.circleHelp || UI.icons.originalIconBase + 'tango/22-help-browser.png' // help-circle if available
+outlineIcons.tooltips[outlineIcons.src.icon_display_reasons] = 'Display explanations'
 
 // Other tooltips
 outlineIcons.tooltips[outlineIcons.src.icon_add_triple] = 'Add more'
@@ -106,21 +82,16 @@ outlineIcons.tooltips[outlineIcons.src.icon_shrink] = 'Shrink list.'
 outlineIcons.tooltips[outlineIcons.src.icon_internals] = 'Under the hood'
 outlineIcons.tooltips[outlineIcons.src.icon_instances] = 'List'
 outlineIcons.tooltips[outlineIcons.src.icon_foaf] = 'Friends'
-outlineIcons.tooltips[outlineIcons.src.icon_rows] =
-  'Make a table of data like this'
+outlineIcons.tooltips[outlineIcons.src.icon_rows] = 'Make a table of data like this'
 // Note the string '[Tt]his resource' can be replaced with an actual URI by the code
 outlineIcons.tooltips[outlineIcons.src.icon_unrequested] = 'Fetch this.'
 outlineIcons.tooltips[outlineIcons.src.icon_fetched] = 'Fetched successfully.'
-outlineIcons.tooltips[outlineIcons.src.icon_failed] =
-  'Failed to load. Click to retry.'
-outlineIcons.tooltips[outlineIcons.src.icon_requested] =
-  'This is being fetched. Please wait...'
+outlineIcons.tooltips[outlineIcons.src.icon_failed] = 'Failed to load. Click to retry.'
+outlineIcons.tooltips[outlineIcons.src.icon_requested] = 'This is being fetched. Please wait...'
 
 outlineIcons.tooltips[outlineIcons.src.icon_visit] = 'View document'
-outlineIcons.tooltips[outlineIcons.src.icon_retract] =
-  'Remove this source and all its data from tabulator.'
-outlineIcons.tooltips[outlineIcons.src.icon_refresh] =
-  'Refresh this source and reload its triples.'
+outlineIcons.tooltips[outlineIcons.src.icon_retract] = 'Remove this source and all its data from tabulator.'
+outlineIcons.tooltips[outlineIcons.src.icon_refresh] = 'Refresh this source and reload its triples.'
 
 /// ////////////////////////////// End comon area
 

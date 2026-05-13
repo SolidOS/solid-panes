@@ -6,6 +6,7 @@ import * as UI from 'solid-ui'
 import type { DataBrowserContext } from 'pane-registry'
 import type { NamedNode } from 'rdflib'
 import './imagePane.css'
+import { lucideIcons } from './icons/lucide'
 
 type FetcherLike = {
   getHeader: (subject: NamedNode, header: string) => string[] | undefined
@@ -45,7 +46,7 @@ function contentTypeMatch (
 }
 
 export const imagePane: ImagePane = {
-  icon: UI.icons.originalIconBase + 'tango/22-image-x-generic.png',
+  icon: lucideIcons.image,
 
   name: 'image',
 

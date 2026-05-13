@@ -9,11 +9,12 @@
  */
 
 import './socialPane.css'
-import { icons, utils, ns, log, widgets } from 'solid-ui'
+import { utils, ns, log, widgets } from 'solid-ui'
 import { authn } from 'solid-logic'
 import { LiveStore, NamedNode, Statement } from 'rdflib'
 import { DataBrowserContext } from 'pane-registry'
 import { locationIcon } from './icons'
+import { lucideIcons } from '../icons/lucide'
 import {
   createAllFriendsSection,
   createHeaderSection,
@@ -41,7 +42,7 @@ function applyEnvironmentAttributes (
 }
 
 export const socialPane = {
-  icon: icons.originalIconBase + 'foaf/foafTiny.gif',
+  icon: lucideIcons.usersRound,
 
   name: 'social',
 

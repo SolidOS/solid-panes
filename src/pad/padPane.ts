@@ -1,15 +1,15 @@
-import { icons, ns, pad, widgets, login } from 'solid-ui'
+import { ns, pad, widgets, login } from 'solid-ui'
 import { authn, AppDetails } from 'solid-logic'
 import { graph, log, NamedNode, Namespace, sym, serialize, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
+import { lucideIcons } from '../icons/lucide'
 import './padPane.css'
 /*   pad Pane
  **
  */
 
 const paneDef: PaneDefinition = {
-  // icon:  (module.__dirname || __dirname) + 'images/ColourOn.png',
-  icon: icons.iconBase + 'noun_79217.svg',
+  icon: lucideIcons.notebookPen,
 
   name: 'pad',
 

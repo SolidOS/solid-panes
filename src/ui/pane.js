@@ -4,11 +4,11 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import { lucideIcons } from '../icons/lucide'
 const ns = UI.ns
 
 export default {
-  // noun_170702.svg' builder   noun_122196.svg form
-  icon: UI.icons.iconBase + 'noun_170702.svg',
+  icon: lucideIcons.wand,
 
   name: 'ui',
 

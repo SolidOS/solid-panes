@@ -6,9 +6,10 @@
 import { authn, store } from 'solid-logic'
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import { lucideIcons } from '../icons/lucide'
 
 export default {
-  icon: UI.icons.originalIconBase + 'microblog/microblog.png',
+  icon: lucideIcons.messageSquareText,
   name: 'microblogPane',
   label: function (subject) {
     if (store.whether(subject, UI.ns.rdf('type'), UI.ns.foaf('Person'))) {

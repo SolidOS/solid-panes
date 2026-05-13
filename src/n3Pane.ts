@@ -9,6 +9,7 @@ import * as $rdf from 'rdflib'
 import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode, Statement } from 'rdflib'
 import './n3Pane.css'
+import { lucideIcons } from './icons/lucide'
 
 const ns = UI.ns
 
@@ -43,7 +44,7 @@ function leadingIndentWidth (line: string): number {
 }
 
 export const n3Pane: N3PaneLike = {
-  icon: UI.icons.originalIconBase + 'w3c/n3_smaller.png',
+  icon: lucideIcons.braces,
 
   name: 'n3',
 

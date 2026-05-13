@@ -16,6 +16,7 @@ import personIcon from '../icons/person.svg'
 import friendsIcon from '../icons/friends.svg'
 import folderIcon from '../icons/folder.svg'
 import dashboardIcon from '../icons/dashboard.svg'
+import { lucideIcons } from '../icons/lucide'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
@@ -397,12 +398,12 @@ export default function (context) {
       {
         paneName: 'home',
         label: 'Your dashboard',
-        icon: DASHBOARD_ICON
+        icon: lucideIcons.layoutDashboard
       },
       {
         paneName: 'basicPreferences',
         label: 'Your preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg'
+        icon: lucideIcons.slidersHorizontal
       }
     )
 
@@ -493,7 +494,7 @@ export default function (context) {
           tabName: `contact-${index}`,
           label: 'Contacts',
           subject: book,
-          icon: UI.icons.iconBase + 'noun_15695.svg'
+          icon: lucideIcons.bookUser
         }))
       } catch (err) {
         console.error('oops in globalAppTabs AddressBook')
@@ -851,7 +852,7 @@ export default function (context) {
     if (!options.solo && !showHeader) {
       const icon = header.appendChild(
         UI.utils.AJARImage(
-          UI.icons.originalIconBase + 'tbl-collapse.png',
+          lucideIcons.chevronDown, // was tbl-collapse.png
           'collapse',
           undefined,
           dom

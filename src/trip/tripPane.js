@@ -10,10 +10,11 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import { lucideIcons } from '../icons/lucide'
 const ns = UI.ns
 
 export default {
-  icon: UI.icons.iconBase + 'noun_62007.svg',
+  icon: lucideIcons.map,
 
   name: 'travel expenses',
 

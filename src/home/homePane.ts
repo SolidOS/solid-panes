@@ -11,11 +11,12 @@
 import { DataBrowserContext, PaneDefinition } from 'pane-registry'
 import { NamedNode } from 'rdflib'
 import { authn } from 'solid-logic'
-import { create, icons, login, ns } from 'solid-ui'
+import { create, login, ns } from 'solid-ui'
 import type { CreateContext } from 'solid-ui'
+import { lucideIcons } from '../icons/lucide'
 
 const HomePaneSource: PaneDefinition = {
-  icon: icons.iconBase + 'noun_547570.svg', // noun_25830
+  icon: lucideIcons.house,
 
   global: true,
 

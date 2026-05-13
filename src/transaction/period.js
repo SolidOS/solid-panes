@@ -6,10 +6,11 @@
  */
 
 import * as UI from 'solid-ui'
+import { lucideIcons } from '../icons/lucide'
 const ns = UI.ns
 
 export default {
-  icon: UI.icons.iconBase + 'noun_142708.svg',
+  icon: lucideIcons.calendarRange,
 
   name: 'period',
 

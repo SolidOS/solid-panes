@@ -10,6 +10,7 @@ import type { DataBrowserContext, PaneDefinition } from 'pane-registry'
 import type { RenderEnvironment } from 'pane-registry'
 import type { NamedNode, Statement } from 'rdflib'
 import './formPane.css'
+import { lucideIcons } from '../icons/lucide'
 const ns = UI.ns
 
 type WorkspaceSelectionDetails = {
@@ -80,7 +81,7 @@ function tagMobileTextareaRows (renderedForm: HTMLElement): void {
 }
 
 export const formPane: PaneDefinition = {
-  icon: UI.icons.iconBase + 'noun_122196.svg',
+  icon: lucideIcons.formInput,
 
   name: 'form',
 

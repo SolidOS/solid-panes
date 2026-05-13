@@ -1,14 +1,15 @@
 import { PaneDefinition } from 'pane-registry'
 import { NamedNode } from 'rdflib'
-import { icons, login, widgets } from 'solid-ui'
+import { login, widgets } from 'solid-ui'
 import { store } from 'solid-logic'
 import { createApplicationTable, createContainer, createText } from './trustedApplications.dom'
+import { lucideIcons } from '../icons/lucide'
 
 const thisColor = '#418d99'
 
 const trustedApplicationView: PaneDefinition = {
   global: true,
-  icon: `${icons.iconBase}noun_15177.svg`,
+  icon: lucideIcons.shieldCheck,
   name: 'trustedApplications',
   label: () => null,
   render: (subject, context) => {

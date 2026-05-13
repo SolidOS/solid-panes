@@ -4,10 +4,11 @@
 import * as UI from 'solid-ui'
 
 import makeBSS from '@solid/better-simple-slideshow'
+import { lucideIcons } from '../icons/lucide'
 const ns = UI.ns
 
 export const slideshowPane = {
-  icon: UI.icons.iconBase + 'noun_138712.svg',
+  icon: lucideIcons.presentation,
 
   name: 'slideshow',
 

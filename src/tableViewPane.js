@@ -16,9 +16,10 @@
 
 // Table view pane  -- view of a class as a table of properties of class members
 import * as UI from 'solid-ui'
+import { lucideIcons } from './icons/lucide'
 
 export const tableViewPane = {
-  icon: UI.icons.originalIconBase + 'table.png',
+  icon: lucideIcons.table,
 
   name: 'tableOfClass',
 

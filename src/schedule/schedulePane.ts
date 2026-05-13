@@ -12,6 +12,7 @@ import type { NamedNode, Node as RdflibNode, Statement, Variable } from 'rdflib'
 import formText from './formsForSchedule.ttl'
 import './schedulePane.css'
 import '../styles/utilities.css'
+import { lucideIcons } from '../icons/lucide'
 
 const ns = UI.ns
 
@@ -64,7 +65,7 @@ function runNextAgendaItem (agenda: AgendaTask[]): void {
 }
 
 export const schedulePane = {
-  icon: UI.icons.iconBase + 'noun_346777.svg', // @@ better?
+  icon: lucideIcons.calendarDays,
 
   name: 'schedule',
 
@@ -921,7 +922,7 @@ export const schedulePane = {
       const emailButton = dom.createElement('button')
       emailButton.classList.add('schedule-pane__button')
       const emailIcon = emailButton.appendChild(dom.createElement('img'))
-      emailIcon.setAttribute('src', UI.icons.iconBase + 'noun_480183.svg') // noun_480183.svg
+      emailIcon.setAttribute('src', lucideIcons.mail) // was noun_480183.svg
       emailIcon.classList.add('schedule-pane__button-icon')
       // emailButton.textContent = 'email invitations'
       emailButton.addEventListener(
@@ -1219,7 +1220,7 @@ export const schedulePane = {
         refreshButton.classList.add('schedule-pane__button')
         // refreshButton.textContent = 'refresh' // noun_479395.svg
         const refreshIcon = dom.createElement('img')
-        refreshIcon.setAttribute('src', UI.icons.iconBase + 'noun_479395.svg')
+        refreshIcon.setAttribute('src', lucideIcons.refreshCw) // was noun_479395.svg
         refreshIcon.classList.add('schedule-pane__button-icon')
         refreshButton.appendChild(refreshIcon)
         refreshButton.addEventListener(
@@ -1361,7 +1362,7 @@ export const schedulePane = {
         editButton.classList.add('schedule-pane__button')
         // editButton.textContent = '(Modify the poll)' // noun_344563.svg
         const editIcon = dom.createElement('img')
-        editIcon.setAttribute('src', UI.icons.iconBase + 'noun_344563.svg')
+        editIcon.setAttribute('src', lucideIcons.pencil) // was noun_344563.svg
         editIcon.classList.add('schedule-pane__button-icon')
         editButton.appendChild(editIcon)
         editButton.addEventListener(
