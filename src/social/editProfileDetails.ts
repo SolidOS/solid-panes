@@ -15,6 +15,14 @@ ns.foaf('schoolHomepage')
  and save it to the Webid. You can look in
  Dev2025/profile-pane/src/sections/heading/mutations to see how
  to write this data in the profile. */
+type SolidUIButton = HTMLElement & {
+  type: string
+  variant: string
+  size: string
+  label: string
+  disabled: boolean
+}
+
 type ProfileLinkField = {
   key: 'homepage' | 'weblog' | 'workplaceHomepage' | 'schoolHomepage'
   label: string
@@ -205,7 +213,7 @@ export function createEditProfileDetailsButton (
   options: EditProfileDetailsButtonOptions
 ): HTMLElement {
   const { dom, store, subject, onSaved } = options
-  const button = dom.createElement('solid-ui-button')
+  const button = dom.createElement('solid-ui-button') as SolidUIButton
   button.type = 'button'
   button.className = 'social-pane__edit-button profile__action-button profile__heading-action-button profile-action-text flex-center profile-section-collapsible__edit-button'
   button.variant = 'secondary'
@@ -286,7 +294,7 @@ export function createEditProfileDetailsButton (
         fieldLabel.textContent = field.label
         fieldHeader.appendChild(fieldLabel)
 
-        const addButton = dom.createElement('solid-ui-button')
+        const addButton = dom.createElement('solid-ui-button') as SolidUIButton
         addButton.type = 'button'
         addButton.className = 'social-pane__dialog-row-button--add'
         addButton.setAttribute('aria-label', `Add another ${field.label.toLowerCase()}`)
@@ -333,7 +341,7 @@ export function createEditProfileDetailsButton (
           })
           row.appendChild(input)
 
-          const removeButton = dom.createElement('solid-ui-button')
+          const removeButton = dom.createElement('solid-ui-button') as SolidUIButton
           removeButton.type = 'button'
           removeButton.className = 'social-pane__dialog-row-button--remove'
           removeButton.setAttribute('aria-label', `Remove ${field.label.toLowerCase()} ${index + 1}`)
@@ -375,7 +383,7 @@ export function createEditProfileDetailsButton (
     actions.className = 'social-pane__dialog-actions'
     form.appendChild(actions)
 
-    const closeButton = dom.createElement('solid-ui-button')
+    const closeButton = dom.createElement('solid-ui-button') as SolidUIButton
     closeButton.type = 'button'
     closeButton.className = 'social-pane__dialog-button--cancel'
     closeButton.setAttribute('aria-label', 'Close dialog')
@@ -384,7 +392,7 @@ export function createEditProfileDetailsButton (
     closeButton.size = 'md'
     actions.appendChild(closeButton)
 
-    const saveButton = dom.createElement('solid-ui-button')
+    const saveButton = dom.createElement('solid-ui-button') as SolidUIButton
     saveButton.type = 'button'
     saveButton.className = 'social-pane__dialog-button--save'
     saveButton.label = 'Save Changes'

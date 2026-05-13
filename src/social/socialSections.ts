@@ -1,5 +1,5 @@
 import { DataBrowserContext } from 'pane-registry'
-import { createAddMeToYourFriendsButton } from 'profile-pane/lib/specialButtons/addMeToYourFriends'
+import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { Statement, NamedNode } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
 import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
