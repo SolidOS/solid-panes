@@ -61,6 +61,12 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
 
 const isLoggedIn = (): boolean => Boolean(authSession?.info?.isLoggedIn)
 
+const setFooterVisibility = (loggedIn: boolean): void => {
+  const footer = document.querySelector('solid-ui-footer') as HTMLElement | null
+  if (!footer) return
+  footer.style.display = loggedIn ? 'none' : ''
+}
+
 const isViewingOwnProfile = (subject: NamedNode): boolean => {
   const currentUser = authn.currentUser()
   return Boolean(currentUser && subject && currentUser.sameTerm(subject))
@@ -296,8 +302,11 @@ export const refreshMenu = (layout: 'mobile' | 'desktop') => {
     collapseBtn.style.display = 'none'
     overlay.hidden = true
     overlay.style.display = 'none'
+    setFooterVisibility(false)
     return
   }
+
+  setFooterVisibility(true)
 
   if (layout === 'mobile') {
     navMenu.classList.add('mobile-hidden')
@@ -410,6 +419,7 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
       menuOverlay.hidden = !loggedIn
       menuOverlay.style.display = loggedIn ? '' : 'none'
     }
+    setFooterVisibility(loggedIn)
   }
 
   updateMenuVisibility()
