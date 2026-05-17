@@ -4,10 +4,20 @@
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
+import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader, refreshHeader } from './header'
 import { createFooter } from './footer'
 import { createLeftSideMenu, refreshMenu } from './menu'
+
+// Symbol used to stash the last render-relevant env snapshot on the outliner
+// so refreshUI can skip a full GotoSubject re-render when nothing changed.
+const LAST_RENDER_ENV_KEY = '__lastRenderEnvSignature'
+
+function renderEnvSignature (env?: RenderEnvironment): string {
+  if (!env) return ''
+  return [env.layout, env.theme, env.inputMode].join('|')
+}
 
 export { refreshMenu as updateMenuLayout } from './menu'
 export { refreshHeader } from './header'
@@ -28,10 +38,11 @@ function ensureMainContent () {
 export async function initMainPage (
   store: LiveStore,
   uri?: string | NamedNode | null,
-  environment?: any
+  environment?: RenderEnvironment
 ) {
   ensureMainContent()
   const outliner = getOutliner(document, environment)
+  ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
   outliner.GotoSubject(subject, true, undefined, true, undefined)
@@ -49,8 +60,15 @@ export async function refreshUI (outliner: OutlineManager) {
   const paneName = window.history.state?.paneName
   const pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
 
-  if (store && typeof outliner?.GotoSubject === 'function') {
+  // Only re-run GotoSubject (full pane re-render) when render-relevant
+  // environment fields actually changed since the last render.
+  const currentSignature = renderEnvSignature(outliner?.context?.environment)
+  const previousSignature = (outliner as any)?.[LAST_RENDER_ENV_KEY] ?? ''
+  const envChanged = currentSignature !== previousSignature
+
+  if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
     outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined)
+    ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
 
   await refreshHeader(outliner)
