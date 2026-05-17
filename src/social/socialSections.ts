@@ -2,7 +2,7 @@ import { DataBrowserContext } from 'pane-registry'
 import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { Statement, NamedNode } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
-import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
+import { appendProfileLinks } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
 import { FriendshipTriage } from './triage'
 
@@ -62,12 +62,8 @@ export function createHeaderSection (
     headerActions.className = 'social-pane__header-actions profile__actions profile__heading-actions'
 
     if (headerControls.canEdit) {
-      headerActions.appendChild(createEditProfileDetailsButton({
-        dom,
-        store: kb,
-        subject,
-        onSaved: renderHeader
-      }))
+      // Hidden for now because the social pane header edit control does not match the new design.
+      // Revisit later if we decide to restore profile-link editing here.
     } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
       headerActions.classList.add('social-pane__header-actions--friend')
       const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
