@@ -61,6 +61,17 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
 
 const isLoggedIn = (): boolean => Boolean(authSession?.info?.isLoggedIn)
 
+const setFooterVisibility = (loggedIn: boolean): void => {
+  const footer = document.querySelector('solid-ui-footer') as HTMLElement | null
+  if (!footer) return
+  footer.style.display = loggedIn ? 'none' : ''
+}
+
+const isViewingOwnProfile = (subject: NamedNode): boolean => {
+  const currentUser = authn.currentUser()
+  return Boolean(currentUser && subject && currentUser.sameTerm(subject))
+}
+
 const ensureMenuSkeleton = () => {
   menuCollapsed = loadMenuCollapsedState()
   const root = document.querySelector('[role="main"]') || document.body
@@ -264,7 +275,13 @@ const renderMenuItems = async (subject: NamedNode, outliner: OutlineManager, con
   const menuItems = await getMenuItems(subject, outliner)
 
   container.replaceChildren(...menuItems.map(createMenuButton))
-  setActiveMenuItem(container, container.dataset.activePaneName)
+  // If the user is logged in and viewing their own profile, select "Your profile"
+  // by default. This also surfaces "Your profile" at the top of the mobile view
+  // via the menu toggle label, which mirrors the active menu item.
+  const activePane = isViewingOwnProfile(subject)
+    ? 'profile'
+    : container.dataset.activePaneName
+  setActiveMenuItem(container, activePane)
 }
 
 export const refreshMenu = (layout: 'mobile' | 'desktop') => {
@@ -285,8 +302,11 @@ export const refreshMenu = (layout: 'mobile' | 'desktop') => {
     collapseBtn.style.display = 'none'
     overlay.hidden = true
     overlay.style.display = 'none'
+    setFooterVisibility(false)
     return
   }
+
+  setFooterVisibility(true)
 
   if (layout === 'mobile') {
     navMenu.classList.add('mobile-hidden')
@@ -399,6 +419,7 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
       menuOverlay.hidden = !loggedIn
       menuOverlay.style.display = loggedIn ? '' : 'none'
     }
+    setFooterVisibility(loggedIn)
   }
 
   updateMenuVisibility()

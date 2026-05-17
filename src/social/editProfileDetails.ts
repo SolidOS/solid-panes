@@ -112,14 +112,6 @@ function normalizeUrlList (values: string[], fieldLabel: string): string[] {
   return [...unique]
 }
 
-function formatDisplayUrl (value: string): string {
-  let displayValue = value.replace(/^https?:\/\//i, '')
-  if (/^[^/?#]+\/$/.test(displayValue)) {
-    displayValue = displayValue.slice(0, -1)
-  }
-  return displayValue
-}
-
 async function saveProfileLinkValues (
   store: LiveStore,
   subject: NamedNode,
@@ -175,38 +167,13 @@ async function saveProfileLinkValues (
 }
 
 export function appendProfileLinks (
-  container: HTMLElement,
-  dom: HTMLDocument,
-  store: LiveStore,
-  subject: NamedNode
+  _container: HTMLElement,
+  _dom: HTMLDocument,
+  _store: LiveStore,
+  _subject: NamedNode
 ): void {
-  const webLinksSection = dom.createElement('section')
-  webLinksSection.className = 'social-profile-links'
-  container.appendChild(webLinksSection)
-  for (const field of profileLinkFields) {
-    const statements = store.statementsMatching(subject, field.predicate)
-    if (statements.length === 0) continue
-
-    const uris = statements
-      .map((statement) => statement.object?.value || '')
-      .filter(Boolean)
-      .sort()
-
-    let previousUri = ''
-    for (const uri of uris) {
-      if (uri === previousUri) continue
-      previousUri = uri
-      const anchor = dom.createElement('a')
-      anchor.textContent = formatDisplayUrl(uri)
-      anchor.setAttribute('href', uri)
-      anchor.setAttribute('title', `${field.label}: ${uri}`)
-
-      const item = dom.createElement('div')
-      item.className = 'social-pane__link-button'
-      item.appendChild(anchor)
-      webLinksSection.appendChild(item)
-    }
-  }
+  // Hidden for now because social-pane website links are not part of the new design.
+  // Revisit later if we decide to show profile links in this header again.
 }
 
 export function createEditProfileDetailsButton (
