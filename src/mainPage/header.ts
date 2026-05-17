@@ -10,7 +10,7 @@ import loginIconSvg from '../icons/person.svg?raw'
 import signOutIconSvg from '../icons/signOut.svg?raw'
 import defaultAvatarIconSvg from '../icons/personInCircle.svg?raw'
 import downArrowIconSvg from '../icons/downArrow.svg?raw'
-import signupIconPng from '../icons/signup.png'
+import signupIconSvg from '../icons/signUp.svg?raw'
 import { createUiIcon } from '../icons/iconHelper'
 import { setActiveMenuPane } from './menu'
 /**
@@ -18,7 +18,7 @@ import { setActiveMenuPane } from './menu'
 */
 const HELP_MENU_ICON = createUiIcon(helpIconSvg, 'Help Icon', '#ffffff')
 const LOGIN_ICON = createUiIcon(loginIconSvg, 'LogIn Icon', '#ffffff')
-const SIGNUP_ICON = signupIconPng
+const SIGNUP_ICON = createUiIcon(signupIconSvg, 'SignUp Icon', '#ffffff')
 const LOGOUT_ICON = createUiIcon(signOutIconSvg, 'LogOut Icon', '#000000')
 const DEFAULT_AVATAR_ICON = createUiIcon(defaultAvatarIconSvg, 'Default Avatar Icon', '#6A7282')
 const DOWN_ARROW_ICON = createUiIcon(downArrowIconSvg, 'Down Arrow Icon', '#ffffff')
