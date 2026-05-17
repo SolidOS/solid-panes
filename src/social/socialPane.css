@@ -13,14 +13,35 @@
 }
 
 .social-pane__header-content {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: flex-start;
-  gap: var(--spacing-xs, 0.75rem);
+  column-gap: var(--spacing-md, 1.25rem);
+  row-gap: var(--spacing-xxs, 0.3125rem);
+  min-width: 0;
+  width: 100%;
+}
+
+.social-pane__header-media {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.social-pane__header-details {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   min-width: 0;
 }
 
 .social-pane__header-actions {
+  grid-column: 3;
+  grid-row: 1;
   margin-left: auto;
   align-self: flex-start;
+  justify-self: end;
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-xs, 0.5rem);
@@ -39,8 +60,11 @@
 }
 
 .social-pane__header-summary {
-  gap: var(--spacing-xs, 0.75rem);
-  width: fit-content;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xxs, 0.125rem);
+  width: 100%;
   max-width: 100%;
 }
 
@@ -50,6 +74,7 @@
   gap: var(--spacing-xs, 0.75rem);
   justify-content: flex-start;
   align-self: flex-start;
+  margin-top: var(--spacing-xxs, 0.3125rem);
 }
 
 .social-pane__header-stat {
@@ -444,24 +469,27 @@
   text-indent: 0;
   line-height: 1.2;
   text-align: left;
-  transform: none;
+  overflow-wrap: anywhere;
+  transform: translateX(-4px);
 }
 
 .social-pane__header-location {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  color: var(--slate-700, #314158);
-  font-size: var(--font-size-xs, 0.8125rem);
+  gap: var(--spacing-2xs, 0.625rem);
+  color: var(--color-text-secondary, #4A5565);
+  font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-normal, 400);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .social-pane__header-job-org {
   margin: 0;
   color: var(--color-text-subheading, #101828);
-  font-size: var(--font-size-base, 1rem);
-  font-weight: var(--font-weight-medium, 500);
+  width: 100%;
+  white-space: normal;
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-md, 500);
   line-height: 1.25;
   text-align: left;
 }
