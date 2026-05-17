@@ -1,14 +1,73 @@
 /* Styles extracted from manager.js */
 
 .obj {
-  margin: 0.2em;
   border: none;
-  padding: 0;
   vertical-align: top;
 }
 
-.pred, .pred.internal {
-  /* Add any specific styles for predicate TDs here */
+/* Real data tables (dataContentPane's internal property tree).
+   These are legitimate <table>s, so just give them consistent inter-cell spacing. */
+.tableFullWidth,
+.collectionAsTables {
+  border-collapse: separate;
+  border-spacing: var(--spacing-sm, 0.5rem);
+}
+
+/* rdf:List rendering: ordered list using the browser's native numbering. */
+.rdf-collection {
+  margin: 0;
+  padding-left: 2em;        /* room for the native marker */
+}
+.rdf-collection > li {
+  padding: 0.1em 0;
+}
+.rdf-collection > li::marker {
+  color: var(--color-text-muted, #6B7280);
+}
+
+/* Description list of a subject's predicates and values, emitted by appendPropertyTRs.
+   The two-column visual layout is purely presentational — semantically it stays a <dl>. */
+.property-list {
+  display: grid;
+  grid-template-columns: minmax(8rem, max-content) 1fr;
+  gap: 0.35em var(--spacing-sm, 0.5rem);
+  margin: 0;
+  align-items: start;
+}
+.property-list > dt {
+  grid-column: 1;
+  font-weight: 500;
+  color: var(--color-text-muted, #6B7280);
+}
+.property-list > dd {
+  grid-column: 2;
+  margin: 0;
+  min-width: 0;        /* allow long URIs to wrap inside the cell */
+}
+.property-list > dd.property-more {
+  grid-column: 2;
+}
+.property-list > dd.property-more > details {
+  display: contents;
+}
+.property-list > dd.property-more > details > summary {
+  cursor: pointer;
+  color: var(--color-text-muted, #6B7280);
+  font-size: 0.9em;
+}
+
+/* dataContentPane: per-subject blocks (was a striped <table>) */
+.data-content {
+  display: block;
+}
+.data-content__subject {
+  padding: 0.5em 0.75em;
+}
+.data-content__subject--even {
+  background-color: var(--color-row-alt, #f0f0f0);
+}
+.data-content .property-list {
+  margin: 0;
 }
 
 .iconTD {
@@ -21,28 +80,31 @@
 
 .labelTD {
   width: 100%;
+  padding: 0;
 }
 
 .paneIconTray {
   display: flex;
   justify-content: flex-start;
   align-items: center;
+  gap: 1em;
+  flex-wrap: wrap;
 }
 
 .paneShown {
   width: 24px;
-  border: none !important;
-  border-radius: var(--border-radius-md, 0.5rem);
+  border: none;
+  border-radius: 0.5em;
   margin-left: var(--spacing-small, 0.1rem);
-  padding: 0.188rem; /* 3px */
-  background-color: var(--header-menu-item-hover, #e6dcff) !important;
+  padding: 3px;
+  background-color: var(--header-menu-item-hover, #e6dcff);
 }
 
 .paneHidden {
   width: 24px;
-  border-radius: var(--border-radius-md, 0.5rem);
+  border-radius: 0.5em;
   margin-left: var(--spacing-small, 0.1rem);
-  padding: 0.188rem; /* 3px */
+  padding: 3px;
 }
 
 .header {
@@ -54,8 +116,9 @@
 
 .strongHeader {
   font-size: 150%;
-  margin: 0 0.6rem 0 0;
-  padding: 0.1rem 0.4rem;
+  margin: 0 0.6em 0 0;
+  padding: 0.1em 0.4em;
+  background-color: var(--color-background, #F8F9FB);
 }
 
 .tableFullWidth {
@@ -63,16 +126,57 @@
   background: var(--color-background, #F8F9FB) !important;
 }
 
+/* Native disclosure for the object cell of a predicate row */
+.obj-disclosure { display: inline-block; }
+.obj-disclosure > summary { cursor: pointer; }
+.obj-disclosure > .obj-expanded {
+  margin-top: 0.25em;
+  padding-left: 1em;
+}
+
 .placeholderTable {
   width: 100%;
 }
 
 .tdFlex {
-  margin: var(--spacing-xxxs, 0.2rem);
+  margin: 0.2em;
   border: none;
   padding: 0;
   vertical-align: top;
   display: flex;
   justify-content: space-between;
   flex-direction: row;
+  background-color: var(--color-background, #F8F9FB);
 }
+
+/* Remove-node icon spacing (image.style.marginLeft/marginRight in JS). */
+.removeIcon {
+  margin-left: 5px;
+  margin-right: 10px;
+}
+
+/* Row container holding a sub-pane's rendered content. */
+.outlineRow {
+  text-align: left;
+  width: 100%;
+}
+
+.outlineRow--themed {
+  background-color: var(--color-background, #F8F9FB);
+}
+
+/* .iconTD already sets width: 0px above; the cell grows automatically when
+   icons are appended by termWidget.addIcon. */
+
+/* Default literal value styling (was rep.setAttribute('style', 'white-space: pre-wrap;')). */
+.literalValue { white-space: pre-wrap; }
+.literalValue--integer { text-align: right; }
+.literalValue--decimal { text-align: '.'; }
+
+/* Table sized full-width when the outline shows a solo subject. */
+.outlineTableSolo { width: 100%; }
+
+/* Alternating background classes for legacy table-of-tables rendering
+   (replaces dynamic style.backgroundColor = 'white'/'#eee'). */
+.outlineNestedTable--white { background-color: white; }
+.outlineNestedTable--grey  { background-color: #eee; }
