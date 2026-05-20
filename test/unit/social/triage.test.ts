@@ -57,20 +57,21 @@ describe('loadFriendshipTriage', () => {
 
     store.add(alice, ns.foaf('knows'), bob, alice.doc())
 
-    ;(store as typeof store & {
-      fetcher?: {
-        load: (...args: any[]) => Promise<void>
-      }
-    }).fetcher = {
-      load: jest.fn(async (target: $rdf.NamedNode | string | Array<$rdf.NamedNode | string>) => {
-        const resolvedTarget = Array.isArray(target) ? target[0] : target
-        const value = typeof resolvedTarget === 'string' ? resolvedTarget : resolvedTarget.value
+    const mockLoad: (target: $rdf.NamedNode | string) => Promise<unknown> = jest.fn(
+      async (target: $rdf.NamedNode | string) => {
+        const value = typeof target === 'string' ? target : target.value
         loadedTargets.push(value)
         if (value === bob.doc().value) {
           store.add(bob, ns.foaf('knows'), alice, bob.doc())
         }
-      })
-    }
+      }
+    )
+
+    ;(store as typeof store & {
+      fetcher?: unknown
+    }).fetcher = {
+      load: mockLoad
+    } as unknown as typeof store.fetcher
 
     const triage = await loadFriendshipTriage(
       { session: { store } } as any,
