@@ -19,7 +19,9 @@ export default {
     '\\.svg\\?raw$': '<rootDir>/test/__mocks__/fileMock.js',
     '\\.(svg)$': '<rootDir>/test/__mocks__/fileMock.js',
     '\\.(png|jpe?g|gif|webp|avif)$': '<rootDir>/test/__mocks__/fileMock.js',
-    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js'
+    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js',
+    'solid-logic': '<rootDir>/../solid-logic/src/index.ts',
+    'solid-oidc-client-browser': '<rootDir>/test/mocks/solid-oidc-client-browser.ts'
   },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],

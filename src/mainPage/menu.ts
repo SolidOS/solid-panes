@@ -59,7 +59,7 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
   updateCollapseButtonPosition(navMenu, collapseBtn)
 }
 
-const isLoggedIn = (): boolean => Boolean(authSession?.info?.isLoggedIn)
+const isLoggedIn = (): boolean => Boolean(authSession?.isActive)
 
 const ensureMenuSkeleton = () => {
   menuCollapsed = loadMenuCollapsedState()
