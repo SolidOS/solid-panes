@@ -16,6 +16,9 @@ so typically a hand-written user interface will be chosen over a generic machine
 These panes are used in the Data Browser - see mashlib
 [https://github.com/linkeddata/mashlib](https://github.com/linkeddata/mashlib)
 
+When panes are hosted through mashlib and use solid-logic authentication, ensure the refresh worker is served same-origin. The worker export and runtime override contract are documented in solid-logic:
+https://github.com/solidos/solid-logic#worker-asset-and-runtime-configuration
+
 Currently the panes available include:
 
 - A default pane which lists the properties of any object
