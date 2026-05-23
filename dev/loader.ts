@@ -129,22 +129,22 @@ window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
   paneRegistry.register(require('contacts-pane'))
-  await authSession.handleIncomingRedirect({
-    restorePreviousSession: true
-  })
-  const session = await authSession
-  if (!session.info.isLoggedIn) {
+  await solidLogicSingleton.authn.checkUser()
+  const session = authSession
+  const isLoggedIn = session?.info?.isLoggedIn ?? session?.isActive ?? Boolean(session?.webId)
+  if (!isLoggedIn) {
     console.log('The user is not logged in')
     const loginBanner = document.getElementById('loginBanner');
     if (loginBanner) {
       loginBanner.innerHTML = '<button onclick="login()">Log in</button>';
     }
     } else {
-      console.log(`Logged in as ${session.info.webId}`)
+      const loggedWebId = session?.info?.webId || session?.webId
+      console.log(`Logged in as ${loggedWebId}`)
     
     const loginBanner = document.getElementById('loginBanner');
     if (loginBanner) {
-      loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
+      loginBanner.innerHTML = `Logged in as ${loggedWebId} <button onclick="logout()">Log out</button>`;
     }
   }
   addLayoutButtons()
@@ -155,8 +155,9 @@ window.logout = () => {
   window.location.href = ''
 }
 window.login = async function () {
-  const session = await authSession
-  if (!session.info.isLoggedIn) {
+  const session = authSession
+  const isLoggedIn = session?.info?.isLoggedIn ?? session?.isActive ?? Boolean(session?.webId)
+  if (!isLoggedIn) {
     const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
     if (issuer) {
       await authSession.login({
