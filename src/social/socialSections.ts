@@ -365,6 +365,11 @@ export function createAllFriendsSection (options: {
     modify: !!editable,
     predicate: ns.foaf('knows'),
     noun: 'friend',
+    // Social pane already owns the async refresh cycle for friend data in
+    // socialPane.ts. Leave attachmentList's generic follow-up rerender disabled
+    // here or each fetched friend profile will trigger an extra whole-table refresh
+    // on top of the pane's own batched updates.
+    refreshOnDocumentLoad: false,
     renderSupportingInfo,
     renderNameSuffix
   })
