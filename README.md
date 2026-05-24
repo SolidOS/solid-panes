@@ -120,17 +120,5 @@ I want the menu to have a tiny button on the bottom margin left with an arrow to
 
 * Raptor mini: Please always keep the footer at the bottom of the menu
 
-* GPT-5.3-Codex in GitHub Copilot: This is the comment I got from copilot, but suggested fix remove the dark class as well The nested table shading logic checks UI.utils.ancestor(newTable, 'TABLE') immediately after creating newTable, but at that moment newTable typically has no
-parent in the DOM yet. This makes parentTable null and will
-always apply dataContentPaneNestedLight, preventing the
-intended alternating light/dark nested backgrounds.
-Consider assigning the class after appending newTable into
-its parent table, or pass the parent table (or current nesting depth) into objectTree() so the decision can be made reliably. can you help me fix this without removing the dark altering 
-
-* GPT-5.4 Model: Make this (n3Pane) look good on mobile by indenting the lines that wrap.
-
-* GPT-5.4 Model: Generate TypeScript types for the default pane. 
-
 * GPT-5.4 Model: Add a compatibility shim in the form pane for mixed `ui:Group` plus field typing.
 
-* AI GPT-5.4 Model: After friend is added when mutual checkbox is checked refresh mutual and header sections */
