@@ -1,0 +1,129 @@
+.human-readable-pane {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.human-readable-pane__container {
+  display: block;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.human-readable-pane__frame {
+  display: block;
+  border: 1px solid;
+  padding: 1rem;
+  height: var(--human-readable-pane-height, 30rem);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  resize: both;
+  overflow: auto;
+}
+
+.human-readable-pane__frame--iframe {
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-height: 18rem;
+  background: var(--color-background, white);
+}
+
+.human-readable-pane__frame--markdown {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane__frame--plain-text {
+  font-family: monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane__frame--markdown > * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.human-readable-pane__frame--markdown img,
+.human-readable-pane__frame--markdown video,
+.human-readable-pane__frame--markdown canvas,
+.human-readable-pane__frame--markdown iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+.human-readable-pane__frame--markdown pre,
+.human-readable-pane__frame--markdown code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane__frame--markdown pre {
+  white-space: pre-wrap;
+}
+
+.human-readable-pane__frame--markdown table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.human-readable-pane__frame--markdown th,
+.human-readable-pane__frame--markdown td {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-pane__frame {
+  padding: 0.75rem;
+  resize: none;
+  min-width: 0;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-pane__frame--markdown,
+.human-readable-pane[data-layout='mobile'] .human-readable-pane__frame--plain-text {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-pane__frame--iframe {
+  width: 100%;
+  max-width: 100%;
+  min-height: 16rem;
+  height: min(var(--human-readable-pane-height, 30rem), 75vh);
+}
+
+@media (max-width: 576px) {
+  .human-readable-pane__frame {
+    padding: 0.75rem;
+    resize: none;
+    min-width: 0;
+  }
+
+  .human-readable-pane__frame--markdown,
+  .human-readable-pane__frame--plain-text {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .human-readable-pane__frame--iframe {
+    width: 100%;
+    max-width: 100%;
+    min-height: 16rem;
+    height: min(var(--human-readable-pane-height, 30rem), 75vh);
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "4.4.0",
+  "version": "4.4.1",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -67,13 +67,14 @@
     "dompurify": "^3.4.4",
     "folder-pane": "^3.1.0",
     "issue-pane": "^3.0.2",
+    "lit-html": "^3.3.2",
     "marked": "^18.0.3",
     "meeting-pane": "^3.0.2",
     "mime-types": "^3.0.2",
     "pane-registry": "^3.1.1",
-    "profile-pane": "^3.2.1",
+    "profile-pane": "^3.2.2",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "^3.1.0",
+    "solid-ui": "^3.1.1",
     "source-pane": "^3.1.0"
   },
   "overrides": {
@@ -110,7 +111,7 @@
     "node-polyfill-webpack-plugin": "^4.1.0",
     "path-browserify": "^1.0.1",
     "raw-loader": "^4.0.2",
-    "rdflib": "^2.3.8",
+    "rdflib": "^2.3.9",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "solid-logic": "^4.0.7",

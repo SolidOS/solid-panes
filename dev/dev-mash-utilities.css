@@ -23,6 +23,29 @@
   border: 0;
 }
 
+.loading-spinner {
+  display: inline-block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 0.15rem solid color-mix(in srgb, var(--slate-300, #CBD5E1) 85%, transparent);
+  border-top-color: var(--color-primary, #7C4DFF);
+  border-radius: 50%;
+  animation: loading-spinner-rotate 0.8s linear infinite;
+}
+
+@keyframes loading-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+    border-top-color: color-mix(in srgb, var(--color-primary, #7C4DFF) 70%, var(--slate-300, #CBD5E1));
+  }
+}
+
 /* Visually hidden but can become visible on focus */
 .visually-hidden {
   position: absolute !important;

@@ -1,0 +1,294 @@
+.schedule-pane__table {
+  border-collapse: collapse;
+  background-color: white;
+  min-width: 40rem;
+  min-height: 13rem;
+}
+
+.schedule-pane__button {
+  background-color: #eef;
+  padding: var(--spacing-xs, 0.5rem);
+  border: .5rem solid white;
+  font-size: 100%;
+}
+
+.schedule-pane__button-icon {
+  width: var(--icon-sm, 1.8rem);
+  height: var(--icon-sm, 1.8rem);
+}
+
+.schedule-pane__nav {
+  text-align: center;
+  vertical-align: middle;
+  padding-top: 4rem;
+}
+
+.schedule-pane__cell {
+  padding: var(--spacing-xs, 0.3rem);
+  text-align: center;
+}
+
+.schedule-pane__table .schedule-pane__form-heading {
+  font-size: 110% !important;
+  font-weight: bold;
+  color: #888888;
+  padding: 0.2em;
+  margin: 0.7em 0 !important;
+}
+
+.schedule-pane__table .schedule-pane__form-heading--time-proposals {
+  margin-bottom: 0 !important;
+}
+
+.schedule-pane__table .schedule-pane__panel--time-proposals {
+  padding-bottom: 0.9rem !important;
+  border: none !important;
+}
+
+.schedule-pane__table .schedule-pane__panel {
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  margin-right: 0.5rem;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .schedule-pane__table .schedule-pane__main-cell {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--comment {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--comment > div:first-child {
+    width: auto !important;
+    min-width: 4.5rem;
+    flex: 0 1 6rem;
+  }
+
+  .schedule-pane__table .schedule-pane__field-value--comment {
+    min-width: 0;
+    flex: 1 1 20rem;
+    width: auto;
+    padding-right: 0.25rem;
+    box-sizing: border-box;
+  }
+
+  .schedule-pane__table .schedule-pane__field-value--comment .schedule-pane__form-control--textarea,
+  .schedule-pane__table .schedule-pane__field-row--comment .schedule-pane__form-control--textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin: 0.2rem 0 0 !important;
+    padding: 0.5rem 0.45rem;
+  }
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table {
+  min-width: 0;
+  width: 100%;
+  min-height: 0;
+  table-layout: fixed;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table td,
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table th {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__main-cell {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  box-sizing: border-box;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact {
+  align-items: flex-start;
+  gap: 0.25rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .formFieldName {
+  width: auto !important;
+  min-width: 4.5rem;
+  flex: 0 1 5.5rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .formFieldValue {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--compact .schedule-pane__form-control {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 0.2rem 0 0 !important;
+  font-size: var(--font-size-sm, 0.875rem);
+  padding: 0.35rem 0.45rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .formFieldName,
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment > div:first-child {
+  width: auto !important;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .formFieldValue,
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment > div:last-child,
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-value--comment {
+  min-width: 0;
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-row--comment .schedule-pane__form-control--textarea,
+div.schedule-pane[data-layout='mobile'] .schedule-pane__table .schedule-pane__field-value--comment .schedule-pane__form-control--textarea {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box;
+  margin: 0 !important;
+  font-size: var(--font-size-sm, 0.875rem);
+  padding: 0.35rem 0.45rem;
+  min-height: 5.5rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__button {
+  padding: 0.4rem;
+  border-width: 0.2rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__button-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__nav {
+  padding-top: 1rem;
+}
+
+div.schedule-pane[data-layout='mobile'] .schedule-pane__cell {
+  padding: 0.2rem;
+}
+
+@media (max-width: 576px) {
+  .schedule-pane__table {
+    min-width: 0;
+    width: 100%;
+    min-height: 0;
+    table-layout: fixed;
+  }
+
+  .schedule-pane__table td,
+  .schedule-pane__table th {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .schedule-pane__table .schedule-pane__main-cell {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--compact {
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--compact .formFieldName {
+    width: auto !important;
+    min-width: 4.5rem;
+    flex: 0 1 5.5rem;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--compact .formFieldValue {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--compact .schedule-pane__form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin: 0.2rem 0 0 !important;
+    font-size: var(--font-size-sm, 0.875rem);
+    padding: 0.35rem 0.45rem;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--comment {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 0.25rem;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--comment .formFieldName,
+  .schedule-pane__table .schedule-pane__field-row--comment > div:first-child {
+    width: auto !important;
+    min-width: 0;
+    flex: 0 0 auto;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--comment .formFieldValue,
+  .schedule-pane__table .schedule-pane__field-row--comment > div:last-child,
+  .schedule-pane__table .schedule-pane__field-value--comment {
+    min-width: 0;
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .schedule-pane__table .schedule-pane__field-row--comment .schedule-pane__form-control--textarea,
+  .schedule-pane__table .schedule-pane__field-value--comment .schedule-pane__form-control--textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box;
+    margin: 0 !important;
+    font-size: var(--font-size-sm, 0.875rem);
+    padding: 0.35rem 0.45rem;
+    min-height: 5.5rem;
+  }
+
+  .schedule-pane__button {
+    padding: 0.4rem;
+    border-width: 0.2rem;
+  }
+
+  .schedule-pane__button-icon {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .schedule-pane__nav {
+    padding-top: 1rem;
+  }
+
+  .schedule-pane__cell {
+    padding: 0.2rem;
+  }
+}

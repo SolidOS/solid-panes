@@ -1,5 +1,4 @@
 # solid-panes
-
 A set of core solid-compatible applets based on solid-ui
 
 These are a set of interlinked applications, or parts of applications,
@@ -118,8 +117,11 @@ I want the menu to have a tiny button on the bottom margin left with an arrow to
 
 * Raprot mini: instead of this code (index.ts of footer), I want to make use of a new footer web component with the readme: # solid-ui-footer component
 
-* Raptor mini: The footer created shoudl actually be part of the left side menu only. Should be displayed inside it and should collaps and expand as the menu.
+* Raptor mini: The footer created should actually be part of the left side menu only. Should be displayed inside it and should collaps and expand as the menu.
 
 * Raptor mini: the footer should completely dissapear when menu folded up.
 
 * Raptor mini: Please always keep the footer at the bottom of the menu
+
+* GPT-5.4 Model: Add a compatibility shim in the form pane for mixed `ui:Group` plus field typing.
+
