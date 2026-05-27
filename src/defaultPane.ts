@@ -7,24 +7,56 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
+import type { BlankNode, Literal, NamedNode, Statement } from 'rdflib'
+import './defaultPane.css'
 
 const ns = UI.ns
+type DefaultPaneSubject = NamedNode | BlankNode | Literal
 
-export const defaultPane = {
+type DefaultPaneDefinition = {
+  icon: string
+  name: string
+  audience: NamedNode[]
+  label: (subject: DefaultPaneSubject) => string
+  render: (subject: DefaultPaneSubject, context: DataBrowserContext) => HTMLDivElement
+}
+
+type DefaultPaneOutliner = {
+  appendPropertyTRs: (
+    parent: HTMLElement,
+    statements: Statement[],
+    inverse: boolean,
+    filter: (pred: NamedNode, inverse: boolean) => boolean
+  ) => void
+  UserInput: {
+    addNewPredicateObject: (event: Event) => void
+  }
+}
+
+export const defaultPane: DefaultPaneDefinition = {
   icon: UI.icons.originalIconBase + 'about.png',
 
   name: 'default',
 
   audience: [ns.solid('Developer')],
 
-  label: function (_subject) {
+  label: function (_subject: DefaultPaneSubject): string {
     return 'about '
   },
 
-  render: function (subject, context) {
+  render: function (
+    subject: DefaultPaneSubject,
+    context: DataBrowserContext
+  ): HTMLDivElement {
     const dom = context.dom
 
-    const filter = function (pred, inverse) {
+    function applyEnvironmentAttributes (element: HTMLDivElement): void {
+      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
+      element.dataset.layout = environment.layout ?? 'desktop'
+    }
+
+    const filter = function (pred: NamedNode, inverse: boolean): boolean {
       if (
         typeof context.session.paneRegistry.byName('internal').predicates[
           pred.uri
@@ -41,19 +73,23 @@ export const defaultPane = {
       return true
     }
 
-    const outliner = context.getOutliner(dom)
+    const outliner = context.getOutliner(dom) as DefaultPaneOutliner
     const kb = context.session.store
     // var outline = outliner; // @@
     UI.log.info('@defaultPane.render, dom is now ' + dom.location)
-    subject = kb.canon(subject)
+    subject = kb.canon(subject) as DefaultPaneSubject
     const div = dom.createElement('div')
     div.setAttribute('class', 'defaultPane')
+    applyEnvironmentAttributes(div)
     //        appendRemoveIcon(div, subject, div)
 
-    let plist = kb.statementsMatching(subject)
+    let plist = subject.termType === 'Literal' ? [] : kb.statementsMatching(subject)
     outliner.appendPropertyTRs(div, plist, false, filter)
     plist = kb.statementsMatching(undefined, undefined, subject)
     outliner.appendPropertyTRs(div, plist, true, filter)
+    const subjectStatement = subject.termType === 'BlankNode'
+      ? kb.anyStatementMatching(subject)
+      : undefined
     if (
       subject.termType === 'Literal' &&
       subject.value.slice(0, 7) === 'http://'
@@ -69,10 +105,11 @@ export const defaultPane = {
       (subject.termType === 'NamedNode' &&
         kb.updater.editable($rdf.Util.uri.docpart(subject.uri), kb)) ||
       (subject.termType === 'BlankNode' &&
-        kb.anyStatementMatching(subject) &&
-        kb.anyStatementMatching(subject).why &&
-        kb.anyStatementMatching(subject).why.uri &&
-        kb.updater.editable(kb.anyStatementMatching(subject).why.uri))
+        subjectStatement &&
+        subjectStatement.why &&
+        'uri' in subjectStatement.why &&
+        typeof subjectStatement.why.uri === 'string' &&
+        kb.updater.editable(subjectStatement.why.uri))
       // check the document containing something about of the bnode @@ what about as object?
       /*  ! && HCIoptions["bottom insert highlights"].enabled  */
     ) {

@@ -128,7 +128,8 @@ function createIconElement (Pane: { icon: string }) {
 window.onload = async () => {
   console.log('document ready')
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
-  paneRegistry.register(require('contacts-pane'))
+  const contactsPane = await import('contacts-pane')
+  paneRegistry.register((contactsPane as any).default || contactsPane)
   await authSession.handleIncomingRedirect({
     restorePreviousSession: true
   })

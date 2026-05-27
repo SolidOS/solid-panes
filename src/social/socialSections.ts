@@ -1,15 +1,17 @@
-import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { DataBrowserContext } from 'pane-registry'
+import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { Statement, NamedNode } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
-import { appendProfileLinks, createEditProfileDetailsButton } from './editProfileDetails'
+import { appendProfileLinks } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
+import { FriendshipTriage } from './triage'
 
 export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
 
 export type HeaderControls = {
   canEdit: boolean,
-  viewerMode: ViewerMode
+  viewerMode: ViewerMode,
+  showAddFriendAction?: boolean
 }
 
 export type SocialHeaderElement = HTMLElement & {
@@ -45,7 +47,7 @@ export function createHeaderSection (
 ): SocialHeaderElement {
   const dom = context.dom
   const kb = context.session.store
-  const header = document.createElement('header') as SocialHeaderElement
+  const header = dom.createElement('header') as SocialHeaderElement
   header.className = 'social-pane__header'
   let headerControls = controls
 
@@ -56,19 +58,17 @@ export function createHeaderSection (
     const headerContent = dom.createElement('div')
     headerContent.className = 'social-pane__header-content'
 
+    const headerActions = dom.createElement('div')
+    headerActions.className = 'social-pane__header-actions profile__actions profile__heading-actions'
+
     if (headerControls.canEdit) {
-      header.appendChild(createEditProfileDetailsButton({
-        dom,
-        store: kb,
-        subject,
-        header,
-        onSaved: renderHeader
-      }))
-    } else if (headerControls.viewerMode === 'authenticated') {
+      // Hidden for now because the social pane header edit control does not match the new design.
+      // Revisit later if we decide to restore profile-link editing here.
+    } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
+      headerActions.classList.add('social-pane__header-actions--friend')
       const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
-      addToFriendsButton.classList.add('social-pane__friend-action', 'profile__action-button', 'profile__btn-friends', 'flex-center')
-      // header.appendChild(addToFriendsButton)
-      headerContent.appendChild(addToFriendsButton)
+      addToFriendsButton.classList.add('flex-center')
+      headerActions.appendChild(addToFriendsButton)
     }
 
     header.appendChild(headerContent)
@@ -78,18 +78,22 @@ export function createHeaderSection (
     headerContent.appendChild(headerMedia)
 
     if (profileData) {
-      headerMedia.appendChild(createImage(profileData.imageUrl, profileData.name))
+      headerMedia.appendChild(createImage(dom, profileData.imageUrl, profileData.name))
     }
 
     const headerDetails = dom.createElement('div')
     headerDetails.className = 'social-pane__header-details'
     headerContent.appendChild(headerDetails)
 
+    if (headerActions.childNodes.length > 0) {
+      headerContent.appendChild(headerActions)
+    }
+
     const headerSummary = dom.createElement('div')
     headerSummary.classList.add('social-pane__header-summary', 'flex-column')
     headerDetails.appendChild(headerSummary)
 
-    const name = profileData?.name || '???'
+    const name = profileData?.name || utils.label(subject)
     const h1 = dom.createElement('h1')
     h1.classList.add('social-pane__header-name')
     h1.appendChild(dom.createTextNode(name))
@@ -159,9 +163,9 @@ export function createHeaderSection (
   return header
 }
 
-function createImage (src: string | null | undefined, alt = ''): HTMLElement {
+function createImage (dom: HTMLDocument, src: string | null | undefined, alt = ''): HTMLElement {
   if (src) {
-    const img = document.createElement('img')
+    const img = dom.createElement('img')
     img.className = 'social-pane__header-hero'
     img.src = src
     img.alt = alt
@@ -171,13 +175,13 @@ function createImage (src: string | null | undefined, alt = ''): HTMLElement {
     return img
   }
 
-  const fallback = document.createElement('div')
+  const fallback = dom.createElement('div')
   fallback.className = 'social-pane__header-hero-alt flex-center'
   fallback.setAttribute('role', 'img')
   fallback.setAttribute('aria-label', alt)
   fallback.tabIndex = 0
 
-  const icon = document.createElement('span')
+  const icon = dom.createElement('span')
   icon.classList.add('social-pane__header-hero-icon', 'inline-flex-row')
   icon.innerHTML = personInCircleIconSvg
   fallback.appendChild(icon)
@@ -212,19 +216,20 @@ export function createMutualSection (options: {
     dom,
     subject,
     familiar,
+    me,
     meUri,
     incoming,
     outgoing,
+    editable,
+    profile,
+    knows,
     mutualConnections,
     link,
     text,
+    buildCheckboxForm,
     renderSupportingInfo,
     renderNameSuffix
   } = options
-
-  // Mutual confirm UI is intentionally hidden for now.
-  // The related options remain in the function contract so that block can be
-  // restored later without reshaping callers.
 
   let refreshMutualFriends = function () {}
 
@@ -259,15 +264,13 @@ export function createMutualSection (options: {
     if (!outgoing) {
       const line = youAndThem()
       line.appendChild(text(' have not said you know each other.'))
-    /* NOTE: hiding the outgoing-only unconfirmed message for now.
     } else {
-      relationshipSummary.appendChild(link(text('You'), meUri))
-      relationshipSummary.appendChild(text(' know '))
-      relationshipSummary.appendChild(link(text(familiar), subject.uri))
-      relationshipSummary.appendChild(text(' (unconfirmed)'))
-    */
+      const line = createRelationshipLine()
+      line.appendChild(link(text('You'), meUri))
+      line.appendChild(text(' know '))
+      line.appendChild(link(text(familiar), subject.uri))
+      line.appendChild(text(' (unconfirmed).'))
     }
-  /* NOTE: hiding the incoming-only unconfirmed message for now.
   } else if (!outgoing) {
     relationshipSummary.classList.add('social-mutual-summary--confirm')
 
@@ -277,16 +280,15 @@ export function createMutualSection (options: {
     incomingLine.appendChild(text(' knows '))
     incomingLine.appendChild(link(text('you'), meUri))
     incomingLine.appendChild(text(' (unconfirmed).'))
-  */
   } else {
     const line = youAndThem()
     line.appendChild(text(' say you know each other.'))
   }
 
-  /* NOTE: hiding the confirm-friend checkbox for now.
-  const shouldShowCheckboxPreview = editable || (Boolean(incoming) && !outgoing)
+  const shouldShowCheckboxPreview = Boolean(incoming) && !outgoing
   if (shouldShowCheckboxPreview) {
     const confirmLabel = dom.createElement('span')
+    confirmLabel.className = 'social-mutual-confirm-prompt'
     confirmLabel.appendChild(text('Confirm you know '))
     confirmLabel.appendChild(link(text(familiar), subject.uri))
 
@@ -303,7 +305,6 @@ export function createMutualSection (options: {
 
     mutualContent.appendChild(relationshipForm)
   }
-  */
 
   if (mutualConnections.length) {
     const mutualFriendsTable = mutualContent.appendChild(dom.createElement('table'))
@@ -364,6 +365,11 @@ export function createAllFriendsSection (options: {
     modify: !!editable,
     predicate: ns.foaf('knows'),
     noun: 'friend',
+    // Social pane already owns the async refresh cycle for friend data in
+    // socialPane.ts. Leave attachmentList's generic follow-up rerender disabled
+    // here or each fetched friend profile will trigger an extra whole-table refresh
+    // on top of the pane's own batched updates.
+    refreshOnDocumentLoad: false,
     renderSupportingInfo,
     renderNameSuffix
   })
@@ -376,15 +382,24 @@ export function createAllFriendsSection (options: {
   const friendsHeaderActions = dom.createElement('div')
   friendsHeaderActions.classList.add('social-friends-header-actions')
 
-  if (friendsListPromptCell instanceof HTMLElement) {
+  if (friendsListPromptCell instanceof HTMLTableCellElement) {
+    friendsListPromptCell.classList.add('social-friends-header-dropzone-cell')
+    const friendsHeaderDropzone = dom.createElement('table')
+    friendsHeaderDropzone.className = 'social-friends-header-dropzone'
+    friendsHeaderDropzone.setAttribute('role', 'presentation')
+    const friendsHeaderDropzoneBody = friendsHeaderDropzone.appendChild(dom.createElement('tbody'))
+    const friendsHeaderDropzoneRow = friendsHeaderDropzoneBody.appendChild(dom.createElement('tr'))
+    friendsHeaderDropzoneRow.appendChild(friendsListPromptCell)
+    friendsHeaderActions.appendChild(friendsHeaderDropzone)
+  } else if (friendsListPromptCell instanceof HTMLElement) {
     while (friendsListPromptCell.firstChild) {
       friendsHeaderActions.appendChild(friendsListPromptCell.firstChild)
     }
     friendsListPromptCell.remove()
   }
 
-  if (friendsHeaderActions.childNodes.length > 0) {
-    const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
+  const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
+  if (editable && friendDropButtons.length > 0) {
     friendDropButtons.forEach((button) => {
       button.setAttribute('title', 'Drop friend here')
       button.setAttribute('aria-label', 'Drop friend here')
@@ -415,4 +430,104 @@ export function createAllFriendsSection (options: {
   }
 
   return { section: allFriends, mainTable, friendsList }
+}
+
+export function createRequestsSection (options: {
+  dom: HTMLDocument,
+  triage: FriendshipTriage,
+  renderSupportingInfo: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null,
+  renderNameSuffix: (target: NamedNode, renderDom: HTMLDocument) => HTMLElement | null
+}): { section: HTMLElement, refreshRequests: (triage: FriendshipTriage) => void } {
+  const { dom, triage, renderSupportingInfo, renderNameSuffix } = options
+
+  const requestsSection = dom.createElement('section')
+  requestsSection.className = 'social-pane__requests social-primary__panel'
+  requestsSection.id = 'social-panel-requests'
+  requestsSection.setAttribute('role', 'tabpanel')
+  requestsSection.setAttribute('aria-labelledby', 'social-tab-requests')
+
+  const requestsContent = requestsSection.appendChild(dom.createElement('div'))
+  requestsContent.classList.add('social-main', 'social-main--requests', 'flex-column')
+
+  const note = requestsContent.appendChild(dom.createElement('p'))
+  note.className = 'social-requests__note'
+  note.textContent = 'Best effort preview: this view only reflects profile documents that are currently loaded. A dedicated inbox would still be needed for complete request discovery.'
+
+  const createRequestGroup = function (title: string, description: string, emptyText: string) {
+    const group = requestsContent.appendChild(dom.createElement('section'))
+    group.classList.add('social-requests__group', 'flex-column')
+
+    const header = group.appendChild(dom.createElement('div'))
+    header.className = 'social-requests__group-header'
+
+    const heading = header.appendChild(dom.createElement('h2'))
+    heading.className = 'social-requests__group-title'
+    heading.textContent = title
+
+    const blurb = header.appendChild(dom.createElement('p'))
+    blurb.className = 'social-requests__group-description'
+    blurb.textContent = description
+
+    const empty = group.appendChild(dom.createElement('p'))
+    empty.className = 'social-requests__empty'
+    empty.textContent = emptyText
+
+    const table = group.appendChild(dom.createElement('table'))
+    table.className = 'social-main social-friends-list social-friends-grid social-requests__table'
+
+    return { empty, table }
+  }
+
+  const incomingGroup = createRequestGroup(
+    'Incoming requests',
+    'People who say they know this profile, but have not been confirmed yet.',
+    'No incoming requests are visible from the currently loaded data.'
+  )
+  const pendingGroup = createRequestGroup(
+    'Awaiting confirmation',
+    'People this profile knows who have not linked back yet.',
+    'Nothing is waiting for confirmation right now.'
+  )
+
+  const createPersonRow = function (target: NamedNode) {
+    return widgets.personTR(dom, ns.foaf('knows'), target, {
+      renderSupportingInfo,
+      renderNameSuffix
+    })
+  }
+
+  const sortNodes = function (nodes: NamedNode[]) {
+    return [...nodes].sort((left, right) => {
+      const leftLabel = utils.label(left) || left.value
+      const rightLabel = utils.label(right) || right.value
+      return leftLabel.localeCompare(rightLabel)
+    })
+  }
+
+  const syncRequestGroup = function (
+    group: { empty: HTMLElement, table: HTMLTableElement },
+    nodes: NamedNode[]
+  ) {
+    const sortedNodes = sortNodes(nodes)
+    group.empty.hidden = sortedNodes.length > 0
+    group.table.hidden = sortedNodes.length === 0
+
+    utils.syncTableToArray(
+      group.table,
+      sortedNodes,
+      createPersonRow,
+      function (_row, thing) {
+        return createPersonRow(thing)
+      }
+    )
+  }
+
+  const refreshRequests = function (nextTriage: FriendshipTriage) {
+    syncRequestGroup(incomingGroup, nextTriage.requests)
+    syncRequestGroup(pendingGroup, nextTriage.unconfirmed)
+  }
+
+  refreshRequests(triage)
+
+  return { section: requestsSection, refreshRequests }
 }

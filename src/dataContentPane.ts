@@ -11,8 +11,34 @@
 
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
+import DOMPurify from 'dompurify'
+import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
+import type {
+  BlankNode,
+  Formula,
+  NamedNode,
+  Statement
+} from 'rdflib'
+import './dataContentPane.css'
 
 const ns = UI.ns
+
+type SubjectTerm = NamedNode | BlankNode
+type ObjectTerm = Statement['object'] | Formula
+
+type RootSubjectsResult = {
+  roots: SubjectTerm[]
+  subjects: Record<string, Statement[]>
+  loopBreakers?: Record<string, unknown>
+}
+
+type DataContentPaneLike = {
+  statementsAsTables: (
+    sts: Statement[],
+    context: DataBrowserContext,
+    initialRoots?: SubjectTerm[]
+  ) => HTMLTableElement
+}
 
 export const dataContentPane = {
   icon: UI.icons.originalIconBase + 'rdf_flyer.24.gif',
@@ -21,7 +47,7 @@ export const dataContentPane = {
 
   audience: [ns.solid('Developer')],
 
-  label: function (subject, context) {
+  label: function (subject: NamedNode, context: DataBrowserContext) {
     if (
       'http://www.w3.org/2007/ont/link#ProtocolEvent' in
       context.session.store.findTypeURIs(subject)
@@ -42,44 +68,52 @@ export const dataContentPane = {
       return store.whether(subject, UI.ns.rdf('type'), UI.ns.link('RDFDocument'))
   },
 */
-  statementsAsTables: function statementsAsTables (sts, context, initialRoots) {
+  statementsAsTables: function statementsAsTables (
+    sts: Statement[],
+    context: DataBrowserContext,
+    initialRoots?: SubjectTerm[]
+  ): HTMLTableElement {
     const myDocument = context.dom
     // const outliner = context.getOutliner(myDocument)
     const rep = myDocument.createElement('table')
+    rep.classList.add('data-content-pane__table', 'data-content-pane__table--root')
+    const isMobileLayout = context.environment?.layout === 'mobile'
     const sz = $rdf.Serializer(context.session.store)
-    const res = sz.rootSubjects(sts)
+    const res = sz.rootSubjects(sts) as RootSubjectsResult
     let roots = res.roots
     const subjects = res.subjects
-    const loopBreakers = res.loopBreakers
+    const loopBreakers = res.loopBreakers ?? {}
     for (const x in loopBreakers) {
       console.log('\tdataContentPane: loopbreaker:' + x)
     }
-    const doneBnodes = {} // For preventing looping
-    const referencedBnodes = {} // Bnodes which need to be named alas
+    const doneBnodes: Record<string, true | HTMLTableElement> = {}
+    const referencedBnodes: Record<string, true> = {}
 
-    // The property tree for a single subject or anonymous node
-    function propertyTree (subject) {
-      // print('Proprty tree for '+subject)
+    function propertyTree (
+      subject: SubjectTerm,
+      nestingLevel = 0
+    ): HTMLTableElement {
       const rep = myDocument.createElement('table')
-      let lastPred = null
-      const sts = subjects[sz.toStr(subject)] // relevant statements
-      if (!sts) {
-        // No statements in tree
-        rep.appendChild(myDocument.createTextNode('...')) // just empty bnode as object
+      rep.classList.add('data-content-pane__table', 'data-content-pane__table--property')
+      let lastPred: string | null = null
+      const subjectStatements = subjects[sz.toStr(subject)]
+      if (!subjectStatements) {
+        rep.appendChild(myDocument.createTextNode('...'))
         return rep
       }
-      sts.sort()
+      subjectStatements.sort()
       let same = 0
-      let predicateTD // The cell which holds the predicate
-      for (let i = 0; i < sts.length; i++) {
-        const st = sts[i]
+      let predicateTD: HTMLTableCellElement | undefined
+      for (let i = 0; i < subjectStatements.length; i++) {
+        const st = subjectStatements[i]
         const tr = myDocument.createElement('tr')
-        if (st.predicate.uri !== lastPred) {
-          if (lastPred && same > 1) {
-            predicateTD.setAttribute('rowspan', '' + same)
+        tr.classList.add('data-content-pane__row--top-aligned', 'data-content-pane__row--property')
+        if (st.predicate.uri !== lastPred || isMobileLayout) {
+          if (!isMobileLayout && lastPred && same > 1) {
+            predicateTD?.setAttribute('rowspan', '' + same)
           }
           predicateTD = myDocument.createElement('td')
-          predicateTD.setAttribute('class', 'pred')
+          predicateTD.setAttribute('class', 'data-content-pane__predicate-cell')
           const anchor = myDocument.createElement('a')
           anchor.setAttribute('href', st.predicate.uri)
           anchor.addEventListener(
@@ -99,17 +133,20 @@ export const dataContentPane = {
         }
         same++
         const objectTD = myDocument.createElement('td')
-        objectTD.appendChild(objectTree(st.object))
+        objectTD.classList.add('data-content-pane__value-cell')
+        objectTD.appendChild(objectTree(st.object, nestingLevel + 1))
         tr.appendChild(objectTD)
         rep.appendChild(tr)
       }
-      if (lastPred && same > 1) predicateTD.setAttribute('rowspan', '' + same)
+      if (!isMobileLayout && lastPred && same > 1) {
+        predicateTD?.setAttribute('rowspan', '' + same)
+      }
       return rep
     }
 
-    // Convert a set of statements into a nested tree of tables
-    function objectTree (obj) {
-      let res, anchor
+    function objectTree (obj: ObjectTerm, nestingLevel = 0): Node {
+      let res: HTMLElement | HTMLTableElement | Text
+      let anchor: HTMLAnchorElement
       switch (obj.termType) {
         case 'NamedNode':
           anchor = myDocument.createElement('a')
@@ -125,7 +162,7 @@ export const dataContentPane = {
         case 'Literal':
           if (!obj.datatype || !obj.datatype.uri) {
             res = myDocument.createElement('div')
-            res.setAttribute('style', 'white-space: pre-wrap;')
+            res.classList.add('data-content-pane__literal')
             res.textContent = obj.value
             return res
           } else if (
@@ -133,65 +170,59 @@ export const dataContentPane = {
             'http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral'
           ) {
             res = myDocument.createElement('div')
-            res.setAttribute('class', 'embeddedXHTML')
-            res.innerHTML = obj.value // Try that  @@@ beware embedded dangerous code
+            res.classList.add('embeddedXHTML')
+            res.innerHTML = DOMPurify.sanitize(obj.value)
             return res
           }
-          return myDocument.createTextNode(obj.value) // placeholder - could be smarter,
+          return myDocument.createTextNode(obj.value)
 
         case 'BlankNode': {
           if (obj.toNT() in doneBnodes) {
-            // Break infinite recursion
             referencedBnodes[obj.toNT()] = true
-            const anchor = myDocument.createElement('a')
-            anchor.setAttribute('href', '#' + obj.toNT().slice(2))
-            anchor.setAttribute('class', 'bnodeRef')
-            anchor.textContent = '*' + obj.toNT().slice(3)
-            return anchor
+            const referenceAnchor = myDocument.createElement('a')
+            referenceAnchor.setAttribute('href', '#' + obj.toNT().slice(2))
+            referenceAnchor.setAttribute('class', 'bnodeRef')
+            referenceAnchor.textContent = '*' + obj.toNT().slice(3)
+            return referenceAnchor
           }
-          doneBnodes[obj.toNT()] = true // Flag to prevent infinite recursion in propertyTree
-          const newTable = propertyTree(obj)
-          doneBnodes[obj.toNT()] = newTable // Track where we mentioned it first
-          if (
-            UI.utils.ancestor(newTable, 'TABLE') &&
-            UI.utils.ancestor(newTable, 'TABLE').style.backgroundColor ===
-            'white'
-          ) {
-            newTable.style.backgroundColor = '#eee'
+          doneBnodes[obj.toNT()] = true
+          const newTable = propertyTree(obj, nestingLevel)
+          doneBnodes[obj.toNT()] = newTable
+          if (nestingLevel % 2 === 1) {
+            newTable.classList.add('data-content-pane__nested-table--light')
           } else {
-            newTable.style.backgroundColor = 'white'
+            newTable.classList.add('data-content-pane__nested-table--dark')
           }
           return newTable
         }
+
         case 'Collection':
           res = myDocument.createElement('table')
           res.setAttribute('class', 'collectionAsTables')
           for (let i = 0; i < obj.elements.length; i++) {
             const tr = myDocument.createElement('tr')
             res.appendChild(tr)
-            tr.appendChild(objectTree(obj.elements[i]))
+            tr.appendChild(objectTree(obj.elements[i] as ObjectTerm, nestingLevel + 1))
           }
           return res
+
         case 'Graph':
-          res = context.session.paneRegistry
-            .byName('dataContents')
+          res = (context.session.paneRegistry
+            .byName('dataContents') as DataContentPaneLike)
             .statementsAsTables(obj.statements, context)
-          res.setAttribute('class', 'nestedFormula')
+          res.setAttribute('class', 'data-content-pane__nested-formula')
           return res
+
         case 'Variable':
-          res = myDocument.createTextNode('?' + obj.uri)
-          return res
+          return myDocument.createTextNode('?' + obj.uri)
       }
       throw new Error('Unhandled node type: ' + obj.termType)
     }
 
-    // roots.sort()
-
     if (initialRoots) {
       roots = initialRoots.concat(
-        roots.filter(function (x) {
+        roots.filter(function (x: SubjectTerm) {
           for (let i = 0; i < initialRoots.length; i++) {
-            // Max 2
             if (x.sameTerm(initialRoots[i])) return false
           }
           return true
@@ -200,24 +231,28 @@ export const dataContentPane = {
     }
     for (let i = 0; i < roots.length; i++) {
       const tr = myDocument.createElement('tr')
-      tr.setAttribute('style', `background-color: ${i % 2 === 0 ? '#f0f0f0' : 'white'};`)
+      tr.classList.add(
+        i % 2 === 0 ? 'data-content-pane__row--even' : 'data-content-pane__row--odd',
+        'data-content-pane__row--root'
+      )
       rep.appendChild(tr)
       const subjectTD = myDocument.createElement('td')
+      subjectTD.classList.add('data-content-pane__subject-cell')
       tr.appendChild(subjectTD)
       const TDTree = myDocument.createElement('td')
+      TDTree.classList.add('data-content-pane__details-cell')
       tr.appendChild(TDTree)
       const root = roots[i]
       if (root.termType === 'BlankNode') {
-        subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root))) // Don't recurse!
+        subjectTD.appendChild(myDocument.createTextNode(UI.utils.label(root)))
       } else {
-        subjectTD.appendChild(objectTree(root)) // won't have tree
+        subjectTD.appendChild(objectTree(root, 0))
       }
-      TDTree.appendChild(propertyTree(root))
+      TDTree.appendChild(propertyTree(root, 0))
     }
     for (const bNT in referencedBnodes) {
-      // Add number to refer to
       const table = doneBnodes[bNT]
-      // let tr = myDocument.createElement('tr')
+      if (table === true) continue
       const anchor = myDocument.createElement('a')
       anchor.setAttribute('id', bNT.slice(2))
       anchor.setAttribute('class', 'bnodeDef')
@@ -225,47 +260,33 @@ export const dataContentPane = {
       table.insertBefore(anchor, table.firstChild)
     }
     return rep
-  }, // statementsAsTables
-  // View the data in a file in user-friendly way
-  render: function (subject, context) {
+  },
+
+  render: function (
+    subject: NamedNode,
+    context: DataBrowserContext
+  ): HTMLDivElement {
     const myDocument = context.dom
 
-    function alternativeRendering () {
-      const sz = $rdf.Serializer(context.session.store)
-      const res = sz.rootSubjects(sts)
-      const roots = res.roots
-      const p = {}
-      p.render = function (s2) {
-        const div = myDocument.createElement('div')
-        div.setAttribute('class', 'withinDocumentPane')
-        const plist = kb.statementsMatching(s2, undefined, undefined, subject)
-        outliner.appendPropertyTRs(div, plist, false, function (
-          _pred,
-          _inverse
-        ) {
-          return true
-        })
-        return div
-      }
-      for (let i = 0; i < roots.length; i++) {
-        const tr = myDocument.createElement('TR')
-        const root = roots[i]
-        tr.style.verticalAlign = 'top'
-        const td = outliner.outlineObjectTD(root, undefined, tr)
-        tr.appendChild(td)
-        div.appendChild(tr)
-        outliner.outlineExpand(td, root, { pane: p })
-      }
+    function applyEnvironmentAttributes (element: HTMLDivElement): void {
+      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
+      element.dataset.layout = environment.layout ?? 'desktop'
+      element.dataset.theme = environment.theme ?? 'light'
+      element.dataset.inputMode = environment.inputMode ?? 'pointer'
     }
 
     function mainRendering () {
-      const initialRoots = [] // Ordering: start with stuff about this doc
+      const kb = context.session.store
+      const sts = kb.statementsMatching(undefined, undefined, undefined, subject)
+      const initialRoots: SubjectTerm[] = []
       if (kb.holds(subject, undefined, undefined, subject)) {
         initialRoots.push(subject)
       }
-      // Then about the primary topic of the document if any
       const ps = kb.any(subject, UI.ns.foaf('primaryTopic'), undefined, subject)
-      if (ps) initialRoots.push(ps)
+      if (ps && (ps.termType === 'NamedNode' || ps.termType === 'BlankNode')) {
+        initialRoots.push(ps as SubjectTerm)
+      }
+
       div.appendChild(
         context.session.paneRegistry
           .byName('dataContents')
@@ -273,21 +294,11 @@ export const dataContentPane = {
       )
     }
 
-    const outliner = context.getOutliner(myDocument)
-    const kb = context.session.store
     const div = myDocument.createElement('div')
-    div.setAttribute('class', 'dataContentPane')
-    // Because of smushing etc, this will not be a copy of the original source
-    // We could instead either fetch and re-parse the source,
-    // or we could keep all the pre-smushed triples.
-    const sts = kb.statementsMatching(undefined, undefined, undefined, subject) // @@ slow with current store!
+    div.classList.add('dataContentPane', 'data-content-pane')
+    applyEnvironmentAttributes(div)
 
-    // eslint-disable-next-line no-constant-condition
-    if (false) { // keep code
-      alternativeRendering()
-    } else {
-      mainRendering()
-    }
+    mainRendering()
     return div
   }
 }

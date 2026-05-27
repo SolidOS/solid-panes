@@ -345,10 +345,6 @@ div.exceptionPane pre {
   display: none;
 }
 
-.active {
-  /* display: visible; */
-}
-
 .submitRow {
   clear: both;
   height: 5em;
@@ -367,124 +363,9 @@ div.exceptionPane pre {
   display: inline;
 }
 
-/******************* CV Pane *****************/
-
-.CVclass {
-  background-color: LightSkyBlue;
-}
-
-/******************* Data Content Pane *****************/
-
-div.dataContentPane {
-  border-top: solid 1px black;
-  border-left: solid 1px black;
-  border-bottom: solid 1px #777;
-  border-right: solid 1px #777;
-  padding: 0.5em; /* color: #404; */
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
-}
-
-.nestedFormula {
-  border-top: solid 1px black;
-  border-left: solid 1px black;
-  border-bottom: solid 1px #777;
-  border-right: solid 1px #777;
-  padding: 0.5em;
-  border-radius: 0.5em;
-}
-
-div.dataContentPane td {
-  padding-left: 0.2em;
-  padding-top: 0.1em;
-  padding-right: 0.2em;
-  padding-bottom: 0.05em;
-  /*	        vertical-align: middle; /*@@ Lalana's request*/
-  vertical-align: top; /*@@ Tims's request*/
-  /* With middel, you can't tell what is with what */
-  /* background-color: white; */
-}
-
-div.dataContentPane tr {
-  margin-bottom: 0.6em;
-  padding-top: 1em;
-  padding-bottom: 1em;
-}
-
-.dataContentPane a {
-  color: #3b5998;
-  text-decoration: none;
-  font-weight: bold;
-}
-.dataContentPane a:link {
-  color: #3b5998;
-  text-decoration: none;
-  font-weight: bold;
-}
-.dataContentPane a:visited {
-  color: #3b5998;
-  text-decoration: none;
-  font-weight: bold;
-}
-.dataContentPane a:hover {
-  color: #3b5998;
-  text-decoration: underline;
-  font-weight: bold;
-}
-.dataContentPane a:active {
-  color: #888;
-  text-decoration: none;
-}
-
-.dataContentPane.embeddedText {
-  white-space: pre-wrap;
-}
-.dataContentPane.embeddedXHTML {
-}
-
-/* div.dataContentPane a { text-decoration: none; color: #006} /* Only very slightly blue */
-div.dataContentPane td.pred {
-  min-width: 12em;
-} /* Keep aligned with others better */
-div.dataContentPane td.pred a {
-  color: #444;
-} /* Greyish as form field names have less info value */
-
-/* .collectionAsTables  {border-right: green 1px; margin: 0.2em;} */
-
-div.n3Pane {
-  padding: 1em;
-  border-top: solid 1px black;
-  border-left: solid 1px black;
-  border-bottom: solid 1px #777;
-  border-right: solid 1px #777;
-  color: #004;
-}
-
 .imageView {
   border: 1em white;
   margin: 1em;
-}
-
-.n3Pane pre {
-  font-size: 120%;
-}
-div.n3Pane {
-}
-
-.RDFXMLPane pre {
-  font-size: 120%;
-}
-div.RDFXMLPane {
-}
-
-div.RDFXMLPane {
-  padding: 1em;
-  border-top: solid 2px black;
-  border-left: solid 2px black;
-  border-bottom: solid 2px #777;
-  border-right: solid 2px #777;
-  color: #440;
 }
 
 /* Generic things useful anywhere */
@@ -893,17 +774,6 @@ td.undetermined table {
   margin: 0.2em;
 }
 
-div.bottom-border {
-  border: 0.2em solid transparent;
-  width: 100%;
-}
-
-div.bottom-border-active {
-  cursor: copy;
-  border: 0.2em solid;
-  border-color: rgb(100%, 65%, 0%);
-}
-
 /* The thing below was for the kenny's orange bar*/
 /* @@@ This is not specific enough
 td{
@@ -1194,30 +1064,3 @@ Styles for tableViewPane
 End of styles for tableViewPane
 */
 
-/* Styles for   FORM PANE
-**
-** Colors from data cotent pane
-*/
-
-.formPane a {
-  color: #3b5998;
-  text-decoration: none;
-}
-.formPane a:link {
-  color: #3b5998;
-  text-decoration: none;
-}
-.formPane a:visited {
-  color: #3b5998;
-  text-decoration: none;
-}
-.formPane a:hover {
-  color: #3b5998;
-  font-weight: bold;
-} /* was  text-decoration: underline; */
-.formPane a:active {
-  color: #888;
-  text-decoration: none;
-}
-
-/* ends */

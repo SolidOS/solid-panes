@@ -57,8 +57,18 @@
     ] /* List of folders to include type definitions from. */,
     // "types": [],                           /* Type declaration files to be included in compilation. */
     // "allowSyntheticDefaultImports": true,  /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */
-    "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
-    // "preserveSymlinks": true,              /* Do not resolve the real path of symlinks. */
+    "esModuleInterop": true, /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
+    "preserveSymlinks": true, /* Keep symlinks unresolved to avoid duplicate rdflib type identities in local linked dev. */
+    /* baseUrl + paths below are for local integrated dev only.
+       They force a single rdflib type identity when solid-panes is linked to local solid-logic/solid-ui.
+       Both options are deprecated in TS6+ but remain functional until TS7.
+       See solid-ui README: Local Integrated Development for context. */
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "rdflib": ["node_modules/rdflib"],
+      "rdflib/*": ["node_modules/rdflib/*"]
+    }
 
     /* Source Map Options */
     // "sourceRoot": "",                      /* Specify the location where debugger should locate TypeScript files instead of source locations. */
