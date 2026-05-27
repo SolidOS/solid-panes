@@ -72,9 +72,9 @@
     "meeting-pane": "^3.0.2",
     "mime-types": "^3.0.2",
     "pane-registry": "^3.1.1",
-    "profile-pane": "^3.2.1",
+    "profile-pane": "^3.2.2",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "^3.1.0",
+    "solid-ui": "^3.1.1",
     "source-pane": "^3.1.0"
   },
   "overrides": {
