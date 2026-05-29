@@ -59,7 +59,11 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
   updateCollapseButtonPosition(navMenu, collapseBtn)
 }
 
-const isLoggedIn = (): boolean => Boolean(authSession?.isActive)
+// Compatibility: solid-logic Session shape differs across stacks (info.isLoggedIn vs isActive/webId).
+const isLoggedIn = (): boolean => {
+  const sessionAny = authSession as any
+  return Boolean(sessionAny?.info?.isLoggedIn ?? sessionAny?.isActive ?? sessionAny?.webId)
+}
 
 const setFooterVisibility = (loggedIn: boolean): void => {
   const footer = document.querySelector('solid-ui-footer') as HTMLElement | null

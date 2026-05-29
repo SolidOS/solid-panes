@@ -38,6 +38,33 @@ export const HELP_MENU_LIST = [
 ]
 
 const HEADER_MOBILE_STYLE_ID = 'solid-ui-header-mobile-style'
+let authRefreshInFlight: Promise<void> | null = null
+
+async function ensureAuthUserResolved (): Promise<void> {
+  if (authn.currentUser()) return
+  if (authRefreshInFlight) {
+    await authRefreshInFlight
+    return
+  }
+
+  authRefreshInFlight = (async () => {
+    try {
+      await authn.checkUser()
+      // Some auth stacks resolve session state asynchronously after first check.
+      if (!authn.currentUser()) {
+        await authn.checkUser()
+      }
+    } catch (_err) {
+      // Keep header rendering resilient when auth refresh fails.
+    }
+  })()
+
+  try {
+    await authRefreshInFlight
+  } finally {
+    authRefreshInFlight = null
+  }
+}
 
 type ManagedHeader = Header & {
   __solidPanesListenersAttached?: boolean
@@ -139,6 +166,7 @@ function attachHeaderListeners (header: ManagedHeader) {
 
 export async function refreshHeader (outliner: OutlineManager, headerElement?: Header) {
   ensureMobileHeaderStyles()
+  await ensureAuthUserResolved()
   const headerOptions = setHeaderOptions(outliner)
   const header = headerElement || document.querySelector('solid-ui-header') as Header | null
   if (!header) return null
