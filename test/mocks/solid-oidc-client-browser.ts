@@ -55,3 +55,5 @@ export class Session {
     return globalThis.fetch(input, init)
   }
 }
+
+export class SessionCore extends Session {}

@@ -30,6 +30,8 @@ export default {
     '\\.(png|jpe?g|gif|webp|avif)$': '<rootDir>/test/__mocks__/fileMock.js',
     '\\.css$': '<rootDir>/test/__mocks__/styleMock.js',
     ...(useLocalSolidLogic ? { '^solid-logic$': localSolidLogicIndex } : {}),
+    '^@uvdsl/solid-oidc-client-browser$': '<rootDir>/test/mocks/solid-oidc-client-browser.ts',
+    '^@uvdsl/solid-oidc-client-browser/core$': '<rootDir>/test/mocks/solid-oidc-client-browser.ts',
     '^solid-oidc-client-browser$': '<rootDir>/test/mocks/solid-oidc-client-browser.ts'
   },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
