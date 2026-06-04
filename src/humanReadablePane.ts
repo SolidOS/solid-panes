@@ -3,7 +3,8 @@
  **  This outline pane contains the document contents for an HTML document
  **  This is for peeking at a page, because the user might not want to leave the data browser.
  */
-import { icons, ns } from 'solid-ui'
+import { ns } from 'solid-ui'
+import { lucideIcons } from './icons/lucide'
 import { Util } from 'rdflib'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -47,7 +48,14 @@ const humanReadablePane: HumanReadablePaneDefinition = {
   icon: function (subject: NamedNode, context: DataBrowserContext): HumanReadableIcon {
     // Markdown files detected by extension
     if (subject && isMarkdownFile(subject.uri)) {
-      return icons.iconBase + 'markdown.svg'
+      // lucide file-text — https://lucide.dev/icons/file-text (ISC license)
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z"/>' +
+          '<path d="M14 2v5a1 1 0 0 0 1 1h5"/>' +
+          '<path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/>' +
+          '</svg>'
+      )
     }
 
     // Dokieli files detected by content check
@@ -57,9 +65,9 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       // Check cache from previous detection
       const cachedResult = dokieliCache.get(subject.uri)
       if (cachedResult === 'dokieli') {
-        return icons.iconBase + 'dokieli-logo.png'
+        return lucideIcons.filePen /* was dokieli-logo.png */
       } else if (cachedResult === 'html') {
-        return icons.originalIconBase + 'tango/22-text-x-generic.png'
+        return lucideIcons.info /* was tango/22-text-x-generic.png — generic HTML doc */
       }
 
       // Check if content already fetched (synchronous)
@@ -70,8 +78,8 @@ const humanReadablePane: HumanReadablePaneDefinition = {
                          text.includes('dokieli.css')
         dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
         return isDokieli
-          ? icons.iconBase + 'dokieli-logo.png'
-          : icons.originalIconBase + 'tango/22-text-x-generic.png'
+          ? lucideIcons.filePen /* was dokieli-logo.png */
+          : lucideIcons.info /* was tango/22-text-x-generic.png — generic HTML doc */
       }
 
       // Content not yet fetched - return a promise (async detection)
@@ -86,18 +94,18 @@ const humanReadablePane: HumanReadablePaneDefinition = {
                              text.includes('dokieli.css')
             dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
             return isDokieli
-              ? icons.iconBase + 'dokieli-logo.png'
-              : icons.originalIconBase + 'tango/22-text-x-generic.png'
+              ? lucideIcons.filePen /* was dokieli-logo.png */
+              : lucideIcons.info /* was tango/22-text-x-generic.png — generic HTML doc */
           })
           .catch(() => {
             dokieliCache.set(subject.uri, 'html')
-            return icons.originalIconBase + 'tango/22-text-x-generic.png'
+            return lucideIcons.info /* was tango/22-text-x-generic.png — generic HTML doc */
           })
       }
     }
 
     // Default for all other human-readable content
-    return icons.originalIconBase + 'tango/22-text-x-generic.png'
+    return lucideIcons.info /* was tango/22-text-x-generic.png — generic HTML doc */
   },
 
   name: 'humanReadable',
