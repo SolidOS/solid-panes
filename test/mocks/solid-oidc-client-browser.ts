@@ -45,6 +45,7 @@ export class Session {
     this.info = { isLoggedIn: false }
     this.webId = undefined
     this.isActive = false
+    this.events.emit('logout')
   }
 
   fetch (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
