@@ -145,7 +145,11 @@ window.onload = async () => {
     
     const loginBanner = document.getElementById('loginBanner');
     if (loginBanner) {
-      loginBanner.innerHTML = `Logged in as ${loggedWebId} <button onclick="logout()">Log out</button>`;
+      loginBanner.textContent = `Logged in as ${loggedWebId ?? ''} `;
+      const logoutButton = document.createElement('button');
+      logoutButton.textContent = 'Log out';
+      logoutButton.onclick = () => window.logout();
+      loginBanner.appendChild(logoutButton);
     }
   }
   addLayoutButtons()
