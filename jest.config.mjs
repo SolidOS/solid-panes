@@ -9,9 +9,9 @@ export default {
   },
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   transform: {
-    '^.+\\.[tj]sx?$': ['babel-jest', { configFile: './babel.config.mjs' }],
+    '^.+\\.(?:[tj]sx?|mjs)$': ['babel-jest', { configFile: './babel.config.mjs' }],
   },
-  transformIgnorePatterns: ['/node_modules/(?!lit-html|uuid|@noble|@uvdsl/solid-oidc-client-browser).+\\.js'],
+  transformIgnorePatterns: ['/node_modules/(?!(@lit|lit|lit-html|lit-element|uuid|@noble|@uvdsl/solid-oidc-client-browser)).+\\.js$'],
   moduleNameMapper: {
     '^SolidLogic$': 'solid-logic',
     '^UI$': 'solid-ui',
