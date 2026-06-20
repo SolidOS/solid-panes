@@ -11,7 +11,7 @@ export default {
   transform: {
     '^.+\\.(?:[tj]sx?|mjs)$': ['babel-jest', { configFile: './babel.config.mjs' }],
   },
-  transformIgnorePatterns: ['/node_modules/(?!(@lit|lit|lit-html|lit-element|uuid|@noble|@uvdsl/solid-oidc-client-browser)).+\\.js$'],
+  transformIgnorePatterns: ['/node_modules/(?!(solid-ui/node_modules/|@lit|lit|lit-html|lit-element|uuid|@noble|@uvdsl/solid-oidc-client-browser)).+\\.js$'],
   moduleNameMapper: {
     '^SolidLogic$': 'solid-logic',
     '^UI$': 'solid-ui',
