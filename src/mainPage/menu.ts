@@ -59,7 +59,20 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
   updateCollapseButtonPosition(navMenu, collapseBtn)
 }
 
-const isLoggedIn = (): boolean => Boolean(authSession?.info?.isLoggedIn)
+const refreshAuthStateFromSession = async (): Promise<boolean> => {
+  try {
+    await authn.checkUser()
+    if (!authn.currentUser()) {
+      await authn.checkUser()
+    }
+  } catch (error) {
+    // Keep the menu responsive even if auth refresh is transiently unavailable.
+  }
+
+  return Boolean(authn.currentUser())
+}
+
+const isLoggedIn = (): boolean => Boolean(authn.currentUser())
 
 const setFooterVisibility = (loggedIn: boolean): void => {
   const footer = document.querySelector('solid-ui-footer') as HTMLElement | null
@@ -343,6 +356,7 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
   const menuToggle = document.getElementById('MenuToggleBtn') as HTMLElement | null
   const menuOverlay = document.getElementById('MenuOverlay') as HTMLElement | null
   const navMenuContent = document.getElementById('NavMenuContent') as HTMLElement | null
+  await refreshAuthStateFromSession()
 
   const closeMobileMenu = () => {
     if (!navMenu || !menuToggle || !menuOverlay) return
@@ -446,19 +460,25 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
       }
 
       authSession.events.on('login', () => {
-        updateMenuVisibility()
-        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
-        refreshMenuItems()
+        void refreshAuthStateFromSession().then(() => {
+          updateMenuVisibility()
+          refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+          void refreshMenuItems()
+        })
       })
       authSession.events.on('logout', () => {
-        updateMenuVisibility()
-        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
-        refreshMenuItems()
+        void refreshAuthStateFromSession().then(() => {
+          updateMenuVisibility()
+          refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+          void refreshMenuItems()
+        })
       })
       authSession.events.on('sessionRestore', () => {
-        updateMenuVisibility()
-        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
-        refreshMenuItems()
+        void refreshAuthStateFromSession().then(() => {
+          updateMenuVisibility()
+          refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+          void refreshMenuItems()
+        })
       })
       navMenuContent.dataset.authEventsBound = 'true'
     }
