@@ -61,15 +61,12 @@ const applyMenuCollapsedState = (navMenu: HTMLElement | null): void => {
 
 const refreshAuthStateFromSession = async (): Promise<boolean> => {
   try {
-    await authn.checkUser()
-    if (!authn.currentUser()) {
-      await authn.checkUser()
-    }
-  } catch (error) {
+    const webId = await authn.checkUser()
+    return Boolean(webId || authn.currentUser())
+  } catch {
     // Keep the menu responsive even if auth refresh is transiently unavailable.
+    return Boolean(authn.currentUser())
   }
-
-  return Boolean(authn.currentUser())
 }
 
 const isLoggedIn = (): boolean => Boolean(authn.currentUser())
