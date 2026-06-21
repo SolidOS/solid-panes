@@ -456,26 +456,23 @@ export const createLeftSideMenu = async (subject: NamedNode, outliner: OutlineMa
         await renderMenuItems(subject, outliner, navMenuContent)
       }
 
-      authSession.events.on('login', () => {
-        void refreshAuthStateFromSession().then(() => {
-          updateMenuVisibility()
-          refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
-          void refreshMenuItems()
-        })
+      authSession.events.on('login', async () => {
+        await refreshAuthStateFromSession()
+        updateMenuVisibility()
+        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+        await refreshMenuItems()
       })
-      authSession.events.on('logout', () => {
-        void refreshAuthStateFromSession().then(() => {
-          updateMenuVisibility()
-          refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
-          void refreshMenuItems()
-        })
+      authSession.events.on('logout', async () => {
+        await refreshAuthStateFromSession()
+        updateMenuVisibility()
+        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+        await refreshMenuItems()
       })
-      authSession.events.on('sessionRestore', () => {
-        void refreshAuthStateFromSession().then(() => {
-          updateMenuVisibility()
-          refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
-          void refreshMenuItems()
-        })
+      authSession.events.on('sessionRestore', async () => {
+        await refreshAuthStateFromSession()
+        updateMenuVisibility()
+        refreshMenu(outliner.context?.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
+        await refreshMenuItems()
       })
       navMenuContent.dataset.authEventsBound = 'true'
     }
