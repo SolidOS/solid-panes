@@ -32,7 +32,6 @@
     "test-debug": "node --inspect-brk ./node_modules/.bin/jest -i --env jest-environment-node-debug",
     "prepublishOnly": "npm run build && npm run lint && npm test",
     "preversion": "npm run lint && npm run typecheck && npm test",
-    "postversion": "git push origin main --follow-tags",
     "watch": "npm run build-version && concurrently -k -n babel,types,webpack \"npm:watch-js\" \"npm:watch-types\" \"npm:watch-dist\"",
     "start": "webpack serve --config webpack.dev.config.mjs --open"
   },
