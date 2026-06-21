@@ -125,5 +125,19 @@
     "webpack": "^5.106.2",
     "webpack-cli": "^6.0.1",
     "webpack-dev-server": "^5.2.4"
-  }
+  },
+  "solidosDependencies": [
+    "rdflib",
+    "solid-logic",
+    "solid-ui",
+    "pane-registry",
+    "activitystreams-pane",
+    "chat-pane",
+    "contacts-pane",
+    "folder-pane",
+    "issue-pane",
+    "meeting-pane",
+    "profile-pane",
+    "source-pane"
+  ]
 }
