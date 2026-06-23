@@ -1,7 +1,7 @@
 
 import * as paneRegistry from 'pane-registry'
 import * as $rdf from 'rdflib'
-import { solidLogicSingleton, store, authSession } from 'solid-logic'
+import { solidLogicSingleton, store, authSession, authn } from 'solid-logic'
 import { getOutliner, initMainPage, refreshUI } from '../src'
 import Pane from 'profile-pane'
 import './dev-mash.css'
@@ -130,22 +130,21 @@ window.onload = async () => {
   // registerPanes((cjsOrEsModule: any) => paneRegistry.register(cjsOrEsModule.default || cjsOrEsModule))
   const contactsPane = await import('contacts-pane')
   paneRegistry.register((contactsPane as any).default || contactsPane)
-  await authSession.handleIncomingRedirect({
-    restorePreviousSession: true
-  })
-  const session = await authSession
-  if (!session.info.isLoggedIn) {
+  await authn.checkUser()
+  const session = authSession
+  const isLoggedIn = session?.info?.isLoggedIn ?? session?.isActive ?? Boolean(session?.webId)
+  if (!isLoggedIn) {
     console.log('The user is not logged in')
     const loginBanner = document.getElementById('loginBanner');
     if (loginBanner) {
       loginBanner.innerHTML = '<button onclick="login()">Log in</button>';
     }
     } else {
-      console.log(`Logged in as ${session.info.webId}`)
+      console.log(`Logged in as ${session.webId}`)
     
     const loginBanner = document.getElementById('loginBanner');
     if (loginBanner) {
-      loginBanner.innerHTML = `Logged in as ${session.info.webId} <button onclick="logout()">Log out</button>`;
+      loginBanner.innerHTML = `Logged in as ${session.webId} <button onclick="logout()">Log out</button>`;
     }
   }
   addLayoutButtons()
@@ -156,14 +155,14 @@ window.logout = () => {
   window.location.href = ''
 }
 window.login = async function () {
-  const session = await authSession
-  if (!session.info.isLoggedIn) {
+  const session = authSession
+  const isLoggedIn = session?.info?.isLoggedIn ?? session?.isActive ?? Boolean(session?.webId)
+  if (!isLoggedIn) {
     const issuer = prompt('Please enter an issuer URI', 'https://solidcommunity.net')
     if (issuer) {
       await authSession.login({
         oidcIssuer: issuer,
-        redirectUrl: window.location.href,
-        clientName: 'Solid Panes Dev Loader'
+        redirectUrl: window.location.href
       })
     } else {
       console.warn('Login cancelled: No issuer provided.')
