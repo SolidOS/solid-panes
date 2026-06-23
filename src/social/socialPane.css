@@ -107,6 +107,19 @@
   outline-offset: 2px;
 }
 
+. social-pane__header {
+  border: var(--border-width-thin, 1px) solid var(--color-border, #444);
+  border-radius: var(--border-radius-base);
+  padding: var(--spacing-lg, 1.5625rem);
+  background: var(--color-card-bg, #FFF);
+}
+
+.social-pane_header-pronouns {
+  color: var(--color-text-secondary, #4A5565);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-regular, 400);
+  line-height: 1.2;
+}
 .social-pane__edit-button {
   position: static;
   display: inline-block;

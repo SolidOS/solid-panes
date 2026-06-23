@@ -28,6 +28,7 @@ export type HeaderStats = {
 export type HeaderProfileData = {
   imageUrl?: string,
   name?: string,
+  pronouns? :string,
   jobTitle?: string,
   organization?: string,
   location?: string | null
@@ -98,6 +99,10 @@ export function createHeaderSection (
     h1.classList.add('social-pane__header-name')
     h1.appendChild(dom.createTextNode(name))
     headerSummary.appendChild(h1)
+
+    const pronounsSpan = dom.createElement('span')
+    pronounsSpan.classList.add('social-pane_header-pronouns')
+    headerSummary.appendChild(pronounsSpan)
 
     const jobAndOrganization = [profileData?.jobTitle, profileData?.organization].filter(Boolean).join(' | ')
     if (jobAndOrganization) {
