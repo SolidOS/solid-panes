@@ -1199,7 +1199,7 @@ export default function (context) {
    **
    */
   const termWidget = {} // @@@@@@ global
-  global.termWidget = termWidget
+  globalThis.termWidget = termWidget
   termWidget.construct = function (dom) {
     dom = dom || document
     const td = dom.createElement('TD')

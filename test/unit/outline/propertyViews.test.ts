@@ -1,4 +1,4 @@
-/* eslint-env jest */
+import { describe, expect, it } from 'vitest'
 import { sym } from 'rdflib'
 import { propertyViews } from '../../../src/outline/propertyViews'
 
