@@ -67,7 +67,11 @@
     "baseUrl": ".",
     "paths": {
       "rdflib": ["node_modules/rdflib"],
-      "rdflib/*": ["node_modules/rdflib/*"]
+      "rdflib/*": ["node_modules/rdflib/*"],
+      "pane-registry": ["node_modules/pane-registry"],
+      "pane-registry/*": ["node_modules/pane-registry/*"],
+      "solid-logic": ["node_modules/solid-logic"],
+      "solid-logic/*": ["node_modules/solid-logic/*"]
     }
 
     /* Source Map Options */
