@@ -6,7 +6,7 @@
 import { LiveStore, NamedNode } from 'rdflib'
 import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
-import { createHeader, refreshHeader } from './header'
+import { createHeader } from './header'
 import { createFooter } from './footer'
 import { createLeftSideMenu, refreshMenu } from './menu'
 
@@ -20,7 +20,6 @@ function renderEnvSignature (env?: RenderEnvironment): string {
 }
 
 export { refreshMenu as updateMenuLayout } from './menu'
-export { refreshHeader } from './header'
 
 function ensureMainContent () {
   let main = document.getElementById('MainContent') as HTMLElement | null
@@ -47,7 +46,7 @@ export async function initMainPage (
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
   outliner.GotoSubject(subject, true, undefined, true, undefined)
 
-  const header = await createHeader(store, outliner)
+  const header = await createHeader(outliner)
   const menu = createLeftSideMenu(subject, outliner)
   const footer = menu.then(() => createFooter(store))
   return Promise.all([header, menu, footer])
@@ -71,6 +70,5 @@ export async function refreshUI (outliner: OutlineManager) {
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
 
-  await refreshHeader(outliner)
   refreshMenu(outliner.context.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
 }

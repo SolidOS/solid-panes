@@ -1,9 +1,41 @@
+import { isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url'
 import { solidPane, buildConfig } from 'solidos-toolkit/vite'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-    build: buildConfig({ entry: "src/index.ts" }),
+    build: buildConfig({
+        entry: "src/index.ts",
+
+        // TODO remove these overrides once the following PR from solidos-toolkit has been merged:
+        // https://github.com/SolidOS/toolkit/pull/6
+        overrides: {
+            rolldownOptions: {
+                output: [
+                    {
+                        format: 'es',
+                        preserveModules: true,
+                        preserveModulesRoot: 'src',
+                        entryFileNames: '[name].esm.js',
+                    },
+                    {
+                        format: 'cjs',
+                        preserveModules: true,
+                        preserveModulesRoot: 'src',
+                        entryFileNames: '[name].cjs.js',
+                    },
+                ],
+                external(id: string) {
+                    return (
+                        !id.startsWith('~icons/') &&
+                        !id.startsWith('@/') &&
+                        !id.startsWith('.') &&
+                        !isAbsolute(id)
+                    );
+                },
+            },
+        }
+    }),
     resolve: {
         tsconfigPaths: true,
 
@@ -16,7 +48,7 @@ export default defineConfig({
         },
     },
     plugins: solidPane({
-        litDecoratorPaths: [],
+        litDecoratorPaths: ['src/components'],
         sandbox: {
             subject: "https://testingsolidos.solidcommunity.net/profile/card#me",
             entry: "./src/dev.ts",
