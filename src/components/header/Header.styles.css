@@ -1,0 +1,38 @@
+@import "solid-ui/breakpoints.css";
+
+:host {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--solid-ui-color-slate-800);
+    color: var(--solid-ui-color-white);
+    padding: 7px 20px;
+    gap: 10px;
+
+    a.logo {
+        height: 40px;
+
+        solid-ui-solid-emblem {
+            height: 100%;
+        }
+    }
+
+    .spacer {
+        flex: 1;
+    }
+
+    .separator {
+        background: var(--solid-ui-color-body-grey);
+        width: 1px;
+        align-self: stretch;
+    }
+
+    @media (--solid-ui-mobile) {
+        a.logo,
+        solid-ui-menu,
+        .separator {
+            display: none;
+        }
+    }
+}

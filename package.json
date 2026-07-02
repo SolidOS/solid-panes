@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "4.4.2-2",
+  "version": "4.4.2-3",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.cjs.js",
   "types": "dist/index.d.ts",
@@ -85,6 +85,7 @@
     "pane-registry": "$pane-registry"
   },
   "devDependencies": {
+    "@iconify/json": "2.2.494",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@types/node": "^22.20.0",
@@ -96,6 +97,7 @@
     "neostandard": "^0.13.0",
     "solidos-toolkit": "dev",
     "typescript": "^6.0.3",
+    "unplugin-icons": "^23.0.1",
     "vite": "^8.0.16",
     "vitest": "^4.0.18"
   },
