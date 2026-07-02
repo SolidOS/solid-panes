@@ -1,4 +1,4 @@
-/* eslint-env jest */
+import { describe, expect, it, vi } from 'vitest'
 import * as $rdf from 'rdflib'
 import solidNamespace from 'solid-namespace'
 import { loadFriendshipTriage, triageFriends } from '../../../src/social/triage'
@@ -57,7 +57,7 @@ describe('loadFriendshipTriage', () => {
 
     store.add(alice, ns.foaf('knows'), bob, alice.doc())
 
-    const mockLoad: (target: $rdf.NamedNode | string) => Promise<unknown> = jest.fn(
+    const mockLoad: (target: $rdf.NamedNode | string) => Promise<unknown> = vi.fn(
       async (target: $rdf.NamedNode | string) => {
         const value = typeof target === 'string' ? target : target.value
         loadedTargets.push(value)

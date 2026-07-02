@@ -50,19 +50,20 @@ Volunteers are always welcome!
 - [Conventions](./Documentation/conventions.md)
 
 ## Development
-To get started, make sure you have Node.js installed (for instance
-through https://github.com/nvm-sh/nvm), and:
-1. run
+
+To get started, make sure you have Node.js installed (for instance through [nvm](https://github.com/nvm-sh/nvm)), then:
+
+1. Clone, install, and start the dev server:
+
 ```sh
 git clone https://github.com/solidos/solid-panes
 cd solid-panes
 npm install
-npm run start
+npm start
 ```
-2. a browser window should automatically open at http://localhost:9000, if for some reason it doesn't go ahead and manually navigate there.
-3. Once you arrive at the Solid Pane Tester page, the `profile-pane` will be loaded by default. Proceed to edit `solid-panes/dev/loader.ts` and, at line 5, you should see `import Pane from 'profile-pane'`. Simply change `'profile-pane'` to your preferred pane/directory containing the pane of choice; for example, you could choose `'source-pane'` and bam, it will load that pane. For those who are new, you can go to the `solid-panes/src` directory and manually navigate through each individual folder. In most folders, you simply look for any file that has `pane` in the title. Copy and paste the `pane.js` file of your choice into the `solid-panes/dev/pane` folder, or you can import directly from the `src` directory. For example, importing from `'../src/dokieli/dokieliPane'` will work just fine. Each time you save `solid-panes/dev/loader.ts` while importing a different pane, your browser at `http://localhost:9000/` should automatically refresh. It's a good idea to keep the developer console open in your web browser to ensure panes are loading and rendering properly. 
+2. Open http://localhost:5173 in your browser. You should see the pane development sandbox.
 
-4. Another tip: to ensure you arrive at the proper destination, look at lines 48–53 in `solid-panes/dev/loader.ts`. You should see an event listener that is ready for a string. `renderPane('https://solidos.solidcommunity.net/Team/SolidOs%20team%20chat/index.ttl#this')` will be the default. Depending on the `pane.js` that you chose in the earlier import statements, the `renderPane` function determines the way you will see DOMContent inside of that particular pane. If you have created an `index.html` in your provider pod storage area, you could use `'https://yoursolidname.solidcommunity.net/profile/index.html'` inside of the `renderPane()` function parameters. You can edit the string manually in `solid-panes/dev/loader.ts`, or you can go to your developer console and type `renderPane('https://yoursolidname.solidcommunity.net/profile/index.html')` — just point to a part of your account that is congruent to the pane that you wish to import! :)
+3. You can change the `subject` in the sandbox to determine which pane gets rendered. For example, the default subject loads the `profile-pane`.
 
 ## Contributing panes
 When you created a pane, you can either add it as an npm dependency
@@ -80,8 +81,8 @@ pane. Any other pane which wants to deal with contacts can just use the pane wit
 
 
 ## Generative AI usage
-The SolidOS team is using GitHub Copilot integrated in Visual Studio Code. 
-We have added comments in the code to make it explicit which parts are 100% written by AI. 
+The SolidOS team is using GitHub Copilot integrated in Visual Studio Code.
+We have added comments in the code to make it explicit which parts are 100% written by AI.
 
 ### Prompt usage hitory:
 * Model Claude Opus 4.6: Initially solid-panes is loaded into an HTML shell form mashlib that looks like ... Also, an iFrame is rendered inside the `<div class="TabulatorOutline" id="DummyUUID">` for “isolated pane rendering”. Analyze the solid-panes code for what it uses from this HTML and suggest a new HTML structure which is mobile and accessibility friendly. Let's go ahead and make changes in this code as suggested to accommodate the new databrowser HTML.
@@ -121,4 +122,3 @@ I want the menu to have a tiny button on the bottom margin left with an arrow to
 * Raptor mini: Please always keep the footer at the bottom of the menu
 
 * GPT-5.4 Model: Add a compatibility shim in the form pane for mixed `ui:Group` plus field typing.
-

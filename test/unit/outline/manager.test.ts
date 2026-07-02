@@ -1,4 +1,4 @@
-/* eslint-env jest */
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import OutlineManager from '../../../src/outline/manager'
 import { lit, NamedNode, sym, blankNode } from 'rdflib'
 import { findByText, getByText } from '@testing-library/dom'
