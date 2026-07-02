@@ -11,9 +11,6 @@
       "require": "./dist/index.cjs.js"
     }
   },
-  "sideEffects": [
-    "*.css"
-  ],
   "files": [
     "dist/",
     "README.md",
