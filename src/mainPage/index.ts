@@ -1,13 +1,12 @@
 /*   Main Page
  **
- **  This code is called in mashlib and renders the header and footer of the Databrowser.
+ **  This code is called in mashlib and renders the header and left side menu of the Databrowser.
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
 import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
-import { createFooter } from './footer'
 import { createLeftSideMenu, refreshMenu } from './menu'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
@@ -48,8 +47,7 @@ export async function initMainPage (
 
   const header = await createHeader(outliner)
   const menu = createLeftSideMenu(subject, outliner)
-  const footer = menu.then(() => createFooter(store))
-  return Promise.all([header, menu, footer])
+  return Promise.all([header, menu])
 }
 
 export async function refreshUI (outliner: OutlineManager) {
