@@ -1,8 +1,6 @@
 import { authn } from 'solid-logic'
 import { html, render } from 'lit-html'
 import type { AccountMenuItem } from 'solid-ui/components/account'
-
-import { setActiveMenuPane } from './menu'
 import type { OutlineManager } from '../outline/manager'
 
 import '~icons/lucide/user'
@@ -29,7 +27,6 @@ export async function createHeader (outliner: OutlineManager) {
 
         if (currentUser) {
           outliner.showDashboard(currentUser, { pane: 'profile' })
-          setActiveMenuPane('profile')
         }
       }
     },
@@ -40,7 +37,6 @@ export async function createHeader (outliner: OutlineManager) {
 
         if (currentUser) {
           outliner.showDashboard(currentUser, { pane: 'social' })
-          setActiveMenuPane('social')
         }
       }
     },
@@ -51,7 +47,6 @@ export async function createHeader (outliner: OutlineManager) {
 
         if (currentUser) {
           outliner.showDashboard(currentUser, { pane: 'folder' })
-          setActiveMenuPane('folder')
         }
       }
     },
@@ -62,7 +57,6 @@ export async function createHeader (outliner: OutlineManager) {
 
         if (currentUser) {
           outliner.showDashboard(currentUser, { pane: 'home' })
-          setActiveMenuPane('home')
         }
       }
     },
@@ -73,7 +67,6 @@ export async function createHeader (outliner: OutlineManager) {
 
         if (currentUser) {
           outliner.showDashboard(currentUser, { pane: 'basicPreferences' })
-          setActiveMenuPane('basicPreferences')
         }
       }
     },
