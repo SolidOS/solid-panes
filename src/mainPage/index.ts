@@ -1,14 +1,12 @@
 /*   Main Page
  **
- **  This code is called in mashlib and renders the header and footer of the Databrowser.
+ **  This code is called in mashlib and renders the header and left side menu of the Databrowser.
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
 import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
-import { createFooter } from './footer'
-import { createLeftSideMenu, refreshMenu } from './menu'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
@@ -18,8 +16,6 @@ function renderEnvSignature (env?: RenderEnvironment): string {
   if (!env) return ''
   return [env.layout, env.theme, env.inputMode].join('|')
 }
-
-export { refreshMenu as updateMenuLayout } from './menu'
 
 function ensureMainContent () {
   let main = document.getElementById('MainContent') as HTMLElement | null
@@ -47,9 +43,7 @@ export async function initMainPage (
   outliner.GotoSubject(subject, true, undefined, true, undefined)
 
   const header = await createHeader(outliner)
-  const menu = createLeftSideMenu(subject, outliner)
-  const footer = menu.then(() => createFooter(store))
-  return Promise.all([header, menu, footer])
+  return Promise.all([header])
 }
 
 export async function refreshUI (outliner: OutlineManager) {
@@ -69,6 +63,4 @@ export async function refreshUI (outliner: OutlineManager) {
     outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined)
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
-
-  refreshMenu(outliner.context.environment?.layout === 'mobile' ? 'mobile' : 'desktop')
 }
