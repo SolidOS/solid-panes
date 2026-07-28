@@ -11,15 +11,15 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { getNameOfPodOwner } from '../profileUtils/ownerProfile'
+import { getFolderPaneforStorage } from './folderPaneUtils.ts'
+import { loadContainerRepresentation } from './podUtils.ts'
 import personIcon from '../icons/person.svg'
 import friendsIcon from '../icons/friends.svg'
-import folderIcon from '../icons/folder.svg'
 import dashboardIcon from '../icons/dashboard.svg'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
-const FOLDER_ICON = folderIcon
+
 const DASHBOARD_ICON = dashboardIcon
 
 /* global alert XPathResult sourceWidget */
@@ -376,18 +376,11 @@ export default function (context) {
       }
     ]
 
-    const [pods] = await Promise.all([getPods()])
+    const [pods] = await Promise.all([getFolderPaneforStorage(me)])
 
     panes.push(...pods)
 
     panes.push(
-      /* not in use since redesign of profile-pane
-      {
-        paneName: 'editProfile',
-        label: 'Edit your Profile',
-        icon: UI.icons.iconBase + 'noun_492246.svg'
-      },
-      */
       {
         paneName: 'home',
         label: 'Your dashboard',
@@ -401,99 +394,6 @@ export default function (context) {
     )
 
     return panes
-
-    async function getPods () {
-      async function addPodStorage (pod) { // namedNode
-        await loadContainerRepresentation(pod)
-        if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
-          pods.push(pod)
-          return true
-        }
-        return false
-      }
-      async function addPodStorageFromUrl (url) {
-        const podStorage = new URL(url)
-        // check for predicate pim:Storage in containers up the path tree
-        let pathStorage = podStorage.pathname
-        while (pathStorage.length) {
-          pathStorage = pathStorage.substring(0, pathStorage.lastIndexOf('/'))
-          if (await addPodStorage(kb.sym(`${podStorage.origin}${pathStorage}/`))) return
-        }
-        // TODO should url.origin be added to pods list when there are no pim:Storage ???
-      }
-
-      try {
-        // need to make sure that profile is loaded
-        await kb.fetcher.load(me.doc())
-      } catch (err) {
-        console.error('Unable to load profile', err)
-        return []
-      }
-      // load pod's storages from profile
-      let pods = kb.each(me, ns.space('storage'), null, me.doc())
-      await Promise.all(
-        pods.map(async (pod) => {
-          // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-          await loadContainerRepresentation(pod)
-        })
-      )
-
-      try {
-        // if uri then SolidOS is a browse.html web app
-        const uri = (new URL(window.location.href)).searchParams.get('uri')
-        const podUrl = uri || window.location.href
-        await addPodStorageFromUrl(podUrl)
-      } catch (err) {
-        console.error('cannot load container', err)
-      }
-      // remove namedNodes duplicates
-      function uniques (nodes) {
-        const uniqueNodes = []
-        nodes.forEach(node => {
-          if (!uniqueNodes.find(uniqueNode => uniqueNode.equals(node))) uniqueNodes.push(node)
-        })
-        return uniqueNodes
-      }
-      pods = uniques(pods)
-      if (!pods.length) return []
-      return Promise.all(
-        pods.map(async (pod, index) => {
-          function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-          const ownerName = (await getNameOfPodOwner(pod, kb, sf)) || ''
-          const label = split(me).startsWith(split(pod))
-            ? 'Your storage'
-            : ownerName.trim() !== ''
-              ? ownerName + '\'s storage'
-              : split(pod)
-          return {
-            paneName: 'folder',
-            tabName: `folder-${index}`,
-            label,
-            subject: pod,
-            icon: FOLDER_ICON
-          }
-        })
-      )
-    }
-
-    async function getAddressBooks () {
-      try {
-        const context = await UI.login.findAppInstances(
-          { me, div, dom },
-          ns.vcard('AddressBook')
-        )
-        return (context.instances || []).map((book, index) => ({
-          paneName: 'contact',
-          tabName: `contact-${index}`,
-          label: 'Contacts',
-          subject: book,
-          icon: UI.icons.iconBase + 'noun_15695.svg'
-        }))
-      } catch (err) {
-        console.error('oops in globalAppTabs AddressBook')
-      }
-      return []
-    }
   }
   this.getDashboardItems = getDashboardItems
 
@@ -528,6 +428,8 @@ export default function (context) {
   async function showDashboard (subject, options = {}) {
     const dashboardContainer = getDashboardContainer()
     const outlineContainer = getOutlineContainer()
+
+    hideSolidPanesNavbar()
 
     // reuse existing dashboard if already rendered for the same pane and subject
     if (dashboardContainer.childNodes.length > 0) {
@@ -564,6 +466,24 @@ export default function (context) {
 
   function getOutlineContainer () {
     return getOrCreateContainer('OutlineView', 'Resource browser')
+  }
+
+  function getNavbarElement () {
+    return document.querySelector('solid-panes-navbar')
+  }
+
+  function hideSolidPanesNavbar () {
+    const navbar = getNavbarElement()
+    if (navbar) {
+      navbar.style.display = 'none'
+    }
+  }
+
+  function showSolidPanesNavbar () {
+    const navbar = getNavbarElement()
+    if (navbar) {
+      navbar.style.display = ''
+    }
   }
 
   /**
@@ -610,15 +530,6 @@ export default function (context) {
     )
   }
 
-  async function loadContainerRepresentation (subject) {
-    // force reload for index.html with RDFa
-    if (!kb.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
-      const response = await kb.fetcher.webOperation('GET', subject.uri, kb.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
-      const containerTurtle = response.responseText
-      $rdf.parse(containerTurtle, kb, subject.uri, 'text/turtle')
-    }
-  }
-
   async function getRelevantPanes (subject, context) {
     // make sure container representation is loaded (when server returns index.html)
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
@@ -626,10 +537,8 @@ export default function (context) {
     const relevantPanes = panes.list.filter(
       pane => pane.label(subject, context) && !pane.global
     )
-    if (relevantPanes.length === 0) {
-      // there are no relevant panes, simply return default pane (which ironically is internalPane)
-      return [panes.byName('internal')]
-    }
+
+    // filter according to audience (develoepr and or power user)
     const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
       // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
@@ -652,7 +561,17 @@ export default function (context) {
   }
 
   async function expandedHeaderTR (subject, requiredPane, options) {
+    async function determineFirstPane (options = {}) {
+      const relevantPanes = options.hideList
+        ? []
+        : await getRelevantPanes(subject, context)
+      tr.firstPane = requiredPane || getPane(relevantPanes, subject)
+    }
+
     async function renderPaneIconTray (td, options = {}) {
+      // Icon tray removed: this UI is no longer needed.
+      // The tray previously populated pane selection buttons,
+      // but pane selection itself is retained via tr.firstPane.
       const paneShownStyle =
         'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
       const paneHiddenStyle =
@@ -813,12 +732,7 @@ export default function (context) {
       tr.setAttribute('class', 'hoverControl')
     }
     const td = tr.appendChild(dom.createElement('td'))
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding-top: 0; padding-bottom: 0; vertical-align: top;' +
-        'display:flex; justify-content: space-between; flex-direction: row;' +
-        'background-color: var(--color-background, #F8F9FB);'
-    )
+    td.classList.add('tdFlex')
     td.setAttribute('notSelectable', 'true')
     td.setAttribute('about', subject.toNT())
     td.setAttribute('colspan', '2')
@@ -847,21 +761,29 @@ export default function (context) {
         'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;' +
         'background-color: var(--color-background, #F8F9FB);'
       UI.widgets.makeDraggable(strong, subject)
+
+      header.appendChild(
+        await renderPaneIconTray(td, {
+          hideList: showHeader
+        })
+      )
     }
 
-    header.appendChild(
-      await renderPaneIconTray(td, {
-        hideList: showHeader
-      })
-    )
+    // Pane icon tray removed: preserve first-pane selection without rendering the tray.
+    await determineFirstPane({ hideList: showHeader })
 
-    // set DOM methods
+    // Hide the header row when the header div has no rendered children.
+    if (header.childNodes.length === 0) {
+      tr.style.display = 'none'
+    }
+
+    /* // set DOM methods
     tr.firstChild.tabulatorSelect = function () {
       setSelected(this, true)
     }
     tr.firstChild.tabulatorDeselect = function () {
       setSelected(this, false)
-    }
+    } */
     return tr
   } // expandedHeaderTR
 
@@ -1738,14 +1660,14 @@ export default function (context) {
               this.walk('right')
               return
             }
-            if (selectedTd.firstChild.tagName !== 'TABLE') {
+            /* if (selectedTd.firstChild.tagName !== 'TABLE') {
               // not expanded
               sf.addCallback('done', setSelectedAfterward)
               sf.addCallback('fail', setSelectedAfterward)
               outlineExpand(selectedTd, obj, {
                 pane: paneRegistry.byName('defaultPane')
               })
-            }
+            } */
             setSelectedAfterward()
           }
         }
@@ -1805,6 +1727,8 @@ export default function (context) {
     // gBrowser.scrollBy(0,100);
 
     // var thisHtml=selection[0].owner
+    // this piece of code scrolls the profile view to the middle when browser window small
+    /*
     if (selection[0]) {
       const PosY = UI.utils.findPos(selection[0])[1]
       if (
@@ -1816,7 +1740,7 @@ export default function (context) {
       if (PosY < window.scrollY + 54) {
         UI.utils.getEyeFocus(selection[0], true, undefined, window)
       }
-    }
+    } */
   }
   this.OutlinerMouseclickPanel = function (e) {
     switch (thisOutline.UserInput._tabulatorMode) {
@@ -1853,15 +1777,15 @@ export default function (context) {
       // Shift forces a refocus - bring this to the top
       outlineRefocus(p, subject, pane)
     } else {
-      if (e.altKey) {
+      /* if (e.altKey) {
         // To investigate screw ups, dont wait show internals
         outlineExpand(p, subject, {
           pane: paneRegistry.byName('internal'),
           immediate: true
         })
-      } else {
-        outlineExpand(p, subject)
-      }
+      } else { */
+      outlineExpand(p, subject)
+      // }
     }
   }
 
@@ -2352,7 +2276,7 @@ export default function (context) {
 
   /** Display the subject in an outline view
 
-  @param subject -- RDF term for teh thing to be presented
+  @param subject -- RDF term for the thing to be presented
   @param expand  -- flag -- open the subject rather than keep folded closed
   @param pane    -- optional -- pane to be used for expanded display
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
@@ -2360,7 +2284,12 @@ export default function (context) {
   @param table   -- option  -- default is an HTML table element in which to put the outline.
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || getOutlineContainer('OutlineView') // if does not exist create a compatible host in the current shell
+    const outlineContainer = getOutlineContainer()
+    if (!table || table === outlineContainer) {
+      showSolidPanesNavbar()
+    }
+
+    table = table || outlineContainer // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'
@@ -2401,6 +2330,8 @@ export default function (context) {
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
+        console.log('currentUrl.origin: ' + currentUrl)
+        console.log('targetUrl.origin: ' + targetUrl)
         if (currentUrl.origin === targetUrl.origin) {
           dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
         }
@@ -2419,8 +2350,6 @@ export default function (context) {
   //
   //
   // / /////////////////////////////////////////////////////
-
-  const ns = UI.ns
 
   const views = propertyViews(dom)
 

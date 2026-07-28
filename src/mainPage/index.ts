@@ -7,6 +7,7 @@ import { LiveStore, NamedNode } from 'rdflib'
 import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
+import { createNavbar } from './navbar'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
@@ -43,7 +44,8 @@ export async function initMainPage (
   outliner.GotoSubject(subject, true, undefined, true, undefined)
 
   const header = await createHeader(outliner)
-  return Promise.all([header])
+  const navbar = await createNavbar(outliner)
+  return Promise.all([header, navbar])
 }
 
 export async function refreshUI (outliner: OutlineManager) {
