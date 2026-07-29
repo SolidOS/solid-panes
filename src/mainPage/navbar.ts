@@ -9,7 +9,7 @@ import '~icons/lucide/users'
 import '~icons/lucide/folder-open'
 import '../components/navbar'
 import { NamedNode } from 'rdflib'
-import { NavbarMenuItem } from 'src/components/navbar/Navbar'
+import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
 function createNavItem (label: string, onSelected: () => void): NavbarMenuItem {
   return { label, onSelected }
