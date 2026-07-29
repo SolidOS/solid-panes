@@ -34,6 +34,7 @@ export default class Navbar extends WebComponent {
           @click=${() => menuItem.onSelected?.()}
           title=${typeof menuItem.label === 'string' ? menuItem.label : ''}
         >
+          ${menuItem.label}
         </button>
       `)}
     </nav>
