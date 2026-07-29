@@ -29,13 +29,11 @@ export default class Navbar extends WebComponent {
     return html`
     <nav class="navbar">
        ${this.navbarItems.map(menuItem => html`
-        <button 
-          type='button' 
+        <button
+          type="button"
           @click=${() => menuItem.onSelected?.()}
-          title="${menuItem.label}" 
-          text="${menuItem.label}" 
-          aria-expanded="false">
-            ${menuItem.label}
+          title=${typeof menuItem.label === 'string' ? menuItem.label : ''}
+        >
         </button>
       `)}
     </nav>
