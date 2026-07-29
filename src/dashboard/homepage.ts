@@ -6,7 +6,7 @@ export async function generateHomepage (
   store: IndexedFormula,
   fetcher: Fetcher
 ): Promise<HTMLElement> {
-  const ownersProfile = await loadProfileFromURI(uri, store, fetcher)
+  const ownersProfile = await loadProfileFromURI(uri)
   const name = getName(store, ownersProfile)
 
   const wrapper = document.createElement('div')

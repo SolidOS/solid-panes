@@ -1,7 +1,6 @@
 import * as paneRegistry from 'pane-registry'
 import friendsIcon from '../icons/friends.svg'
 import { NamedNode, sym } from 'rdflib'
-import { store } from 'solid-logic'
 import { loadProfileFromURI } from './webIdUtils'
 
 const FRIENDS_ICON = friendsIcon
@@ -10,7 +9,7 @@ const FRIENDS_ICON = friendsIcon
 export async function getSocialPaneFromURI (subject?: NamedNode) {
   const windowHref = (new URL(window.location.href))
   const finalURL = subject || sym(windowHref.toString())
-  const webId = await loadProfileFromURI(finalURL, store, store.fetcher)
+  const webId = await loadProfileFromURI(finalURL)
   if (!webId || !webId.value) return []
 
   const socialPane = paneRegistry.byName('social')

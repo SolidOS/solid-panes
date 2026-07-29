@@ -22,9 +22,9 @@ function createNavItem (label: string, onSelected: () => void): NavbarMenuItem {
 async function createNavbarMenuItems (
   outliner: OutlineManager,
   subject: NamedNode,
-  OutlineView: HTMLElement | null
+  outlineView: HTMLElement | null
 ): Promise<NavbarMenuItem[]> {
-  const webId = await loadProfileFromURI(subject, store, store.fetcher)
+  const webId = await loadProfileFromURI(subject)
   const podStorages = await getPodStorages(subject.uri)
 
   const menuItems: NavbarMenuItem[] = []
@@ -37,7 +37,7 @@ async function createNavbarMenuItems (
           console.warn('Profile pane is not registered')
           return
         }
-        outliner.GotoSubject(subject, true, profilePane, true, undefined, OutlineView)
+        outliner.GotoSubject(subject, true, profilePane, true, undefined, outlineView)
       }),
       createNavItem('Friends', async () => {
         const socialPane = await getSocialPaneFromURI(webId)
@@ -45,7 +45,7 @@ async function createNavbarMenuItems (
           console.warn('Social pane is not registered')
           return
         }
-        outliner.GotoSubject(subject, true, socialPane, true, undefined, OutlineView)
+        outliner.GotoSubject(subject, true, socialPane, true, undefined, outlineView)
       })
     )
   }
@@ -62,7 +62,7 @@ async function createNavbarMenuItems (
           createFolderPaneItem(folderPane, pod, index)
         )
         // TODO make storage work for more storage spaces, not just the first one
-        outliner.GotoSubject(subject, true, folderPanes[0], true, undefined, OutlineView)
+        outliner.GotoSubject(subject, true, folderPanes[0], true, undefined, outlineView)
       })
     )
   }
@@ -82,7 +82,10 @@ export async function createNavbar (outliner: OutlineManager) {
   const tmpContainer = document.createElement('div')
   const uri = window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  const menuItems = await createNavbarMenuItems(outliner, subject, OutlineView)
+  const menuItems = await createNavbarMenuItems(outliner, subject, OutlineView).catch((err) => {
+    console.error('Failed to build navbar menu items:', err)
+    return []
+  })
 
   render(
     html`<solid-panes-navbar .navbarItems=${menuItems}></solid-panes-navbar>`,
@@ -95,6 +98,7 @@ export async function createNavbar (outliner: OutlineManager) {
     throw new Error('Failed to create nav bar')
   }
 
+  console.log('Navbar created', navbar)
   if (mainContent) {
     mainContent.insertBefore(navbar, mainContent.firstChild)
   } else {

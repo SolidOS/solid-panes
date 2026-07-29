@@ -1,7 +1,6 @@
 import * as paneRegistry from 'pane-registry'
 import personIcon from '../icons/person.svg'
 import { NamedNode, sym } from 'rdflib'
-import { store } from 'solid-logic'
 import { loadProfileFromURI } from './webIdUtils'
 
 const PERSON_ICON = personIcon
@@ -10,7 +9,7 @@ const PERSON_ICON = personIcon
 export async function getProfilePaneFromURI (subject?: NamedNode) {
   const windowHref = (new URL(window.location.href))
   const finalURL = subject || sym(windowHref.toString())
-  const webId = await loadProfileFromURI(finalURL, store, store.fetcher)
+  const webId = await loadProfileFromURI(finalURL)
   if (!webId || !webId.value) return []
 
   const profilePane = paneRegistry.byName('profile')

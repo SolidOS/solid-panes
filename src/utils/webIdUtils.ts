@@ -3,71 +3,72 @@
 * especially when I am not logged in
 */
 
-import { Fetcher, IndexedFormula, NamedNode, sym } from 'rdflib'
+import { IndexedFormula, NamedNode, sym } from 'rdflib'
 import { ns } from 'solid-ui'
+import { store } from 'solid-logic'
 
 const DEFAULT_PROFILE_PATH = 'profile/card#me'
 
 export async function loadProfileFromURI (
-  uri: NamedNode,
-  store: IndexedFormula,
-  fetcher: Fetcher
+  uri: NamedNode
 ): Promise<NamedNode> {
-  const pod = uri.site().uri
-  // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
-  const webId = sym(`${pod}${DEFAULT_PROFILE_PATH}`)
   try {
-    await fetcher.load(webId)
-    return webId
-  } catch (err) {
-    // continue
-  }
-
-  // we try a prefixed pod structure
-  try {
-    const uriUrl = new URL(uri.uri)
-    const pathSegments = uriUrl.pathname.split('/').filter(Boolean)
-    if (pathSegments.length > 0) {
-      const derivedPod = `${uriUrl.origin}/${pathSegments[0]}/`
-      const derivedWebId = sym(`${derivedPod}${DEFAULT_PROFILE_PATH}`)
-      await fetcher.load(derivedWebId)
-      return derivedWebId
-    }
-  } catch (err) {
-    // continue
-  }
-
-  try {
-    await fetcher.load(uri)
-  } catch (err) {
-    return uri
-  }
-
-  const primaryTopic = store.any(uri, ns.foaf('primaryTopic'), null, uri.doc())
-  if (primaryTopic && primaryTopic.termType === 'NamedNode') {
+    const pod = uri.site().uri
+    // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
+    const webId = sym(`${pod}${DEFAULT_PROFILE_PATH}`)
     try {
-      await fetcher.load(primaryTopic as NamedNode)
-      return primaryTopic as NamedNode
-    } catch (err) {
+      await store.fetcher.load(webId)
+      return webId
+    } catch {
+      // ignore failed profile fetch and continue fallback lookup
+    }
+
+    // we try a prefixed pod structure
+    try {
+      const uriUrl = new URL(uri.uri)
+      const pathSegments = uriUrl.pathname.split('/').filter(Boolean)
+      if (pathSegments.length > 0) {
+        const derivedPod = `${uriUrl.origin}/${pathSegments[0]}/`
+        const derivedWebId = sym(`${derivedPod}${DEFAULT_PROFILE_PATH}`)
+        await store.fetcher.load(derivedWebId)
+        return derivedWebId
+      }
+    } catch {
+      // ignore failed derived profile fetch and continue fallback lookup
+    }
+
+    try {
+      await store.fetcher.load(uri)
+    } catch {
       return uri
     }
-  }
 
-  return uri
+    const primaryTopic = store.any(uri, ns.foaf('primaryTopic'), null, uri.doc())
+    if (primaryTopic && primaryTopic.termType === 'NamedNode') {
+      try {
+        await store.fetcher.load(primaryTopic as NamedNode)
+        return primaryTopic as NamedNode
+      } catch {
+        return uri
+      }
+    }
+
+    return uri
+  } catch {
+    return uri
+  }
 }
 
 export async function getNameOfPodOwner (
-  pod: NamedNode,
-  store: IndexedFormula,
-  fetcher: Fetcher
+  pod: NamedNode
 ): Promise<string> {
   // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
   const webId = sym(`${pod.uri}${DEFAULT_PROFILE_PATH}`)
   try {
-    await fetcher.load(webId)
+    await store.fetcher.load(webId)
     return getName(store, webId)
   } catch (err) {
-    // continue
+    console.error('getNameOfPodOwner failed on default profile:', err)
   }
 
   // we try a prefixed pod structure
@@ -77,11 +78,11 @@ export async function getNameOfPodOwner (
     if (pathSegments.length > 0) {
       const derivedPod = `${uriUrl.origin}/${pathSegments[0]}/`
       const derivedWebId = sym(`${derivedPod}${DEFAULT_PROFILE_PATH}`)
-      await fetcher.load(derivedWebId)
+      await store.fetcher.load(derivedWebId)
       return getName(store, derivedWebId)
     }
   } catch (err) {
-    // continue
+    console.error('getNameOfPodOwner failed on derived profile:', err)
   }
 
   return ''
