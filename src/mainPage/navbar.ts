@@ -9,7 +9,7 @@ import '~icons/lucide/users'
 import '~icons/lucide/folder-open'
 import '../components/navbar'
 import { NamedNode } from 'rdflib'
-import { NavbarMenuItem } from 'src/components/navbar/Navbar'
+import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
 function createNavItem (label: string, onSelected: () => void): NavbarMenuItem {
   return { label, onSelected }
@@ -37,11 +37,14 @@ async function createNavbarMenuItems (
   return [
     ...baseItems,
     createNavItem('Storage', () => {
-      const folderPanes = podStorages.map((pod, index) => createFolderPaneItem(outliner?.context?.session?.paneRegistry?.byName('folder'), pod, index))
-      if (folderPanes.length === 0) {
+      const folderPane = outliner?.context?.session?.paneRegistry?.byName('folder')
+      if (!folderPane) {
         console.warn('Folder pane is not registered')
         return
       }
+      const folderPanes = podStorages.map((pod, index) =>
+        createFolderPaneItem(folderPane, pod, index)
+      )
       // TODO make storage work for more storage spaces, not just the first one
       outliner.GotoSubject(subject, true, folderPanes[0], true, undefined, OutlineView)
     })

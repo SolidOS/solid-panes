@@ -538,7 +538,7 @@ export default function (context) {
       pane => pane.label(subject, context) && !pane.global
     )
 
-    // filter according to audience (develoepr and or power user)
+    // filter according to audience (developer and or power user)
     const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
       // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
@@ -2330,8 +2330,6 @@ export default function (context) {
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
-        console.log('currentUrl.origin: ' + currentUrl)
-        console.log('targetUrl.origin: ' + targetUrl)
         if (currentUrl.origin === targetUrl.origin) {
           dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
         }
