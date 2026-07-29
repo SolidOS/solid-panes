@@ -1,5 +1,5 @@
 import * as paneRegistry from 'pane-registry'
-import { getPodStorages } from './podUtils'
+import { getPodStorages } from '../utils/podUtils'
 import folderIcon from '../icons/folder.svg'
 import { NamedNode } from 'rdflib'
 
