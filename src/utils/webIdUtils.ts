@@ -19,8 +19,8 @@ export async function loadProfileFromURI (
     try {
       await store.fetcher.load(webId)
       return webId
-    } catch {
-      // ignore failed profile fetch and continue fallback lookup
+    } catch (err) {
+      // ignore any failure and continue fallback lookup
     }
 
     // we try a prefixed pod structure
@@ -33,13 +33,13 @@ export async function loadProfileFromURI (
         await store.fetcher.load(derivedWebId)
         return derivedWebId
       }
-    } catch {
-      // ignore failed derived profile fetch and continue fallback lookup
+    } catch (err) {
+      // ignore any failure and continue fallback lookup
     }
 
     try {
       await store.fetcher.load(uri)
-    } catch {
+    } catch (err) {
       return uri
     }
 
@@ -48,13 +48,13 @@ export async function loadProfileFromURI (
       try {
         await store.fetcher.load(primaryTopic as NamedNode)
         return primaryTopic as NamedNode
-      } catch {
+      } catch (err) {
         return uri
       }
     }
 
     return uri
-  } catch {
+  } catch (err) {
     return uri
   }
 }
@@ -68,7 +68,9 @@ export async function getNameOfPodOwner (
     await store.fetcher.load(webId)
     return getName(store, webId)
   } catch (err) {
-    console.error('getNameOfPodOwner failed on default profile:', err)
+    if (!isFetchErrorStatus(err, 403)) {
+      console.error('getNameOfPodOwner failed on default profile:', err)
+    }
   }
 
   // we try a prefixed pod structure
@@ -82,7 +84,9 @@ export async function getNameOfPodOwner (
       return getName(store, derivedWebId)
     }
   } catch (err) {
-    console.error('getNameOfPodOwner failed on derived profile:', err)
+    if (!isFetchErrorStatus(err, 403)) {
+      console.error('getNameOfPodOwner failed on derived profile:', err)
+    }
   }
 
   return ''
@@ -94,4 +98,11 @@ export function getName (store: IndexedFormula, ownersProfile: NamedNode): strin
     store.anyValue(ownersProfile, ns.foaf('name'), null, ownersProfile.doc()) ||
     new URL(ownersProfile.uri).host.split('.')[0]
   )
+}
+
+function isFetchErrorStatus (err: unknown, status: number): boolean {
+  if (!err || typeof err !== 'object') return false
+  const statusCode = (err as any)?.response?.status ?? (err as any)?.status
+  const parsedStatus = Number(statusCode)
+  return Number.isFinite(parsedStatus) && parsedStatus === status
 }

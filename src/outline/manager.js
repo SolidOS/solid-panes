@@ -11,7 +11,7 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { getFolderPaneforStorage } from '../utils/folderPaneUtils'
+import { getFolderPaneforStorage } from '../utils/paneUtils'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import personIcon from '../icons/person.svg'
 import friendsIcon from '../icons/friends.svg'

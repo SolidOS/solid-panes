@@ -1,11 +1,10 @@
 import { store } from 'solid-logic'
 import { NamedNode } from 'rdflib'
-import { getSocialPaneFromURI } from '../utils/socialPaneUtils'
+import { getSocialPaneFromURI, getProfilePaneFromURI, getFolderPaneFromURI } from '../utils/paneUtils'
 import { html, render } from 'lit-html'
 import type { OutlineManager } from '../outline/manager'
 import { getPodStorages } from '../utils/podUtils'
 import { loadProfileFromURI } from '../utils/webIdUtils'
-import { createFolderPaneItem } from '../utils/folderPaneUtils'
 
 import '~icons/lucide/user'
 import '~icons/lucide/users'
@@ -13,7 +12,6 @@ import '~icons/lucide/folder-open'
 import '../components/navbar'
 
 import type { NavbarMenuItem } from '../components/navbar/Navbar'
-import { getProfilePaneFromURI } from '../utils/profilePaneUtils'
 
 function createNavItem (label: string, onSelected: () => void): NavbarMenuItem {
   return { label, onSelected }
@@ -52,17 +50,10 @@ async function createNavbarMenuItems (
 
   if (podStorages.length > 0) {
     menuItems.push(
-      createNavItem('Storage', () => {
-        const folderPane = outliner?.context?.session?.paneRegistry?.byName('folder')
-        if (!folderPane) {
-          console.warn('Folder pane is not registered')
-          return
-        }
-        const folderPanes = podStorages.map((pod, index) =>
-          createFolderPaneItem(folderPane, pod, index)
-        )
+      createNavItem('Storage', async () => {
         // TODO make storage work for more storage spaces, not just the first one
-        outliner.GotoSubject(subject, true, folderPanes[0], true, undefined, outlineView)
+        const folderPane = await getFolderPaneFromURI(podStorages[0])
+        outliner.GotoSubject(subject, true, folderPane, true, undefined, outlineView)
       })
     )
   }
