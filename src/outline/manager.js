@@ -538,7 +538,7 @@ export default function (context) {
       pane => pane.label(subject, context) && !pane.global
     )
 
-    // filter according to audience (develoepr and or power user)
+    // filter according to audience (developer and or power user)
     const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
       // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
