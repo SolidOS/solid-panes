@@ -2330,8 +2330,6 @@ export default function (context) {
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
-        console.log('currentUrl.origin: ' + currentUrl)
-        console.log('targetUrl.origin: ' + targetUrl)
         if (currentUrl.origin === targetUrl.origin) {
           dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
         }
