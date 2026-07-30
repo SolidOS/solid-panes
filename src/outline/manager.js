@@ -6,7 +6,7 @@ import * as paneRegistry from 'pane-registry'
 import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
-import { authn, authSession, store } from 'solid-logic'
+import { authn, store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
@@ -19,13 +19,7 @@ import dashboardIcon from '../icons/dashboard.svg'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
-
 const DASHBOARD_ICON = dashboardIcon
-
-/* global alert XPathResult sourceWidget */
-// XPathResult?
-
-// const iconHeight = '24px'
 
 export default function (context) {
   const dom = context.dom
@@ -311,158 +305,6 @@ export default function (context) {
     return predicateTD
   } // outlinePredicateTD
 
-  /**
-   * Render Tabbed set of home app panes
-   *
-   * @param {Object} [options] A set of options you can provide
-   * @param {string} [options.selectedTab] To open a specific dashboard pane
-   * @param {Function} [options.onClose] If given, will present an X for the dashboard, and call this method when clicked
-   * @returns Promise<{Element}> - the div that holds the dashboard
-   */
-  async function globalAppTabs (options = {}) {
-    console.log('globalAppTabs @@')
-    const div = dom.createElement('div')
-    const me = authn.currentUser()
-    if (!me) {
-      alert('Must be logged in for this')
-      throw new Error('Not logged in')
-    }
-    const items = await getDashboardItems()
-
-    const selectedItem = options.selectedTab
-      ? items.find(
-        item => item.paneName === options.selectedTab || item.tabName === options.selectedTab
-      )
-      : items[0]
-
-    if (!selectedItem) {
-      return div
-    }
-
-    div.dataset.globalPaneName = selectedItem.tabName || selectedItem.paneName
-
-    const content = div.appendChild(dom.createElement('div'))
-    const pane = paneRegistry.byName(selectedItem.paneName) // 20190701
-    const table = content.appendChild(dom.createElement('table'))
-    thisOutline.GotoSubject(
-      selectedItem.subject || me,
-      true,
-      pane,
-      false,
-      undefined,
-      table
-    )
-
-    return div
-  }
-  this.getDashboard = globalAppTabs
-
-  async function getDashboardItems () {
-    const me = authn.currentUser()
-    if (!me) return []
-    const div = dom.createElement('div')
-    const panes = [
-      {
-        paneName: 'profile',
-        subject: me,
-        label: 'Your profile',
-        icon: PERSON_ICON
-      },
-      {
-        paneName: 'social', // loads socialPane
-        subject: me,
-        label: 'Your friends',
-        icon: FRIENDS_ICON
-      }
-    ]
-
-    const pods = await getFolderPanesFromURI(me)
-    panes.push(...pods)
-
-    panes.push(
-      {
-        paneName: 'home',
-        label: 'Your dashboard',
-        icon: DASHBOARD_ICON
-      },
-      {
-        paneName: 'basicPreferences',
-        label: 'Your preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg'
-      }
-    )
-
-    return panes
-  }
-  this.getDashboardItems = getDashboardItems
-
-  /**
-   * Call this method to show the global dashboard.
-   *
-   * @param {Object} [options] A set of options that can be passed
-   * @param {string} [options.pane] To open a specific dashboard pane
-   * @returns {Promise<void>}
-   */
-  function closeDashboard () {
-    const dashboardContainer = getDashboardContainer()
-    const outlineContainer = getOutlineContainer()
-    dashboardContainer.innerHTML = ''
-    hideGlobalContainer(dashboardContainer)
-    showGlobalContainer(outlineContainer)
-  }
-
-  // Register the closeDashboard listener only once
-  authSession.events.on('logout', closeDashboard)
-
-  function showGlobalContainer (container) {
-    container.removeAttribute('hidden')
-    container.style.display = ''
-  }
-
-  function hideGlobalContainer (container) {
-    container.setAttribute('hidden', '')
-    container.style.display = 'none'
-  }
-
-  async function showDashboard (subject, options = {}) {
-    const dashboardContainer = getDashboardContainer()
-    const outlineContainer = getOutlineContainer()
-
-    hideSolidPanesNavbar()
-
-    // reuse existing dashboard if already rendered for the same pane and subject
-    if (dashboardContainer.childNodes.length > 0) {
-      const existingDashboard = dashboardContainer.firstElementChild
-      if (
-        existingDashboard &&
-        options.pane &&
-        existingDashboard.dataset.globalPaneName === options.pane &&
-          existingDashboard.dataset.subject === ((subject && subject.value) || '')
-      ) {
-        hideGlobalContainer(outlineContainer)
-        showGlobalContainer(dashboardContainer)
-        return
-      }
-      dashboardContainer.innerHTML = ''
-    }
-
-    // create a new dashboard if not already present
-    const dashboard = await globalAppTabs({
-      selectedTab: options.pane,
-      // onClose: closeDashboard
-    })
-
-    // finally - switch to showing dashboard
-    hideGlobalContainer(outlineContainer)
-    showGlobalContainer(dashboardContainer)
-    dashboardContainer.appendChild(dashboard)
-  }
-  this.showDashboard = showDashboard
-
-  function getDashboardContainer () {
-    return getOrCreateContainer('GlobalDashboard', 'Dashboard')
-  }
-
   function getOutlineContainer () {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
@@ -494,9 +336,7 @@ export default function (context) {
    */
   function getOrCreateContainer (id) {
     const containerHost =
-      document.getElementById('app-view') ||
       document.getElementById('MainContent') ||
-      document.querySelector('[role="main"]') ||
       document.body
 
     // OutlineView is a table
@@ -505,6 +345,10 @@ export default function (context) {
       if (existingOutline) {
         return existingOutline
       }
+
+      const containerHost =
+      document.getElementById('MainContent') ||
+      document.body
 
       if (containerHost) {
         const OutlineView = document.createElement('table')
@@ -515,18 +359,6 @@ export default function (context) {
         return OutlineView
       }
     }
-
-    // or we deal with the section GlobalDashboard
-    return (
-      document.getElementById(id) ||
-      (() => {
-        const GlobalDashboard = document.createElement('section')
-        GlobalDashboard.id = id
-        GlobalDashboard.setAttribute('aria-label', 'Dashboard')
-        GlobalDashboard.classList.add('global-dashboard')
-        return containerHost.appendChild(GlobalDashboard)
-      })()
-    )
   }
 
   async function getRelevantPanes (subject, context) {
@@ -1182,64 +1014,6 @@ export default function (context) {
 
   //  Summarize a thing as a table cell
 
-  /**********************
-
-    query global vars
-
-  ***********************/
-
-  // const doesn't work in Opera
-  // const BLANK_QUERY = { pat: kb.formula(), vars: [], orderBy: [] };
-  // @ pat: the query pattern in an RDFIndexedFormula. Statements are in pat.statements
-  // @ vars: the free variables in the query
-  // @ orderBy: the variables to order the table
-
-  function QueryObj () {
-    this.pat = kb.formula()
-    this.vars = []
-    // this.orderBy = []
-  }
-
-  const queries = []
-  queries[0] = new QueryObj()
-  /*
-  function querySave () {
-    queries.push(queries[0])
-    var choices = dom.getElementById('queryChoices')
-    var next = dom.createElement('option')
-    var box = dom.createElement('input')
-    var index = queries.length - 1
-    box.setAttribute('type', 'checkBox')
-    box.setAttribute('value', index)
-    choices.appendChild(box)
-    choices.appendChild(dom.createTextNode('Saved query #' + index))
-    choices.appendChild(dom.createElement('br'))
-    next.setAttribute('value', index)
-    next.appendChild(dom.createTextNode('Saved query #' + index))
-    dom.getElementById('queryJump').appendChild(next)
-  }
-*/
-  /*
-  function resetQuery () {
-    function resetOutliner (pat) {
-      var n = pat.statements.length
-      var pattern, tr
-      for (let i = 0; i < n; i++) {
-        pattern = pat.statements[i]
-        tr = pattern.tr
-        // UI.log.debug('tr: ' + tr.AJAR_statement);
-        if (typeof tr !== 'undefined') {
-          delete tr.AJAR_pattern
-          delete tr.AJAR_variable
-        }
-      }
-      for (let x in pat.optional) { resetOutliner(pat.optional[x]) }
-    }
-    resetOutliner(myQuery.pat)
-    UI.utils.clearVariableNames()
-    queries[0] = myQuery = new QueryObj()
-  }
-*/
   function addButtonCallbacks (target, fireOn) {
     UI.log.debug('Button callbacks for ' + fireOn + ' added')
     const makeIconCallback = function (icon) {
@@ -1354,6 +1128,8 @@ export default function (context) {
         about.termType === 'NamedNode' ? about.uri : '' // blank if no URI
     }
   }
+
+  /* global alert XPathResult sourceWidget */
 
   this.showSource = function showSource () {
     if (typeof sourceWidget === 'undefined') return
