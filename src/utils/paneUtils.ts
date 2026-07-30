@@ -84,7 +84,6 @@ export async function getFolderPanesFromURI (subject: NamedNode): Promise<PaneIt
   const podStorages = await getPodStorages(subject)
   if (podStorages.length === 0) return []
 
-  console.log('Found pod storages:', podStorages)
   return Promise.all(
     podStorages.map((pod, index) =>
       getFolderPaneforStorage(

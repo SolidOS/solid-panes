@@ -4,8 +4,6 @@ import { NamedNode, parse } from 'rdflib'
 import { isWebIdUri } from './webIdUtils'
 
 export async function getPodStorages (url: NamedNode): Promise<NamedNode[]> {
-  console.log('Getting pod storages for URL:', url.value || url.uri)
-  console.log('Is webIdUri:', isWebIdUri(url))
   if (isWebIdUri(url)) {
     const podStorages = store.each(url, ns.space('storage'))
     const results = await Promise.all(podStorages.map(async pod => await isPodStorage(pod as NamedNode) ? pod as NamedNode : null))

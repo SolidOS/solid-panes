@@ -53,7 +53,6 @@ async function createNavbarMenuItems (
   }
 
   const storagePanes = await getFolderPanesFromURI(subject)
-  console.log('---Storage panes for subject', subject.value, ':', storagePanes)
   storagePanes.forEach(pane => {
     menuItems.push(
       createNavItem(
@@ -98,7 +97,6 @@ export async function createNavbar (outliner: OutlineManager) {
     throw new Error('Failed to create nav bar')
   }
 
-  console.log('Navbar created', navbar)
   if (mainContent) {
     mainContent.insertBefore(navbar, mainContent.firstChild)
   } else {

@@ -51,9 +51,7 @@ export async function initMainPage (
   outliner.GotoSubject(subject, true, initialPane, true, undefined)
 
   const header = await createHeader(outliner)
-  console.log('Header and Navbar created', header)
   const navbar = await createNavbar(outliner)
-  console.log('Header and Navbar created', navbar)
   return Promise.all([header, navbar])
 }
 
