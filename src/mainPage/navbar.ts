@@ -35,18 +35,10 @@ async function createNavbarMenuItems (
     menuItems.push(
       createNavItem('Profile', async () => {
         const profilePane = await getProfilePaneFromURI(webId)
-        if (!profilePane) {
-          console.warn('Profile pane is not registered')
-          return
-        }
         outliner.GotoSubject(subject, true, profilePane, true, undefined, outlineView)
       }, selectedPane === 'profile'),
       createNavItem('Friends', async () => {
         const socialPane = await getSocialPaneFromURI(webId)
-        if (!socialPane) {
-          console.warn('Social pane is not registered')
-          return
-        }
         outliner.GotoSubject(subject, true, socialPane, true, undefined, outlineView)
       }, selectedPane === 'social')
     )
