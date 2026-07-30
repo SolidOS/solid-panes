@@ -12,8 +12,12 @@
         border-bottom: 2px solid transparent;
         font-weight: 500;
         font-size: 90%;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
     }
 
+    button.selected,
     button:active,
     button:hover,
     button:focus {

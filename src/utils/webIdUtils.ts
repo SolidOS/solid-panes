@@ -59,6 +59,15 @@ export async function loadProfileFromURI (
   }
 }
 
+export function isWebIdUri (uri: NamedNode): boolean {
+  try {
+    const parsedURL = new URL(uri.uri)
+    return parsedURL.hash === '#me'
+  } catch (err) {
+    return false
+  }
+}
+
 export async function getNameOfPodOwner (
   pod: NamedNode
 ): Promise<string> {

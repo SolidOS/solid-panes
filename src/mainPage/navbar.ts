@@ -1,10 +1,9 @@
 import { store } from 'solid-logic'
 import { NamedNode } from 'rdflib'
-import { getSocialPaneFromURI, getProfilePaneFromURI, getFolderPaneFromURI } from '../utils/paneUtils'
+import { getSocialPaneFromURI, getProfilePaneFromURI, getFolderPanesFromURI } from '../utils/paneUtils'
 import { html, render } from 'lit-html'
 import type { OutlineManager } from '../outline/manager'
-import { getPodStorages } from '../utils/podUtils'
-import { loadProfileFromURI } from '../utils/webIdUtils'
+import { isWebIdUri, loadProfileFromURI } from '../utils/webIdUtils'
 
 import '~icons/lucide/user'
 import '~icons/lucide/users'
@@ -13,17 +12,22 @@ import '../components/navbar'
 
 import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
-function createNavItem (label: string, onSelected: () => void): NavbarMenuItem {
-  return { label, onSelected }
+function createNavItem (
+  label: string,
+  onSelected: () => void,
+  selected = false
+): NavbarMenuItem {
+  return { label, onSelected, selected }
 }
 
 async function createNavbarMenuItems (
   outliner: OutlineManager,
   subject: NamedNode,
-  outlineView: HTMLElement | null
+  outlineView: HTMLElement | null,
+  selectedPaneName?: string
 ): Promise<NavbarMenuItem[]> {
   const webId = await loadProfileFromURI(subject)
-  const podStorages = await getPodStorages(subject.uri)
+  const selectedPane = selectedPaneName || (isWebIdUri(subject) ? 'profile' : undefined)
 
   const menuItems: NavbarMenuItem[] = []
 
@@ -36,7 +40,7 @@ async function createNavbarMenuItems (
           return
         }
         outliner.GotoSubject(subject, true, profilePane, true, undefined, outlineView)
-      }),
+      }, selectedPane === 'profile'),
       createNavItem('Friends', async () => {
         const socialPane = await getSocialPaneFromURI(webId)
         if (!socialPane) {
@@ -44,19 +48,23 @@ async function createNavbarMenuItems (
           return
         }
         outliner.GotoSubject(subject, true, socialPane, true, undefined, outlineView)
-      })
+      }, selectedPane === 'social')
     )
   }
 
-  if (podStorages.length > 0) {
+  const storagePanes = await getFolderPanesFromURI(subject)
+  console.log('---Storage panes for subject', subject.value, ':', storagePanes)
+  storagePanes.forEach(pane => {
     menuItems.push(
-      createNavItem('Storage', async () => {
-        // TODO make storage work for more storage spaces, not just the first one
-        const folderPane = await getFolderPaneFromURI(podStorages[0])
-        outliner.GotoSubject(subject, true, folderPane, true, undefined, outlineView)
-      })
+      createNavItem(
+        pane.label(),
+        async () => {
+          outliner.GotoSubject(subject, true, pane, true, undefined, outlineView)
+        },
+        selectedPane === pane.paneName
+      )
     )
-  }
+  })
 
   return menuItems
 }
@@ -73,7 +81,8 @@ export async function createNavbar (outliner: OutlineManager) {
   const tmpContainer = document.createElement('div')
   const uri = window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  const menuItems = await createNavbarMenuItems(outliner, subject, OutlineView).catch((err) => {
+  const selectedPaneName = window.history.state?.paneName
+  const menuItems = await createNavbarMenuItems(outliner, subject, OutlineView, selectedPaneName).catch((err) => {
     console.error('Failed to build navbar menu items:', err)
     return []
   })

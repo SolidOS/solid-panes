@@ -1,10 +1,18 @@
 import { store } from 'solid-logic'
 import { ns } from 'solid-ui'
 import { NamedNode, parse } from 'rdflib'
+import { isWebIdUri } from './webIdUtils'
 
-export async function getPodStorages (podUrl: string): Promise<NamedNode[]> {
+export async function getPodStorages (url: NamedNode): Promise<NamedNode[]> {
+  console.log('Getting pod storages for URL:', url.value || url.uri)
+  console.log('Is webIdUri:', isWebIdUri(url))
+  if (isWebIdUri(url)) {
+    const podStorages = store.each(url, ns.space('storage'))
+    const results = await Promise.all(podStorages.map(async pod => await isPodStorage(pod as NamedNode) ? pod as NamedNode : null))
+    return results.filter(pod => pod !== null) as NamedNode[]
+  }
   try {
-    const storage = await findPodStorageFromUrl(podUrl)
+    const storage = await findPodStorageFromUrl(url)
     return storage ? [storage] : []
   } catch (err) {
     console.error('cannot load container', err)
@@ -12,8 +20,8 @@ export async function getPodStorages (podUrl: string): Promise<NamedNode[]> {
   }
 }
 
-async function findPodStorageFromUrl (url: string): Promise<NamedNode | null> {
-  const podStorage = new URL(url)
+async function findPodStorageFromUrl (url: NamedNode): Promise<NamedNode | null> {
+  const podStorage = new URL(url.value || url.uri)
   let pathStorage = podStorage.pathname
 
   while (pathStorage.length) {
@@ -34,10 +42,14 @@ async function isPodStorage (pod: NamedNode): Promise<boolean> {
 export async function loadContainerRepresentation (subject) {
   // force reload for index.html with RDFa
   if (!store.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
-    const response = await store.fetcher.webOperation('GET', subject.uri, store.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
-    const containerTurtle = response.responseText
-    if (subject.uri && containerTurtle) {
-      parse(containerTurtle, store, subject.uri, 'text/turtle')
+    try {
+      const response = await store.fetcher.webOperation('GET', subject.uri, store.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
+      const containerTurtle = response.responseText
+      if (subject.uri && containerTurtle) {
+        parse(containerTurtle, store, subject.uri, 'text/turtle')
+      }
+    } catch (err) {
+      console.warn('Unable to load container representation for', subject.uri, err)
     }
   }
 }

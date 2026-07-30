@@ -13,7 +13,6 @@ import styles from './Navbar.styles.css'
 
 export interface NavbarMenuItem {
   label: string | TemplateResult
-  href?: string
   selected?: boolean
   onSelected?(): void
 }
@@ -25,13 +24,22 @@ export default class Navbar extends WebComponent {
   @property({ type: Array })
   accessor navbarItems: NavbarMenuItem[] = []
 
+  private selectItem (item: NavbarMenuItem) {
+    this.navbarItems = this.navbarItems.map(menuItem => ({
+      ...menuItem,
+      selected: menuItem === item
+    }))
+    item.onSelected?.()
+  }
+
   render () {
     return html`
     <nav class="navbar">
        ${this.navbarItems.map(menuItem => html`
         <button
           type="button"
-          @click=${() => menuItem.onSelected?.()}
+          class=${menuItem.selected ? 'selected' : ''}
+          @click=${() => this.selectItem(menuItem)}
           title=${typeof menuItem.label === 'string' ? menuItem.label : ''}
         >
           ${menuItem.label}

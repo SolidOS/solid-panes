@@ -8,6 +8,8 @@ import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
 import { createNavbar } from './navbar'
+import { getProfilePaneFromURI } from '../utils/paneUtils'
+import { isWebIdUri } from '../utils/webIdUtils'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
@@ -41,7 +43,12 @@ export async function initMainPage (
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  outliner.GotoSubject(subject, true, undefined, true, undefined)
+  const historyPane = window.history.state?.paneName
+  const initialPane = !historyPane && isWebIdUri(subject)
+    ? await getProfilePaneFromURI(subject)
+    : undefined
+
+  outliner.GotoSubject(subject, true, initialPane, true, undefined)
 
   const header = await createHeader(outliner)
   console.log('Header and Navbar created', header)
