@@ -113,7 +113,7 @@ export function registerPanes (register) {
   register(tableViewPane)
 
   // Fallback totally generic:
-  // register(defaultPane)
+  register(defaultPane)
 
   register(uiPane)
 
@@ -139,7 +139,7 @@ export function registerPanes (register) {
   register(sharingPane)
 
   // The internals pane is always (almost?) the last as it is the least user-friendly
-  // register(internalPane) // under the hood has been removed with new design
+  register(internalPane)
 
   register(homePane) // This is a global pane
 

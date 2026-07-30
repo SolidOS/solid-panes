@@ -6,20 +6,17 @@ import * as paneRegistry from 'pane-registry'
 import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
-import { authn, store } from 'solid-logic'
+import { store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { getFolderPanesFromURI } from '../utils/paneUtils'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import personIcon from '../icons/person.svg'
 import friendsIcon from '../icons/friends.svg'
-import dashboardIcon from '../icons/dashboard.svg'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
-const DASHBOARD_ICON = dashboardIcon
 
 export default function (context) {
   const dom = context.dom
@@ -361,8 +358,10 @@ export default function (context) {
     const relevantPanes = panes.list.filter(
       pane => pane.label(subject, context) && !pane.global
     )
-
-    // filter according to audience (developer and or power user)
+    if (relevantPanes.length === 0) {
+      // there are no relevant panes, simply return default pane (which ironically is internalPane)
+      return [panes.byName('internal')]
+    }
     const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
     if (filteredPanes.length === 0) {
       // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
@@ -1428,14 +1427,14 @@ export default function (context) {
               this.walk('right')
               return
             }
-            /* if (selectedTd.firstChild.tagName !== 'TABLE') {
+            if (selectedTd.firstChild.tagName !== 'TABLE') {
               // not expanded
               sf.addCallback('done', setSelectedAfterward)
               sf.addCallback('fail', setSelectedAfterward)
               outlineExpand(selectedTd, obj, {
                 pane: paneRegistry.byName('defaultPane')
               })
-            } */
+            }
             setSelectedAfterward()
           }
         }
@@ -1485,30 +1484,6 @@ export default function (context) {
     } // end of switch
 
     showURI(UI.utils.getAbout(kb, selection[0]))
-    // alert(window);alert(doc);
-    /*
-    var wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
-               .getService(Components.interfaces.nsIWindowMediator);
-    var gBrowser = wm.getMostRecentWindow('navigator:browser') */
-    // gBrowser.addTab('http://www.w3.org/');
-    // alert(gBrowser.addTab);alert(gBrowser.scroll);alert(gBrowser.scrollBy)
-    // gBrowser.scrollBy(0,100);
-
-    // var thisHtml=selection[0].owner
-    // this piece of code scrolls the profile view to the middle when browser window small
-    /*
-    if (selection[0]) {
-      const PosY = UI.utils.findPos(selection[0])[1]
-      if (
-        PosY + selection[0].clientHeight >
-        window.scrollY + window.innerHeight
-      ) {
-        UI.utils.getEyeFocus(selection[0], true, true, window)
-      }
-      if (PosY < window.scrollY + 54) {
-        UI.utils.getEyeFocus(selection[0], true, undefined, window)
-      }
-    } */
   }
   this.OutlinerMouseclickPanel = function (e) {
     switch (thisOutline.UserInput._tabulatorMode) {
@@ -1545,15 +1520,15 @@ export default function (context) {
       // Shift forces a refocus - bring this to the top
       outlineRefocus(p, subject, pane)
     } else {
-      /* if (e.altKey) {
+      if (e.altKey) {
         // To investigate screw ups, dont wait show internals
         outlineExpand(p, subject, {
           pane: paneRegistry.byName('internal'),
           immediate: true
         })
-      } else { */
-      outlineExpand(p, subject)
-      // }
+      } else {
+        outlineExpand(p, subject)
+      }
     }
   }
 
