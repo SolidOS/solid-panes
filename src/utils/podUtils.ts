@@ -5,6 +5,11 @@ import { isWebIdUri } from './webIdUtils'
 
 export async function getPodStorages (url: NamedNode): Promise<NamedNode[]> {
   if (isWebIdUri(url)) {
+    try {
+      await store.fetcher.load(url.doc())
+    } catch (err) {
+      console.warn('Unable to load profile document for WebID', url.doc().uri, err)
+    }
     const podStorages = store.each(url, ns.space('storage'))
     const results = await Promise.all(podStorages.map(async pod => await isPodStorage(pod as NamedNode) ? pod as NamedNode : null))
     return results.filter(pod => pod !== null) as NamedNode[]
