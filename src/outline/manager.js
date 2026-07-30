@@ -313,17 +313,10 @@ export default function (context) {
     return document.querySelector('solid-panes-navbar')
   }
 
-  function hideSolidPanesNavbar () {
-    const navbar = getNavbarElement()
-    if (navbar) {
-      navbar.style.display = 'none'
-    }
-  }
-
   function showSolidPanesNavbar () {
     const navbar = getNavbarElement()
     if (navbar) {
-      navbar.style.display = ''
+      navbar.classList.remove('navbar--hidden')
     }
   }
 
@@ -2057,10 +2050,11 @@ export default function (context) {
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
   @param table   -- option  -- default is an HTML table element in which to put the outline.
+  @param showNavbar -- optional -- when false, suppress automatic navbar reveal
 */
-  this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
+  this.GotoSubject = function (subject, expand, pane, solo, referrer, table, showNavbar = true) {
     const outlineContainer = getOutlineContainer()
-    if (!table || table === outlineContainer) {
+    if (showNavbar && (!table || table === outlineContainer)) {
       showSolidPanesNavbar()
     }
 

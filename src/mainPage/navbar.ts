@@ -12,12 +12,26 @@ import '../components/navbar'
 
 import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
+function showNavbar () {
+  const navbar = document.querySelector<HTMLElement>('solid-panes-navbar')
+  if (navbar) {
+    navbar.classList.remove('navbar--hidden')
+  }
+}
+
 function createNavItem (
   label: string,
   onSelected: () => void,
   selected = false
 ): NavbarMenuItem {
-  return { label, onSelected, selected }
+  return {
+    label,
+    onSelected () {
+      showNavbar()
+      return onSelected()
+    },
+    selected
+  }
 }
 
 async function createNavbarMenuItems (
@@ -61,9 +75,10 @@ async function createNavbarMenuItems (
 }
 
 export async function createNavbar (outliner: OutlineManager) {
-  const existingNavbar = document.querySelector('solid-panes-navbar')
+  const existingNavbar = document.querySelector<HTMLElement>('solid-panes-navbar')
 
   if (existingNavbar) {
+    existingNavbar.classList.remove('navbar--hidden')
     return existingNavbar
   }
 

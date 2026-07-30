@@ -1,30 +1,36 @@
 :host {
-    .navbar {
-        border: 1px solid var(--color-border,#444);
-        border-radius: 5px;
-        display: flex;
-        background: var(--solid-ui-color-white, #fff);
-        overflow: hidden;
-    }
+    display: block;
+}
 
-    button {
-        padding: 10px 25px;
-        border-bottom: 2px solid transparent;
-        font-weight: 500;
-        font-size: 90%;
-        background: transparent;
-        color: inherit;
-        cursor: pointer;
-    }
+:host(.navbar--hidden) {
+    display: none !important;
+}
 
-    button.selected,
-    button:active,
-    button:hover,
-    button:focus {
-        border-bottom-color: var(--solid-ui-color-primary, #7C4DFF);
-        border-radius: 0;
-        color: var(--solid-ui-color-primary, #7C4DFF);
-        text-transform: capitalize;
-        background: color-mix(in srgb, currentColor 25%, transparent);
-    }
+.navbar {
+    border: 1px solid var(--color-border, #444);
+    border-radius: 5px;
+    display: flex;
+    background: var(--solid-ui-color-white, #fff);
+    overflow: hidden;
+}
+
+button {
+    padding: 10px 25px;
+    border-bottom: 2px solid transparent;
+    font-weight: 500;
+    font-size: 90%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+button.selected,
+button:active,
+button:hover,
+button:focus {
+    border-bottom-color: var(--solid-ui-color-primary, #7C4DFF);
+    border-radius: 0;
+    color: var(--solid-ui-color-primary, #7C4DFF);
+    text-transform: capitalize;
+    background: color-mix(in srgb, currentColor 25%, transparent);
 }
