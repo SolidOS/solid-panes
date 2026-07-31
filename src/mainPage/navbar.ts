@@ -38,7 +38,8 @@ async function createNavbarMenuItems (
   outliner: OutlineManager,
   subject: NamedNode,
   outlineView: HTMLElement | null,
-  selectedPaneName?: string
+  selectedPaneName?: string,
+  selectedPaneUri?: string
 ): Promise<NavbarMenuItem[]> {
   const webId = await loadProfileFromURI(subject)
   const selectedPane = selectedPaneName || (isWebIdUri(subject) ? 'profile' : undefined)
@@ -66,7 +67,8 @@ async function createNavbarMenuItems (
         async () => {
           outliner.GotoSubject(subject, true, pane, true, undefined, outlineView)
         },
-        selectedPane === pane.paneName
+        selectedPane === pane.paneName &&
+          (selectedPaneUri ? selectedPaneUri === pane.subject.value : storagePanes.length === 1)
       )
     )
   })
@@ -88,7 +90,8 @@ export async function createNavbar (outliner: OutlineManager) {
   const uri = window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
   const selectedPaneName = window.history.state?.paneName
-  let menuItems = await createNavbarMenuItems(outliner, subject, OutlineView, selectedPaneName).catch((err) => {
+  const selectedPaneUri = window.history.state?.paneUri
+  let menuItems = await createNavbarMenuItems(outliner, subject, OutlineView, selectedPaneName, selectedPaneUri).catch((err) => {
     console.error('Failed to build navbar menu items:', err)
     return []
   })

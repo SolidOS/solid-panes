@@ -2068,7 +2068,11 @@ export default function (context) {
       dom.defaultView.history
     ) {
       const currentState = dom.defaultView.history.state || {}
-      const stateObj = pane ? { ...currentState, paneName: pane.name } : currentState
+      const paneState = pane ? { paneName: pane.name } : {}
+      if (pane && pane.subject && typeof pane.subject.uri === 'string') {
+        paneState.paneUri = pane.subject.uri
+      }
+      const stateObj = { ...currentState, ...paneState }
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
