@@ -31,7 +31,6 @@ const mockPaneRegistry = {
   byName: () => MockPane
 }
 
-
 describe('manager', () => {
   describe('outline object td', () => {
     describe('for a named node', () => {

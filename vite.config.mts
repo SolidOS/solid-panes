@@ -55,8 +55,8 @@ export default defineConfig({
         // FIXME drop aliases once the dependencies support ESM exports (only necessary for dev sandbox)
         alias: {
             '$rdf': 'rdflib',
-            'solid-logic': fileURLToPath(new URL('./node_modules/solid-logic/dist/solid-logic.esm.js', import.meta.url)),
-            SolidLogic: fileURLToPath(new URL('./node_modules/solid-logic/dist/solid-logic.esm.js', import.meta.url)),
+            'solid-logic': fileURLToPath(new URL('./node_modules/solid-logic/dist/index.esm.js', import.meta.url)),
+            SolidLogic: fileURLToPath(new URL('./node_modules/solid-logic/dist/index.esm.js', import.meta.url)),
             UI: fileURLToPath(new URL('./node_modules/solid-ui/dist/index.esm.js', import.meta.url)),
         },
     },
