@@ -2065,17 +2065,19 @@ export default function (context) {
       solo &&
       dom &&
       dom.defaultView &&
-      dom.defaultView.history &&
-      // Don't add the new location to the history if we arrived here through a direct link
-      // (i.e. when static/databrowser.html in node-solid-server called this method):
-      document.location.href !== subject.uri
+      dom.defaultView.history
     ) {
-      const stateObj = pane ? { paneName: pane.name } : {}
+      const currentState = dom.defaultView.history.state || {}
+      const stateObj = pane ? { ...currentState, paneName: pane.name } : currentState
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
         if (currentUrl.origin === targetUrl.origin) {
-          dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+          if (document.location.href !== subject.uri) {
+            dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+          } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
+            dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
+          }
         }
       } catch (e) {
         console.log(e)

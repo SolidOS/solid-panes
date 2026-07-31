@@ -5,6 +5,7 @@
 
 import { LiveStore, NamedNode } from 'rdflib'
 import type { RenderEnvironment } from 'pane-registry'
+import * as paneRegistry from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
 import { createNavbar } from './navbar'
@@ -43,10 +44,14 @@ export async function initMainPage (
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  const historyPane = window.history.state?.paneName
-  const initialPane = !historyPane && isWebIdUri(subject)
-    ? await getProfilePaneFromURI(subject)
+  const historyPaneName = window.history.state?.paneName
+  const historyPane = historyPaneName
+    ? paneRegistry.byName(historyPaneName)
     : undefined
+  const initialPane = historyPane ??
+    (!historyPaneName && isWebIdUri(subject)
+      ? await getProfilePaneFromURI(subject)
+      : undefined)
 
   outliner.GotoSubject(subject, true, initialPane, true, undefined)
 
