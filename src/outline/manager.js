@@ -2057,8 +2057,6 @@ export default function (context) {
         pane,
         solo
       })
-      const tr = td.parentNode
-      UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
 
     if (

@@ -53,7 +53,7 @@ export async function initMainPage (
       ? await getProfilePaneFromURI(subject)
       : undefined)
 
-  outliner.GotoSubject(subject, true, initialPane, true, undefined)
+  outliner.GotoSubject(subject, true, initialPane, true, undefined, undefined, true, false)
 
   const header = await createHeader(outliner)
   const navbar = await createNavbar(outliner)
@@ -74,7 +74,7 @@ export async function refreshUI (outliner: OutlineManager) {
   const envChanged = currentSignature !== previousSignature
 
   if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
-    outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined)
+    outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined, undefined, true, false)
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
 }
