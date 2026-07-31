@@ -5,8 +5,12 @@
 
 import { LiveStore, NamedNode } from 'rdflib'
 import type { RenderEnvironment } from 'pane-registry'
+import * as paneRegistry from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
+import { createNavbar } from './navbar'
+import { getProfilePaneFromURI } from '../utils/paneUtils'
+import { isWebIdUri } from '../utils/webIdUtils'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
@@ -40,10 +44,20 @@ export async function initMainPage (
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  outliner.GotoSubject(subject, true, undefined, true, undefined)
+  const historyPaneName = window.history.state?.paneName
+  const historyPane = historyPaneName
+    ? paneRegistry.byName(historyPaneName)
+    : undefined
+  const initialPane = historyPane ??
+    (!historyPaneName && isWebIdUri(subject)
+      ? await getProfilePaneFromURI(subject)
+      : undefined)
+
+  outliner.GotoSubject(subject, true, initialPane, true, undefined, undefined, true, false)
 
   const header = await createHeader(outliner)
-  return Promise.all([header])
+  const navbar = await createNavbar(outliner)
+  return Promise.all([header, navbar])
 }
 
 export async function refreshUI (outliner: OutlineManager) {
@@ -60,7 +74,7 @@ export async function refreshUI (outliner: OutlineManager) {
   const envChanged = currentSignature !== previousSignature
 
   if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
-    outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined)
+    outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined, undefined, true, false)
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
 }

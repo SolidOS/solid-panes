@@ -1,4 +1,5 @@
 declare module '*.css';
+declare module '~icons/*';
 declare module '*.svg' {
   const content: string
   export default content

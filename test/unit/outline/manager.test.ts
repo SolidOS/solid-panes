@@ -1,9 +1,24 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+
+vi.mock('solid-ui', async () => {
+  const actual = await vi.importActual<typeof import('solid-ui')>('solid-ui')
+  return {
+    ...actual,
+    login: {
+      ...actual.login,
+      filterAvailablePanes: async panes => panes
+    }
+  }
+})
+
 import OutlineManager from '../../../src/outline/manager'
 import { lit, NamedNode, sym, blankNode } from 'rdflib'
 import { findByText, getByText } from '@testing-library/dom'
 
 const MockPane = {
+  name: 'mock',
+  icon: 'data:image/svg+xml,<svg></svg>',
+  label: () => 'Mock Pane',
   render: (subject: NamedNode) => {
     const div = document.createElement('div')
     div.appendChild(document.createTextNode(`Mock Pane for ${subject.uri}`))
@@ -12,7 +27,7 @@ const MockPane = {
 }
 
 const mockPaneRegistry = {
-  list: [],
+  list: [MockPane],
   byName: () => MockPane
 }
 
