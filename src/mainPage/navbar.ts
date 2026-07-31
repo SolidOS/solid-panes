@@ -88,15 +88,37 @@ export async function createNavbar (outliner: OutlineManager) {
   const uri = window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
   const selectedPaneName = window.history.state?.paneName
-  const menuItems = await createNavbarMenuItems(outliner, subject, OutlineView, selectedPaneName).catch((err) => {
+  let menuItems = await createNavbarMenuItems(outliner, subject, OutlineView, selectedPaneName).catch((err) => {
     console.error('Failed to build navbar menu items:', err)
     return []
   })
 
-  render(
-    html`<solid-panes-navbar .navbarItems=${menuItems}></solid-panes-navbar>`,
-    tmpContainer
-  )
+  function setSelectedItem (selectedItem: NavbarMenuItem) {
+    menuItems = menuItems.map((menuItem) => ({
+      ...menuItem,
+      selected: menuItem === selectedItem
+    }))
+  }
+
+  function handleSelectionChanged (event: Event) {
+    const { detail: selectedItem } = event as CustomEvent<NavbarMenuItem>
+    setSelectedItem(selectedItem)
+
+    Promise.resolve(selectedItem.onSelected?.()).catch((error) => {
+      console.error('Navbar menu item selection failed:', error)
+    })
+
+    renderNavbar()
+  }
+
+  function renderNavbar () {
+    render(
+      html`<solid-panes-navbar .navbarItems=${menuItems} @solid-ui-select=${handleSelectionChanged}></solid-panes-navbar>`,
+      tmpContainer
+    )
+  }
+
+  renderNavbar()
 
   const navbar = tmpContainer.firstElementChild as HTMLElement | null
 

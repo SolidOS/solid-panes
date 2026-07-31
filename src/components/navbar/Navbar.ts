@@ -14,7 +14,7 @@ import styles from './Navbar.styles.css'
 export interface NavbarMenuItem {
   label: string | TemplateResult
   selected?: boolean
-  onSelected?(): void
+  onSelected?(): void | Promise<void>
 }
 
 @customElement('solid-panes-navbar')
@@ -25,11 +25,12 @@ export default class Navbar extends WebComponent {
   accessor navbarItems: NavbarMenuItem[] = []
 
   private selectItem (item: NavbarMenuItem) {
-    this.navbarItems = this.navbarItems.map(menuItem => ({
-      ...menuItem,
-      selected: menuItem === item
+    this.dispatchEvent(new CustomEvent('solid-ui-select', {
+      detail: item,
+      bubbles: true,
+      composed: true,
+      cancelable: true
     }))
-    item.onSelected?.()
   }
 
   render () {
