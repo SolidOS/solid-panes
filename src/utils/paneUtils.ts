@@ -74,7 +74,7 @@ export async function getSocialPaneFromURI (subject?: NamedNode) {
   return getPaneItemFromURI('social', subject, 'Social', FRIENDS_ICON)
 }
 
-export async function getFolderPaneforStorage (podUrl: NamedNode, label?: string): Promise<PaneItem | null> {
+export async function getFolderPaneForStorage (podUrl: NamedNode, label?: string): Promise<PaneItem | null> {
   const folderPane = paneRegistry.byName('folder')
   if (!folderPane) return null
 
@@ -86,7 +86,7 @@ export async function getFolderPanesFromURI (subject: NamedNode): Promise<PaneIt
 
   return Promise.all(
     podStorages.map((pod, index) =>
-      getFolderPaneforStorage(
+      getFolderPaneForStorage(
         pod,
         podStorages.length > 1 ? `Storage ${index + 1}` : 'Storage'
       )
