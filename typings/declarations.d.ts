@@ -1,23 +1,8 @@
 declare module '*.css';
+declare module '~icons/*';
 declare module '*.svg' {
   const content: string
   export default content
-}
-
-declare module 'solid-ui/components/actions/button'
-
-interface SolidUIButtonElement extends HTMLElement {
-  type: string
-  variant: string
-  size: string
-  label: string
-  disabled: boolean
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'solid-ui-button': SolidUIButtonElement
-  }
 }
 
 declare module '*.svg?raw' {
@@ -38,5 +23,3 @@ declare module '*.png' {
   const content: string
   export default content
 }
-
-declare module 'contacts-pane'

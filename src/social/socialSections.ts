@@ -28,7 +28,7 @@ export type HeaderStats = {
 export type HeaderProfileData = {
   imageUrl?: string,
   name?: string,
-  pronouns? :string,
+  pronouns?: string,
   jobTitle?: string,
   organization?: string,
   location?: string | null
@@ -68,25 +68,25 @@ export function createHeaderSection (
     } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
       headerActions.classList.add('social-pane__header-actions--friend')
 
-    const friendDropButton = dom.createElement('button')
-    friendDropButton.setAttribute('title', 'Drop friend here')
-    friendDropButton.setAttribute('aria-label', 'Drop friend here')
-    const buttonImage = dom.createElement('img')
-    buttonImage.setAttribute('title', 'Drop friend here')
-    buttonImage.setAttribute('alt', 'Drop friend here')
-    friendDropButton.appendChild(buttonImage)
+      const friendDropButton = dom.createElement('button')
+      friendDropButton.setAttribute('title', 'Drop friend here')
+      friendDropButton.setAttribute('aria-label', 'Drop friend here')
+      const buttonImage = dom.createElement('img')
+      buttonImage.setAttribute('title', 'Drop friend here')
+      buttonImage.setAttribute('alt', 'Drop friend here')
+      friendDropButton.appendChild(buttonImage)
 
-    const dropHint = dom.createElement('span')
-    dropHint.className = 'social-friends-header-hint'
-    dropHint.textContent = 'Drag a WebId on the target to add a friend.'
-    friendDropButton.appendChild(dropHint)
-    headerActions.appendChild(friendsDropButton)
-  }
-
-      // const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
-      // addToFriendsButton.classList.add('flex-center')
-      // headerActions.appendChild(addToFriendsButton)
+      const dropHint = dom.createElement('span')
+      dropHint.className = 'social-friends-header-hint'
+      dropHint.textContent = 'Drag a WebId on the target to add a friend.'
+      friendDropButton.appendChild(dropHint)
+      headerActions.appendChild(friendDropButton)
     }
+
+    // const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
+    // addToFriendsButton.classList.add('flex-center')
+    // headerActions.appendChild(addToFriendsButton)
+    // }
 
     header.appendChild(headerContent)
 

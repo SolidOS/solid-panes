@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getStatementsToAdd should return all required statements to add the given permissions for a given origin 1`] = `
+exports[`getStatementsToAdd > should return all required statements to add the given permissions for a given origin 1`] = `
 [
   Statement {
     "graph": NamedNode {
@@ -101,7 +101,7 @@ exports[`getStatementsToAdd should return all required statements to add the giv
 ]
 `;
 
-exports[`getStatementsToDelete should return all statements for the given origin 1`] = `
+exports[`getStatementsToDelete > should return all statements for the given origin 1`] = `
 [
   Statement {
     "graph": DefaultGraph {

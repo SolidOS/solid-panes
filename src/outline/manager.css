@@ -68,11 +68,12 @@
 }
 
 .tdFlex {
-  margin: var(--spacing-xxxs, 0.2rem);
-  border: none;
-  padding: 0;
+  border: 1px solid var(--color-border, #444);
+  border-radius: 5px;
   vertical-align: top;
   display: flex;
   justify-content: space-between;
   flex-direction: row;
+  background: var(--solid-ui-color-white, #fff);
+  overflow: hidden;
 }
