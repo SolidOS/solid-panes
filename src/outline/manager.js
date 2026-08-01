@@ -14,6 +14,7 @@ import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import personIcon from '../icons/person.svg'
 import friendsIcon from '../icons/friends.svg'
+import '~icons/lucide/ellipsis-vertical'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
@@ -391,14 +392,79 @@ export default function (context) {
       tr.firstPane = requiredPane || getPane(relevantPanes, subject)
     }
 
+    /**
+     * Shared pane-toggle logic used by tray icons and submenu items.
+     */
+    function togglePane (ico, pane, td, tr, paneShownStyle, paneHiddenStyle) {
+      let containingTable
+      for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
+        if (containingTable.nodeName === 'TABLE') break
+      }
+      if (containingTable.nodeName !== 'TABLE') {
+        throw new Error('outline: internal error.')
+      }
+
+      function removePanes (specific) {
+        for (let d = containingTable.firstChild; d; d = d.nextSibling) {
+          if (typeof d.pane !== 'undefined') {
+            if (!specific || d.pane === specific) {
+              if (d.paneButton) {
+                d.paneButton.setAttribute('class', 'paneHidden')
+                d.paneButton.style = paneHiddenStyle
+              }
+              removeAndRefresh(d)
+            }
+          }
+        }
+      }
+
+      function renderPane (paneToRender) {
+        let paneDiv
+        UI.log.info('outline: Rendering pane (2): ' + paneToRender.name)
+        try {
+          paneDiv = paneToRender.render(subject, context, options)
+        } catch (e) {
+          paneDiv = dom.createElement('div')
+          paneDiv.setAttribute('class', 'exceptionPane')
+          const pre = dom.createElement('pre')
+          paneDiv.appendChild(pre)
+          pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
+        }
+        if (paneToRender.requireQueryButton && dom.getElementById('queryButton')) {
+          dom.getElementById('queryButton').removeAttribute('style')
+        }
+        const second = containingTable.firstChild.nextSibling
+        const row = dom.createElement('tr')
+        const cell = row.appendChild(dom.createElement('td'))
+        cell.setAttribute('colspan', '2')
+        cell.style.textAlign = 'left'
+        cell.style.width = '100%'
+        cell.appendChild(paneDiv)
+        if (second) containingTable.insertBefore(row, second)
+        else containingTable.appendChild(row)
+        row.pane = paneToRender
+        row.paneButton = ico
+      }
+
+      const state = ico.getAttribute('class')
+      if (state === 'paneHidden') {
+        removePanes()
+        renderPane(pane)
+        ico.setAttribute('class', 'paneShown')
+        ico.style = paneShownStyle
+      } else {
+        removePanes(pane)
+        ico.setAttribute('class', 'paneHidden')
+        ico.style = paneHiddenStyle
+      }
+    }
+
     async function renderPaneIconTray (td, options = {}) {
-      // Icon tray removed: this UI is no longer needed.
-      // The tray previously populated pane selection buttons,
-      // but pane selection itself is retained via tr.firstPane.
       const paneShownStyle =
-        'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
+        'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color: #ffd;'
       const paneHiddenStyle =
         'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
+
       const paneIconTray = td.appendChild(dom.createElement('nav'))
       paneIconTray.style =
         'display:flex; justify-content: flex-start; align-items: center;'
@@ -407,144 +473,121 @@ export default function (context) {
         ? []
         : await getRelevantPanes(subject, context)
       tr.firstPane = requiredPane || getPane(relevantPanes, subject)
-      const paneNumber = relevantPanes.indexOf(tr.firstPane)
+      const activeIdx = relevantPanes.indexOf(tr.firstPane)
 
-      if (relevantPanes.length !== 1) {
-        // if only one, simplify interface
-        relevantPanes.forEach((pane, index) => {
-          const label = pane.label(subject, context)
+      if (relevantPanes.length === 0) return paneIconTray
 
-          let iconSrc = ''
-          if (pane.name === 'profile') {
-            iconSrc = PERSON_ICON
-          } else if (pane.name === 'social') {
-            iconSrc = FRIENDS_ICON
-          } else {
-            iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+      // ── Icon builder ──
+      function buildPaneIcon (pane, index) {
+        const label = pane.label(subject, context)
+        let iconSrc = ''
+        if (pane.name === 'profile') {
+          iconSrc = PERSON_ICON
+        } else if (pane.name === 'social') {
+          iconSrc = FRIENDS_ICON
+        } else {
+          iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
+        }
+        const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
+        if (iconSrc instanceof Promise) {
+          iconSrc.then(resolvedIconSrc => {
+            ico.setAttribute('src', resolvedIconSrc)
+          }).catch(err => {
+            console.error('Error resolving async icon:', err)
+          })
+        }
+        ico.title = label
+        return ico
+      }
+
+      // ── Wire click handler ──
+      function wireIcon (ico, pane, index) {
+        ico.style = (index === activeIdx) ? paneShownStyle : paneHiddenStyle
+        ico.setAttribute('class', index !== activeIdx ? 'paneHidden' : 'paneShown')
+        if (index === activeIdx) tr.paneButton = ico
+        ico.addEventListener('click', function (event) {
+          if (ico.getAttribute('class') === 'paneHidden' && event.shiftKey) {
+            // Shift+click keeps current panes
           }
-          const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
-
-          // Handle async icon functions
-          if (iconSrc instanceof Promise) {
-            iconSrc.then(resolvedIconSrc => {
-              ico.setAttribute('src', resolvedIconSrc)
-            }).catch(err => {
-              console.error('Error resolving async icon:', err)
-            })
-          }
-
-          ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
-          // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
-          // ico.style.width = iconHeight
-          // ico.style.height = iconHeight
-          const listen = function (ico, pane) {
-            // Freeze scope for event time
-            ico.addEventListener(
-              'click',
-              function (event) {
-                let containingTable
-                // Find the containing table for this subject
-                for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-                  if (containingTable.nodeName === 'TABLE') break
-                }
-                if (containingTable.nodeName !== 'TABLE') {
-                  throw new Error('outline: internal error.')
-                }
-                const removePanes = function (specific) {
-                  for (let d = containingTable.firstChild; d; d = d.nextSibling) {
-                    if (typeof d.pane !== 'undefined') {
-                      if (!specific || d.pane === specific) {
-                        if (d.paneButton) {
-                          d.paneButton.setAttribute('class', 'paneHidden')
-                          d.paneButton.style = paneHiddenStyle
-                        }
-                        removeAndRefresh(d)
-                        // If we just delete the node d, ffox doesn't refresh the display properly.
-                        // state = 'paneHidden';
-                        if (
-                          d.pane.requireQueryButton &&
-                          containingTable.parentNode.className /* outer table */ &&
-                          numberOfPanesRequiringQueryButton === 1 &&
-                          dom.getElementById('queryButton')
-                        ) {
-                          dom
-                            .getElementById('queryButton')
-                            .setAttribute('style', 'display:none;')
-                        }
-                      }
-                    }
-                  }
-                }
-                const renderPane = function (pane) {
-                  let paneDiv
-                  UI.log.info('outline: Rendering pane (2): ' + pane.name)
-
-                  try {
-                    paneDiv = pane.render(subject, context, options)
-                  } catch (e) {
-                    // Easier debugging for pane developers
-                    paneDiv = dom.createElement('div')
-                    paneDiv.setAttribute('class', 'exceptionPane')
-                    const pre = dom.createElement('pre')
-                    paneDiv.appendChild(pre)
-                    pre.appendChild(
-                      dom.createTextNode(UI.utils.stackString(e))
-                    )
-                  }
-
-                  if (
-                    pane.requireQueryButton &&
-                    dom.getElementById('queryButton')
-                  ) {
-                    dom.getElementById('queryButton').removeAttribute('style')
-                  }
-                  const second = containingTable.firstChild.nextSibling
-                  const row = dom.createElement('tr')
-                  const cell = row.appendChild(dom.createElement('td'))
-                  cell.setAttribute('colspan', '2')
-                  cell.style.textAlign = 'left'
-                  cell.style.width = '100%'
-                  cell.appendChild(paneDiv)
-                  if (second) containingTable.insertBefore(row, second)
-                  else containingTable.appendChild(row)
-                  row.pane = pane
-                  row.paneButton = ico
-                }
-                const state = ico.getAttribute('class')
-                if (state === 'paneHidden') {
-                  if (!event.shiftKey) {
-                    // shift means multiple select
-                    removePanes()
-                  }
-                  renderPane(pane)
-                  ico.setAttribute('class', 'paneShown')
-                  ico.style = paneShownStyle
-                } else {
-                  removePanes(pane)
-                  ico.setAttribute('class', 'paneHidden')
-                  ico.style = paneHiddenStyle
-                }
-
-                let numberOfPanesRequiringQueryButton = 0
-                for (let d = containingTable.firstChild; d; d = d.nextSibling) {
-                  if (d.pane && d.pane.requireQueryButton) {
-                    numberOfPanesRequiringQueryButton++
-                  }
-                }
-              },
-              false
-            )
-          } // listen
-
-          listen(ico, pane)
-          ico.setAttribute(
-            'class',
-            index !== paneNumber ? 'paneHidden' : 'paneShown'
-          )
-          if (index === paneNumber) tr.paneButton = ico
-          paneIconTray.appendChild(ico)
+          togglePane(ico, pane, td, tr, paneShownStyle, paneHiddenStyle)
         })
       }
+
+      // ── Split: tray (first + sharing) vs submenu (rest) ──
+      const sharingPaneIdx = relevantPanes.findIndex(p => {
+        const src = typeof p.icon === 'function' ? p.icon(subject, context) : p.icon
+        return typeof src === 'string' && src.includes('padlock')
+      })
+
+      const trayPanes = []
+      const menuPanes = []
+      relevantPanes.forEach((pane, index) => {
+        if (index === 0 || index === sharingPaneIdx) {
+          trayPanes.push({ pane, index })
+        } else {
+          menuPanes.push({ pane, index })
+        }
+      })
+
+      // ── Render tray icons ──
+      trayPanes.forEach(({ pane, index }) => {
+        const ico = buildPaneIcon(pane, index)
+        wireIcon(ico, pane, index)
+        paneIconTray.appendChild(ico)
+      })
+
+      // ── Render 3-dots submenu ──
+      if (menuPanes.length > 0) {
+        const wrapper = dom.createElement('div')
+        wrapper.style = 'margin-left: 0.3em; display: flex; align-items: center;'
+
+        const trigger = dom.createElement('solid-ui-button')
+        trigger.setAttribute('variant', 'ghost')
+        trigger.setAttribute('title', 'More options')
+        trigger.setAttribute('id', `menu-trigger-${Math.random().toString(36).slice(2)}`)
+        const dots = dom.createElement('icon-lucide-ellipsis-vertical')
+        dots.setAttribute('slot', 'icon')
+        trigger.appendChild(dots)
+
+        const dropdown = dom.createElement('wa-dropdown')
+        dropdown.setAttribute('placement', 'bottom-end')
+        dropdown.setAttribute('distance', '5')
+        trigger.setAttribute('slot', 'trigger')
+        trigger.setAttribute('aria-haspopup', 'menu')
+        dropdown.appendChild(trigger)
+
+        menuPanes.forEach(({ pane, index }) => {
+          const item = dom.createElement('wa-dropdown-item')
+          item.setAttribute('role', 'menuitem')
+
+          const icon = buildPaneIcon(pane, index)
+          icon.style = 'width: 20px; margin-right: 0.4em; border-radius: 0; margin-left: 0; padding: 0; vertical-align: middle;'
+          item.appendChild(icon)
+
+          const labelSpan = dom.createElement('span')
+          labelSpan.textContent = pane.label(subject, context)
+          if (index === activeIdx) labelSpan.style = 'font-weight: bold;'
+          item.appendChild(labelSpan)
+
+          item.addEventListener('click', () => {
+            const currentBtn = tr.paneButton
+            if (currentBtn) {
+              currentBtn.setAttribute('class', 'paneHidden')
+              currentBtn.style = paneHiddenStyle
+            }
+            const proxyIco = buildPaneIcon(pane, index)
+            proxyIco.setAttribute('class', 'paneHidden')
+            tr.paneButton = proxyIco
+            togglePane(proxyIco, pane, td, tr, paneShownStyle, paneHiddenStyle)
+          })
+
+          dropdown.appendChild(item)
+        })
+
+        wrapper.appendChild(dropdown)
+        paneIconTray.appendChild(wrapper)
+      }
+
       return paneIconTray
     } // renderPaneIconTray
 
