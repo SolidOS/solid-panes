@@ -1,0 +1,28 @@
+:host {
+  div {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    text-align: right;
+  }
+
+  /* generative ai */
+  div > * {
+    flex: 0 1 auto;
+  }
+
+  @media (max-width: 900px) {
+    div {
+      padding-right: 3px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    div {
+      justify-content: flex-start;
+      gap: 5px;
+    }
+  }
+}
