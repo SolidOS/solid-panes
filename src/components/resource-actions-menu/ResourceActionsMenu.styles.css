@@ -1,5 +1,0 @@
-/*this isnt working */
-solid-ui-menu::part(menu) {
-  min-width: max-content;
-  width: max-content;
-}

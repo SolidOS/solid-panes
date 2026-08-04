@@ -1,44 +1,40 @@
-import { widgets, utils, WebComponent } from 'solid-ui'
+import { sym } from 'rdflib'
+import { widgets, utils, WebComponent, fileExplorerContext, type FileExplorerContext } from 'solid-ui'
 import 'solid-ui/components/button'
 import { customElement, property, query, state } from 'lit/decorators.js'
 import { html } from 'lit'
-import { LiveStore, sym } from 'rdflib'
+import { consume } from '@lit/context'
 import { PaneIcon } from './types'
-// we will need a context later i think
 import '~icons/lucide/globe'
 import '~icons/lucide/lock-keyhole'
 import '~icons/lucide/arrow-left'
 import styles from './FileExplorerHeaderSummary.styles.css'
-import { fetchContentAndMetadata, type FileExplorerResourceMetadata } from './helper'
-
+import { type FileExplorerResourceMetadata } from './helper'
 
 @customElement('file-explorer-header-summary')
 export default class FileExplorerHeaderSummary extends WebComponent {
   static styles = styles
 
   private _draggableSubjectUri: string | undefined
-  private _loadedMetadataForUri: string | undefined
+  private _resolvedPaneIconFor: PaneIcon | undefined
 
-  @property({ type: LiveStore })
-  accessor store: LiveStore | undefined
-
-  @property({ type: String })
-  accessor subjectUri: string | undefined
+  @consume({ context: fileExplorerContext, subscribe: true })
+  accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
 
   @property({ attribute: false })
-  accessor paneIcon: PaneIcon
+  accessor paneIcon: PaneIcon | undefined
 
-  @state()
-  accessor resolvedPaneIcon: string | undefined = undefined
-
-  @property({ type: Function })
+  @property({ attribute: false })
   accessor onBackClick: (() => void) | undefined
 
-  @state()
+  @property({ attribute: false })
   accessor responseMetadata: Pick<FileExplorerResourceMetadata, 'modified' | 'isPublic'> = {
     modified: undefined,
     isPublic: false
   }
+
+  @state()
+  accessor resolvedPaneIcon: string | undefined = undefined
 
   @query('h1')
   private accessor titleHeading: HTMLHeadingElement | null = null
@@ -70,43 +66,35 @@ export default class FileExplorerHeaderSummary extends WebComponent {
   }
 
   protected updated () {
-    if (this.store && this.subjectUri && this._loadedMetadataForUri !== this.subjectUri) {
-      this._loadedMetadataForUri = this.subjectUri
-      void this.loadResponseMetadata()
+    if (this.paneIcon !== undefined && this._resolvedPaneIconFor !== this.paneIcon) {
+      this._resolvedPaneIconFor = this.paneIcon
+      this.resolvePaneIcon()
     }
 
-    if (this.resolvedPaneIcon === undefined) {
-      void this.resolvePaneIcon()
-    }
+    if (!this.titleHeading || !this.fileExplorerContext?.subjectUri || this._draggableSubjectUri === this.fileExplorerContext.subjectUri) return
 
-    if (!this.titleHeading || !this.subjectUri || this._draggableSubjectUri === this.subjectUri) return
-
-    widgets.makeDraggable(this.titleHeading, sym(this.subjectUri)) // doing it this way for now, just to keep the same functionality
-    this._draggableSubjectUri = this.subjectUri
+    widgets.makeDraggable(this.titleHeading, sym(this.fileExplorerContext.subjectUri)) // doing it this way for now, just to keep the same functionality
+    this._draggableSubjectUri = this.fileExplorerContext.subjectUri
   }
 
-  private async loadResponseMetadata () {
-    if (!this.store || !this.subjectUri) return
-
-    const { metadata } = await fetchContentAndMetadata(this.store, sym(this.subjectUri))
-    this.responseMetadata = {
-      modified: metadata.modified,
-      isPublic: metadata.isPublic
-    }
-  }
-
+  // Needed because humanReadable pane can return a promise for an icon.
   private async resolvePaneIcon () {
-    if (this.paneIcon == null) {
-      this.resolvedPaneIcon = undefined
-      return
-    }
+    try {
+      if (this.paneIcon == null) {
+        this.resolvedPaneIcon = undefined
+        return
+      }
 
-    const icon = await this.paneIcon
-    this.resolvedPaneIcon = icon ?? undefined
+      const icon = await this.paneIcon
+      this.resolvedPaneIcon = icon ?? undefined
+    } catch (error) {
+      this.resolvedPaneIcon = undefined
+      console.warn('file-explorer-header-summary: failed to resolve pane icon', error)
+    }
   }
 
   render () {
-    const subject = this.subjectUri ? sym(this.subjectUri) : undefined
+    const subject = this.fileExplorerContext?.subjectUri ? sym(this.fileExplorerContext.subjectUri) : undefined
     const label = subject ? utils.label(subject) : ''
     const modified = this.formatModifiedDate(this.responseMetadata.modified)
     const isPublic = this.responseMetadata.isPublic
@@ -115,7 +103,7 @@ export default class FileExplorerHeaderSummary extends WebComponent {
       <div class="file-explorer-header-summary">
         <solid-ui-button
           variant="ghost"
-          @click=${() => this.onBackClick?.()}
+          @click=${this.onBackClick}
           title="Back"
         >
           <icon-lucide-arrow-left></icon-lucide-arrow-left>

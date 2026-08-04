@@ -51,3 +51,34 @@
   background: var(--solid-ui-color-white, #fff);
   overflow: hidden;
 }
+
+.paneDiv,
+.exceptionPane {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.objectValue--literal {
+  white-space: pre-wrap;
+}
+
+.objectValue--integer,
+.objectValue--decimal,
+.objectValue--double {
+  display: block;
+  text-align: right;
+}
+
+.objectValueAccessIcon,
+.objectValueLinkIcon,
+.phoneIcon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.objectValueLinkIcon,
+.phoneIcon {
+  width: 12px;
+  height: 12px;
+}

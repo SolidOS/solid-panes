@@ -4,20 +4,15 @@ import { html } from 'lit'
 import 'solid-ui/components/button'
 import 'solid-ui/components/menu'
 import 'solid-ui/components/menu-item'
-// import { sourceContext, SourceContext } from '../../../primitives/context'
 import DeleteResourceDialog from './DeleteResourceDialog'
 import '~icons/lucide/ellipsis-vertical'
 import '~icons/lucide/trash-2'
-import styles from './ResourceActionsMenu.styles.css'
 import { LiveStore } from 'rdflib'
-// import { getStatusSection } from '../../../StatusSection'
-
+// TODO: Add Error Status section
 
 @customElement('resource-actions-menu')
 export default class ResourceActionsMenu extends WebComponent {
-  static styles = styles
-
-  @property({ type: LiveStore })
+  @property({ attribute: false })
   accessor store: LiveStore | undefined
 
   @property({ type: String })
@@ -26,7 +21,7 @@ export default class ResourceActionsMenu extends WebComponent {
   @property({ attribute: false })
   accessor menuItems: Array<{ label: string, icon?: HTMLElement, action: (event: Event) => void }> = []
 
-  private confirmDelete(resourceName: string) {
+  private confirmDelete (resourceName: string) {
     return new Promise<boolean>(resolve => {
       showDialog(DeleteResourceDialog, {
         props: { resourceName },
@@ -45,7 +40,7 @@ export default class ResourceActionsMenu extends WebComponent {
     ;(outliner as any).GotoSubject(sourceContext.context.session.store.sym(parentFolderUri), true, undefined, true, undefined)
   } */
 
-  private async deleteResourceIfPresent(store: LiveStore, uri: string) {
+  private async deleteResourceIfPresent (store: LiveStore, uri: string) {
     try {
       await store.fetcher.webOperation('DELETE', uri)
     } catch (err: any) {
@@ -55,18 +50,18 @@ export default class ResourceActionsMenu extends WebComponent {
     }
   }
 
-  // Note: Below is for a file only. I need to move this to a function 
-  // that function needs to check if it's a container and if so we can do the 
+  // TODO: Below is for a file only. I need to move this to a function
+  // that function needs to check if it's a container and if so we can do the
   // recursive delete function.
   // dont' forget public and private type indexes.
-  private async handleDelete(event: Event) {
+  private async handleDelete (event: Event) {
     event.preventDefault()
 
     if (!this.store?.fetcher || !this.subjectUri) return
 
     const store = this.store
     const resourceNode = store.sym(this.subjectUri)
-    
+
     const confirmation = await this.confirmDelete(utils.label(resourceNode))
     if (!confirmation) return
 
@@ -87,15 +82,7 @@ export default class ResourceActionsMenu extends WebComponent {
     }
   }
 
-  /* private handleViewRDFXML(event: Event) {
-    event.preventDefault()
-    const sourceContext = this.sourceContext
-    if (!sourceContext) return
-
-    sourceContext.updateSourcePaneState('viewMode', 'rdfxml')
-  } */
-
-  render() {
+  render () {
     return html`
       <solid-ui-menu>
         <solid-ui-button slot="trigger" variant="ghost" title="More options">
