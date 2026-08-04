@@ -544,21 +544,18 @@ export default function (context) {
         const trigger = dom.createElement('solid-ui-button')
         trigger.setAttribute('variant', 'ghost')
         trigger.setAttribute('title', 'More options')
-        trigger.setAttribute('id', `menu-trigger-${Math.random().toString(36).slice(2)}`)
         const dots = dom.createElement('icon-lucide-ellipsis-vertical')
         dots.setAttribute('slot', 'icon')
         trigger.appendChild(dots)
 
-        const dropdown = dom.createElement('wa-dropdown')
-        dropdown.setAttribute('placement', 'bottom-end')
-        dropdown.setAttribute('distance', '5')
+        const menu = dom.createElement('solid-ui-menu')
+        menu.setAttribute('placement', 'bottom-end')
+        menu.setAttribute('distance', '5')
         trigger.setAttribute('slot', 'trigger')
-        trigger.setAttribute('aria-haspopup', 'menu')
-        dropdown.appendChild(trigger)
+        menu.appendChild(trigger)
 
         menuPanes.forEach(({ pane, index }) => {
-          const item = dom.createElement('wa-dropdown-item')
-          item.setAttribute('role', 'menuitem')
+          const item = dom.createElement('div')
 
           const icon = buildPaneIcon(pane, index)
           icon.style = 'width: 20px; margin-right: 0.4em; border-radius: 0; margin-left: 0; padding: 0; vertical-align: middle;'
@@ -581,10 +578,10 @@ export default function (context) {
             togglePane(proxyIco, pane, td, tr, paneShownStyle, paneHiddenStyle)
           })
 
-          dropdown.appendChild(item)
+          menu.appendChild(item)
         })
 
-        wrapper.appendChild(dropdown)
+        wrapper.appendChild(menu)
         paneIconTray.appendChild(wrapper)
       }
 
