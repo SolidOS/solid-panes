@@ -1,3 +1,12 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const localSolidLogicIndex = path.resolve(__dirname, '../solid-logic/src/index.ts')
+const useLocalSolidLogic = existsSync(localSolidLogicIndex)
+
 export default {
   collectCoverage: true,
   coverageDirectory: 'coverage',
@@ -19,7 +28,11 @@ export default {
     '\\.svg\\?raw$': '<rootDir>/test/__mocks__/fileMock.js',
     '\\.(svg)$': '<rootDir>/test/__mocks__/fileMock.js',
     '\\.(png|jpe?g|gif|webp|avif)$': '<rootDir>/test/__mocks__/fileMock.js',
-    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js'
+    '\\.css$': '<rootDir>/test/__mocks__/styleMock.js',
+    ...(useLocalSolidLogic ? { '^solid-logic$': localSolidLogicIndex } : {}),
+    '^@uvdsl/solid-oidc-client-browser$': '<rootDir>/test/mocks/solid-oidc-client-browser.ts',
+    '^@uvdsl/solid-oidc-client-browser/core$': '<rootDir>/test/mocks/solid-oidc-client-browser.ts',
+    '^solid-oidc-client-browser$': '<rootDir>/test/mocks/solid-oidc-client-browser.ts'
   },
   setupFilesAfterEnv: ['./test/helpers/setup.ts'],
   testMatch: ['**/?(*.)+(spec|test).[tj]s?(x)'],
