@@ -12,11 +12,8 @@ import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
-import personIcon from '../icons/person.svg'
-import friendsIcon from '../icons/friends.svg'
-
-const PERSON_ICON = personIcon
-const FRIENDS_ICON = friendsIcon
+import { isWebIdUri } from '../utils/webIdUtils'
+import '../components/file-explorer-header/FileExplorerProvider'
 
 export default function (context) {
   const dom = context.dom
@@ -168,6 +165,7 @@ export default function (context) {
       outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri),
       dom
     )
+    img.classList.add('objectValueAccessIcon')
     img.setAttribute('uri', uri)
     img.addEventListener('click', listener) // @@ seemed to be missing 2017-08
     addButtonCallbacks(img, docuri)
@@ -189,14 +187,10 @@ export default function (context) {
     const td = dom.createElement('td')
     td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
-    td.style.margin = '0.2em'
     if (!obj) {
       td.textContent = 'No object available.'
       return td
     }
-    td.style.border = 'none'
-    td.style.padding = '0'
-    td.style.verticalAlign = 'top'
     const theClass = 'obj'
 
     // set about and put 'expand' icon
@@ -356,7 +350,7 @@ export default function (context) {
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
     const panes = context.session.paneRegistry
     const relevantPanes = panes.list.filter(
-      pane => pane.label(subject, context) && !pane.global
+      pane => pane.label(subject, context) && !pane.global && pane.name !== 'sharing'
     )
     if (relevantPanes.length === 0) {
       // there are no relevant panes, simply return default pane (which ironically is internalPane)
@@ -383,232 +377,112 @@ export default function (context) {
     )
   }
 
-  async function expandedHeaderTR (subject, requiredPane, options) {
-    async function determineFirstPane (options = {}) {
-      const relevantPanes = options.hideList
-        ? []
-        : await getRelevantPanes(subject, context)
-      tr.firstPane = requiredPane || getPane(relevantPanes, subject)
+  function setQueryButtonVisibility (shouldShow) {
+    const queryButton = dom.getElementById('queryButton')
+    if (!queryButton) return
+    if (shouldShow) {
+      queryButton.removeAttribute('style')
+    } else {
+      queryButton.setAttribute('style', 'display:none;')
+    }
+  }
+
+  function findContainingTable (td) {
+    let containingTable
+    for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
+      if (containingTable.nodeName === 'TABLE') break
+    }
+    if (containingTable.nodeName !== 'TABLE') {
+      throw new Error('outline: internal error.')
+    }
+    return containingTable
+  }
+
+  function renderPaneIntoProvider (provider, subject, pane, options) {
+    if (!provider || !pane) return
+
+    let paneDiv
+    try {
+      UI.log.info('outline: Rendering pane (menu): ' + pane.name)
+      paneDiv = pane.render(subject, context, options)
+    } catch (e) {
+      paneDiv = dom.createElement('div')
+      paneDiv.setAttribute('class', 'exceptionPane')
+      const pre = dom.createElement('pre')
+      paneDiv.appendChild(pre)
+      pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
     }
 
-    async function renderPaneIconTray (td, options = {}) {
-      // Icon tray removed: this UI is no longer needed.
-      // The tray previously populated pane selection buttons,
-      // but pane selection itself is retained via tr.firstPane.
-      const paneShownStyle =
-        'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
-      const paneHiddenStyle =
-        'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
-      const paneIconTray = td.appendChild(dom.createElement('nav'))
-      paneIconTray.style =
-        'display:flex; justify-content: flex-start; align-items: center;'
+    paneDiv.classList.add('paneDiv')
+    const existingPaneDiv = provider.querySelector('.paneDiv')
+    if (existingPaneDiv) {
+      existingPaneDiv.replaceWith(paneDiv)
+    } else {
+      provider.appendChild(paneDiv)
+    }
+  }
 
-      const relevantPanes = options.hideList
-        ? []
-        : await getRelevantPanes(subject, context)
-      tr.firstPane = requiredPane || getPane(relevantPanes, subject)
-      const paneNumber = relevantPanes.indexOf(tr.firstPane)
+  function openPaneInPlace (subject, pane) {
+    const outlineView = dom.getElementById('OutlineView')
+    if (!outlineView) return
 
-      if (relevantPanes.length !== 1) {
-        // if only one, simplify interface
-        relevantPanes.forEach((pane, index) => {
-          const label = pane.label(subject, context)
+    const subjectId = subject.toNT()
+    const subjectTd = outlineView.querySelector('td.paneView[about="' + subjectId + '"]')
+    if (!subjectTd) return
 
-          let iconSrc = ''
-          if (pane.name === 'profile') {
-            iconSrc = PERSON_ICON
-          } else if (pane.name === 'social') {
-            iconSrc = FRIENDS_ICON
-          } else {
-            iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
-          }
-          const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
+    const provider = subjectTd.querySelector('file-explorer-provider')
+    if (!provider) return
+    if (!pane) {
+      UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
+      return
+    }
 
-          // Handle async icon functions
-          if (iconSrc instanceof Promise) {
-            iconSrc.then(resolvedIconSrc => {
-              ico.setAttribute('src', resolvedIconSrc)
-            }).catch(err => {
-              console.error('Error resolving async icon:', err)
-            })
-          }
+    setQueryButtonVisibility(!!pane.requireQueryButton)
+    provider.openSelectedPane?.(pane)
+    renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
+  }
 
-          ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
-          // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
-          // ico.style.width = iconHeight
-          // ico.style.height = iconHeight
-          const listen = function (ico, pane) {
-            // Freeze scope for event time
-            ico.addEventListener(
-              'click',
-              function (event) {
-                let containingTable
-                // Find the containing table for this subject
-                for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-                  if (containingTable.nodeName === 'TABLE') break
-                }
-                if (containingTable.nodeName !== 'TABLE') {
-                  throw new Error('outline: internal error.')
-                }
-                const removePanes = function (specific) {
-                  for (let d = containingTable.firstChild; d; d = d.nextSibling) {
-                    if (typeof d.pane !== 'undefined') {
-                      if (!specific || d.pane === specific) {
-                        if (d.paneButton) {
-                          d.paneButton.setAttribute('class', 'paneHidden')
-                          d.paneButton.style = paneHiddenStyle
-                        }
-                        removeAndRefresh(d)
-                        // If we just delete the node d, ffox doesn't refresh the display properly.
-                        // state = 'paneHidden';
-                        if (
-                          d.pane.requireQueryButton &&
-                          containingTable.parentNode.className /* outer table */ &&
-                          numberOfPanesRequiringQueryButton === 1 &&
-                          dom.getElementById('queryButton')
-                        ) {
-                          dom
-                            .getElementById('queryButton')
-                            .setAttribute('style', 'display:none;')
-                        }
-                      }
-                    }
-                  }
-                }
-                const renderPane = function (pane) {
-                  let paneDiv
-                  UI.log.info('outline: Rendering pane (2): ' + pane.name)
+  async function expandedProviderTR (subject, requiredPane, options) {
+    options = options || {}
 
-                  try {
-                    paneDiv = pane.render(subject, context, options)
-                  } catch (e) {
-                    // Easier debugging for pane developers
-                    paneDiv = dom.createElement('div')
-                    paneDiv.setAttribute('class', 'exceptionPane')
-                    const pre = dom.createElement('pre')
-                    paneDiv.appendChild(pre)
-                    pre.appendChild(
-                      dom.createTextNode(UI.utils.stackString(e))
-                    )
-                  }
-
-                  if (
-                    pane.requireQueryButton &&
-                    dom.getElementById('queryButton')
-                  ) {
-                    dom.getElementById('queryButton').removeAttribute('style')
-                  }
-                  const second = containingTable.firstChild.nextSibling
-                  const row = dom.createElement('tr')
-                  const cell = row.appendChild(dom.createElement('td'))
-                  cell.setAttribute('colspan', '2')
-                  cell.style.textAlign = 'left'
-                  cell.style.width = '100%'
-                  cell.appendChild(paneDiv)
-                  if (second) containingTable.insertBefore(row, second)
-                  else containingTable.appendChild(row)
-                  row.pane = pane
-                  row.paneButton = ico
-                }
-                const state = ico.getAttribute('class')
-                if (state === 'paneHidden') {
-                  if (!event.shiftKey) {
-                    // shift means multiple select
-                    removePanes()
-                  }
-                  renderPane(pane)
-                  ico.setAttribute('class', 'paneShown')
-                  ico.style = paneShownStyle
-                } else {
-                  removePanes(pane)
-                  ico.setAttribute('class', 'paneHidden')
-                  ico.style = paneHiddenStyle
-                }
-
-                let numberOfPanesRequiringQueryButton = 0
-                for (let d = containingTable.firstChild; d; d = d.nextSibling) {
-                  if (d.pane && d.pane.requireQueryButton) {
-                    numberOfPanesRequiringQueryButton++
-                  }
-                }
-              },
-              false
-            )
-          } // listen
-
-          listen(ico, pane)
-          ico.setAttribute(
-            'class',
-            index !== paneNumber ? 'paneHidden' : 'paneShown'
-          )
-          if (index === paneNumber) tr.paneButton = ico
-          paneIconTray.appendChild(ico)
-        })
-      }
-      return paneIconTray
-    } // renderPaneIconTray
-
-    // Body of expandedHeaderTR
+    // TODO: hide the main storage header
+    // const showHeader = !!requiredPane
     const tr = dom.createElement('tr')
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
-      tr.setAttribute('class', 'hoverControl')
+      tr.classList.add('hoverControl')
     }
     const td = tr.appendChild(dom.createElement('td'))
-    td.classList.add('tdFlex')
+    td.classList.add('paneView', 'tdFlex')
     td.setAttribute('notSelectable', 'true')
     td.setAttribute('about', subject.toNT())
     td.setAttribute('colspan', '2')
 
-    // Stuff at the right about the subject
-    const header = td.appendChild(dom.createElement('div'))
-    header.style =
-      'display:flex; justify-content: flex-start; align-items: center; flex-wrap: wrap;'
+    const provider = td.appendChild(dom.createElement('file-explorer-provider'))
+    provider.context = context
+    provider.subjectUri = subject.uri
+    provider.onBack = () => collapseMouseDownListener({ target: provider })
 
-    const showHeader = !!requiredPane
+    const relevantPanes = options.hideList
+      ? []
+      : await getRelevantPanes(subject, context)
 
-    if (!options.solo && !showHeader) {
-      const icon = header.appendChild(
-        UI.utils.AJARImage(
-          UI.icons.originalIconBase + 'tbl-collapse.png',
-          'collapse',
-          undefined,
-          dom
-        )
-      )
-      icon.addEventListener('click', collapseMouseDownListener)
+    provider.relevantPanes = relevantPanes
+    provider.pane = requiredPane || getPane(relevantPanes, subject)
+    const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+    provider.showHeader = !isRootResource && !isWebIdUri(subject)
+    provider.paneRenderOptions = options
+    provider.soloPane = options.solo
+    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
+    // TODO: for now we do this until we create sharing dialog in solid-panes
+    provider.handleSharingClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
 
-      const strong = header.appendChild(dom.createElement('h1'))
-      strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
-      strong.style =
-        'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;' +
-        'background-color: var(--color-background, #F8F9FB);'
-      UI.widgets.makeDraggable(strong, subject)
-
-      header.appendChild(
-        await renderPaneIconTray(td, {
-          hideList: showHeader
-        })
-      )
+    if (provider.pane) {
+      tr.classList.add('outlinePaneRow')
+      renderPaneIntoProvider(provider, subject, provider.pane, options)
     }
-
-    // Pane icon tray removed: preserve first-pane selection without rendering the tray.
-    await determineFirstPane({ hideList: showHeader })
-
-    // Hide the header row when the header div has no rendered children.
-    if (header.childNodes.length === 0) {
-      tr.style.display = 'none'
-    }
-
-    /* // set DOM methods
-    tr.firstChild.tabulatorSelect = function () {
-      setSelected(this, true)
-    }
-    tr.firstChild.tabulatorDeselect = function () {
-      setSelected(this, false)
-    } */
     return tr
-  } // expandedHeaderTR
+  }
 
   // / //////////////////////////////////////////////////////////////////////////
 
@@ -648,51 +522,19 @@ export default function (context) {
   const propertyTable = (this.propertyTable = function propertyTable (
     subject,
     table,
-    pane,
+    requiredPane,
     options
   ) {
     UI.log.debug('Property table for: ' + subject)
     subject = kb.canon(subject)
-    // if (!pane) pane = panes.defaultPane;
+    // if (!requiredPane) requiredPane = panes.defaultPane;
 
     if (!table) {
       // Create a new property table
       table = dom.createElement('table')
       table.classList.add('tableFullWidth')
-      expandedHeaderTR(subject, pane, options).then(tr1 => {
-        table.appendChild(tr1)
-
-        if (tr1.firstPane) {
-          let paneDiv
-          try {
-            UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
-            paneDiv = tr1.firstPane.render(subject, context, options)
-          } catch (e) {
-            // Easier debugging for pane developers
-            paneDiv = dom.createElement('div')
-            paneDiv.setAttribute('class', 'exceptionPane')
-            const pre = dom.createElement('pre')
-            paneDiv.appendChild(pre)
-            pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
-          }
-
-          const row = dom.createElement('tr')
-          const cell = row.appendChild(dom.createElement('td'))
-          cell.setAttribute('colspan', '2')
-          cell.style.textAlign = 'left'
-          cell.style.width = '100%'
-          cell.style.backgroundColor = 'var(--color-background, #F8F9FB)'
-          cell.appendChild(paneDiv)
-          if (
-            tr1.firstPane.requireQueryButton &&
-            dom.getElementById('queryButton')
-          ) {
-            dom.getElementById('queryButton').removeAttribute('style')
-          }
-          table.appendChild(row)
-          row.pane = tr1.firstPane
-          row.paneButton = tr1.paneButton
-        }
+      expandedProviderTR(subject, requiredPane, options).then(providerTR => {
+        table.appendChild(providerTR)
       })
 
       return table
@@ -986,7 +828,6 @@ export default function (context) {
       try {
         baseURI = dom.location.href.split('?')[0]
       } catch (e) {
-        console.log(e)
         baseURI = ''
       }
       const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
@@ -1011,10 +852,6 @@ export default function (context) {
     const makeIconCallback = function (icon) {
       return function IconCallback (req) {
         if (req.indexOf('#') >= 0) {
-          console.log(
-            '@@ makeIconCallback: Not expecting # in URI whose state changed: ' +
-              req
-          )
           // alert('Should have no hash in '+req)
         }
         if (!target) {
@@ -1132,7 +969,6 @@ export default function (context) {
     } // .class doesn't work. Be careful!
     for (let i = 0; i < selection.length; i++) {
       if (!selection[i].parentNode) {
-        console.log('showSource: EH? no parentNode? ' + selection[i] + '\n')
         continue
       }
       const st = selection[i].parentNode.AJAR_statement
@@ -2040,7 +1876,8 @@ export default function (context) {
     }
 
     function GotoSubjectDefault () {
-      const tr = dom.createElement('TR')
+      const tr = dom.createElement('tr')
+      tr.classList.add('outlineRow1')
       tr.style.verticalAlign = 'top'
       table.appendChild(tr)
       const td = thisOutline.outlineObjectTD(subject, undefined, tr)
@@ -2082,7 +1919,6 @@ export default function (context) {
           }
         }
       } catch (e) {
-        console.log(e)
       }
     }
 
@@ -2107,24 +1943,19 @@ export default function (context) {
     let rep // representation in html
 
     if (obj.termType === 'Literal') {
-      const styles = {
-        integer: 'text-align: right;',
-        decimal: 'text-align: \'.\';',
-        double: 'text-align: \'.\';'
-      }
       rep = dom.createElement('span')
+      rep.classList.add('objectValue', 'objectValue--literal')
       rep.textContent = obj.value
       // Newlines have effect and overlong lines wrapped automatically
-      let style = ''
       if (obj.datatype && obj.datatype.uri) {
         const xsd = UI.ns.xsd('').uri
         if (obj.datatype.uri.slice(0, xsd.length) === xsd) {
-          style = styles[obj.datatype.uri.slice(xsd.length)]
+          rep.classList.add('objectValue--' + obj.datatype.uri.slice(xsd.length))
         }
       }
-      rep.setAttribute('style', style || 'white-space: pre-wrap;')
     } else if (obj.termType === 'NamedNode' || obj.termType === 'BlankNode') {
       rep = dom.createElement('span')
+      rep.classList.add('objectValue', 'objectValue--resource')
       rep.setAttribute('about', obj.toNT())
       thisOutline.appendAccessIcons(kb, rep, obj)
 
@@ -2144,10 +1975,14 @@ export default function (context) {
           )
           rep.appendChild(anchor)
           anchor.firstChild.setAttribute('class', 'phoneIcon')
+          anchor.firstChild.classList.add('objectValueLinkIcon')
         } else {
           // not tel:
           rep.appendChild(dom.createTextNode(UI.utils.label(obj)))
           const anchor = UI.widgets.linkIcon(dom, obj)
+          if (anchor.firstChild) {
+            anchor.firstChild.classList.add('objectValueLinkIcon')
+          }
           rep.appendChild(anchor)
           UI.widgets.makeDraggable(rep, obj) // 2017
         }

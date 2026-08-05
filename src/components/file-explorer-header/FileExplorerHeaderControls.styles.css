@@ -1,0 +1,43 @@
+:host {
+  div {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    text-align: right;
+  }
+
+  /* generative ai */
+  div > * {
+    flex: 0 1 auto;
+  }
+
+  /* TODO: look into what colors to use this is just to show */
+  .dirtyIndicator {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #F59E0B;
+    color: #92400E;
+    background: #FFFBEB;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 900px) {
+    div {
+      padding-right: 3px;
+    }
+  }
+
+  @media (max-width: 600px) {
+    div {
+      justify-content: flex-start;
+      gap: 5px;
+    }
+  }
+}

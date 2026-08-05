@@ -7,10 +7,6 @@
   vertical-align: top;
 }
 
-.pred, .pred.internal {
-  /* Add any specific styles for predicate TDs here */
-}
-
 .iconTD {
   margin: 0.2em;
   border: none;
@@ -23,29 +19,7 @@
   width: 100%;
 }
 
-.paneIconTray {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-}
-
-.paneShown {
-  width: 24px;
-  border: none !important;
-  border-radius: var(--border-radius-md, 0.5rem);
-  margin-left: var(--spacing-small, 0.1rem);
-  padding: 0.188rem; /* 3px */
-  background-color: var(--header-menu-item-hover, #e6dcff) !important;
-}
-
-.paneHidden {
-  width: 24px;
-  border-radius: var(--border-radius-md, 0.5rem);
-  margin-left: var(--spacing-small, 0.1rem);
-  padding: 0.188rem; /* 3px */
-}
-
-.header {
+.file-explorer-header {
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -76,4 +50,35 @@
   flex-direction: row;
   background: var(--solid-ui-color-white, #fff);
   overflow: hidden;
+}
+
+.paneDiv,
+.exceptionPane {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.objectValue--literal {
+  white-space: pre-wrap;
+}
+
+.objectValue--integer,
+.objectValue--decimal,
+.objectValue--double {
+  display: block;
+  text-align: right;
+}
+
+.objectValueAccessIcon,
+.objectValueLinkIcon,
+.phoneIcon {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.objectValueLinkIcon,
+.phoneIcon {
+  width: 12px;
+  height: 12px;
 }
