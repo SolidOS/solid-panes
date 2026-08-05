@@ -1,5 +1,7 @@
 .rdfxml-pane {
 	padding: 1rem;
+	width: 100%;
+	min-width: 0;
 	border-top: solid 2px var(--color-data-pane-border-top, black);
 	border-left: solid 2px var(--color-data-pane-border-top, black);
 	border-bottom: solid 2px var(--color-data-pane-border-side, #777);
@@ -11,6 +13,7 @@
 .rdfxml-pane__source {
 	overflow-x: auto;
 	max-width: 100%;
+	min-width: 0;
 	box-sizing: border-box;
 	font-family: monospace;
 	font-size: 120%;
@@ -20,8 +23,9 @@
 
 .rdfxml-pane__line {
 	display: grid;
-	grid-template-columns: var(--rdfxml-indent, 0) minmax(max-content, auto);
+	grid-template-columns: var(--rdfxml-indent, 0) minmax(0, 1fr);
 	align-items: start;
+	min-width: 0;
 }
 
 .rdfxml-pane__line-indent {

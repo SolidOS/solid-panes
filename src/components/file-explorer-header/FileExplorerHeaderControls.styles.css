@@ -1,4 +1,7 @@
 :host {
+  flex: 0 1 auto;
+  min-width: 0;
+
   div {
     display: flex;
     justify-content: flex-end;

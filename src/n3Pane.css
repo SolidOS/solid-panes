@@ -1,5 +1,7 @@
 .n3-pane {
 	padding: 1rem;
+	width: 100%;
+	min-width: 0;
 	border-top: solid 1px var(--color-data-pane-border-top, black);
 	border-left: solid 1px var(--color-data-pane-border-top, black);
 	border-bottom: solid 1px var(--color-data-pane-border-side, #777);
@@ -11,6 +13,7 @@
 .n3-pane__source {
 	overflow-x: auto;
 	max-width: 100%;
+	min-width: 0;
 	box-sizing: border-box;
 	font-family: monospace;
 	font-size: 120%;
