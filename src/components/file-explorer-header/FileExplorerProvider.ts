@@ -9,6 +9,8 @@ import './FileExplorerHeader'
 import styles from './FileExplorerProvider.styles.css'
 import personIcon from '../../icons/person.svg'
 import friendsIcon from '../../icons/friends.svg'
+import { solidLogicSingleton } from 'solid-logic'
+import { deriveDeleteTargetUri } from './helper'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
@@ -19,6 +21,8 @@ function createFileExplorerContextValue (value: {
   pane?: PaneDefinition
   soloPane?: boolean
   onBack?: () => void
+  refresh?: () => void
+  deleteTargetUri?: string
   openPane?: (subject: NamedNode, paneName: string) => void
   handleSharingClick?: () => void
   paneSupportsEditing?: boolean
@@ -34,6 +38,8 @@ function createFileExplorerContextValue (value: {
     pane: value.pane,
     soloPane: value.soloPane,
     onBack: value.onBack,
+    refresh: value.refresh,
+    deleteTargetUri: value.deleteTargetUri,
     openPane: value.openPane,
     handleSharingClick: value.handleSharingClick,
     paneSupportsEditing: value.paneSupportsEditing,
@@ -52,6 +58,12 @@ export default class FileExplorerProvider extends WebComponent {
 
   @property({ attribute: false })
   accessor onBack: (() => void) | undefined = undefined
+
+  @property({ attribute: false })
+  accessor refresh: (() => void) | undefined = undefined
+
+  @property({ attribute: false })
+  accessor deleteTargetUri: string | undefined = undefined
 
   @property({ attribute: false })
   accessor relevantPanes: PaneDefinition[] = []
@@ -86,6 +98,9 @@ export default class FileExplorerProvider extends WebComponent {
 
   @state()
   accessor paneSupportsEditing: boolean = false
+
+  @state()
+  accessor isContainerResourceValue: boolean = false
 
   // TODO: For now this works, but check if there is a better way.
   // because this means file explorer will know about the pane.
@@ -124,6 +139,8 @@ export default class FileExplorerProvider extends WebComponent {
     pane: this.pane,
     soloPane: this.soloPane,
     onBack: this.onBack,
+    refresh: this.refresh,
+    deleteTargetUri: deriveDeleteTargetUri(this.context?.session.store as LiveStore, this.subjectUri, this.pane?.mintClass, this.deleteTargetUri),
     openPane: this.openPane,
     handleSharingClick: this.handleSharingClick,
     paneSupportsEditing: false,
@@ -138,11 +155,12 @@ export default class FileExplorerProvider extends WebComponent {
     this.pane = pane
   }
 
-  private getPaneIcon (pane, subject, context) {
+  // The icon method may be a function that returns a promise, so we need to handle that.
+  private async getPaneIcon (pane, subject, context) {
     if (!pane) return undefined
 
     const icon = typeof pane.icon === 'function'
-      ? pane.icon(subject, context)
+      ? await pane.icon(subject, context)
       : pane.icon
     return icon
   }
@@ -174,12 +192,21 @@ export default class FileExplorerProvider extends WebComponent {
   }
 
   private refreshFileExplorerContextValue () {
+    const store = this.context?.session.store as LiveStore
+    const deleteTargetUri = deriveDeleteTargetUri(store, this.subjectUri, this.pane?.mintClass, this.deleteTargetUri)
+
+    this.isContainerResourceValue = deleteTargetUri
+      ? solidLogicSingleton.resource.isContainer(store.sym(deleteTargetUri))
+      : solidLogicSingleton.resource.isContainer(store.sym(this.subjectUri as string))
+
     this.fileExplorerContextValue = createFileExplorerContextValue({
-      store: this.context?.session.store as LiveStore,
+      store,
       subjectUri: this.subjectUri,
       pane: this.pane,
       soloPane: this.soloPane,
       onBack: this.onBack,
+      refresh: this.refresh,
+      deleteTargetUri,
       openPane: this.openPane,
       handleSharingClick: this.handleSharingClick,
       paneSupportsEditing: this.paneSupportsEditing,
@@ -190,7 +217,6 @@ export default class FileExplorerProvider extends WebComponent {
   private async refreshMenuItems () {
     const store = this.context?.session.store as LiveStore
     if (!store || !this.subjectUri) return
-
     const subject = store.sym(this.subjectUri)
     const menuItems = await this.getPaneItems(subject, this.context as DataBrowserContext, this.relevantPanes)
 
@@ -227,9 +253,10 @@ export default class FileExplorerProvider extends WebComponent {
       changedProperties.has('pane') ||
       changedProperties.has('soloPane') ||
       changedProperties.has('onBack') ||
+      changedProperties.has('refresh') ||
+      changedProperties.has('deleteTargetUri') ||
       changedProperties.has('openPane') ||
       changedProperties.has('handleSharingClick') ||
-      changedProperties.has('pane') ||
       changedProperties.has('isDirty')
     ) {
       this.refreshFileExplorerContextValue()
@@ -247,6 +274,7 @@ export default class FileExplorerProvider extends WebComponent {
                 .paneIcon=${this.getPaneIcon(this.pane, subject, this.context as DataBrowserContext)}
                 .menuItems=${this.menuItems}
                 .paneSupportsEditing=${this.paneSupportsEditing}
+                .isContainerResource=${this.isContainerResourceValue}
               ></file-explorer-header>
             `
           : nothing}

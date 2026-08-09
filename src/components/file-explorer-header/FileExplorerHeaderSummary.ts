@@ -9,7 +9,7 @@ import '~icons/lucide/globe'
 import '~icons/lucide/lock-keyhole'
 import '~icons/lucide/arrow-left'
 import styles from './FileExplorerHeaderSummary.styles.css'
-import { type FileExplorerResourceMetadata } from './helper'
+import { type FileExplorerHeaderMetadata } from './types'
 
 @customElement('file-explorer-header-summary')
 export default class FileExplorerHeaderSummary extends WebComponent {
@@ -28,9 +28,12 @@ export default class FileExplorerHeaderSummary extends WebComponent {
   accessor onBackClick: (() => void) | undefined
 
   @property({ attribute: false })
-  accessor responseMetadata: Pick<FileExplorerResourceMetadata, 'modified' | 'isPublic'> = {
+  accessor responseMetadata: Pick<FileExplorerHeaderMetadata, 'modified' | 'access'> = {
     modified: undefined,
-    isPublic: false
+    access: {
+      isPublic: false,
+      canEdit: false
+    }
   }
 
   @state()
@@ -97,7 +100,7 @@ export default class FileExplorerHeaderSummary extends WebComponent {
     const subject = this.fileExplorerContext?.subjectUri ? sym(this.fileExplorerContext.subjectUri) : undefined
     const label = subject ? utils.label(subject) : ''
     const modified = this.formatModifiedDate(this.responseMetadata.modified)
-    const isPublic = this.responseMetadata.isPublic
+    const isPublic = this.responseMetadata.access.isPublic
 
     return html`
       <div class="file-explorer-header-summary">

@@ -1,0 +1,12 @@
+:host {
+  .resource-delete-dialog__emphasis {
+    font-weight: 600;
+  }
+
+  .resource-delete-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-sm, 0.75em);
+    width: 100%;
+  }
+}

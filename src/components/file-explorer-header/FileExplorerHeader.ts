@@ -3,14 +3,14 @@ import { WebComponent, type FileExplorerContext, fileExplorerContext } from 'sol
 import { customElement, property, state } from 'lit/decorators.js'
 import { consume } from '@lit/context'
 import { html } from 'lit'
+import { solidLogicSingleton } from 'solid-logic'
 import '~icons/lucide/share-2'
 import '~icons/lucide/pencil'
 import '~icons/lucide/ellipsis-vertical'
 import styles from './FileExplorerHeader.styles.css'
 import './FileExplorerHeaderSummary'
 import './FileExplorerHeaderControls'
-import { PaneIcon } from './types'
-import { fetchContentAndMetadata, type FileExplorerResourceMetadata } from './helper'
+import { PaneIcon, type FileExplorerHeaderMetadata } from './types'
 
 @customElement('file-explorer-header')
 export default class FileExplorerHeader extends WebComponent {
@@ -27,19 +27,28 @@ export default class FileExplorerHeader extends WebComponent {
   @property({ attribute: false })
   accessor paneIcon: PaneIcon = undefined as unknown as PaneIcon
 
+  @property({ type: Boolean })
+  accessor isContainerResource: boolean = false
+
   @state()
-  accessor responseMetadata: Pick<FileExplorerResourceMetadata, 'modified' | 'isPublic' | 'canEdit' | 'aclUri'> = {
+  accessor responseMetadata: FileExplorerHeaderMetadata = {
     modified: undefined,
-    isPublic: false,
-    canEdit: false,
+    access: {
+      isPublic: false,
+      canEdit: false,
+      canDelete: false
+    },
     aclUri: undefined
   }
 
-  private getDefaultResponseMetadata (): Pick<FileExplorerResourceMetadata, 'modified' | 'isPublic' | 'canEdit' | 'aclUri'> {
+  private getDefaultResponseMetadata (): FileExplorerHeaderMetadata {
     return {
       modified: undefined,
-      isPublic: false,
-      canEdit: false,
+      access: {
+        isPublic: false,
+        canEdit: false,
+        canDelete: false
+      },
       aclUri: undefined
     }
   }
@@ -54,17 +63,18 @@ export default class FileExplorerHeader extends WebComponent {
   private async loadResponseMetadata () {
     if (!this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) return
 
+    const subjectUri = this.fileExplorerContext.subjectUri
+    const defaultMetadata = this.getDefaultResponseMetadata()
+
     try {
-      const { metadata } = await fetchContentAndMetadata(this.fileExplorerContext.store, sym(this.fileExplorerContext.subjectUri))
+      const metadata = await solidLogicSingleton.resource.fetchMetadataWithDelete(sym(subjectUri))
       this.responseMetadata = {
-        modified: metadata.modified,
-        isPublic: metadata.isPublic,
-        canEdit: metadata.canEdit,
-        aclUri: metadata.aclUri
+        modified: metadata?.modified ?? defaultMetadata.modified,
+        access: metadata?.access ?? defaultMetadata.access,
+        aclUri: metadata?.aclUri ?? defaultMetadata.aclUri
       }
     } catch (error) {
       this.responseMetadata = this.getDefaultResponseMetadata()
-      console.warn('Failed to load response metadata', error)
     }
   }
 
@@ -78,7 +88,9 @@ export default class FileExplorerHeader extends WebComponent {
         ></file-explorer-header-summary>
         <file-explorer-header-controls
           .menuItems=${this.menuItems}
-          .canEdit=${this.responseMetadata.canEdit}
+          .canEdit=${this.responseMetadata.access.canEdit}
+          .canDelete=${this.responseMetadata.access.canDelete ?? false}
+          .isContainerResource=${this.isContainerResource}
         ></file-explorer-header-controls>
       </header>
     `
