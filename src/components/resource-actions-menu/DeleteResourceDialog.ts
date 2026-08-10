@@ -16,7 +16,10 @@ export default class DeleteResourceDialog extends DialogComponent<boolean> {
   static styles = styles
 
   @property({ attribute: false })
-  accessor resourceNode: NamedNode = undefined as unknown as NamedNode
+  accessor resourceNode: NamedNode | undefined = undefined
+
+  @property({ type: Boolean })
+  accessor resourceDetailsLoaded: boolean = true
 
   private cancel = () => this.close(false)
 
@@ -25,7 +28,7 @@ export default class DeleteResourceDialog extends DialogComponent<boolean> {
   protected render () {
     const resourceLogic = solidLogicSingleton.resource
     const resourceNode = this.resourceNode
-    const hasResourceValue = typeof resourceNode?.value === 'string' && resourceNode.value.length > 0
+    const hasResourceValue = this.resourceDetailsLoaded && typeof resourceNode?.value === 'string' && resourceNode.value.length > 0
     const resourceLabel = hasResourceValue ? utils.label(resourceNode) : 'this resource'
     const isContainer = hasResourceValue ? resourceLogic.isContainer(resourceNode) : false
     const numberOfContents = hasResourceValue && isContainer

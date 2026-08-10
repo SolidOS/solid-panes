@@ -472,7 +472,16 @@ export default function (context) {
         deleteTargetUri
       )
       if (!refreshTargetUri) return
-      openPaneInPlace(kb.sym(refreshTargetUri), paneRegistry.byName('folder'))
+      const outlineView = getOutlineContainer()
+      dom.outline.GotoSubject(
+        kb.sym(refreshTargetUri),
+        true,
+        paneRegistry.byName('folder'),
+        true,
+        undefined,
+        outlineView,
+        false
+      )
     }
 
     const relevantPanes = options.hideList

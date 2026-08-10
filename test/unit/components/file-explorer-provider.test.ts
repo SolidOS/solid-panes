@@ -42,8 +42,8 @@ describe('FileExplorerProvider', () => {
     provider.pane = { name: 'source' } as any
     await provider.updateComplete
 
-    expect(provider.fileExplorerContextValue.deleteTargetUri).toBeUndefined()
-    expect(provider.isContainerResourceValue).toBe(false)
+    expect(provider.fileExplorerContextValue.deleteTargetUri).toBe('https://example.com/workspace/')
+    expect(provider.isContainerResourceValue).toBe(true)
   })
 
   it('returns the parent of the deleted container for delete refresh navigation', () => {

@@ -16,7 +16,7 @@ import { PaneIcon, type FileExplorerHeaderMetadata } from './types'
 export default class FileExplorerHeader extends WebComponent {
   static styles = styles
 
-  private _loadedMetadataForUri: string | undefined
+  private _loadedMetadataForTargetUri: string | undefined
 
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
@@ -54,16 +54,19 @@ export default class FileExplorerHeader extends WebComponent {
   }
 
   protected updated () {
-    if (this.fileExplorerContext?.store && this.fileExplorerContext.subjectUri && this._loadedMetadataForUri !== this.fileExplorerContext.subjectUri) {
-      this._loadedMetadataForUri = this.fileExplorerContext.subjectUri
+    const loadTargetUri = this.fileExplorerContext?.deleteTargetUri ?? this.fileExplorerContext?.subjectUri
+    if (this.fileExplorerContext?.store && loadTargetUri && this._loadedMetadataForTargetUri !== loadTargetUri) {
+      this._loadedMetadataForTargetUri = loadTargetUri
       this.loadResponseMetadata()
     }
   }
 
   private async loadResponseMetadata () {
-    if (!this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) return
+    if (!this.fileExplorerContext?.store) return
 
-    const subjectUri = this.fileExplorerContext.subjectUri
+    const subjectUri = this.fileExplorerContext.deleteTargetUri ?? this.fileExplorerContext.subjectUri
+    if (!subjectUri) return
+
     const defaultMetadata = this.getDefaultResponseMetadata()
 
     try {

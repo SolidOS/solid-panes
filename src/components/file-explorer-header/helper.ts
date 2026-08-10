@@ -1,5 +1,8 @@
 import type { LiveStore, NamedNode } from 'rdflib'
 
+/* Resources for panes that have an index.ttl file can be deleted from
+the index file as well as from the container. When the index file (pane driver)
+is deleted the container it's in should also be deleted. */
 export function deriveDeleteTargetUri (
   store: LiveStore | undefined,
   subjectUri: string | undefined,

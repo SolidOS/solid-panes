@@ -39,16 +39,18 @@ export default class ResourceActionsMenu extends WebComponent {
     const store = this.store
     if (!store) return false
 
+    let resourceDetailsLoaded = true
     try {
       await store.fetcher.load(resourceNode.doc())
     } catch (_error) {
-      // Best-effort load: if it fails we still show the generic delete prompt.
+      resourceDetailsLoaded = false
     }
 
     return new Promise<boolean>(resolve => {
       showDialog(DeleteResourceDialog, {
         props: {
-          resourceNode
+          resourceNode: resourceDetailsLoaded ? resourceNode : undefined,
+          resourceDetailsLoaded
         },
         onClose: (result) => resolve(result === true)
       })

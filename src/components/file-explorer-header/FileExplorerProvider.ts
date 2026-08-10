@@ -193,7 +193,9 @@ export default class FileExplorerProvider extends WebComponent {
 
   private refreshFileExplorerContextValue () {
     const store = this.context?.session.store as LiveStore
-    const deleteTargetUri = deriveDeleteTargetUri(store, this.subjectUri, this.pane?.mintClass, this.deleteTargetUri)
+    const deleteTargetUri =
+      deriveDeleteTargetUri(store, this.subjectUri, this.pane?.mintClass, this.deleteTargetUri) ??
+      this.fileExplorerContextValue?.deleteTargetUri
 
     this.isContainerResourceValue = deleteTargetUri
       ? solidLogicSingleton.resource.isContainer(store.sym(deleteTargetUri))
