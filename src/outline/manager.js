@@ -13,6 +13,7 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
+import { deriveDeleteRefreshTargetUri } from '../components/file-explorer-header/helper'
 import '../components/file-explorer-header/FileExplorerProvider'
 
 export default function (context) {
@@ -462,6 +463,26 @@ export default function (context) {
     provider.context = context
     provider.subjectUri = subject.uri
     provider.onBack = () => collapseMouseDownListener({ target: provider })
+    provider.refresh = () => {
+      const deleteTargetUri = provider.fileExplorerContextValue?.deleteTargetUri
+      const refreshTargetUri = deriveDeleteRefreshTargetUri(
+        context.session.store,
+        subject.uri,
+        (provider.pane || requiredPane)?.mintClass,
+        deleteTargetUri
+      )
+      if (!refreshTargetUri) return
+      const outlineView = getOutlineContainer()
+      dom.outline.GotoSubject(
+        kb.sym(refreshTargetUri),
+        true,
+        paneRegistry.byName('folder'),
+        true,
+        undefined,
+        outlineView,
+        false
+      )
+    }
 
     const relevantPanes = options.hideList
       ? []

@@ -22,6 +22,12 @@ export default class FileExplorerHeaderControls extends WebComponent {
   @property({ type: Boolean })
   accessor canEdit: boolean = false
 
+  @property({ type: Boolean })
+  accessor canDelete: boolean = false
+
+  @property({ type: Boolean })
+  accessor isContainerResource: boolean = false
+
   // TODO: Add broken then use this function to set tooltip and disable edit button
   /* private setEditable() {
     const sourcePaneState = this.sourceContext?.sourcePaneState
@@ -43,12 +49,31 @@ export default class FileExplorerHeaderControls extends WebComponent {
   }
 
   private renderDirtyIndicator () {
-    if (!this.fileExplorerContext.edit?.isDirty) return nothing
+    if (!this.fileExplorerContext.paneSupportsEditing || !this.fileExplorerContext.edit?.isDirty) return nothing
 
     return html`<span class="dirtyIndicator" title="This file has unsaved changes">Unsaved</span>`
   }
 
-  render () {
+  private renderContainerControl () {
+    if (!this.fileExplorerContext.subjectUri || !this.fileExplorerContext.store) return nothing
+
+    return html`
+      <div>
+        <resource-actions-menu
+          .store=${this.fileExplorerContext?.store}
+          .subjectUri=${this.fileExplorerContext?.subjectUri}
+          .deleteTargetUri=${this.fileExplorerContext?.deleteTargetUri}
+          .menuItems=${this.menuItems}
+          .showShareItem=${this.isContainerResource}
+          .canDelete=${this.canDelete}
+        ></resource-actions-menu>
+      </div>
+    `
+  }
+
+  private renderResourceControls () {
+    if (!this.fileExplorerContext.subjectUri || !this.fileExplorerContext.store) return nothing
+
     return html`
       <div>
         ${this.renderDirtyIndicator()}
@@ -66,9 +91,18 @@ export default class FileExplorerHeaderControls extends WebComponent {
         <resource-actions-menu
           .store=${this.fileExplorerContext?.store}
           .subjectUri=${this.fileExplorerContext?.subjectUri}
+          .deleteTargetUri=${this.fileExplorerContext?.deleteTargetUri}
           .menuItems=${this.menuItems}
+          .showShareItem=${false}
+          .canDelete=${this.canDelete}
         ></resource-actions-menu>
       </div>
+    `
+  }
+
+  render () {
+    return html`
+      ${this.isContainerResource ? this.renderContainerControl() : this.renderResourceControls()}
     `
   }
 }
