@@ -44,14 +44,14 @@ export async function initMainPage (
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
+  const urlPane = isWebIdUri(subject)
+    ? await getProfilePaneFromURI(subject)
+    : undefined
   const historyPaneName = window.history.state?.paneName
   const historyPane = historyPaneName
     ? paneRegistry.byName(historyPaneName)
     : undefined
-  const initialPane = historyPane ??
-    (!historyPaneName && isWebIdUri(subject)
-      ? await getProfilePaneFromURI(subject)
-      : undefined)
+  const initialPane = urlPane ?? historyPane
 
   outliner.GotoSubject(subject, true, initialPane, true, undefined, undefined, true, false)
 
@@ -65,7 +65,10 @@ export async function refreshUI (outliner: OutlineManager) {
   const paneRegistry = outliner?.context?.session?.paneRegistry
   const paneName = window.history.state?.paneName
   const paneUri = window.history.state?.paneUri
-  const subjectUri = paneUri && (paneName === 'profile' || paneName === 'social')
+  // Panes rendered for a subject other than the page URL (storage/profile/social)
+  // must be restored from paneUri, since byName() returns the pane without that subject.
+  const usesOwnSubject = paneName === 'profile' || paneName === 'social' || paneName === 'folder'
+  const subjectUri = paneUri && usesOwnSubject
     ? paneUri
     : window.document.location.href
   let pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
