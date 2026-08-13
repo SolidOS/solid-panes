@@ -9,6 +9,7 @@ import './FileExplorerHeader'
 import styles from './FileExplorerProvider.styles.css'
 import personIcon from '../../icons/person.svg'
 import friendsIcon from '../../icons/friends.svg'
+import '~icons/lucide/share-2'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon

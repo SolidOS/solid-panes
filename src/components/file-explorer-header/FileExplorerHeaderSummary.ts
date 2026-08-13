@@ -8,8 +8,9 @@ import { PaneIcon } from './types'
 import '~icons/lucide/globe'
 import '~icons/lucide/lock-keyhole'
 import '~icons/lucide/arrow-left'
+import '~icons/lucide/folder'
 import styles from './FileExplorerHeaderSummary.styles.css'
-import { type FileExplorerResourceMetadata } from './helper'
+import { getContainerItemCount, isContainerSubject, type FileExplorerResourceMetadata } from './helper'
 
 @customElement('file-explorer-header-summary')
 export default class FileExplorerHeaderSummary extends WebComponent {
@@ -93,11 +94,41 @@ export default class FileExplorerHeaderSummary extends WebComponent {
     }
   }
 
+  private renderContainerResourceHeader (label: string, isPublic: boolean) {
+    const itemCount = getContainerItemCount(this.fileExplorerContext?.store, this.fileExplorerContext?.subjectUri) ?? 0
+    return html`
+      <div class="container-info">
+        <h1>
+          <span>${label}</span>
+        </h1>
+        <p>
+        ${itemCount} items
+          ${isPublic
+            ? html`<span class="public"><icon-lucide-globe></icon-lucide-globe></span>`
+            : html`<span class="private"><icon-lucide-lock-keyhole></icon-lucide-lock-keyhole></span>`}
+        </p>
+      </div>
+    `
+  }
+
+  private renderResourceHeader (label: string, isPublic: boolean) {
+    const modified = this.formatModifiedDate(this.responseMetadata.modified)
+
+    return html`
+        <div class="resource-info">
+          <h1>
+            <span>${label}</span>
+          </h1>
+          <p>${modified} ${isPublic ? html`<span class="public"><icon-lucide-globe></icon-lucide-globe> Public</span>` : html`<span class="private"><icon-lucide-lock-keyhole></icon-lucide-lock-keyhole> Private</span>`}</p>
+        </div>
+    `
+  }
+
   render () {
     const subject = this.fileExplorerContext?.subjectUri ? sym(this.fileExplorerContext.subjectUri) : undefined
     const label = subject ? utils.label(subject) : ''
-    const modified = this.formatModifiedDate(this.responseMetadata.modified)
     const isPublic = this.responseMetadata.isPublic
+    const isContainerResource = isContainerSubject(this.fileExplorerContext?.store, this.fileExplorerContext?.subjectUri)
 
     return html`
       <div class="file-explorer-header-summary">
@@ -111,10 +142,8 @@ export default class FileExplorerHeaderSummary extends WebComponent {
         <span class="pane-icon">
           ${this.resolvedPaneIcon ? html`<img src=${this.resolvedPaneIcon} alt="" />` : ''}
         </span>
-        <div>
-          <h1>${label}</h1>
-          <p>${modified} ${isPublic ? html`<span class="public"><icon-lucide-globe></icon-lucide-globe> Public</span>` : html`<span class="private"><icon-lucide-lock-keyhole></icon-lucide-lock-keyhole> Private</span>`}</p>
-        </div>
+        ${isContainerResource ? this.renderContainerResourceHeader(label, isPublic) : this.renderResourceHeader(label, isPublic)}
+      </div>
       </div>
     `
   }

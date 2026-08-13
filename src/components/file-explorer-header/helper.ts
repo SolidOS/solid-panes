@@ -12,6 +12,25 @@ export type FileExplorerResourceMetadata = {
   modified: string | undefined
 }
 
+export function isContainerSubject (store: LiveStore | undefined, subjectUri: string | undefined): boolean {
+  if (!store || !subjectUri) return false
+
+  const subject = store.sym(subjectUri)
+  const typeUris = store.findTypeURIs(subject)
+  return Boolean(
+    typeUris[ns.ldp('Container').uri] ||
+    typeUris[ns.ldp('BasicContainer').uri] ||
+    subject.uri.endsWith('/')
+  )
+}
+
+export function getContainerItemCount (store: LiveStore | undefined, subjectUri: string | undefined): number {
+  if (!store || !subjectUri) return 0
+
+  const subject = store.sym(subjectUri)
+  return store.each(subject, ns.ldp('contains')).length
+}
+
 function parseWacAllowHeader (headerValue: string | null | undefined) {
   const permissions = new Map<string, Set<string>>()
   if (!headerValue) return permissions

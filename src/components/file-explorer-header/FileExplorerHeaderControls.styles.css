@@ -31,6 +31,12 @@
     white-space: nowrap;
   }
 
+  icon-lucide-share-2,
+  icon-lucide-pencil {
+    width: 16px;
+    height: 16px;
+  }
+
   @media (max-width: 900px) {
     div {
       padding-right: 3px;

@@ -8,6 +8,7 @@ import '~icons/lucide/pencil'
 import styles from './FileExplorerHeaderControls.styles.css'
 import '../resource-actions-menu/ResourceActionsMenu'
 import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
+import { isContainerSubject } from './helper'
 
 @customElement('file-explorer-header-controls')
 export default class FileExplorerHeaderControls extends WebComponent {
@@ -49,22 +50,29 @@ export default class FileExplorerHeaderControls extends WebComponent {
   }
 
   render () {
+    const isContainerResource = isContainerSubject(this.fileExplorerContext.store, this.fileExplorerContext.subjectUri)
+
     return html`
       <div>
         ${this.renderDirtyIndicator()}
-        <solid-ui-button variant="ghost" title="Share" @click=${this.fileExplorerContext.handleSharingClick}>
-          <icon-lucide-share-2 slot="icon"></icon-lucide-share-2>
-        </solid-ui-button>
-        <solid-ui-button
-          variant="ghost"
-          title=${this.getEditTooltip()}
-          ?disabled=${!this.fileExplorerContext.paneSupportsEditing || !this.canEdit}
-          @click=${this.handleEditingClick}
-        >
-          <icon-lucide-pencil slot="icon"></icon-lucide-pencil>
-        </solid-ui-button>
+        ${!isContainerResource
+          ? html`
+              <solid-ui-button variant="ghost" title="Share" @click=${this.fileExplorerContext.handleSharingClick}>
+                <icon-lucide-share-2 slot="icon"></icon-lucide-share-2>
+              </solid-ui-button>
+              <solid-ui-button
+                variant="ghost"
+                title=${this.getEditTooltip()}
+                ?disabled=${!this.fileExplorerContext.paneSupportsEditing || !this.canEdit}
+                @click=${this.handleEditingClick}
+              >
+                <icon-lucide-pencil slot="icon"></icon-lucide-pencil>
+              </solid-ui-button>
+            `
+          : nothing}
         <resource-actions-menu
-          .store=${this.fileExplorerContext?.store}
+          .store=${this.fileExplorerContext.store}
+          .handleSharingClick=${this.fileExplorerContext.handleSharingClick}
           .subjectUri=${this.fileExplorerContext?.subjectUri}
           .menuItems=${this.menuItems}
         ></resource-actions-menu>
