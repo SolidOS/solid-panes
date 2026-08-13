@@ -63,9 +63,12 @@ export async function initMainPage (
 export async function refreshUI (outliner: OutlineManager) {
   const store = outliner?.context?.session?.store
   const paneRegistry = outliner?.context?.session?.paneRegistry
-  const subjectUri = window.document.location.href
   const paneName = window.history.state?.paneName
-  const pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
+  const paneUri = window.history.state?.paneUri
+  const subjectUri = paneUri && (paneName === 'profile' || paneName === 'social')
+    ? paneUri
+    : window.document.location.href
+  let pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
 
   // Only re-run GotoSubject (full pane re-render) when render-relevant
   // environment fields actually changed since the last render.
