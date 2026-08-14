@@ -711,10 +711,7 @@ export default function (context) {
           // Add the x more <TR> here
           const moreTR = dom.createElement('tr')
           const moreTD = moreTR.appendChild(dom.createElement('td'))
-          moreTD.setAttribute(
-            'style',
-            'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-          )
+          moreTD.classList.add('obj')
           moreTD.setAttribute('notSelectable', 'false')
           if (predDups > n) {
             // what is this for??
@@ -790,13 +787,8 @@ export default function (context) {
   termWidget.construct = function (dom) {
     dom = dom || document
     const td = dom.createElement('TD')
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
     td.setAttribute('class', 'iconTD')
     td.setAttribute('notSelectable', 'true')
-    td.style.width = '0px'
     return td
   }
   termWidget.addIcon = function (td, icon, listener) {

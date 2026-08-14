@@ -48,5 +48,17 @@
       justify-content: flex-start;
       gap: 5px;
     }
+
+    .file-explorer-header-share-button,
+    .file-explorer-header-edit-button {
+      display: none;
+    }
+
+    icon-lucide-ellipsis-vertical {
+      width: 15.36px;
+      height: 15.36px;
+      flex-shrink: 0;
+      aspect-ratio: 1 / 1;
+    }
   }
 }

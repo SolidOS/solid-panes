@@ -1,5 +1,5 @@
 import { WebComponent } from 'solid-ui'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 import { consume } from '@lit/context'
 import { html, nothing } from 'lit'
 import 'solid-ui/components/button'
@@ -14,14 +14,43 @@ import { isContainerSubject } from './helper'
 export default class FileExplorerHeaderControls extends WebComponent {
   static styles = styles
 
+  private mobileMediaQuery: MediaQueryList | undefined
+  private readonly mobileQuery = '(max-width: 600px)'
+  private readonly handleMobileMediaChange = (event: MediaQueryListEvent) => {
+    this.isMobile = event.matches
+  }
+
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
 
   @property({ attribute: false })
-  accessor menuItems: Array<{ label: string, action: (event: Event) => void }> = []
+  accessor menuItems: Array<{ label: string, action: (event: Event) => void, icon?: HTMLElement }> = []
 
   @property({ type: Boolean })
   accessor canEdit: boolean = false
+
+  @state()
+  accessor isMobile = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    ? window.matchMedia('(max-width: 600px)').matches
+    : false
+
+  connectedCallback () {
+    super.connectedCallback()
+
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return
+    }
+
+    this.mobileMediaQuery = window.matchMedia(this.mobileQuery)
+    this.isMobile = this.mobileMediaQuery.matches
+    this.mobileMediaQuery.addEventListener('change', this.handleMobileMediaChange)
+  }
+
+  disconnectedCallback () {
+    this.mobileMediaQuery?.removeEventListener('change', this.handleMobileMediaChange)
+    this.mobileMediaQuery = undefined
+    super.disconnectedCallback()
+  }
 
   // TODO: Add broken then use this function to set tooltip and disable edit button
   /* private setEditable() {
@@ -32,10 +61,6 @@ export default class FileExplorerHeaderControls extends WebComponent {
 
     this.sourceContext?.setEditing?.()
   } */
-
-  private handleEditingClick () {
-    this.fileExplorerContext.edit?.onEdit?.()
-  }
 
   private getEditTooltip () {
     if (!this.fileExplorerContext.paneSupportsEditing) return 'Not Supported'
@@ -55,16 +80,17 @@ export default class FileExplorerHeaderControls extends WebComponent {
     return html`
       <div>
         ${this.renderDirtyIndicator()}
-        ${!isContainerResource
+        ${!isContainerResource && !this.isMobile
           ? html`
-              <solid-ui-button variant="ghost" title="Share" @click=${this.fileExplorerContext.handleSharingClick}>
+              <solid-ui-button class="file-explorer-header-share-button" variant="ghost" title="Share" @click=${this.fileExplorerContext.handleSharingClick}>
                 <icon-lucide-share-2 slot="icon"></icon-lucide-share-2>
               </solid-ui-button>
               <solid-ui-button
+                class="file-explorer-header-edit-button"
                 variant="ghost"
                 title=${this.getEditTooltip()}
                 ?disabled=${!this.fileExplorerContext.paneSupportsEditing || !this.canEdit}
-                @click=${this.handleEditingClick}
+                @click=${this.fileExplorerContext.edit?.onEdit}
               >
                 <icon-lucide-pencil slot="icon"></icon-lucide-pencil>
               </solid-ui-button>
@@ -73,8 +99,10 @@ export default class FileExplorerHeaderControls extends WebComponent {
         <resource-actions-menu
           .store=${this.fileExplorerContext.store}
           .handleSharingClick=${this.fileExplorerContext.handleSharingClick}
+          .handleEditingClick=${this.fileExplorerContext.edit?.onEdit}
           .subjectUri=${this.fileExplorerContext?.subjectUri}
           .menuItems=${this.menuItems}
+          .isMobile=${this.isMobile}
         ></resource-actions-menu>
       </div>
     `

@@ -6,6 +6,7 @@ import 'solid-ui/components/menu'
 import 'solid-ui/components/menu-item'
 import '~icons/lucide/ellipsis-vertical'
 import '~icons/lucide/share-2'
+import '~icons/lucide/pencil'
 import { LiveStore } from 'rdflib'
 import styles from './ResourceActionsMenu.styles.css'
 import { isContainerSubject } from '../file-explorer-header/helper'
@@ -23,11 +24,16 @@ export default class ResourceActionsMenu extends WebComponent {
   accessor handleSharingClick: (() => void) | undefined = undefined
 
   @property({ attribute: false })
-  accessor menuItems: Array<{ label: string, icon?: HTMLElement, action: (event: Event) => void }> = []
+  accessor handleEditingClick: (() => void) | undefined = undefined
+
+  @property({ type: Boolean })
+  accessor isMobile = false
+
+  @property({ attribute: false })
+  accessor menuItems: Array<{ label: string, icon?: unknown, action: (event: Event) => void }> = []
 
   render () {
     const isContainerResource = isContainerSubject(this.store, this.subjectUri)
-
     return html`
       <solid-ui-menu>
         <solid-ui-button slot="trigger" variant="ghost" title="More options">
@@ -39,9 +45,21 @@ export default class ResourceActionsMenu extends WebComponent {
             ${item.label}
           </solid-ui-menu-item>
         `)}
+        ${!isContainerResource && this.isMobile
+          ? html`
+              <solid-ui-menu-item @solid-ui-select=${this.handleEditingClick}>
+                <icon-lucide-pencil slot="left-icon"></icon-lucide-pencil>
+                Edit
+              </solid-ui-menu-item>
+              <solid-ui-menu-item @solid-ui-select=${this.handleSharingClick}>
+                <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
+                Share
+              </solid-ui-menu-item>
+            `
+          : nothing}
         ${isContainerResource && this.handleSharingClick
           ? html`
-              <solid-ui-menu-item @solid-ui-select=${() => this.handleSharingClick?.()}>
+              <solid-ui-menu-item @solid-ui-select=${this.handleSharingClick}>
                 <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
                 Share
               </solid-ui-menu-item>

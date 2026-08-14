@@ -99,8 +99,50 @@
     height: 0.875rem;
   }
 
+  .resource-date {
+    font-size: inherit;
+  }
+
   icon-lucide-arrow-left {
     width: 1.125rem;
     height: 1.125rem;
+  }
+
+  @media (max-width: 600px) {
+    .file-explorer-header-summary {
+      gap: 7px;
+    }
+
+    h1 {
+      font-size: 14px;
+    }
+
+    .pane-icon {
+      width: 18.2px;
+      height: 18.2px;
+      flex-shrink: 0;
+      aspect-ratio: 1 / 1;
+      padding: 0;
+    }
+
+    p {
+      font-size: 14px;
+    }
+
+    .resource-date {
+      font-size: 10px;
+    }
+
+    .public,
+    .private {
+      font-size: 9px;
+    }
+
+    icon-lucide-arrow-left {
+      width: 15px;
+      height: 18px;
+      flex-shrink: 0;
+      aspect-ratio: 5 / 6;
+    }
   }
 }

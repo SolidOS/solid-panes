@@ -82,3 +82,12 @@
   width: 12px;
   height: 12px;
 }
+
+@media (max-width: 600px) {
+  .obj,
+  .iconTD {
+    font-size: 100%;
+    margin: 0 !important;
+    vertical-align: top;
+  }
+}
