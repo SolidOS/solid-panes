@@ -44,14 +44,15 @@ export async function initMainPage (
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  const urlPane = isWebIdUri(subject)
-    ? await getProfilePaneFromURI(subject)
-    : undefined
   const historyPaneName = window.history.state?.paneName
   const historyPane = historyPaneName
     ? paneRegistry.byName(historyPaneName)
     : undefined
-  const initialPane = urlPane ?? historyPane
+  let initialPane = historyPane
+
+  if (!initialPane && isWebIdUri(subject)) {
+    initialPane = await getProfilePaneFromURI(subject)
+  }
 
   outliner.GotoSubject(subject, true, initialPane, true, undefined, undefined, true, false)
 
@@ -71,7 +72,7 @@ export async function refreshUI (outliner: OutlineManager) {
   const subjectUri = paneUri && usesOwnSubject
     ? paneUri
     : window.document.location.href
-  let pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
+  const pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
 
   // Only re-run GotoSubject (full pane re-render) when render-relevant
   // environment fields actually changed since the last render.

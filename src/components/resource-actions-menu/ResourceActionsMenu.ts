@@ -27,6 +27,12 @@ export default class ResourceActionsMenu extends WebComponent {
   accessor handleEditingClick: (() => void) | undefined = undefined
 
   @property({ type: Boolean })
+  accessor paneSupportsEditing = false
+
+  @property({ type: Boolean })
+  accessor canEdit = false
+
+  @property({ type: Boolean })
   accessor isMobile = false
 
   @property({ attribute: false })
@@ -34,6 +40,8 @@ export default class ResourceActionsMenu extends WebComponent {
 
   render () {
     const isContainerResource = isContainerSubject(this.store, this.subjectUri)
+    const canEdit = !isContainerResource && this.isMobile && this.paneSupportsEditing && this.canEdit && !!this.handleEditingClick
+    const canShare = !!this.handleSharingClick
     return html`
       <solid-ui-menu>
         <solid-ui-button slot="trigger" variant="ghost" title="More options">
@@ -45,19 +53,23 @@ export default class ResourceActionsMenu extends WebComponent {
             ${item.label}
           </solid-ui-menu-item>
         `)}
-        ${!isContainerResource && this.isMobile
+        ${canEdit
           ? html`
               <solid-ui-menu-item @solid-ui-select=${this.handleEditingClick}>
                 <icon-lucide-pencil slot="left-icon"></icon-lucide-pencil>
                 Edit
               </solid-ui-menu-item>
+            `
+          : nothing}
+        ${!isContainerResource && this.isMobile && canShare
+          ? html`
               <solid-ui-menu-item @solid-ui-select=${this.handleSharingClick}>
                 <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
                 Share
               </solid-ui-menu-item>
             `
           : nothing}
-        ${isContainerResource && this.handleSharingClick
+        ${isContainerResource && canShare
           ? html`
               <solid-ui-menu-item @solid-ui-select=${this.handleSharingClick}>
                 <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>

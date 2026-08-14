@@ -100,6 +100,8 @@ export default class FileExplorerHeaderControls extends WebComponent {
           .store=${this.fileExplorerContext.store}
           .handleSharingClick=${this.fileExplorerContext.handleSharingClick}
           .handleEditingClick=${this.fileExplorerContext.edit?.onEdit}
+          .paneSupportsEditing=${this.fileExplorerContext.paneSupportsEditing}
+          .canEdit=${this.canEdit}
           .subjectUri=${this.fileExplorerContext?.subjectUri}
           .menuItems=${this.menuItems}
           .isMobile=${this.isMobile}

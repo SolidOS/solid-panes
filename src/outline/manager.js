@@ -794,11 +794,7 @@ export default function (context) {
   termWidget.addIcon = function (td, icon, listener) {
     const iconTD = td.childNodes[1]
     if (!iconTD) return
-    let width = iconTD.style.width
     const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
-    width = parseInt(width)
-    width = width + icon.width
-    iconTD.style.width = width + 'px'
     iconTD.appendChild(img)
     if (listener) {
       img.addEventListener('click', listener)
@@ -808,10 +804,6 @@ export default function (context) {
     const iconTD = td.childNodes[1]
     let baseURI
     if (!iconTD) return
-    let width = iconTD.style.width
-    width = parseInt(width)
-    width = width - icon.width
-    iconTD.style.width = width + 'px'
     for (let x = 0; x < iconTD.childNodes.length; x++) {
       const elt = iconTD.childNodes[x]
       const eltSrc = elt.src
