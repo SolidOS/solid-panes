@@ -13,7 +13,7 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
-import '../components/file-explorer-header/FileExplorerProvider'
+import '../components/file-explorer-header'
 
 export default function (context) {
   const dom = context.dom
