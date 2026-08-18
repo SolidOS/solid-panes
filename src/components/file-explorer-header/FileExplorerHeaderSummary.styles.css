@@ -12,7 +12,7 @@
 
   h1 {
       color: var(--solid-ui-color-gray-700, #364153);
-      font-size: var(--solid-ui-font-size-xl, 1.25rem); /* while in expand will go to 2xl when new design is complete */
+      font-size: var(--solid-ui-font-size-xl, 1.25rem); /* while in expand; will go to 2xl when new design is complete */
       font-weight: 500;
       display: flex;
       align-items: center;
