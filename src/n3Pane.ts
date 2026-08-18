@@ -9,7 +9,7 @@ import * as $rdf from 'rdflib'
 import type { DataBrowserContext } from 'pane-registry'
 import type { NamedNode, Statement } from 'rdflib'
 import './n3Pane.css'
-import './components/editor-card/EditorCard'
+import './components/editor-card'
 
 const ns = UI.ns
 

@@ -47,6 +47,7 @@ export default class EditorCard extends WebComponent {
       }
       this._editor?.setReadOnly(true)
     } catch (err) {
+      // TODO: Bring in error handling and debug
       console.log('Error loading CodeEditor module:', err)
     } finally {
       this._initializing = false

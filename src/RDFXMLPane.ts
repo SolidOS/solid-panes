@@ -9,7 +9,7 @@ import { ns, icons } from 'solid-ui'
 import type { DataBrowserContext } from 'pane-registry'
 import { Serializer, type NamedNode, type Statement } from 'rdflib'
 import './RDFXMLPane.css'
-import './components/editor-card/EditorCard'
+import './components/editor-card'
 
 type RDFXMLPaneDefinition = {
   icon: string
