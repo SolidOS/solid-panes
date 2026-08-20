@@ -21,7 +21,7 @@ function createFileExplorerContextValue (value: {
   soloPane?: boolean
   onBack?: () => void
   openPane?: (subject: NamedNode, paneName: string) => void
-  handleSharingClick?: () => void
+  handleAccessClick?: () => void
   paneSupportsEditing?: boolean
   edit?: {
     onEdit?: () => void
@@ -36,7 +36,7 @@ function createFileExplorerContextValue (value: {
     soloPane: value.soloPane,
     onBack: value.onBack,
     openPane: value.openPane,
-    handleSharingClick: value.handleSharingClick,
+    handleAccessClick: value.handleAccessClick,
     paneSupportsEditing: value.paneSupportsEditing,
     edit: value.edit
   }
@@ -126,7 +126,7 @@ export default class FileExplorerProvider extends WebComponent {
     soloPane: this.soloPane,
     onBack: this.onBack,
     openPane: this.openPane,
-    handleSharingClick: this.handleSharingClick,
+    handleAccessClick: this.handleAccessClick,
     paneSupportsEditing: false,
     edit: this.edit
   })
@@ -182,7 +182,7 @@ export default class FileExplorerProvider extends WebComponent {
       soloPane: this.soloPane,
       onBack: this.onBack,
       openPane: this.openPane,
-      handleSharingClick: this.handleSharingClick,
+      handleAccessClick: this.handleAccessClick,
       paneSupportsEditing: this.paneSupportsEditing,
       edit: this.edit
     })
@@ -229,7 +229,7 @@ export default class FileExplorerProvider extends WebComponent {
       changedProperties.has('soloPane') ||
       changedProperties.has('onBack') ||
       changedProperties.has('openPane') ||
-      changedProperties.has('handleSharingClick') ||
+      changedProperties.has('handleAccessClick') ||
       changedProperties.has('pane') ||
       changedProperties.has('isDirty')
     ) {
