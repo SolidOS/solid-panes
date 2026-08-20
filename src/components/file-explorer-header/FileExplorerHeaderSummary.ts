@@ -10,7 +10,8 @@ import '~icons/lucide/lock-keyhole'
 import '~icons/lucide/arrow-left'
 import '~icons/lucide/folder'
 import styles from './FileExplorerHeaderSummary.styles.css'
-import { getContainerItemCount, isContainerSubject, type FileExplorerResourceMetadata } from './helper'
+import { getContainerItemCount, isContainerSubject } from '../../utils/podUtils'
+import type { FileExplorerResourceMetadata } from './types'
 
 @customElement('file-explorer-header-summary')
 export default class FileExplorerHeaderSummary extends WebComponent {

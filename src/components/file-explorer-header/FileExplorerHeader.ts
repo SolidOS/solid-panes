@@ -10,8 +10,8 @@ import styles from './FileExplorerHeader.styles.css'
 import './FileExplorerHeaderSummary'
 import './FileExplorerHeaderControls'
 import { PaneIcon } from './types'
-import { fetchContentAndMetadata, type FileExplorerResourceMetadata } from './helper'
-
+import { fetchContentAndMetadata } from '../../utils/podUtils'
+import { type FileExplorerResourceMetadata } from './types'
 @customElement('file-explorer-header')
 export default class FileExplorerHeader extends WebComponent {
   static styles = styles

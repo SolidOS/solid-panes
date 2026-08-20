@@ -9,7 +9,7 @@ import '~icons/lucide/share-2'
 import '~icons/lucide/pencil'
 import { LiveStore } from 'rdflib'
 import styles from './ResourceActionsMenu.styles.css'
-import { isContainerSubject } from '../file-explorer-header/helper'
+import { isContainerSubject } from '../../utils/podUtils'
 @customElement('resource-actions-menu')
 export default class ResourceActionsMenu extends WebComponent {
   static styles = styles
@@ -21,7 +21,7 @@ export default class ResourceActionsMenu extends WebComponent {
   accessor subjectUri: string | undefined
 
   @property({ attribute: false })
-  accessor handleSharingClick: (() => void) | undefined = undefined
+  accessor handleAccessClick: (() => void) | undefined = undefined
 
   @property({ attribute: false })
   accessor handleEditingClick: (() => void) | undefined = undefined
@@ -41,7 +41,7 @@ export default class ResourceActionsMenu extends WebComponent {
   render () {
     const isContainerResource = isContainerSubject(this.store, this.subjectUri)
     const canEdit = !isContainerResource && this.isMobile && this.paneSupportsEditing && this.canEdit && !!this.handleEditingClick
-    const canShare = !!this.handleSharingClick
+    const canManageAccess = !!this.handleAccessClick
     return html`
       <solid-ui-menu>
         <solid-ui-button slot="trigger" variant="ghost" title="More options">
@@ -61,19 +61,19 @@ export default class ResourceActionsMenu extends WebComponent {
               </solid-ui-menu-item>
             `
           : nothing}
-        ${!isContainerResource && this.isMobile && canShare
+        ${!isContainerResource && this.isMobile && canManageAccess
           ? html`
-              <solid-ui-menu-item @solid-ui-select=${this.handleSharingClick}>
+              <solid-ui-menu-item @solid-ui-select=${this.handleAccessClick}>
                 <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
-                Share
+                Manage Access
               </solid-ui-menu-item>
             `
           : nothing}
-        ${isContainerResource && canShare
+        ${isContainerResource && canManageAccess
           ? html`
-              <solid-ui-menu-item @solid-ui-select=${this.handleSharingClick}>
+              <solid-ui-menu-item @solid-ui-select=${this.handleAccessClick}>
                 <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
-                Share
+                Manage Access
               </solid-ui-menu-item>
             `
           : nothing}

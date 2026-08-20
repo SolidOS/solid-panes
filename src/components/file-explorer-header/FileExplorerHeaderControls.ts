@@ -8,7 +8,7 @@ import '~icons/lucide/pencil'
 import styles from './FileExplorerHeaderControls.styles.css'
 import '../resource-actions-menu/ResourceActionsMenu'
 import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
-import { isContainerSubject } from './helper'
+import { isContainerSubject } from '../../utils/podUtils'
 
 @customElement('file-explorer-header-controls')
 export default class FileExplorerHeaderControls extends WebComponent {
