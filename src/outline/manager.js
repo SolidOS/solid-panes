@@ -1637,33 +1637,40 @@ export default function (context) {
       GotoSubjectDefault()
     }
 
-    if (
-      solo &&
-      dom &&
-      dom.defaultView &&
-      dom.defaultView.history
-    ) {
-      const currentState = dom.defaultView.history.state || {}
-      const paneState = pane ? { paneName: pane.name } : {}
-      if (pane && pane.subject && typeof pane.subject.uri === 'string') {
-        paneState.paneUri = pane.subject.uri
-      }
-      const stateObj = { ...currentState, ...paneState }
-      try {
-        const currentUrl = new URL(document.location.href)
-        const targetUrl = new URL(subject.uri, document.location.href)
-        if (currentUrl.origin === targetUrl.origin) {
-          if (document.location.href !== subject.uri) {
-            dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
-          } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
-            dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
-          }
-        }
-      } catch (e) {
-      }
-    }
+    updateHistoryForSubject(subject, pane, solo)
 
     return subject
+  }
+
+  function updateHistoryForSubject (subject, pane, solo) {
+    if (
+      !solo ||
+      !dom ||
+      !dom.defaultView ||
+      !dom.defaultView.history
+    ) {
+      return
+    }
+
+    const currentState = dom.defaultView.history.state || {}
+    const paneState = pane ? { paneName: pane.name } : {}
+    if (pane && pane.subject && typeof pane.subject.uri === 'string') {
+      paneState.paneUri = pane.subject.uri
+    }
+    const stateObj = { ...currentState, ...paneState }
+
+    try {
+      const currentUrl = new URL(document.location.href)
+      const targetUrl = new URL(subject.uri, document.location.href)
+      if (currentUrl.origin === targetUrl.origin) {
+        if (document.location.href !== subject.uri) {
+          dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+        } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
+          dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
+        }
+      }
+    } catch (e) {
+    }
   }
 
   // / /////////////////////////////////////////////////////
