@@ -6,9 +6,10 @@
  */
 import * as UI from 'solid-ui'
 import * as $rdf from 'rdflib'
-import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
+import type { DataBrowserContext } from 'pane-registry'
 import type { NamedNode, Statement } from 'rdflib'
 import './n3Pane.css'
+import './components/editor-card'
 
 const ns = UI.ns
 
@@ -18,26 +19,6 @@ type N3PaneLike = {
   audience: NamedNode[]
   label: (subject: NamedNode, context: DataBrowserContext) => string | null
   render: (subject: NamedNode, context: DataBrowserContext) => HTMLDivElement
-}
-
-function leadingIndentWidth (line: string): number {
-  if (line.trim().length === 0) {
-    return 0
-  }
-
-  let width = 0
-  for (const character of line) {
-    if (character === ' ') {
-      width += 1
-      continue
-    }
-    if (character === '\t') {
-      width += 2
-      continue
-    }
-    break
-  }
-  return Math.max(width, 2)
 }
 
 export const n3Pane: N3PaneLike = {
@@ -68,45 +49,28 @@ export const n3Pane: N3PaneLike = {
     const myDocument = context.dom
     const kb = context.session.store
 
-    function applyEnvironmentAttributes (element: HTMLDivElement): void {
-      const environment = (context.environment ?? {}) as Partial<RenderEnvironment>
-      element.dataset.layout = environment.layout ?? 'desktop'
-    }
-
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'n3-pane')
-    applyEnvironmentAttributes(div)
     // Because of smushing etc, this will not be a copy of the original source
     // We could instead either fetch and re-parse the source,
     // or we could keep all the pre-smushed triples.
-    const sts = kb.statementsMatching(
+    const statements = kb.statementsMatching(
       undefined,
       undefined,
       undefined,
       subject
     ) as Statement[] // @@ slow with current store!
-    /*
-    var kludge = kb.formula([]) // No features
-    for (var i=0; i< sts.length; i++) {
-        s = sts[i]
-        kludge.add(s.subject, s.predicate, s.object)
-    }
-    */
+
     const sz = $rdf.Serializer(kb)
     sz.suggestNamespaces(kb.namespaces)
     sz.setBase(subject.uri)
-    const str = sz.statementsToN3(sts)
-    const source = myDocument.createElement('div')
-    source.classList.add('n3-pane__source')
-
-    str.split('\n').forEach(line => {
-      const lineElement = myDocument.createElement('div')
-      const indentWidth = leadingIndentWidth(line)
-      lineElement.classList.add('n3-pane__line')
-      lineElement.style.setProperty('--n3-indent', `${indentWidth}ch`)
-      lineElement.textContent = line.length > 0 ? line : ' '
-      source.appendChild(lineElement)
-    })
+    const serializedContent = sz.statementsToN3(statements)
+    const source = myDocument.createElement('solid-panes-editor-card') as HTMLElement & {
+      contentType?: string
+      content?: string
+    }
+    source.contentType = 'text/n3'
+    source.content = serializedContent
 
     div.appendChild(source)
     return div

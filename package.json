@@ -59,7 +59,7 @@
     "@solid/better-simple-slideshow": "^0.1.0",
     "activitystreams-pane": "2.0.0-0",
     "chat-pane": "4.0.0-0",
-    "contacts-pane": "3.2.1-6",
+    "contacts-pane": "4.0.0-0",
     "dompurify": "^3.4.4",
     "folder-pane": "4.0.0-0",
     "issue-pane": "4.0.0-0",
@@ -68,12 +68,12 @@
     "meeting-pane": "4.0.0-0",
     "mime-types": "^3.0.2",
     "pane-registry": "5.0.0-0",
-    "profile-pane": "3.2.3-4",
+    "profile-pane": "4.0.0-0",
     "rdflib": "2.4.0",
     "solid-logic": "6.0.0-0",
     "solid-namespace": "^0.5.4",
     "solid-ui": "5.0.0-0",
-    "source-pane": "3.1.1-7"
+    "source-pane": "4.0.0-0"
   },
   "overrides": {
     "rdflib": "$rdflib"
