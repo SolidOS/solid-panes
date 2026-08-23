@@ -152,14 +152,11 @@ export function getResponseMetadata (store: LiveStore, subject: NamedNode, respo
   return { contentType, canEdit, isPublic, aclUri, eTag, modified }
 }
 
-export async function fetchContentAndMetadata (store: LiveStore, subject: NamedNode): Promise<{ content: string, metadata: FileExplorerResourceMetadata }> {
-  const fetcher = store.fetcher
+export async function fetchResourceMetadata (store: LiveStore, subject: NamedNode): Promise<FileExplorerResourceMetadata> {
+  const response = await store.fetcher.webOperation('HEAD', subject.uri)
 
-  const response = await fetcher.webOperation('GET', subject.uri)
-  const content = (response as Response & { responseText?: string }).responseText
-
-  if (content === undefined) {
-    throw new Error('No text in response object!!')
+  if (!response.ok) {
+    throw new Error(`HEAD request failed with status ${response.status}`)
   }
 
   const metadata = getResponseMetadata(store, subject, response)
@@ -167,5 +164,5 @@ export async function fetchContentAndMetadata (store: LiveStore, subject: NamedN
     throw new Error('No content-type available!')
   }
 
-  return { content, metadata }
+  return metadata
 }

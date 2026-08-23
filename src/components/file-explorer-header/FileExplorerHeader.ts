@@ -10,7 +10,7 @@ import styles from './FileExplorerHeader.styles.css'
 import './FileExplorerHeaderSummary'
 import './FileExplorerHeaderControls'
 import { PaneIcon } from './types'
-import { fetchContentAndMetadata } from '../../utils/podUtils'
+import { fetchResourceMetadata } from '../../utils/podUtils'
 import { type FileExplorerResourceMetadata } from './types'
 @customElement('file-explorer-header')
 export default class FileExplorerHeader extends WebComponent {
@@ -55,7 +55,7 @@ export default class FileExplorerHeader extends WebComponent {
     if (!this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) return
 
     try {
-      const { metadata } = await fetchContentAndMetadata(this.fileExplorerContext.store, sym(this.fileExplorerContext.subjectUri))
+      const metadata = await fetchResourceMetadata(this.fileExplorerContext.store, sym(this.fileExplorerContext.subjectUri))
       this.responseMetadata = {
         modified: metadata.modified,
         isPublic: metadata.isPublic,
