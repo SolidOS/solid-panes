@@ -14,6 +14,7 @@ import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
 import { createOutlineDomHelpers } from './outlineDomHelpers.js'
+import { createLegacyOutlineApis } from './legacy.js'
 import '../components/file-explorer-header/FileExplorerProvider'
 
 export default function (context) {
@@ -735,16 +736,6 @@ export default function (context) {
           n = n.previousSibling
         } else break
       }
-    }
-  }
-
-  this.statusBarClick = function (event) {
-    const target = UI.utils.getTarget(event)
-    if (target.label) {
-      window.content.location = target.label
-      // The following alternative does not work in the extension.
-      // var s = store.sym(target.label);
-      // outline.GotoSubject(s, true);
     }
   }
 
@@ -1583,22 +1574,6 @@ export default function (context) {
     }
   }
 */
-  this.GotoFormURI_enterKey = function (e) {
-    if (e.keyCode === 13) outline.GotoFormURI(e)
-  }
-  this.GotoFormURI = function (_e) {
-    GotoURI(dom.getElementById('UserURI').value)
-  }
-
-  function GotoURI (uri) {
-    const subject = kb.sym(uri)
-    this.GotoSubject(subject, true)
-  }
-  this.GotoURIinit = function (uri) {
-    const subject = kb.sym(uri)
-    this.GotoSubject(subject)
-  }
-
   /** Display the subject in an outline view
 
   @param subject -- RDF term for the thing to be presented
@@ -1771,10 +1746,14 @@ export default function (context) {
     return rep
   } // boring_default
 
-  this.createTabURI = function () {
-    dom.getElementById('UserURI').value =
-      dom.URL + '?uri=' + dom.getElementById('UserURI').value
-  }
+  // Legacy compatibility APIs: keep these attached for older callers while the
+  // new outline/content-view split stabilizes.
+  const legacyApis = createLegacyOutlineApis({ outline: thisOutline, dom, kb })
+  this.statusBarClick = legacyApis.statusBarClick
+  this.GotoFormURI_enterKey = legacyApis.GotoFormURI_enterKey
+  this.GotoFormURI = legacyApis.GotoFormURI
+  this.GotoURIinit = legacyApis.GotoURIinit
+  this.createTabURI = legacyApis.createTabURI
 
   // a way to expose variables to UserInput without making them propeties/methods
   this.UserInput.setSelected = setSelected
