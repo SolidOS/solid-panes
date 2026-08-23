@@ -86,29 +86,6 @@ export default function (context) {
     return 'desktop'
   }
 
-  /** benchmark a function **/
-  benchmark.lastkbsize = 0
-
-  function benchmark (f) {
-    const args = []
-    for (let i = arguments.length - 1; i > 0; i--) args[i - 1] = arguments[i]
-    // UI.log.debug('BENCHMARK: args=' + args.join());
-    const begin = new Date().getTime()
-    const returnValue = f.apply(f, args)
-    const end = new Date().getTime()
-    UI.log.info(
-      'BENCHMARK: kb delta: ' +
-        (kb.statements.length - benchmark.lastkbsize) +
-        ', time elapsed for ' +
-        f +
-        ' was ' +
-        (end - begin) +
-        'ms'
-    )
-    benchmark.lastkbsize = kb.statements.length
-    return returnValue
-  } // benchmark
-
   // / ////////////////////// Representing data
 
   //  Represent an object in summary form as a content block
