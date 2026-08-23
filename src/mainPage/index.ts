@@ -63,8 +63,14 @@ export async function initMainPage (
 export async function refreshUI (outliner: OutlineManager) {
   const store = outliner?.context?.session?.store
   const paneRegistry = outliner?.context?.session?.paneRegistry
-  const subjectUri = window.document.location.href
   const paneName = window.history.state?.paneName
+  const paneUri = window.history.state?.paneUri
+  // Panes rendered for a subject other than the page URL (storage/profile/social)
+  // must be restored from paneUri, since byName() returns the pane without that subject.
+  const usesOwnSubject = paneName === 'profile' || paneName === 'social' || paneName === 'folder'
+  const subjectUri = paneUri && usesOwnSubject
+    ? paneUri
+    : window.document.location.href
   const pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
 
   // Only re-run GotoSubject (full pane re-render) when render-relevant
