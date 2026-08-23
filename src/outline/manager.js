@@ -41,6 +41,10 @@ export default function (context) {
   dom.outline = this
   this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
+  // Legacy compatibility APIs: keep these attached for older callers while the
+  // new outline/content-view split stabilizes.
+  const legacyApis = createLegacyOutlineApis({ outline: thisOutline, dom, kb })
+
   // var selection = []  // Array of statements which have been selected
   // this.focusTd // the <td> that is being observed
   this.UserInput = new UserInput(this)
@@ -60,7 +64,7 @@ export default function (context) {
     selectableTDClickListener,
     setSelected,
     viewAsBoringDefault,
-    removeNodeIconMouseDownListener
+    removeNodeIconMouseDownListener: legacyApis.removeNodeIconMouseDownListener
   })
 
   this.outlineObjectDiv = outlineObjectDiv
@@ -76,6 +80,8 @@ export default function (context) {
     outlineHost.outline = this
   }
 
+  // Responsive layout detector shared by the outline and folder-pane views.
+  // Keep this in the new design.
   this.getLayoutMode = function () {
     const envLayout = this.context?.environment?.layout
     if (envLayout === 'mobile' || envLayout === 'desktop') return envLayout
@@ -94,6 +100,9 @@ export default function (context) {
 
   //  Represent an object in summary form as a content block
 
+  // Adds access/fetch icons to resource labels in the outline and content
+  // views. Keep this in the new design because the folder-pane still renders
+  // shared resource summaries through the outline helpers.
   this.appendAccessIcons = function (kb, node, obj) {
     if (obj.termType !== 'NamedNode') return
     const uris = kb.uris(obj)
@@ -106,6 +115,8 @@ export default function (context) {
     }
   }
 
+  // Chooses and wires one fetch-state icon for a single resource. Keep this in
+  // the new design for shared resource rendering.
   this.appendAccessIcon = function (node, uri) {
     if (!uri) return ''
     const docuri = $rdf.uri.docpart(uri)
@@ -161,14 +172,19 @@ export default function (context) {
     return img
   } // appendAccessIcon
 
+  // Gets the shared outline host element. Keep this in the new design while
+  // the folder-pane still renders content through the outline host.
   function getOutlineContainer () {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
+  // Finds the shared Solid panes navbar. Keep this in the new design.
   function getNavbarElement () {
     return document.querySelector('solid-panes-navbar')
   }
 
+  // Reveals the shared navbar when the outline host is active. Keep this in
+  // the new design.
   function showSolidPanesNavbar () {
     const navbar = getNavbarElement()
     if (navbar) {
@@ -183,6 +199,8 @@ export default function (context) {
    * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
+  // Creates the outline host container if needed. Keep this in the new design
+  // while the outline host remains the backing surface for rendered content.
   function getOrCreateContainer (id) {
     // OutlineView is a simple block container
     if (id === 'OutlineView') {
@@ -206,6 +224,9 @@ export default function (context) {
     }
   }
 
+  // Filters the pane registry down to panes that can render the current
+  // subject. Keep this in the new design because the folder-pane still uses it
+  // to choose ContentView panes.
   async function getRelevantPanes (subject, context) {
     // make sure container representation is loaded (when server returns index.html)
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
@@ -230,6 +251,8 @@ export default function (context) {
       : filteredPanes
   }
 
+  // Picks the pane that should actually render the subject. Keep this in the
+  // new design.
   function getPane (relevantPanes, subject) {
     return (
       relevantPanes.find(
@@ -238,6 +261,8 @@ export default function (context) {
     )
   }
 
+  // Shows or hides the query button when a pane asks for it. Keep this in the
+  // new design.
   function setQueryButtonVisibility (shouldShow) {
     const queryButton = dom.getElementById('queryButton')
     if (!queryButton) return
@@ -248,6 +273,8 @@ export default function (context) {
     }
   }
 
+  // Renders the active pane into a provider node. Keep this in the new design
+  // because the folder-pane uses the same provider shell.
   function renderPaneIntoProvider (provider, subject, pane, options) {
     if (!provider || !pane) return
 
@@ -272,6 +299,8 @@ export default function (context) {
     }
   }
 
+  // Swaps panes inside an already-rendered provider. Keep this in the new
+  // design because folder-pane still reuses the provider shell.
   function openPaneInPlace (subject, pane) {
     const outlineView = dom.getElementById('OutlineView')
     if (!outlineView) return
@@ -294,6 +323,8 @@ export default function (context) {
     renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
   }
 
+  // Builds the provider wrapper for an expanded subject. Keep this in the new
+  // design because folder-pane still renders subjects through providers.
   async function expandedProviderTR (subject, requiredPane, options, provider) {
     options = options || {}
 
@@ -352,18 +383,8 @@ export default function (context) {
 
   // / ///////////////////////////////////////////////////////////////////////////
 
-  // Remove a node from the DOM so that Firefox refreshes the screen OK
-  // Just deleting it cause whitespace to accumulate.
-  function removeAndRefresh (d) {
-    const parent = d.parentNode
-    const grandParent = parent.parentNode
-    const placeholder = dom.createElement('div')
-    placeholder.classList.add('placeholderTable')
-    grandParent.replaceChild(placeholder, parent)
-    parent.removeChild(d)
-    grandParent.replaceChild(parent, placeholder) // Attempt to
-  }
-
+  // Creates or refreshes the outer provider/table shell for a subject. Keep
+  // this in the new design because folder-pane still reaches it via GotoSubject.
   const propertyTable = (this.propertyTable = function propertyTable (
     subject,
     table,
@@ -388,6 +409,8 @@ export default function (context) {
     }
   }) /* propertyTable */
 
+  // Builds one old-style property row inside the outline table view. Likely to
+  // shrink away once the remaining table-based outline path disappears.
   function propertyTR (doc, st, inverse) {
     const tr = doc.createElement('div')
     tr.AJAR_statement = st
@@ -402,6 +425,8 @@ export default function (context) {
   this.propertyTR = propertyTR
 
   // / ////////// Property list
+  // Expands grouped statements into the old multi-row outline table view.
+  // Likely to shrink away with the new design.
   function appendPropertyTRs (parent, plist, inverse, predicateFilter) {
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
@@ -681,6 +706,10 @@ export default function (context) {
 
   //  Summarize a thing as a table cell
 
+  // Wires request/done/fail callbacks so access icons update when a resource
+  // starts fetching, finishes, or fails. It is used by the shared resource
+  // summary icons, but the outline-specific callback wiring should go away
+  // once the new design replaces these legacy access-icon hooks.
   function addButtonCallbacks (target, fireOn) {
     UI.log.debug('Button callbacks for ' + fireOn + ' added')
     const makeIconCallback = function (icon) {
@@ -707,6 +736,8 @@ export default function (context) {
 
   //   Selection support
 
+  // Predicate/class helper used by the current selection-state logic. Will go
+  // away with new design.
   function selected (node) {
     const a = node.getAttribute('class')
     if (a && a.indexOf('selected') >= 0) return true
@@ -714,6 +745,8 @@ export default function (context) {
   }
 
   // These woulkd be simpler using closer variables below
+  // Optional-property toggle handler for the old outline adornments. Will go
+  // away with new design.
   function optOnIconMouseDownListener (e) {
     // outlineIcons.src.icon_opton  needed?
     const target = thisOutline.targetOf(e)
@@ -727,6 +760,8 @@ export default function (context) {
     p.parentNode.parentNode.removeAttribute('optional')
   }
 
+  // Optional-property toggle handler for the old outline adornments. Will go
+  // away with new design.
   function optOffIconMouseDownListener (e) {
     // outlineIcons.src.icon_optoff needed?
     const target = thisOutline.targetOf(e)
@@ -740,6 +775,8 @@ export default function (context) {
     p.parentNode.parentNode.setAttribute('optional', 'true')
   }
 
+  // Selection adornment bookkeeping for predicate/object rows. Will go away
+  // with new design.
   function setSelectedParent (node, inc) {
     const onIcon = outlineIcons.termWidgets.optOn
     const offIcon = outlineIcons.termWidgets.optOff
@@ -775,6 +812,7 @@ export default function (context) {
     }
   }
 
+  // Current selection URI display helper. Will go away with new design.
   this.showURI = function showURI (about) {
     if (about && dom.getElementById('UserURI')) {
       dom.getElementById('UserURI').value =
@@ -784,6 +822,10 @@ export default function (context) {
 
   /* global alert XPathResult sourceWidget */
 
+  // Selection-source panel updater for the optional sourceWidget view.
+  // It is only active when that widget exists, but when it does this keeps the
+  // displayed sources in sync with the current outline selection. Keep it while
+  // the outline selection model still exists.
   this.showSource = function showSource () {
     if (typeof sourceWidget === 'undefined') return
     // deselect all before going on, this is necessary because you would switch tab,
@@ -804,10 +846,18 @@ export default function (context) {
     }
   }
 
+  // Read-only accessor for the current outline selection array. It is used by
+  // outline-side code as a simple state bridge and may still matter while the
+  // folder-pane reuses outline selection for inline editing and rendering.
   this.getSelection = function getSelection () {
     return selection
   }
 
+  // Central selection-state mutator for the outline keyboard and mouse flows.
+  // The current outline handlers and the UserInput bridge still depend on it,
+  // and the folder-pane/content-view design still leans on outline selection
+  // state for inline editing and resource rendering. This only shrinks if the
+  // new design fully replaces outline-driven selection.
   function setSelected (node, newValue) {
     // UI.log.info('selection has ' +selection.map(function(item){return item.textContent;}).join(', '));
     // UI.log.debug('@outline setSelected, intended to '+(newValue?'select ':'deselect ')+node+node.textContent);
@@ -875,11 +925,18 @@ export default function (context) {
     node.setAttribute('class', cla)
   }
 
+  // Bulk selection reset that delegates to setSelected() so the same side
+  // effects and cleanup happen when the outline needs to clear focus. It stays
+  // relevant while the folder-pane still uses outline selection state, and
+  // would only become disposable if that model is replaced end-to-end.
   function deselectAll () {
     const n = selection.length
     for (let i = n - 1; i >= 0; i--) setSelected(selection[i], false)
     selection = []
   }
+  // Shared event-target normalizer for the outline mouse handlers in this file.
+  // It is still needed because several listeners call it before inspecting the
+  // clicked node, including handlers that support the current sidebar/content-view flow.
   /* SAM srcElement is the old IE-era version of event.target. */
   /** Get the target of an event **/
   this.targetOf = function (e) {
@@ -960,6 +1017,10 @@ export default function (context) {
     // return newSelTd;
   }
 
+  // Outline-level keyboard dispatcher for Enter, arrows, delete/backspace,
+  // copy/paste, and the input-box up/down bridge from createInputBoxIn() in
+  // userInput.js. The folder-pane sidebar/content-view flow does not call this
+  // directly, but the outline still needs it for inline editing and navigation.
   // Keyboard Input: we can consider this as...
   // 1. a fast way to modify data - enter will go to next predicate
   // 2. an alternative way to input - enter at the end of a predicate will create a new statement
@@ -1164,6 +1225,10 @@ export default function (context) {
   // select
   // visit/open a page
 
+  // Attached by outlineObjectDiv in outlineDomHelpers.js to the expand icon.
+  // Handles subject expansion, Shift-click refocus, and Alt-click internal
+  // pane debugging. Still used by the outline; the folder-pane uses it only
+  // indirectly when GotoSubject(..., true) renders ContentView content.
   function expandMouseDownListener (e) {
     // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
     const target = thisOutline.targetOf(e)
@@ -1187,6 +1252,8 @@ export default function (context) {
     }
   }
 
+  // Used as the back action for expanded providers, and still the outline-side
+  // collapse handler for the old row-based outline view.
   function collapseMouseDownListener (e) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     const target = thisOutline.targetOf(e)
@@ -1196,6 +1263,9 @@ export default function (context) {
     outlineCollapse(p, subject, pane)
   }
 
+  // Attached to access icons for fetch/retry failure states in
+  // appendAccessIcon(). Still used by both outline summaries and the
+  // folder-pane ContentView resource display.
   function failedIconMouseDownListener (e) {
     // outlineIcons.src.icon_failed
     const target = thisOutline.targetOf(e)
@@ -1209,6 +1279,8 @@ export default function (context) {
     }
   }
 
+  // Attached to access icons after a document is fetched successfully.
+  // Same callers and future relevance as failedIconMouseDownListener.
   function fetchedIconMouseDownListener (e) {
     // outlineIcons.src.icon_fetched
     const target = thisOutline.targetOf(e)
@@ -1222,20 +1294,18 @@ export default function (context) {
     }
   }
 
+  // Attached to access icons before a document has been requested yet.
+  // This keeps the resource-fetch affordance working in outline summaries and
+  // the folder-pane ContentView resource display.
   function unrequestedIconMouseDownListener (e) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
     sf.fetch($rdf.uri.docpart(uri))
   }
 
-  function removeNodeIconMouseDownListener (e) {
-    // icon_remove_node
-    const target = thisOutline.targetOf(e)
-    let node = target.node
-    if (node.childNodes.length > 1) node = target.parentNode // parallel outline view @@ Hack
-    removeAndRefresh(node) // @@ update icons for pane?
-  }
-
+  // Attached by outlineObjectDiv and outlinePredicateDiv in outlineDomHelpers.
+  // Handles selection and edit-entry clicks on outline/content blocks; still
+  // needed for the outline and for resource summaries rendered in ContentView.
   function selectableTDClickListener (e) {
     // Is we are in editing mode already
     if (thisOutline.UserInput._tabulatorMode) {
@@ -1303,6 +1373,10 @@ export default function (context) {
     // this is important or conflict between deselect and user input happens
   }
 
+  // Legacy-style global mousedown cleanup for the outline keyboard/mouse model.
+  // Called from OutlinerMouseclickPanel() when the old tabulator mode is active.
+  // Likely to shrink or disappear if the new sidebar/content-view path fully
+  // replaces outline-wide mouse handling.
   function TabulatorMousedown (e) {
     UI.log.info('@TabulatorMousedown, dom.location is now ' + dom.location)
     const target = thisOutline.targetOf(e)
@@ -1358,6 +1432,11 @@ export default function (context) {
     }
   }
 
+  // Low-level subject expansion for the outline host.
+  // Called from Enter, right-arrow, click-expand, and GotoSubject(..., true).
+  // The folder-pane sidebar/content-view flow reaches this indirectly through
+  // GotoSubject(..., true) when it renders a selected resource in ContentView.
+  // Keep it until that flow fully replaces outline-host expansion.
   /** Expand an outline view
    * @param p {Element} - container
    */
@@ -1553,6 +1632,8 @@ export default function (context) {
     }
   } // outlineExpand
 
+  // Collapse the currently expanded outline row back to a summary block.
+  // This still serves keyboard and mouse collapse actions.
   function outlineCollapse (p, subject) {
     const statement = p.AJAR_statement || (p.parentNode && p.parentNode.AJAR_statement)
 
@@ -1573,6 +1654,8 @@ export default function (context) {
     )
   } // outlineCollapse
 
+  // Replace one DOM block with another while preserving selection state.
+  // User-input edits still rely on this swap behavior.
   this.replaceTD = function replaceTD (newTd, replacedTd) {
     let reselect
     if (selected(replacedTd)) reselect = true
@@ -1591,8 +1674,9 @@ export default function (context) {
     if (reselect) setSelected(newTd, true)
   }
 
+  // Shift-click maximize the current subject by replacing the pane contents
+  // with the subject view.
   function outlineRefocus (p, subject) {
-    // Shift-expand or shift-collapse: Maximize
     UI.utils.emptyNode(p).appendChild(propertyTable(subject))
     setUrlBarAndTitle(subject)
     // dom.title = UI.utils.label(subject)
@@ -1694,9 +1778,10 @@ export default function (context) {
 
   const views = propertyViews(dom)
 
-  // var thisOutline = this   dup
-  /** some builtin simple views **/
-
+  // Current fallback renderer for outline objects and generic resource summaries.
+  // This will still be used by the existing folder-pane/content-view flow for plain
+  // resource display, but it may later be replaced by a dedicated content-view
+  // renderer that looks different from the sidebar for the folder-pane.
   function viewAsBoringDefault (obj) {
     // UI.log.debug('entered viewAsBoringDefault...');
     let rep // representation in html
@@ -1782,9 +1867,6 @@ export default function (context) {
     return rep
   } // boring_default
 
-  // Legacy compatibility APIs: keep these attached for older callers while the
-  // new outline/content-view split stabilizes.
-  const legacyApis = createLegacyOutlineApis({ outline: thisOutline, dom, kb })
   this.statusBarClick = legacyApis.statusBarClick
   this.GotoFormURI_enterKey = legacyApis.GotoFormURI_enterKey
   this.GotoFormURI = legacyApis.GotoFormURI
