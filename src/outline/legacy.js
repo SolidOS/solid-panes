@@ -1,6 +1,17 @@
 // Legacy outline manager APIs kept for backward compatibility.
 
 export function createLegacyOutlineApis ({ outline, dom, kb }) {
+  // Legacy helper: used only by the old outline row delete affordance.
+  function removeAndRefresh (d) {
+    const parent = d.parentNode
+    const grandParent = parent.parentNode
+    const placeholder = dom.createElement('div')
+    placeholder.classList.add('placeholderTable')
+    grandParent.replaceChild(placeholder, parent)
+    parent.removeChild(d)
+    grandParent.replaceChild(parent, placeholder) // Attempt to
+  }
+
   // Legacy compatibility: keep this for older panes and toolbar handlers that
   // still call the status bar click behavior directly.
   function statusBarClick (event) {
@@ -41,11 +52,21 @@ export function createLegacyOutlineApis ({ outline, dom, kb }) {
       dom.URL + '?uri=' + dom.getElementById('UserURI').value
   }
 
+  // Legacy helper: kept for the old outline row delete affordance.
+  // This is not part of the new folder-pane sidebar/content-view path.
+  function removeNodeIconMouseDownListener (e) {
+    const target = outline.targetOf(e)
+    let node = target.node
+    if (node.childNodes.length > 1) node = target.parentNode // parallel outline view @@ Hack
+    removeAndRefresh(node)
+  }
+
   return {
     statusBarClick,
     GotoFormURI_enterKey,
     GotoFormURI,
     GotoURIinit,
-    createTabURI
+    createTabURI,
+    removeNodeIconMouseDownListener
   }
 }
