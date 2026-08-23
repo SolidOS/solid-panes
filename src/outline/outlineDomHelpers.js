@@ -12,6 +12,10 @@ export function createOutlineDomHelpers ({
   viewAsBoringDefault,
   removeNodeIconMouseDownListener
 }) {
+  // old name: appendRemoveIcon
+  // Used by outlineCollapse when a row in the main OutlineView is collapsed back
+  // to a summary object and needs to keep the remove/delete affordance on that
+  // outline row.
   function appendRemoveIcon (node, subject, removeNode) {
     const image = utils.AJARImage(
       outlineIcons.src.icon_remove_node,

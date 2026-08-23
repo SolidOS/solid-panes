@@ -112,24 +112,6 @@ export default function (context) {
 
   //  Represent an object in summary form as a content block
 
-  function appendRemoveIcon (node, subject, removeNode) {
-    const image = UI.utils.AJARImage(
-      outlineIcons.src.icon_remove_node,
-      'remove',
-      undefined,
-      dom
-    )
-    image.addEventListener('click', removeNodeIconMouseDownListener)
-    // image.setAttribute('align', 'right')  Causes icon to be moved down
-    image.node = removeNode
-    image.setAttribute('about', subject.toNT())
-    image.style.marginLeft = '5px'
-    image.style.marginRight = '10px'
-    // image.style.border='solid #777 1px';
-    node.appendChild(image)
-    return image
-  }
-
   this.appendAccessIcons = function (kb, node, obj) {
     if (obj.termType !== 'NamedNode') return
     const uris = kb.uris(obj)
