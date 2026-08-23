@@ -13,6 +13,8 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
+import { createOutlineDomHelpers } from './outlineDomHelpers.js'
+import { createLegacyOutlineApis } from './legacy.js'
 import '../components/file-explorer-header/FileExplorerProvider'
 
 export default function (context) {
@@ -35,18 +37,47 @@ export default function (context) {
   dom.outline = this
   this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
+  // Legacy compatibility APIs: keep these attached for older callers while the
+  // new outline/content-view split stabilizes.
+  const legacyApis = createLegacyOutlineApis({ outline: thisOutline, dom, kb })
+
   // var selection = []  // Array of statements which have been selected
   // this.focusTd // the <td> that is being observed
   this.UserInput = new UserInput(this)
   this.clipboardAddress = 'tabulator:clipboard' // Weird
   this.UserInput.clipboardInit(this.clipboardAddress)
-  const outlineElement = this.outlineElement
+
+  const {
+    outlineObjectDiv,
+    outlinePredicateDiv,
+    termWidget
+  } = createOutlineDomHelpers({
+    dom,
+    UI,
+    kb: store,
+    outlineIcons,
+    expandMouseDownListener,
+    selectableTDClickListener,
+    setSelected,
+    viewAsBoringDefault,
+    removeNodeIconMouseDownListener: legacyApis.removeNodeIconMouseDownListener
+  })
+
+  this.outlineObjectDiv = outlineObjectDiv
+  this.outlinePredicateDiv = outlinePredicateDiv
+  // old name: outlineObjectTD
+  this.outlineObjectTD = outlineObjectDiv
+  // old name: outlinePredicateTD
+  this.outlinePredicateTD = outlinePredicateDiv
+  this.termWidget = termWidget
 
   this.init = function () {
-    const table = getOutlineContainer()
-    table.outline = this
+    const outlineHost = getOutlineContainer()
+    outlineHost.outline = this
   }
 
+  // Responsive layout detector shared by the outline and folder-pane views.
+  // Keep this in the new design.
   this.getLayoutMode = function () {
     const envLayout = this.context?.environment?.layout
     if (envLayout === 'mobile' || envLayout === 'desktop') return envLayout
@@ -61,51 +92,13 @@ export default function (context) {
     return 'desktop'
   }
 
-  /** benchmark a function **/
-  benchmark.lastkbsize = 0
-
-  function benchmark (f) {
-    const args = []
-    for (let i = arguments.length - 1; i > 0; i--) args[i - 1] = arguments[i]
-    // UI.log.debug('BENCHMARK: args=' + args.join());
-    const begin = new Date().getTime()
-    const returnValue = f.apply(f, args)
-    const end = new Date().getTime()
-    UI.log.info(
-      'BENCHMARK: kb delta: ' +
-        (kb.statements.length - benchmark.lastkbsize) +
-        ', time elapsed for ' +
-        f +
-        ' was ' +
-        (end - begin) +
-        'ms'
-    )
-    benchmark.lastkbsize = kb.statements.length
-    return returnValue
-  } // benchmark
-
   // / ////////////////////// Representing data
 
-  //  Represent an object in summary form as a table cell
+  //  Represent an object in summary form as a content block
 
-  function appendRemoveIcon (node, subject, removeNode) {
-    const image = UI.utils.AJARImage(
-      outlineIcons.src.icon_remove_node,
-      'remove',
-      undefined,
-      dom
-    )
-    image.addEventListener('click', removeNodeIconMouseDownListener)
-    // image.setAttribute('align', 'right')  Causes icon to be moved down
-    image.node = removeNode
-    image.setAttribute('about', subject.toNT())
-    image.style.marginLeft = '5px'
-    image.style.marginRight = '10px'
-    // image.style.border='solid #777 1px';
-    node.appendChild(image)
-    return image
-  }
-
+  // Adds access/fetch icons to resource labels in the outline and content
+  // views. Keep this in the new design because the folder-pane still renders
+  // shared resource summaries through the outline helpers.
   this.appendAccessIcons = function (kb, node, obj) {
     if (obj.termType !== 'NamedNode') return
     const uris = kb.uris(obj)
@@ -118,6 +111,8 @@ export default function (context) {
     }
   }
 
+  // Chooses and wires one fetch-state icon for a single resource. Keep this in
+  // the new design for shared resource rendering.
   this.appendAccessIcon = function (node, uri) {
     if (!uri) return ''
     const docuri = $rdf.uri.docpart(uri)
@@ -173,137 +168,19 @@ export default function (context) {
     return img
   } // appendAccessIcon
 
-  /** make the td for an object (grammatical object)
-   *  @param obj - an RDF term
-   *  @param view - a VIEW function (rather than a bool asImage)
-   **/
-
-  this.outlineObjectTD = function outlineObjectTD (
-    obj,
-    view,
-    deleteNode,
-    statement
-  ) {
-    const td = dom.createElement('td')
-    td.classList.add('obj')
-    td.setAttribute('notSelectable', 'false')
-    if (!obj) {
-      td.textContent = 'No object available.'
-      return td
-    }
-    const theClass = 'obj'
-
-    // set about and put 'expand' icon
-    if (
-      obj.termType === 'NamedNode' ||
-      obj.termType === 'BlankNode' ||
-      (obj.termType === 'Literal' &&
-        obj.value.slice &&
-        (obj.value.slice(0, 6) === 'ftp://' ||
-          obj.value.slice(0, 8) === 'https://' ||
-          obj.value.slice(0, 7) === 'http://'))
-    ) {
-      td.setAttribute('about', obj.toNT())
-      td.appendChild(
-        UI.utils.AJARImage(
-          UI.icons.originalIconBase + 'tbl-expand-trans.png',
-          'expand',
-          undefined,
-          dom
-        )
-      ).addEventListener('click', expandMouseDownListener)
-    }
-    td.setAttribute('class', theClass) // this is how you find an object
-    if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
-      td.className = 'undetermined'
-    } // @@? why-timbl
-
-    if (!view) {
-      // view should be a function pointer
-      view = viewAsBoringDefault
-    }
-    td.appendChild(view(obj))
-    if (deleteNode) {
-      appendRemoveIcon(td, obj, deleteNode)
-    }
-
-    // set DOM methods
-    td.tabulatorSelect = function () {
-      setSelected(this, true)
-    }
-    td.tabulatorDeselect = function () {
-      setSelected(this, false)
-    }
-
-    td.addEventListener('click', selectableTDClickListener)
-    return td
-  } // outlineObjectTD
-
-  this.outlinePredicateTD = function outlinePredicateTD (
-    predicate,
-    newTr,
-    inverse,
-    internal
-  ) {
-    const predicateTD = dom.createElement('TD')
-    predicateTD.setAttribute('about', predicate.toNT())
-    predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
-
-    let lab
-    switch (predicate.termType) {
-      case 'BlankNode': // TBD
-        predicateTD.className = 'undetermined'
-        break
-      case 'NamedNode':
-        lab = UI.utils.predicateLabelForXML(predicate, inverse)
-        break
-      case 'Collection': // some choices of predicate
-        lab = UI.utils.predicateLabelForXML(predicate.elements[0], inverse)
-    }
-    lab = lab ? lab.slice(0, 1).toUpperCase() + lab.slice(1) : '...'
-    // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
-
-    const labelTD = dom.createElement('TD')
-    labelTD.classList.add('labelTD')
-    labelTD.setAttribute('notSelectable', 'true')
-    labelTD.appendChild(dom.createTextNode(lab))
-    predicateTD.appendChild(labelTD)
-    labelTD.style.width = '100%'
-    predicateTD.appendChild(termWidget.construct(dom)) // termWidget is global???
-    for (const w in outlineIcons.termWidgets) {
-      if (!newTr || !newTr.AJAR_statement) break // case for TBD as predicate
-      // alert(Icon.termWidgets[w]+'   '+Icon.termWidgets[w].filter)
-      if (
-        outlineIcons.termWidgets[w].filter &&
-        outlineIcons.termWidgets[w].filter(
-          newTr.AJAR_statement,
-          'pred',
-          inverse
-        )
-      ) {
-        termWidget.addIcon(predicateTD, outlineIcons.termWidgets[w])
-      }
-    }
-
-    // set DOM methods
-    predicateTD.tabulatorSelect = function () {
-      setSelected(this, true)
-    }
-    predicateTD.tabulatorDeselect = function () {
-      setSelected(this, false)
-    }
-    predicateTD.addEventListener('click', selectableTDClickListener)
-    return predicateTD
-  } // outlinePredicateTD
-
+  // Gets the shared outline host element. Keep this in the new design while
+  // the folder-pane still renders content through the outline host.
   function getOutlineContainer () {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
+  // Finds the shared Solid panes navbar. Keep this in the new design.
   function getNavbarElement () {
     return document.querySelector('solid-panes-navbar')
   }
 
+  // Reveals the shared navbar when the outline host is active. Keep this in
+  // the new design.
   function showSolidPanesNavbar () {
     const navbar = getNavbarElement()
     if (navbar) {
@@ -318,12 +195,10 @@ export default function (context) {
    * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
+  // Creates the outline host container if needed. Keep this in the new design
+  // while the outline host remains the backing surface for rendered content.
   function getOrCreateContainer (id) {
-    const containerHost =
-      document.getElementById('MainContent') ||
-      document.body
-
-    // OutlineView is a table
+    // OutlineView is a simple block container
     if (id === 'OutlineView') {
       const existingOutline = document.getElementById('OutlineView')
       if (existingOutline) {
@@ -335,7 +210,7 @@ export default function (context) {
       document.body
 
       if (containerHost) {
-        const OutlineView = document.createElement('table')
+        const OutlineView = document.createElement('div')
         OutlineView.id = 'OutlineView'
         OutlineView.classList.add('outline-view')
         OutlineView.setAttribute('aria-label', 'Resource browser')
@@ -345,6 +220,9 @@ export default function (context) {
     }
   }
 
+  // Filters the pane registry down to panes that can render the current
+  // subject. Keep this in the new design because the folder-pane still uses it
+  // to choose ContentView panes.
   async function getRelevantPanes (subject, context) {
     // make sure container representation is loaded (when server returns index.html)
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
@@ -369,6 +247,8 @@ export default function (context) {
       : filteredPanes
   }
 
+  // Picks the pane that should actually render the subject. Keep this in the
+  // new design.
   function getPane (relevantPanes, subject) {
     return (
       relevantPanes.find(
@@ -377,6 +257,8 @@ export default function (context) {
     )
   }
 
+  // Shows or hides the query button when a pane asks for it. Keep this in the
+  // new design.
   function setQueryButtonVisibility (shouldShow) {
     const queryButton = dom.getElementById('queryButton')
     if (!queryButton) return
@@ -387,17 +269,8 @@ export default function (context) {
     }
   }
 
-  function findContainingTable (td) {
-    let containingTable
-    for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-      if (containingTable.nodeName === 'TABLE') break
-    }
-    if (containingTable.nodeName !== 'TABLE') {
-      throw new Error('outline: internal error.')
-    }
-    return containingTable
-  }
-
+  // Renders the active pane into a provider node. Keep this in the new design
+  // because the folder-pane uses the same provider shell.
   function renderPaneIntoProvider (provider, subject, pane, options) {
     if (!provider || !pane) return
 
@@ -422,15 +295,19 @@ export default function (context) {
     }
   }
 
+  // Swaps panes inside an already-rendered provider. Keep this in the new
+  // design because folder-pane still reuses the provider shell.
   function openPaneInPlace (subject, pane) {
     const outlineView = dom.getElementById('OutlineView')
     if (!outlineView) return
 
     const subjectId = subject.toNT()
-    const subjectTd = outlineView.querySelector('td.paneView[about="' + subjectId + '"]')
-    if (!subjectTd) return
+    const subjectNode = outlineView.querySelector('[about="' + subjectId + '"]')
+    if (!subjectNode) return
 
-    const provider = subjectTd.querySelector('file-explorer-provider')
+    const provider = subjectNode.matches?.('file-explorer-provider')
+      ? subjectNode
+      : subjectNode.querySelector('file-explorer-provider')
     if (!provider) return
     if (!pane) {
       UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
@@ -442,23 +319,19 @@ export default function (context) {
     renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
   }
 
-  async function expandedProviderTR (subject, requiredPane, options) {
+  // Builds the provider wrapper for an expanded subject. Keep this in the new
+  // design because folder-pane still renders subjects through providers.
+  async function expandedProviderTR (subject, requiredPane, options, provider) {
     options = options || {}
 
-    // TODO: hide the main storage header
-    // const showHeader = !!requiredPane
-    const tr = dom.createElement('tr')
+    provider = provider || dom.createElement('file-explorer-provider')
+    provider.classList.add('paneView', 'tdFlex')
+    provider.setAttribute('notSelectable', 'true')
+    provider.setAttribute('about', subject.toNT())
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
-      tr.classList.add('hoverControl')
+      provider.classList.add('hoverControl')
     }
-    const td = tr.appendChild(dom.createElement('td'))
-    td.classList.add('paneView', 'tdFlex')
-    td.setAttribute('notSelectable', 'true')
-    td.setAttribute('about', subject.toNT())
-    td.setAttribute('colspan', '2')
-
-    const provider = td.appendChild(dom.createElement('file-explorer-provider'))
     provider.context = context
     provider.subjectUri = subject.uri
     provider.onBack = () => collapseMouseDownListener({ target: provider })
@@ -478,10 +351,9 @@ export default function (context) {
     provider.handleSharingClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
 
     if (provider.pane) {
-      tr.classList.add('outlinePaneRow')
       renderPaneIntoProvider(provider, subject, provider.pane, options)
     }
-    return tr
+    return provider
   }
 
   // / //////////////////////////////////////////////////////////////////////////
@@ -507,63 +379,51 @@ export default function (context) {
 
   // / ///////////////////////////////////////////////////////////////////////////
 
-  // Remove a node from the DOM so that Firefox refreshes the screen OK
-  // Just deleting it cause whitespace to accumulate.
-  function removeAndRefresh (d) {
-    const table = d.parentNode
-    const par = table.parentNode
-    const placeholder = dom.createElement('table')
-    placeholder.classList.add('placeholderTable')
-    par.replaceChild(placeholder, table)
-    table.removeChild(d)
-    par.replaceChild(table, placeholder) // Attempt to
-  }
-
+  // Creates or refreshes the outer provider/table shell for a subject. Keep
+  // this in the new design because folder-pane still reaches it via GotoSubject.
   const propertyTable = (this.propertyTable = function propertyTable (
     subject,
     table,
     requiredPane,
     options
   ) {
-    UI.log.debug('Property table for: ' + subject)
+    UI.log.debug('Property block for: ' + subject)
     subject = kb.canon(subject)
     // if (!requiredPane) requiredPane = panes.defaultPane;
 
     if (!table) {
-      // Create a new property table
-      table = dom.createElement('table')
-      table.classList.add('tableFullWidth')
-      expandedProviderTR(subject, requiredPane, options).then(providerTR => {
-        table.appendChild(providerTR)
-      })
-
-      return table
+      const provider = dom.createElement('file-explorer-provider')
+      expandedProviderTR(subject, requiredPane, options, provider)
+      return provider
     } else {
-      // New display of existing table, keeping expanded bits
+      const existingProvider = table.matches?.('file-explorer-provider')
+        ? table
+        : table.firstElementChild || table
+      expandedProviderTR(subject, requiredPane, options, existingProvider)
       UI.log.info('Re-expand: ' + table)
-      // do some other stuff here
       return table
     }
   }) /* propertyTable */
 
+  // Builds one old-style property row inside the outline table view. Likely to
+  // shrink away once the remaining table-based outline path disappears.
   function propertyTR (doc, st, inverse) {
-    const tr = doc.createElement('TR')
+    const tr = doc.createElement('div')
     tr.AJAR_statement = st
     tr.AJAR_inverse = inverse
     // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
     tr.setAttribute('predTR', 'true')
-    const predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
+    tr.setAttribute('role', 'row')
+    const predicateTD = thisOutline.outlinePredicateDiv(st.predicate, tr, inverse)
     tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
     return tr
   }
   this.propertyTR = propertyTR
 
   // / ////////// Property list
+  // Expands grouped statements into the old multi-row outline table view.
+  // Likely to shrink away with the new design.
   function appendPropertyTRs (parent, plist, inverse, predicateFilter) {
-    // UI.log.info('@appendPropertyTRs, 'this' is %s, dom is %s, '+ // Gives 'can't access dead object'
-    //                   'thisOutline.document is %s', this, dom.location, thisOutline.document.location);
-    // UI.log.info('@appendPropertyTRs, dom is now ' + this.document.location);
-    // UI.log.info('@appendPropertyTRs, dom is now ' + thisOutline.document.location);
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
     let sel, j, k
@@ -629,7 +489,7 @@ export default function (context) {
             sel(plist[k]).lang.indexOf(outline.labeller.LanguagePreference) >= 0
           ) {
             tr.appendChild(
-              thisOutline.outlineObjectTD(
+              thisOutline.outlineObjectDiv(
                 sel(plist[k]),
                 defaultpropview,
                 undefined,
@@ -644,7 +504,7 @@ export default function (context) {
       }
 
       tr.appendChild(
-        thisOutline.outlineObjectTD(sel(s), defaultpropview, undefined, s)
+        thisOutline.outlineObjectDiv(sel(s), defaultpropview, undefined, s)
       )
 
       /* Note: showNobj shows between n to 2n objects.
@@ -679,10 +539,9 @@ export default function (context) {
               displayed++
               s = plist[j + l]
               defaultpropview = views.defaults[s.predicate.uri]
-              const trObj = dom.createElement('tr')
-              trObj.style.colspan = '1'
+              const trObj = dom.createElement('div')
               trObj.appendChild(
-                thisOutline.outlineObjectTD(
+                thisOutline.outlineObjectDiv(
                   sel(plist[j + l]),
                   defaultpropview,
                   undefined,
@@ -709,8 +568,8 @@ export default function (context) {
 
         if (show < predDups) {
           // Add the x more <TR> here
-          const moreTR = dom.createElement('tr')
-          const moreTD = moreTR.appendChild(dom.createElement('td'))
+          const moreTR = dom.createElement('div')
+          const moreTD = moreTR.appendChild(dom.createElement('div'))
           moreTD.setAttribute(
             'style',
             'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
@@ -782,71 +641,16 @@ export default function (context) {
 
   this.appendPropertyTRs = appendPropertyTRs
 
-  /*   termWidget
-   **
-   */
-  const termWidget = {} // @@@@@@ global
-  globalThis.termWidget = termWidget
-  termWidget.construct = function (dom) {
-    dom = dom || document
-    const td = dom.createElement('TD')
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
-    td.setAttribute('class', 'iconTD')
-    td.setAttribute('notSelectable', 'true')
-    td.style.width = '0px'
-    return td
-  }
-  termWidget.addIcon = function (td, icon, listener) {
-    const iconTD = td.childNodes[1]
-    if (!iconTD) return
-    let width = iconTD.style.width
-    const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
-    width = parseInt(width)
-    width = width + icon.width
-    iconTD.style.width = width + 'px'
-    iconTD.appendChild(img)
-    if (listener) {
-      img.addEventListener('click', listener)
-    }
-  }
-  termWidget.removeIcon = function (td, icon) {
-    const iconTD = td.childNodes[1]
-    let baseURI
-    if (!iconTD) return
-    let width = iconTD.style.width
-    width = parseInt(width)
-    width = width - icon.width
-    iconTD.style.width = width + 'px'
-    for (let x = 0; x < iconTD.childNodes.length; x++) {
-      const elt = iconTD.childNodes[x]
-      const eltSrc = elt.src
-
-      // ignore first '?' and everything after it //Kenny doesn't know what this is for
-      try {
-        baseURI = dom.location.href.split('?')[0]
-      } catch (e) {
-        baseURI = ''
-      }
-      const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
-      if (eltSrc === relativeIconSrc) {
-        iconTD.removeChild(elt)
-      }
-    }
-  }
-  termWidget.replaceIcon = function (td, oldIcon, newIcon, listener) {
-    termWidget.removeIcon(td, oldIcon)
-    termWidget.addIcon(td, newIcon, listener)
-  }
-
   // / /////////////////////////////////////////////////// VALUE BROWSER VIEW
 
   // / /////////////////////////////////////////////////////// TABLE VIEW
 
   //  Summarize a thing as a table cell
 
+  // Wires request/done/fail callbacks so access icons update when a resource
+  // starts fetching, finishes, or fails. It is used by the shared resource
+  // summary icons, but the outline-specific callback wiring should go away
+  // once the new design replaces these legacy access-icon hooks.
   function addButtonCallbacks (target, fireOn) {
     UI.log.debug('Button callbacks for ' + fireOn + ' added')
     const makeIconCallback = function (icon) {
@@ -873,6 +677,8 @@ export default function (context) {
 
   //   Selection support
 
+  // Predicate/class helper used by the current selection-state logic. Will go
+  // away with new design.
   function selected (node) {
     const a = node.getAttribute('class')
     if (a && a.indexOf('selected') >= 0) return true
@@ -880,6 +686,8 @@ export default function (context) {
   }
 
   // These woulkd be simpler using closer variables below
+  // Optional-property toggle handler for the old outline adornments. Will go
+  // away with new design.
   function optOnIconMouseDownListener (e) {
     // outlineIcons.src.icon_opton  needed?
     const target = thisOutline.targetOf(e)
@@ -893,6 +701,8 @@ export default function (context) {
     p.parentNode.parentNode.removeAttribute('optional')
   }
 
+  // Optional-property toggle handler for the old outline adornments. Will go
+  // away with new design.
   function optOffIconMouseDownListener (e) {
     // outlineIcons.src.icon_optoff needed?
     const target = thisOutline.targetOf(e)
@@ -906,6 +716,8 @@ export default function (context) {
     p.parentNode.parentNode.setAttribute('optional', 'true')
   }
 
+  // Selection adornment bookkeeping for predicate/object rows. Will go away
+  // with new design.
   function setSelectedParent (node, inc) {
     const onIcon = outlineIcons.termWidgets.optOn
     const offIcon = outlineIcons.termWidgets.optOff
@@ -941,16 +753,7 @@ export default function (context) {
     }
   }
 
-  this.statusBarClick = function (event) {
-    const target = UI.utils.getTarget(event)
-    if (target.label) {
-      window.content.location = target.label
-      // The following alternative does not work in the extension.
-      // var s = store.sym(target.label);
-      // outline.GotoSubject(s, true);
-    }
-  }
-
+  // Current selection URI display helper. Will go away with new design.
   this.showURI = function showURI (about) {
     if (about && dom.getElementById('UserURI')) {
       dom.getElementById('UserURI').value =
@@ -960,6 +763,10 @@ export default function (context) {
 
   /* global alert XPathResult sourceWidget */
 
+  // Selection-source panel updater for the optional sourceWidget view.
+  // It is only active when that widget exists, but when it does this keeps the
+  // displayed sources in sync with the current outline selection. Keep it while
+  // the outline selection model still exists.
   this.showSource = function showSource () {
     if (typeof sourceWidget === 'undefined') return
     // deselect all before going on, this is necessary because you would switch tab,
@@ -980,18 +787,26 @@ export default function (context) {
     }
   }
 
+  // Read-only accessor for the current outline selection array. It is used by
+  // outline-side code as a simple state bridge and may still matter while the
+  // folder-pane reuses outline selection for inline editing and rendering.
   this.getSelection = function getSelection () {
     return selection
   }
 
+  // Central selection-state mutator for the outline keyboard and mouse flows.
+  // The current outline handlers and the UserInput bridge still depend on it,
+  // and the folder-pane/content-view design still leans on outline selection
+  // state for inline editing and resource rendering. This only shrinks if the
+  // new design fully replaces outline-driven selection.
   function setSelected (node, newValue) {
     // UI.log.info('selection has ' +selection.map(function(item){return item.textContent;}).join(', '));
     // UI.log.debug('@outline setSelected, intended to '+(newValue?'select ':'deselect ')+node+node.textContent);
     // if (newValue === selected(node)) return; //we might not need this anymore...
-    if (node.nodeName !== 'TD') {
+    if (node.nodeName !== 'TD' && node.nodeName !== 'DIV') {
       UI.log.debug('down' + node.nodeName)
       throw new Error(
-        'Expected TD in setSelected: ' +
+        'Expected TD or DIV in setSelected: ' +
           node.nodeName +
           ' : ' +
           node.textContent
@@ -1051,12 +866,19 @@ export default function (context) {
     node.setAttribute('class', cla)
   }
 
+  // Bulk selection reset that delegates to setSelected() so the same side
+  // effects and cleanup happen when the outline needs to clear focus. It stays
+  // relevant while the folder-pane still uses outline selection state, and
+  // would only become disposable if that model is replaced end-to-end.
   function deselectAll () {
     const n = selection.length
     for (let i = n - 1; i >= 0; i--) setSelected(selection[i], false)
     selection = []
   }
-
+  // Shared event-target normalizer for the outline mouse handlers in this file.
+  // It is still needed because several listeners call it before inspecting the
+  // clicked node, including handlers that support the current sidebar/content-view flow.
+  /* SAM srcElement is the old IE-era version of event.target. */
   /** Get the target of an event **/
   this.targetOf = function (e) {
     let target
@@ -1107,13 +929,8 @@ export default function (context) {
         ) {
           setSelected(selectedTd.nextSibling, true)
         } else {
-          const newSelected = dom.evaluate(
-            'table/div/tr/td[2]',
-            selectedTd,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
-          ).singleNodeValue
+          const nextRow = selectedTd.parentNode && selectedTd.parentNode.nextSibling
+          const newSelected = nextRow ? nextRow.lastChild : null
           setSelected(newSelected, true)
         }
         break
@@ -1126,7 +943,7 @@ export default function (context) {
           setSelected(selectedTd.previousSibling, true)
           return true // do not shrink signal
         } else {
-          setSelected(UI.utils.ancestor(selectedTd.parentNode, 'TD'), true)
+          setSelected(selectedTd.parentNode && selectedTd.parentNode.firstChild, true)
         } // supplied by thieOutline.focusTd
         break
       case 'moveTo':
@@ -1141,6 +958,10 @@ export default function (context) {
     // return newSelTd;
   }
 
+  // Outline-level keyboard dispatcher for Enter, arrows, delete/backspace,
+  // copy/paste, and the input-box up/down bridge from createInputBoxIn() in
+  // userInput.js. The folder-pane sidebar/content-view flow does not call this
+  // directly, but the outline still needs it for inline editing and navigation.
   // Keyboard Input: we can consider this as...
   // 1. a fast way to modify data - enter will go to next predicate
   // 2. an alternative way to input - enter at the end of a predicate will create a new statement
@@ -1263,7 +1084,7 @@ export default function (context) {
               this.walk('right')
               return
             }
-            if (selectedTd.firstChild.tagName !== 'TABLE') {
+            if (selectedTd.firstChild.tagName !== 'SECTION') {
               // not expanded
               sf.addCallback('done', setSelectedAfterward)
               sf.addCallback('fail', setSelectedAfterward)
@@ -1345,6 +1166,10 @@ export default function (context) {
   // select
   // visit/open a page
 
+  // Attached by outlineObjectDiv in outlineDomHelpers.js to the expand icon.
+  // Handles subject expansion, Shift-click refocus, and Alt-click internal
+  // pane debugging. Still used by the outline; the folder-pane uses it only
+  // indirectly when GotoSubject(..., true) renders ContentView content.
   function expandMouseDownListener (e) {
     // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
     const target = thisOutline.targetOf(e)
@@ -1368,6 +1193,8 @@ export default function (context) {
     }
   }
 
+  // Used as the back action for expanded providers, and still the outline-side
+  // collapse handler for the old row-based outline view.
   function collapseMouseDownListener (e) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     const target = thisOutline.targetOf(e)
@@ -1377,6 +1204,9 @@ export default function (context) {
     outlineCollapse(p, subject, pane)
   }
 
+  // Attached to access icons for fetch/retry failure states in
+  // appendAccessIcon(). Still used by both outline summaries and the
+  // folder-pane ContentView resource display.
   function failedIconMouseDownListener (e) {
     // outlineIcons.src.icon_failed
     const target = thisOutline.targetOf(e)
@@ -1390,6 +1220,8 @@ export default function (context) {
     }
   }
 
+  // Attached to access icons after a document is fetched successfully.
+  // Same callers and future relevance as failedIconMouseDownListener.
   function fetchedIconMouseDownListener (e) {
     // outlineIcons.src.icon_fetched
     const target = thisOutline.targetOf(e)
@@ -1403,20 +1235,18 @@ export default function (context) {
     }
   }
 
+  // Attached to access icons before a document has been requested yet.
+  // This keeps the resource-fetch affordance working in outline summaries and
+  // the folder-pane ContentView resource display.
   function unrequestedIconMouseDownListener (e) {
     const target = thisOutline.targetOf(e)
     const uri = target.getAttribute('uri') // Put on access buttons
     sf.fetch($rdf.uri.docpart(uri))
   }
 
-  function removeNodeIconMouseDownListener (e) {
-    // icon_remove_node
-    const target = thisOutline.targetOf(e)
-    let node = target.node
-    if (node.childNodes.length > 1) node = target.parentNode // parallel outline view @@ Hack
-    removeAndRefresh(node) // @@ update icons for pane?
-  }
-
+  // Attached by outlineObjectDiv and outlinePredicateDiv in outlineDomHelpers.
+  // Handles selection and edit-entry clicks on outline/content blocks; still
+  // needed for the outline and for resource summaries rendered in ContentView.
   function selectableTDClickListener (e) {
     // Is we are in editing mode already
     if (thisOutline.UserInput._tabulatorMode) {
@@ -1428,9 +1258,9 @@ export default function (context) {
     // var p = target.parentNode
     let node
     for (
-      node = UI.utils.ancestor(target, 'TD');
+      node = UI.utils.ancestor(target, 'TD') || UI.utils.ancestor(target, 'DIV');
       node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
-      node = UI.utils.ancestor(node.parentNode, 'TD')
+      node = UI.utils.ancestor(node.parentNode, 'TD') || UI.utils.ancestor(node.parentNode, 'DIV')
     ) {
       // ...
     }
@@ -1460,7 +1290,7 @@ export default function (context) {
       // go to UserInput
       let st
       if (node.parentNode) st = node.parentNode.AJAR_statement
-      if (!st) return // For example in the title TD of an expanded pane
+      if (!st) return // For example in the title block of an expanded pane
       const target = st.why
       const editable = store.updater.editable(target.uri, kb)
       if (sel && editable) thisOutline.UserInput.Click(e, selection[0]) // was next 2 lines
@@ -1484,6 +1314,10 @@ export default function (context) {
     // this is important or conflict between deselect and user input happens
   }
 
+  // Legacy-style global mousedown cleanup for the outline keyboard/mouse model.
+  // Called from OutlinerMouseclickPanel() when the old tabulator mode is active.
+  // Likely to shrink or disappear if the new sidebar/content-view path fully
+  // replaces outline-wide mouse handling.
   function TabulatorMousedown (e) {
     UI.log.info('@TabulatorMousedown, dom.location is now ' + dom.location)
     const target = thisOutline.targetOf(e)
@@ -1539,6 +1373,11 @@ export default function (context) {
     }
   }
 
+  // Low-level subject expansion for the outline host.
+  // Called from Enter, right-arrow, click-expand, and GotoSubject(..., true).
+  // The folder-pane sidebar/content-view flow reaches this indirectly through
+  // GotoSubject(..., true) when it renders a selected resource in ContentView.
+  // Keep it until that flow fully replaces outline-host expansion.
   /** Expand an outline view
    * @param p {Element} - container
    */
@@ -1566,27 +1405,12 @@ export default function (context) {
         // first expand
         newTable = propertyTable(subject, undefined, pane, options)
       } else {
-        UI.log.info(' ... p is  ' + p)
-        for (
-          newTable = p.firstChild;
-          newTable.nextSibling;
-          newTable = newTable.nextSibling
-        ) {
-          UI.log.info(' ... checking node ' + newTable)
-          if (newTable.nodeName === 'table') break
-        }
-        newTable = propertyTable(subject, newTable, pane, options)
+        newTable = propertyTable(subject, p, pane, options)
       }
       already = true
-      if (
-        UI.utils.ancestor(p, 'TABLE') &&
-        UI.utils.ancestor(p, 'TABLE').style.backgroundColor === 'white'
-      ) {
-        newTable.style.backgroundColor = '#eee'
-      } else {
-        newTable.style.backgroundColor = 'white'
+      if (newTable !== p) {
+        UI.utils.emptyNode(p).appendChild(newTable)
       }
-      UI.utils.emptyNode(p).appendChild(newTable)
       thisOutline.focusTd = p // I don't know why I couldn't use 'this'...because not defined in callbacks
       UI.log.debug('expand: Node for ' + subject + ' expanded')
       // fetch seeAlso when render()
@@ -1670,22 +1494,10 @@ export default function (context) {
     sf.addCallback('done', expand) // @@@@@@@ This can really mess up existing work
     sf.addCallback('fail', expand) // Need to do if there s one a gentle resync of page with store
 
-    const returnConditions = [] // this is quite a general way to do cut and paste programming
-    // I might make a class for this
     if (subject.uri && subject.uri.split(':')[0] === 'rdf') {
       // what is this? -tim
       render()
       return
-    }
-
-    for (let i = 0; i < returnConditions.length; i++) {
-      let returnCode
-      if (returnCode === returnConditions[i](subject)) {
-        render()
-        UI.log.debug('outline 1815')
-        if (returnCode[1]) outlineElement.removeChild(outlineElement.lastChild)
-        return
-      }
     }
     if (
       subject.uri &&
@@ -1761,22 +1573,10 @@ export default function (context) {
     }
   } // outlineExpand
 
+  // Collapse the currently expanded outline row back to a summary block.
+  // This still serves keyboard and mouse collapse actions.
   function outlineCollapse (p, subject) {
-    let row = UI.utils.ancestor(p, 'TR')
-    row = UI.utils.ancestor(row.parentNode, 'TR') // two levels up
-    let statement
-    if (row) statement = row.AJAR_statement
-    let level // find level (the enclosing TD)
-    for (
-      level = p.parentNode;
-      level.tagName !== 'TD';
-      level = level.parentNode
-    ) {
-      if (typeof level === 'undefined') {
-        alert('Not enclosed in TD!')
-        return
-      }
-    }
+    const statement = p.AJAR_statement || (p.parentNode && p.parentNode.AJAR_statement)
 
     UI.log.debug('Collapsing subject ' + subject)
     let myview
@@ -1786,15 +1586,17 @@ export default function (context) {
     }
     UI.log.debug('view= ' + myview)
     let deleteNode
-    if (level.parentNode.parentNode.id === 'outline') {
-      deleteNode = level.parentNode
+    if (p.parentNode && p.parentNode.id === 'outline') {
+      deleteNode = p
     }
     thisOutline.replaceTD(
-      thisOutline.outlineObjectTD(subject, myview, deleteNode, statement),
-      level
+      thisOutline.outlineObjectDiv(subject, myview, deleteNode, statement),
+      p
     )
   } // outlineCollapse
 
+  // Replace one DOM block with another while preserving selection state.
+  // User-input edits still rely on this swap behavior.
   this.replaceTD = function replaceTD (newTd, replacedTd) {
     let reselect
     if (selected(replacedTd)) reselect = true
@@ -1813,17 +1615,13 @@ export default function (context) {
     if (reselect) setSelected(newTd, true)
   }
 
+  // Shift-click maximize the current subject by replacing the pane contents
+  // with the subject view.
   function outlineRefocus (p, subject) {
-    // Shift-expand or shift-collapse: Maximize
-    let outer = null
-    for (let level = p.parentNode; level; level = level.parentNode) {
-      UI.log.debug('level ' + level.tagName)
-      if (level.tagName === 'TD') outer = level
-    } // find outermost td
-    UI.utils.emptyNode(outer).appendChild(propertyTable(subject))
+    UI.utils.emptyNode(p).appendChild(propertyTable(subject))
     setUrlBarAndTitle(subject)
     // dom.title = UI.utils.label(subject)
-    outer.setAttribute('about', subject.toNT())
+    p.setAttribute('about', subject.toNT())
   } // outlineRefocus
 
   outline.outlineRefocus = outlineRefocus
@@ -1837,22 +1635,6 @@ export default function (context) {
     }
   }
 */
-  this.GotoFormURI_enterKey = function (e) {
-    if (e.keyCode === 13) outline.GotoFormURI(e)
-  }
-  this.GotoFormURI = function (_e) {
-    GotoURI(dom.getElementById('UserURI').value)
-  }
-
-  function GotoURI (uri) {
-    const subject = kb.sym(uri)
-    this.GotoSubject(subject, true)
-  }
-  this.GotoURIinit = function (uri) {
-    const subject = kb.sym(uri)
-    this.GotoSubject(subject)
-  }
-
   /** Display the subject in an outline view
 
   @param subject -- RDF term for the thing to be presented
@@ -1860,69 +1642,71 @@ export default function (context) {
   @param pane    -- optional -- pane to be used for expanded display
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
-  @param table   -- option  -- default is an HTML table element in which to put the outline.
+  @param host   -- option  -- default is the outline host element used for the view.
   @param showNavbar -- optional -- when false, suppress automatic navbar reveal
 */
-  this.GotoSubject = function (subject, expand, pane, solo, referrer, table, showNavbar = true) {
-    const outlineContainer = getOutlineContainer()
-    if (showNavbar && (!table || table === outlineContainer)) {
+  this.GotoSubject = function (subject, expand, pane, solo, referrer, host, showNavbar = true) {
+    const outlineHost = getOutlineContainer()
+
+    openSubjectInHost(subject, expand, pane, solo, host || outlineHost, showNavbar, outlineHost)
+
+    updateHistoryForSubject(subject, pane, solo)
+
+    return subject
+  }
+
+  function openSubjectInHost (subject, expand, pane, solo, host, showNavbar, outlineHost) {
+    if (showNavbar && host === outlineHost) {
       showSolidPanesNavbar()
     }
 
-    table = table || outlineContainer // if does not exist create a compatible host in the current shell
     if (solo) {
-      UI.utils.emptyNode(table)
-      table.style.width = '100%'
+      host.style.width = '100%'
     }
-
-    function GotoSubjectDefault () {
-      const tr = dom.createElement('tr')
-      tr.classList.add('outlineRow1')
-      tr.style.verticalAlign = 'top'
-      table.appendChild(tr)
-      const td = thisOutline.outlineObjectTD(subject, undefined, tr)
-      tr.appendChild(td)
-      return td
-    }
-
-    const td = GotoSubjectDefault()
 
     if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
-      outlineExpand(td, subject, {
+      outlineExpand(host, subject, {
         pane,
         solo
       })
+      return
     }
 
+    const block = thisOutline.outlineObjectDiv(subject, undefined, host)
+    host.appendChild(block)
+  }
+
+  function updateHistoryForSubject (subject, pane, solo) {
     if (
-      solo &&
-      dom &&
-      dom.defaultView &&
-      dom.defaultView.history
+      !solo ||
+      !dom ||
+      !dom.defaultView ||
+      !dom.defaultView.history
     ) {
-      const currentState = dom.defaultView.history.state || {}
-      const paneState = pane ? { paneName: pane.name } : {}
-      if (pane && pane.subject && typeof pane.subject.uri === 'string') {
-        paneState.paneUri = pane.subject.uri
-      }
-      const stateObj = { ...currentState, ...paneState }
-      try {
-        const currentUrl = new URL(document.location.href)
-        const targetUrl = new URL(subject.uri, document.location.href)
-        if (currentUrl.origin === targetUrl.origin) {
-          if (document.location.href !== subject.uri) {
-            dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
-          } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
-            dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
-          }
-        }
-      } catch (e) {
-      }
+      return
     }
 
-    return subject
+    const currentState = dom.defaultView.history.state || {}
+    const paneState = pane ? { paneName: pane.name } : {}
+    if (pane && pane.subject && typeof pane.subject.uri === 'string') {
+      paneState.paneUri = pane.subject.uri
+    }
+    const stateObj = { ...currentState, ...paneState }
+
+    try {
+      const currentUrl = new URL(document.location.href)
+      const targetUrl = new URL(subject.uri, document.location.href)
+      if (currentUrl.origin === targetUrl.origin) {
+        if (document.location.href !== subject.uri) {
+          dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+        } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
+          dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
+        }
+      }
+    } catch (e) {
+    }
   }
 
   // / /////////////////////////////////////////////////////
@@ -1935,9 +1719,10 @@ export default function (context) {
 
   const views = propertyViews(dom)
 
-  // var thisOutline = this   dup
-  /** some builtin simple views **/
-
+  // Current fallback renderer for outline objects and generic resource summaries.
+  // This will still be used by the existing folder-pane/content-view flow for plain
+  // resource display, but it may later be replaced by a dedicated content-view
+  // renderer that looks different from the sidebar for the folder-pane.
   function viewAsBoringDefault (obj) {
     // UI.log.debug('entered viewAsBoringDefault...');
     let rep // representation in html
@@ -1992,8 +1777,7 @@ export default function (context) {
       }
     } else if (obj.termType === 'Collection') {
       // obj.elements is an array of the elements in the collection
-      rep = dom.createElement('table')
-      rep.classList.add('tableFullWidth')
+      rep = dom.createElement('div')
       rep.setAttribute('about', obj.toNT())
       /* Not sure which looks best -- with or without. I think without
 
@@ -2003,13 +1787,13 @@ export default function (context) {
         */
       for (let i = 0; i < obj.elements.length; i++) {
         const elt = obj.elements[i]
-        const row = rep.appendChild(dom.createElement('tr'))
-        const numcell = row.appendChild(dom.createElement('td'))
+                const row = rep.appendChild(dom.createElement('div'))
+                const numcell = row.appendChild(dom.createElement('div'))
         numcell.classList.add('obj')
         numcell.setAttribute('notSelectable', 'false')
         numcell.setAttribute('about', obj.toNT())
         numcell.innerHTML = i + 1 + ')'
-        row.appendChild(thisOutline.outlineObjectTD(elt))
+        row.appendChild(thisOutline.outlineObjectDiv(elt))
       }
     } else if (obj.termType === 'Graph') {
       rep = paneRegistry
@@ -2024,10 +1808,11 @@ export default function (context) {
     return rep
   } // boring_default
 
-  this.createTabURI = function () {
-    dom.getElementById('UserURI').value =
-      dom.URL + '?uri=' + dom.getElementById('UserURI').value
-  }
+  this.statusBarClick = legacyApis.statusBarClick
+  this.GotoFormURI_enterKey = legacyApis.GotoFormURI_enterKey
+  this.GotoFormURI = legacyApis.GotoFormURI
+  this.GotoURIinit = legacyApis.GotoURIinit
+  this.createTabURI = legacyApis.createTabURI
 
   // a way to expose variables to UserInput without making them propeties/methods
   this.UserInput.setSelected = setSelected
