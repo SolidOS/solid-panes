@@ -1611,19 +1611,21 @@ export default function (context) {
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, host, showNavbar = true) {
     const outlineHost = getOutlineContainer()
-    if (showNavbar && (!host || host === outlineHost)) {
+
+    openSubjectInHost(subject, expand, pane, solo, host || outlineHost, showNavbar, outlineHost)
+
+    updateHistoryForSubject(subject, pane, solo)
+
+    return subject
+  }
+
+  function openSubjectInHost (subject, expand, pane, solo, host, showNavbar, outlineHost) {
+    if (showNavbar && host === outlineHost) {
       showSolidPanesNavbar()
     }
 
-    host = host || outlineHost // if it does not exist, create a compatible host in the current shell
     if (solo) {
       host.style.width = '100%'
-    }
-
-    function GotoSubjectDefault () {
-      const block = thisOutline.outlineObjectDiv(subject, undefined, host)
-      host.appendChild(block)
-      return block
     }
 
     if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
@@ -1633,13 +1635,11 @@ export default function (context) {
         pane,
         solo
       })
-    } else {
-      GotoSubjectDefault()
+      return
     }
 
-    updateHistoryForSubject(subject, pane, solo)
-
-    return subject
+    const block = thisOutline.outlineObjectDiv(subject, undefined, host)
+    host.appendChild(block)
   }
 
   function updateHistoryForSubject (subject, pane, solo) {
