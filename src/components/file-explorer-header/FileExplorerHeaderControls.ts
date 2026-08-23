@@ -82,7 +82,7 @@ export default class FileExplorerHeaderControls extends WebComponent {
         ${this.renderDirtyIndicator()}
         ${!isContainerResource && !this.isMobile
           ? html`
-              <solid-ui-button class="file-explorer-header-share-button" variant="ghost" title="Share" @click=${this.fileExplorerContext.handleSharingClick}>
+              <solid-ui-button class="file-explorer-header-access-button" variant="ghost" title="Manage Access" @click=${this.fileExplorerContext.handleAccessClick}>
                 <icon-lucide-share-2 slot="icon"></icon-lucide-share-2>
               </solid-ui-button>
               <solid-ui-button
@@ -98,7 +98,7 @@ export default class FileExplorerHeaderControls extends WebComponent {
           : nothing}
         <resource-actions-menu
           .store=${this.fileExplorerContext.store}
-          .handleSharingClick=${this.fileExplorerContext.handleSharingClick}
+          .handleAccessClick=${this.fileExplorerContext.handleAccessClick}
           .handleEditingClick=${this.fileExplorerContext.edit?.onEdit}
           .paneSupportsEditing=${this.fileExplorerContext.paneSupportsEditing}
           .canEdit=${this.canEdit}

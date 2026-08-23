@@ -67,7 +67,7 @@ export default class FileExplorerProvider extends WebComponent {
   accessor showHeader: boolean = true
 
   @property({ attribute: false })
-  accessor handleSharingClick: (() => void) | undefined = undefined
+  accessor handleAccessClick: (() => void) | undefined = undefined
 
   // TODO: Need to research this more, brought it over from manager.
   @property({ attribute: false })

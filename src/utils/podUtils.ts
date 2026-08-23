@@ -102,11 +102,33 @@ export function isContainerSubject (store: LiveStore | undefined, subjectUri: st
   )
 }
 
+// The shared rdflib store can hold duplicate ldp:contains statements for the
+// same child resource when the container and companion metadata are both loaded.
+// Count unique visible children here so the header summary matches the list UI.
 export function getContainerItemCount (store: LiveStore | undefined, subjectUri: string | undefined): number {
   if (!store || !subjectUri) return 0
 
   const subject = store.sym(subjectUri)
-  return store.each(subject, ns.ldp('contains')).length
+  const seen = new Set<string>()
+
+  for (const item of store.each(subject, ns.ldp('contains'))) {
+    if (item.termType === 'NamedNode') {
+      const resource = item as NamedNode
+      const parent = resource.dir()
+
+      if (parent) {
+        const pathEnd = resource.uri.slice(parent.uri.length)
+        if (
+          !pathEnd.startsWith('.') &&
+          !pathEnd.endsWith('.acl') &&
+          !pathEnd.endsWith('~')
+        ) {
+          seen.add(resource.uri)
+        }
+      }
+    }
+  }
+  return seen.size
 }
 
 export function getResponseMetadata (store: LiveStore, subject: NamedNode, response: Response): FileExplorerResourceMetadata {
