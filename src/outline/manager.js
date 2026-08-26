@@ -475,7 +475,7 @@ export default function (context) {
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
     // TODO: for now we do this until we create sharing dialog in solid-panes
-    provider.handleSharingClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
+    provider.handleAccessClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
 
     if (provider.pane) {
       tr.classList.add('outlinePaneRow')
