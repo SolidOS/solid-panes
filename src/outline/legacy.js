@@ -1,6 +1,40 @@
 // Legacy outline manager APIs kept for backward compatibility.
 
-export function createLegacyOutlineApis ({ outline, dom, kb }) {
+import * as UI from 'solid-ui'
+
+export function createLegacyOutlineApis ({ outline, dom, kb, expandedProviderTR }) {
+  function propertyTable (subject, table, requiredPane, options) {
+    UI.log.debug('Property block for: ' + subject)
+    subject = kb.canon(subject)
+    // if (!requiredPane) requiredPane = panes.defaultPane;
+
+    if (!table) {
+      const provider = dom.createElement('file-explorer-provider')
+      expandedProviderTR(subject, requiredPane, options, provider)
+      return provider
+    } else {
+      const existingProvider = table.matches?.('file-explorer-provider')
+        ? table
+        : table.firstElementChild || table
+      expandedProviderTR(subject, requiredPane, options, existingProvider)
+      UI.log.info('Re-expand: ' + table)
+      return table
+    }
+  }
+
+  // Builds one old-style property row inside the outline table view. Likely to
+  // shrink away once the remaining table-based outline path disappears.
+  function propertyTR (doc, st, inverse) {
+    const tr = doc.createElement('div')
+    tr.AJAR_statement = st
+    tr.AJAR_inverse = inverse
+    tr.setAttribute('predTR', 'true')
+    tr.setAttribute('role', 'row')
+    const predicateTD = outline.outlinePredicateDiv(st.predicate, tr, inverse)
+    tr.appendChild(predicateTD)
+    return tr
+  }
+
   // Legacy helper: used only by the old outline row delete affordance.
   function removeAndRefresh (d) {
     const parent = d.parentNode
@@ -62,6 +96,8 @@ export function createLegacyOutlineApis ({ outline, dom, kb }) {
   }
 
   return {
+    propertyTable,
+    propertyTR,
     statusBarClick,
     GotoFormURI_enterKey,
     GotoFormURI,

@@ -17,6 +17,7 @@ import { isWebIdUri } from '../utils/webIdUtils'
 import '../components/file-explorer-header'
 =======
 import { createOutlineDomHelpers } from './outlineDomHelpers.js'
+import { createOutlineRenderHelpers } from './newHelpers.ts'
 import { createLegacyOutlineApis } from './legacy.js'
 import '../components/file-explorer-header/FileExplorerProvider'
 >>>>>>> 9ba0e27 (refactor (no table) and move dom functions)
@@ -41,9 +42,27 @@ export default function (context) {
   dom.outline = this
   this.qs = new queryByExample.QuerySource() // Track queries in queryByExample
 
+  const { renderExpandedProvider, renderSubjectProvider } = createOutlineRenderHelpers({
+    dom,
+    context,
+    paneRegistry,
+    getRelevantPanes,
+    getPane,
+    renderPaneIntoProvider,
+    openPaneInPlace,
+    collapseMouseDownListener,
+    isWebIdUri
+  })
+
   // Legacy compatibility APIs: keep these attached for older callers while the
   // new outline/content-view split stabilizes.
-  const legacyApis = createLegacyOutlineApis({ outline: thisOutline, dom, kb })
+  // expandedProviderTR is a new function created for the new design file explorer header.
+  const legacyApis = createLegacyOutlineApis({
+    outline: thisOutline,
+    dom,
+    kb,
+    expandedProviderTR: renderExpandedProvider
+  })
 
   // var selection = []  // Array of statements which have been selected
   // this.focusTd // the <td> that is being observed
@@ -178,6 +197,31 @@ export default function (context) {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
+  // Creates the outline host container if needed. Keep this in the new design
+  // while the outline host remains the backing surface for rendered content.
+  function getOrCreateContainer (id) {
+    // OutlineView is a simple block container
+    if (id === 'OutlineView') {
+      const existingOutline = document.getElementById('OutlineView')
+      if (existingOutline) {
+        return existingOutline
+      }
+
+      const containerHost =
+      document.getElementById('MainContent') ||
+      document.body
+
+      if (containerHost) {
+        const outlineView = document.createElement('div')
+        outlineView.id = 'OutlineView'
+        outlineView.classList.add('outline-view')
+        outlineView.setAttribute('aria-label', 'Resource browser')
+        containerHost.appendChild(outlineView)
+        return outlineView
+      }
+    }
+  }
+
   // Finds the shared Solid panes navbar. Keep this in the new design.
   function getNavbarElement () {
     return document.querySelector('solid-panes-navbar')
@@ -199,31 +243,6 @@ export default function (context) {
    * @param {string} [ariaLabel] Optional aria-label for accessibility
    * @returns {HTMLElement}
    */
-  // Creates the outline host container if needed. Keep this in the new design
-  // while the outline host remains the backing surface for rendered content.
-  function getOrCreateContainer (id) {
-    // OutlineView is a simple block container
-    if (id === 'OutlineView') {
-      const existingOutline = document.getElementById('OutlineView')
-      if (existingOutline) {
-        return existingOutline
-      }
-
-      const containerHost =
-      document.getElementById('MainContent') ||
-      document.body
-
-      if (containerHost) {
-        const OutlineView = document.createElement('div')
-        OutlineView.id = 'OutlineView'
-        OutlineView.classList.add('outline-view')
-        OutlineView.setAttribute('aria-label', 'Resource browser')
-        containerHost.appendChild(OutlineView)
-        return OutlineView
-      }
-    }
-  }
-
   // Filters the pane registry down to panes that can render the current
   // subject. Keep this in the new design because the folder-pane still uses it
   // to choose ContentView panes.
@@ -323,43 +342,6 @@ export default function (context) {
     renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
   }
 
-  // Builds the provider wrapper for an expanded subject. Keep this in the new
-  // design because folder-pane still renders subjects through providers.
-  async function expandedProviderTR (subject, requiredPane, options, provider) {
-    options = options || {}
-
-    provider = provider || dom.createElement('file-explorer-provider')
-    provider.classList.add('paneView', 'tdFlex')
-    provider.setAttribute('notSelectable', 'true')
-    provider.setAttribute('about', subject.toNT())
-    if (options.hover) {
-      // By default no hide till hover as community deems it confusing
-      provider.classList.add('hoverControl')
-    }
-    provider.context = context
-    provider.subjectUri = subject.uri
-    provider.onBack = () => collapseMouseDownListener({ target: provider })
-
-    const relevantPanes = options.hideList
-      ? []
-      : await getRelevantPanes(subject, context)
-
-    provider.relevantPanes = relevantPanes
-    provider.pane = requiredPane || getPane(relevantPanes, subject)
-    const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
-    provider.showHeader = !isRootResource && !isWebIdUri(subject)
-    provider.paneRenderOptions = options
-    provider.soloPane = options.solo
-    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
-    // TODO: for now we do this until we create sharing dialog in solid-panes
-    provider.handleSharingClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
-
-    if (provider.pane) {
-      renderPaneIntoProvider(provider, subject, provider.pane, options)
-    }
-    return provider
-  }
-
   // / //////////////////////////////////////////////////////////////////////////
 
   /*  PANES
@@ -383,46 +365,8 @@ export default function (context) {
 
   // / ///////////////////////////////////////////////////////////////////////////
 
-  // Creates or refreshes the outer provider/table shell for a subject. Keep
-  // this in the new design because folder-pane still reaches it via GotoSubject.
-  const propertyTable = (this.propertyTable = function propertyTable (
-    subject,
-    table,
-    requiredPane,
-    options
-  ) {
-    UI.log.debug('Property block for: ' + subject)
-    subject = kb.canon(subject)
-    // if (!requiredPane) requiredPane = panes.defaultPane;
-
-    if (!table) {
-      const provider = dom.createElement('file-explorer-provider')
-      expandedProviderTR(subject, requiredPane, options, provider)
-      return provider
-    } else {
-      const existingProvider = table.matches?.('file-explorer-provider')
-        ? table
-        : table.firstElementChild || table
-      expandedProviderTR(subject, requiredPane, options, existingProvider)
-      UI.log.info('Re-expand: ' + table)
-      return table
-    }
-  }) /* propertyTable */
-
-  // Builds one old-style property row inside the outline table view. Likely to
-  // shrink away once the remaining table-based outline path disappears.
-  function propertyTR (doc, st, inverse) {
-    const tr = doc.createElement('div')
-    tr.AJAR_statement = st
-    tr.AJAR_inverse = inverse
-    // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
-    tr.setAttribute('predTR', 'true')
-    tr.setAttribute('role', 'row')
-    const predicateTD = thisOutline.outlinePredicateDiv(st.predicate, tr, inverse)
-    tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
-    return tr
-  }
-  this.propertyTR = propertyTR
+  this.propertyTable = legacyApis.propertyTable
+  this.propertyTR = legacyApis.propertyTR
 
   // / ////////// Property list
   // Expands grouped statements into the old multi-row outline table view.
@@ -1462,9 +1406,9 @@ export default function (context) {
       UI.log.info('@@ REPAINTING ')
       if (!already) {
         // first expand
-        newTable = propertyTable(subject, undefined, pane, options)
+        newTable = renderSubjectProvider(subject, undefined, pane, options)
       } else {
-        newTable = propertyTable(subject, p, pane, options)
+        newTable = renderSubjectProvider(subject, p, pane, options)
       }
       already = true
       if (newTable !== p) {
@@ -1677,7 +1621,7 @@ export default function (context) {
   // Shift-click maximize the current subject by replacing the pane contents
   // with the subject view.
   function outlineRefocus (p, subject) {
-    UI.utils.emptyNode(p).appendChild(propertyTable(subject))
+    UI.utils.emptyNode(p).appendChild(renderSubjectProvider(subject))
     setUrlBarAndTitle(subject)
     // dom.title = UI.utils.label(subject)
     p.setAttribute('about', subject.toNT())
