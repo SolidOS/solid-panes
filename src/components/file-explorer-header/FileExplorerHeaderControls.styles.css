@@ -31,6 +31,12 @@
     white-space: nowrap;
   }
 
+  icon-lucide-share-2,
+  icon-lucide-pencil {
+    width: 16px;
+    height: 16px;
+  }
+
   @media (max-width: 900px) {
     div {
       padding-right: 3px;
@@ -41,6 +47,18 @@
     div {
       justify-content: flex-start;
       gap: 5px;
+    }
+
+    .file-explorer-header-access-button,
+    .file-explorer-header-edit-button {
+      display: none;
+    }
+
+    icon-lucide-ellipsis-vertical {
+      width: 15.36px;
+      height: 15.36px;
+      flex-shrink: 0;
+      aspect-ratio: 1 / 1;
     }
   }
 }
