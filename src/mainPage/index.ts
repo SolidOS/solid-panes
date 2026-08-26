@@ -14,6 +14,13 @@ import { createLeftSideMenu, refreshMenu } from './menu'
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
 const LAST_RENDER_ENV_KEY = '__lastRenderEnvSignature'
 
+// Set once initMainPage has performed the initial (authenticated) render.
+// refreshUI will not auto-GotoSubject before this flag is set, so early
+// callers (e.g. mashlib's window 'load' -> syncEnvironmentToContext) cannot
+// trigger a subject fetch before the auth session is active. See
+// https://github.com/SolidOS/solid-logic/issues/324
+const INITIAL_RENDER_KEY = '__initialRenderDone'
+
 function renderEnvSignature (env?: RenderEnvironment): string {
   if (!env) return ''
   return [env.layout, env.theme, env.inputMode].join('|')
@@ -46,6 +53,7 @@ export async function initMainPage (
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
   outliner.GotoSubject(subject, true, undefined, true, undefined)
+  ;(outliner as any)[INITIAL_RENDER_KEY] = true
 
   const header = await createHeader(store, outliner)
   const menu = createLeftSideMenu(subject, outliner)
@@ -61,12 +69,18 @@ export async function refreshUI (outliner: OutlineManager) {
   const pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
 
   // Only re-run GotoSubject (full pane re-render) when render-relevant
-  // environment fields actually changed since the last render.
+  // environment fields actually changed since the last render, and only
+  // after initMainPage has performed the initial render. Without the
+  // INITIAL_RENDER_KEY gate, pre-auth callers (e.g. mashlib's window
+  // 'load' -> refreshUI) could trigger a subject fetch before the auth
+  // session is active, 401-ing on private containers and leaving the pane
+  // stuck on a login/error state (SolidOS/solid-logic#324).
+  const initialRenderDone = (outliner as any)?.[INITIAL_RENDER_KEY] === true
   const currentSignature = renderEnvSignature(outliner?.context?.environment)
   const previousSignature = (outliner as any)?.[LAST_RENDER_ENV_KEY] ?? ''
   const envChanged = currentSignature !== previousSignature
 
-  if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
+  if (initialRenderDone && envChanged && store && typeof outliner?.GotoSubject === 'function') {
     outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined)
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
