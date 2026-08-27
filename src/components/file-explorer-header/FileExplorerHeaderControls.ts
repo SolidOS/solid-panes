@@ -3,7 +3,7 @@ import { customElement, property, state } from 'lit/decorators.js'
 import { consume } from '@lit/context'
 import { html, nothing } from 'lit'
 import 'solid-ui/components/button'
-import '~icons/lucide/share-2'
+import '~icons/lucide/user-round-cog'
 import '~icons/lucide/pencil'
 import styles from './FileExplorerHeaderControls.styles.css'
 import '../resource-actions-menu/ResourceActionsMenu'
@@ -82,11 +82,11 @@ export default class FileExplorerHeaderControls extends WebComponent {
         ${this.renderDirtyIndicator()}
         ${!isContainerResource && !this.isMobile
           ? html`
-              <solid-ui-button class="file-explorer-header-access-button" variant="ghost" title="Manage Access" @click=${this.fileExplorerContext.handleAccessClick}>
-                <icon-lucide-share-2 slot="icon"></icon-lucide-share-2>
+              <solid-ui-button class="file-explorer-header-action-button" variant="ghost" title="Manage Access" @click=${this.fileExplorerContext.handleAccessClick}>
+                <icon-lucide-user-round-cog slot="icon"></icon-lucide-user-round-cog>
               </solid-ui-button>
               <solid-ui-button
-                class="file-explorer-header-edit-button"
+                class="file-explorer-header-action-button"
                 variant="ghost"
                 title=${this.getEditTooltip()}
                 ?disabled=${!this.fileExplorerContext.paneSupportsEditing || !this.canEdit}

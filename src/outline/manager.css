@@ -3,7 +3,7 @@
 .obj {
   margin: 0.2em;
   border: none;
-  padding: 0;
+  padding: 0 0 5px 0;
   vertical-align: top;
 }
 
@@ -54,7 +54,10 @@
 .exceptionPane {
   display: block;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .objectValue--literal {
