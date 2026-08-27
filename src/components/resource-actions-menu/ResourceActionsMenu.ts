@@ -5,7 +5,7 @@ import 'solid-ui/components/button'
 import 'solid-ui/components/menu'
 import 'solid-ui/components/menu-item'
 import '~icons/lucide/ellipsis-vertical'
-import '~icons/lucide/share-2'
+import '~icons/lucide/user-round-cog'
 import '~icons/lucide/pencil'
 import { LiveStore } from 'rdflib'
 import styles from './ResourceActionsMenu.styles.css'
@@ -44,7 +44,7 @@ export default class ResourceActionsMenu extends WebComponent {
     const canManageAccess = !!this.handleAccessClick
     return html`
       <solid-ui-menu>
-        <solid-ui-button slot="trigger" variant="ghost" title="More options">
+        <solid-ui-button slot="trigger" class="file-explorer-header-more-button" variant="ghost" title="More options">
           <icon-lucide-ellipsis-vertical slot="icon" class="ellipsisIcon"></icon-lucide-ellipsis-vertical>
         </solid-ui-button>
         ${this.menuItems.map(item => html`
@@ -64,7 +64,7 @@ export default class ResourceActionsMenu extends WebComponent {
         ${!isContainerResource && this.isMobile && canManageAccess
           ? html`
               <solid-ui-menu-item @solid-ui-select=${this.handleAccessClick}>
-                <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
+                <icon-lucide-user-round-cog slot="left-icon"></icon-lucide-user-round-cog>
                 Manage Access
               </solid-ui-menu-item>
             `
@@ -72,7 +72,7 @@ export default class ResourceActionsMenu extends WebComponent {
         ${isContainerResource && canManageAccess
           ? html`
               <solid-ui-menu-item @solid-ui-select=${this.handleAccessClick}>
-                <icon-lucide-share-2 slot="left-icon"></icon-lucide-share-2>
+                <icon-lucide-user-round-cog slot="left-icon"></icon-lucide-user-round-cog>
                 Manage Access
               </solid-ui-menu-item>
             `
