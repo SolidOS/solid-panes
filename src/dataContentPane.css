@@ -3,12 +3,8 @@
 }
 
 div.data-content-pane {
-  border-top: solid 1px var(--color-data-pane-border-top, black);
-  border-left: solid 1px var(--color-data-pane-border-top, black);
-  border-bottom: solid 1px var(--color-data-pane-border-side, #777);
-  border-right: solid 1px var(--color-data-pane-border-side, #777);
+  border: 1px solid var(--solid-ui-color-gray-200, #cbd5e1);
   padding: var(--spacing-base, 0.5rem);
-  margin-top: var(--spacing-base, 0.5rem);
   margin-bottom: var(--spacing-base, 0.5rem);
 }
 
