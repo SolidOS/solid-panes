@@ -16,6 +16,12 @@
     flex: 0 1 auto;
   }
 
+  .file-explorer-header-action-button {
+    width: var(--solid-ui-clickable-area, 42px);
+    height: var(--solid-ui-clickable-area, 42px);
+    padding: 0;
+  }
+
   /* TODO: look into what colors to use this is just to show */
   .dirtyIndicator {
     display: inline-flex;
@@ -31,7 +37,7 @@
     white-space: nowrap;
   }
 
-  icon-lucide-share-2,
+  icon-lucide-user-round-cog,
   icon-lucide-pencil {
     width: 16px;
     height: 16px;
@@ -49,8 +55,7 @@
       gap: 5px;
     }
 
-    .file-explorer-header-access-button,
-    .file-explorer-header-edit-button {
+    .file-explorer-header-action-button {
       display: none;
     }
 
