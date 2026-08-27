@@ -17,7 +17,7 @@
 
 .human-readable-pane__frame {
   display: block;
-  border: 1px solid;
+  border: 1px solid var(--solid-ui-color-gray-200, #cbd5e1);
   padding: 1rem;
   height: var(--human-readable-pane-height, 30rem);
   min-width: 0;
@@ -44,6 +44,7 @@
 
 .human-readable-pane__frame--plain-text {
   font-family: monospace;
+  margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
