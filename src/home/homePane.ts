@@ -26,7 +26,7 @@ const HomePaneSource: PaneDefinition = {
   //   yes, always!
   //
   label: function () {
-    return 'home'
+    return 'Home'
   },
 
   audience: [ns.solid('PowerUser')],
