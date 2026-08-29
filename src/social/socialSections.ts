@@ -1,5 +1,5 @@
 import { DataBrowserContext } from 'pane-registry'
-import { createAddMeToYourFriendsButton } from 'profile-pane'
+// import { createAddMeToYourFriendsButton } from 'profile-pane'
 import { Statement, NamedNode } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
 import { appendProfileLinks } from './editProfileDetails'
@@ -28,6 +28,7 @@ export type HeaderStats = {
 export type HeaderProfileData = {
   imageUrl?: string,
   name?: string,
+  pronouns?: string,
   jobTitle?: string,
   organization?: string,
   location?: string | null
@@ -66,10 +67,26 @@ export function createHeaderSection (
       // Revisit later if we decide to restore profile-link editing here.
     } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
       headerActions.classList.add('social-pane__header-actions--friend')
-      const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
-      addToFriendsButton.classList.add('flex-center')
-      headerActions.appendChild(addToFriendsButton)
+
+      const friendDropButton = dom.createElement('button')
+      friendDropButton.setAttribute('title', 'Drop friend here')
+      friendDropButton.setAttribute('aria-label', 'Drop friend here')
+      const buttonImage = dom.createElement('img')
+      buttonImage.setAttribute('title', 'Drop friend here')
+      buttonImage.setAttribute('alt', 'Drop friend here')
+      friendDropButton.appendChild(buttonImage)
+
+      const dropHint = dom.createElement('span')
+      dropHint.className = 'social-friends-header-hint'
+      dropHint.textContent = 'Drag a WebId on the target to add a friend.'
+      friendDropButton.appendChild(dropHint)
+      headerActions.appendChild(friendDropButton)
     }
+
+    // const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
+    // addToFriendsButton.classList.add('flex-center')
+    // headerActions.appendChild(addToFriendsButton)
+    // }
 
     header.appendChild(headerContent)
 
@@ -98,6 +115,10 @@ export function createHeaderSection (
     h1.classList.add('social-pane__header-name')
     h1.appendChild(dom.createTextNode(name))
     headerSummary.appendChild(h1)
+
+    const pronounsSpan = dom.createElement('span')
+    pronounsSpan.classList.add('social-pane_header-pronouns')
+    headerSummary.appendChild(pronounsSpan)
 
     const jobAndOrganization = [profileData?.jobTitle, profileData?.organization].filter(Boolean).join(' | ')
     if (jobAndOrganization) {
@@ -396,28 +417,6 @@ export function createAllFriendsSection (options: {
       friendsHeaderActions.appendChild(friendsListPromptCell.firstChild)
     }
     friendsListPromptCell.remove()
-  }
-
-  const friendDropButtons = friendsHeaderActions.querySelectorAll('button')
-  if (editable && friendDropButtons.length > 0) {
-    friendDropButtons.forEach((button) => {
-      button.setAttribute('title', 'Drop friend here')
-      button.setAttribute('aria-label', 'Drop friend here')
-      const buttonImages = button.querySelectorAll('img')
-      buttonImages.forEach((image) => {
-        image.setAttribute('title', 'Drop friend here')
-        image.setAttribute('alt', 'Drop friend here')
-      })
-    })
-
-    const friendsActionsRow = dom.createElement('div')
-    friendsActionsRow.className = 'social-friends-header-actions social-friends-header-actions--standalone'
-    friendsActionsRow.appendChild(friendsHeaderActions)
-    const dropHint = dom.createElement('span')
-    dropHint.className = 'social-friends-header-hint'
-    dropHint.textContent = 'Drag a WebId on the target to add a friend.'
-    friendsActionsRow.appendChild(dropHint)
-    allFriends.prepend(friendsActionsRow)
   }
 
   if (friendsListRightCell instanceof HTMLTableCellElement) {
