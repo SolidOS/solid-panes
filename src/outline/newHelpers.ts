@@ -1,3 +1,6 @@
+import { ns } from 'solid-ui'
+import { loadContainerRepresentation } from '../utils/podUtils'
+
 type RenderExpandedProviderArgs = {
   dom: Document
   context: any
@@ -8,6 +11,13 @@ type RenderExpandedProviderArgs = {
   openPaneInPlace: (subject: any, pane: any) => void
   collapseMouseDownListener: (event: any) => void
   isWebIdUri: (subject: any) => boolean
+}
+
+async function isStorageRootSubject (subject: any): Promise<boolean> {
+  if (!subject?.uri || !subject?.doc) return false
+
+  await loadContainerRepresentation(subject)
+  return subject?.doc?.()?.store?.holds(subject, ns.rdf('type'), ns.space('Storage'), subject.doc()) ?? false
 }
 
 export function createOutlineRenderHelpers ({
@@ -39,8 +49,7 @@ export function createOutlineRenderHelpers ({
 
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
-    const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
-    provider.showHeader = !isRootResource && !isWebIdUri(subject)
+    provider.showHeader = !(await isStorageRootSubject(subject)) && !isWebIdUri(subject)
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
