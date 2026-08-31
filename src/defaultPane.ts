@@ -42,7 +42,7 @@ export const defaultPane: DefaultPaneDefinition = {
   audience: [ns.solid('Developer')],
 
   label: function (_subject: DefaultPaneSubject): string {
-    return 'about '
+    return 'About '
   },
 
   render: function (

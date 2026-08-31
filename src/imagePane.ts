@@ -68,7 +68,7 @@ export const imagePane: ImagePane = {
     if (contentTypeMatch(store, subject, suppressed)) {
       return null
     }
-    return 'view'
+    return 'Image'
   },
 
   render: function (subject: NamedNode, context: DataBrowserContext): HTMLDivElement {
