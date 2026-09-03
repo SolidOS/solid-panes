@@ -1,5 +1,5 @@
 import { sym } from 'rdflib'
-import { widgets, utils, WebComponent, fileExplorerContext, type FileExplorerContext } from 'solid-ui'
+import { widgets, utils, WebComponent, fileExplorerContext, type FileExplorerContext, storeContext, DEFAULT_STORE } from 'solid-ui'
 import 'solid-ui/components/button'
 import { customElement, property, query, state } from 'lit/decorators.js'
 import { html } from 'lit'
@@ -12,6 +12,7 @@ import '~icons/lucide/folder'
 import styles from './FileExplorerHeaderSummary.styles.css'
 import { getContainerItemCount, isContainerSubject } from '../../utils/podUtils'
 import type { FileExplorerResourceMetadata } from './types'
+import type { LiveStore } from 'rdflib'
 
 @customElement('file-explorer-header-summary')
 export default class FileExplorerHeaderSummary extends WebComponent {
@@ -22,6 +23,9 @@ export default class FileExplorerHeaderSummary extends WebComponent {
 
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+
+  @consume({ context: storeContext, subscribe: true })
+  accessor store: LiveStore = DEFAULT_STORE
 
   @property({ attribute: false })
   accessor paneIcon: PaneIcon | undefined
@@ -96,7 +100,7 @@ export default class FileExplorerHeaderSummary extends WebComponent {
   }
 
   private renderContainerResourceHeader (label: string, isPublic: boolean) {
-    const itemCount = getContainerItemCount(this.fileExplorerContext?.store, this.fileExplorerContext?.subjectUri) ?? 0
+    const itemCount = getContainerItemCount(this.store, this.fileExplorerContext?.subjectUri) ?? 0
     return html`
       <div class="container-info">
         <h1>
@@ -129,7 +133,7 @@ export default class FileExplorerHeaderSummary extends WebComponent {
     const subject = this.fileExplorerContext?.subjectUri ? sym(this.fileExplorerContext.subjectUri) : undefined
     const label = subject ? utils.label(subject) : ''
     const isPublic = this.responseMetadata.isPublic
-    const isContainerResource = isContainerSubject(this.fileExplorerContext?.store, this.fileExplorerContext?.subjectUri)
+    const isContainerResource = isContainerSubject(this.store, this.fileExplorerContext?.subjectUri)
 
     return html`
       <div class="file-explorer-header-summary">

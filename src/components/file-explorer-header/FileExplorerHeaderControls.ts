@@ -7,7 +7,8 @@ import '~icons/lucide/share-2'
 import '~icons/lucide/pencil'
 import styles from './FileExplorerHeaderControls.styles.css'
 import '../resource-actions-menu/ResourceActionsMenu'
-import { fileExplorerContext, type FileExplorerContext } from 'solid-ui'
+import { fileExplorerContext, type FileExplorerContext, storeContext, DEFAULT_STORE } from 'solid-ui'
+import type { LiveStore } from 'rdflib'
 import { isContainerSubject } from '../../utils/podUtils'
 
 @customElement('file-explorer-header-controls')
@@ -22,6 +23,9 @@ export default class FileExplorerHeaderControls extends WebComponent {
 
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+
+  @consume({ context: storeContext, subscribe: true })
+  accessor store: LiveStore = DEFAULT_STORE
 
   @property({ attribute: false })
   accessor menuItems: Array<{ label: string, action: (event: Event) => void, icon?: HTMLElement }> = []
@@ -75,7 +79,7 @@ export default class FileExplorerHeaderControls extends WebComponent {
   }
 
   render () {
-    const isContainerResource = isContainerSubject(this.fileExplorerContext.store, this.fileExplorerContext.subjectUri)
+    const isContainerResource = isContainerSubject(this.store, this.fileExplorerContext.subjectUri)
 
     return html`
       <div>
@@ -97,7 +101,7 @@ export default class FileExplorerHeaderControls extends WebComponent {
             `
           : nothing}
         <resource-actions-menu
-          .store=${this.fileExplorerContext.store}
+          .store=${this.store}
           .handleAccessClick=${this.fileExplorerContext.handleAccessClick}
           .handleEditingClick=${this.fileExplorerContext.edit?.onEdit}
           .paneSupportsEditing=${this.fileExplorerContext.paneSupportsEditing}

@@ -1,5 +1,5 @@
 import { html, nothing, type PropertyValues } from 'lit'
-import type { NamedNode, LiveStore } from 'rdflib'
+import type { NamedNode } from 'rdflib'
 import { DataBrowserContext, type PaneDefinition } from 'pane-registry'
 import { utils, WebComponent } from 'solid-ui'
 import { provide } from '@lit/context'
@@ -15,7 +15,6 @@ const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
 
 function createFileExplorerContextValue (value: {
-  store: LiveStore | undefined
   subjectUri: string | undefined
   pane?: PaneDefinition
   soloPane?: boolean
@@ -30,7 +29,6 @@ function createFileExplorerContextValue (value: {
   }
 }): FileExplorerContext {
   return {
-    store: value.store as LiveStore,
     subjectUri: value.subjectUri,
     pane: value.pane,
     soloPane: value.soloPane,
@@ -120,7 +118,6 @@ export default class FileExplorerProvider extends WebComponent {
 
   @provide({ context: fileExplorerContext })
   accessor fileExplorerContextValue: FileExplorerContext = createFileExplorerContextValue({
-    store: this.context?.session.store as LiveStore,
     subjectUri: this.subjectUri,
     pane: this.pane,
     soloPane: this.soloPane,
@@ -133,7 +130,7 @@ export default class FileExplorerProvider extends WebComponent {
 
   // Change the state for the pane so it can show the new icon.
   openSelectedPane (pane: PaneDefinition) {
-    const store = this.context?.session.store as LiveStore
+    const store = this.context?.session.store
     if (!store || !this.subjectUri) return
     this.paneSupportsEditing = pane.name === 'source'
     this.pane = pane
@@ -176,7 +173,6 @@ export default class FileExplorerProvider extends WebComponent {
 
   private refreshFileExplorerContextValue () {
     this.fileExplorerContextValue = createFileExplorerContextValue({
-      store: this.context?.session.store as LiveStore,
       subjectUri: this.subjectUri,
       pane: this.pane,
       soloPane: this.soloPane,
@@ -189,7 +185,7 @@ export default class FileExplorerProvider extends WebComponent {
   }
 
   private async refreshMenuItems () {
-    const store = this.context?.session.store as LiveStore
+    const store = this.context?.session.store
     if (!store || !this.subjectUri) return
 
     const subject = store.sym(this.subjectUri)
@@ -200,10 +196,6 @@ export default class FileExplorerProvider extends WebComponent {
 
   protected willUpdate (changedProperties: PropertyValues<this>) {
     super.willUpdate(changedProperties)
-    const store = this.context?.session.store as LiveStore
-    if (!store) {
-      throw new Error('The element is missing the required `context.session.store` value. Ensure the `context` property is set.')
-    }
     if (!this.subjectUri) {
       throw new Error('The element is missing the required `subjectUri` property.')
     }
@@ -238,8 +230,12 @@ export default class FileExplorerProvider extends WebComponent {
   }
 
   render () {
-    const store = this.context?.session.store as LiveStore
-    const subject = store.sym(this.subjectUri as string)
+    const store = this.context?.session.store
+    if (!store || !this.subjectUri) {
+      return html``
+    }
+
+    const subject = store.sym(this.subjectUri)
     return html`
       <div class="file-explorer-provider">
         ${this.showHeader

@@ -12,6 +12,8 @@ import './FileExplorerHeaderControls'
 import { PaneIcon } from './types'
 import { fetchResourceMetadata } from '../../utils/podUtils'
 import { type FileExplorerResourceMetadata } from './types'
+import { storeContext, DEFAULT_STORE } from 'solid-ui'
+import type { LiveStore } from 'rdflib'
 @customElement('file-explorer-header')
 export default class FileExplorerHeader extends WebComponent {
   static styles = styles
@@ -20,6 +22,9 @@ export default class FileExplorerHeader extends WebComponent {
 
   @consume({ context: fileExplorerContext, subscribe: true })
   accessor fileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
+
+  @consume({ context: storeContext, subscribe: true })
+  accessor store: LiveStore = DEFAULT_STORE
 
   @property({ attribute: false })
   accessor menuItems: Array<{ label: string, action: (event: Event) => void }> = []
@@ -45,17 +50,17 @@ export default class FileExplorerHeader extends WebComponent {
   }
 
   protected updated () {
-    if (this.fileExplorerContext?.store && this.fileExplorerContext.subjectUri && this._loadedMetadataForUri !== this.fileExplorerContext.subjectUri) {
+    if (this.store && this.fileExplorerContext.subjectUri && this._loadedMetadataForUri !== this.fileExplorerContext.subjectUri) {
       this._loadedMetadataForUri = this.fileExplorerContext.subjectUri
       this.loadResponseMetadata()
     }
   }
 
   private async loadResponseMetadata () {
-    if (!this.fileExplorerContext?.store || !this.fileExplorerContext.subjectUri) return
+    if (!this.store || !this.fileExplorerContext.subjectUri) return
 
     try {
-      const metadata = await fetchResourceMetadata(this.fileExplorerContext.store, sym(this.fileExplorerContext.subjectUri))
+      const metadata = await fetchResourceMetadata(this.store, sym(this.fileExplorerContext.subjectUri))
       this.responseMetadata = {
         modified: metadata.modified,
         isPublic: metadata.isPublic,
