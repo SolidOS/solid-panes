@@ -139,7 +139,7 @@ export default class FileExplorerHeaderSummary extends WebComponent {
       <div class="file-explorer-header-summary">
         <solid-ui-button
           variant="ghost"
-          @click=${this.onBackClick}
+          @click=${() => this.onBackClick?.()}
           title="Back"
         >
           <icon-lucide-arrow-left></icon-lucide-arrow-left>

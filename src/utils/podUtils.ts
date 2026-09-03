@@ -80,6 +80,12 @@ export async function loadContainerRepresentation (subject) {
   if (!store.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
     try {
       const response = await store.fetcher.webOperation('GET', subject.uri, store.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
+      const contentType = response.headers?.get?.('content-type')?.toLowerCase() ?? ''
+
+      if (!contentType.includes('turtle') && !contentType.includes('n-triples') && !contentType.includes('n3') && !contentType.includes('rdf+xml')) {
+        return
+      }
+
       const containerTurtle = response.responseText
       if (subject.uri && containerTurtle) {
         parse(containerTurtle, store, subject.uri, 'text/turtle')

@@ -2,7 +2,7 @@ import { html, nothing, type PropertyValues } from 'lit'
 import type { NamedNode } from 'rdflib'
 import { DataBrowserContext, type PaneDefinition } from 'pane-registry'
 import { utils, WebComponent } from 'solid-ui'
-import { provide } from '@lit/context'
+import { consume, provide } from '@lit/context'
 import { fileExplorerContext, type FileExplorerContext, type FileExplorerEdit } from 'solid-ui'
 import { customElement, property, state } from 'lit/decorators.js'
 import './FileExplorerHeader'
@@ -50,9 +50,6 @@ export default class FileExplorerProvider extends WebComponent {
   accessor subjectUri: string | undefined = undefined
 
   @property({ attribute: false })
-  accessor onBack: (() => void) | undefined = undefined
-
-  @property({ attribute: false })
   accessor relevantPanes: PaneDefinition[] = []
 
   @property({ attribute: false })
@@ -73,6 +70,9 @@ export default class FileExplorerProvider extends WebComponent {
 
   @property({ attribute: false })
   accessor openPane: ((subject: NamedNode, paneName: string) => void) | undefined = undefined
+
+  @consume({ context: fileExplorerContext, subscribe: true })
+  accessor parentFileExplorerContext: FileExplorerContext = undefined as unknown as FileExplorerContext
 
   @state()
   accessor menuItems: Array<{ label: string, icon?: HTMLElement, action: (event: Event) => void }> = []
@@ -116,12 +116,15 @@ export default class FileExplorerProvider extends WebComponent {
     }
   }
 
+  @state()
+  accessor onBack: (() => void) | undefined = undefined
+
   @provide({ context: fileExplorerContext })
   accessor fileExplorerContextValue: FileExplorerContext = createFileExplorerContextValue({
     subjectUri: this.subjectUri,
     pane: this.pane,
     soloPane: this.soloPane,
-    onBack: this.onBack,
+    onBack: this.onBack ?? this.parentFileExplorerContext?.onBack,
     openPane: this.openPane,
     handleAccessClick: this.handleAccessClick,
     paneSupportsEditing: false,
@@ -176,7 +179,7 @@ export default class FileExplorerProvider extends WebComponent {
       subjectUri: this.subjectUri,
       pane: this.pane,
       soloPane: this.soloPane,
-      onBack: this.onBack,
+      onBack: this.onBack ?? this.parentFileExplorerContext?.onBack,
       openPane: this.openPane,
       handleAccessClick: this.handleAccessClick,
       paneSupportsEditing: this.paneSupportsEditing,
@@ -220,6 +223,7 @@ export default class FileExplorerProvider extends WebComponent {
       changedProperties.has('pane') ||
       changedProperties.has('soloPane') ||
       changedProperties.has('onBack') ||
+      changedProperties.has('parentFileExplorerContext') ||
       changedProperties.has('openPane') ||
       changedProperties.has('handleAccessClick') ||
       changedProperties.has('pane') ||

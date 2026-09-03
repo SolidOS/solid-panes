@@ -344,7 +344,7 @@ export default function (context) {
     }
     provider.context = context
     provider.subjectUri = subject.uri
-    provider.onBack = () => collapseMouseDownListener({ target: provider })
+    // provider.onBack = () => collapseMouseDownListener({ target: provider })
 
     const relevantPanes = options.hideList
       ? []
