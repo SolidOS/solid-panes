@@ -63,7 +63,6 @@ export default class FileExplorerHeaderControls extends WebComponent {
   } */
 
   private getEditTooltip () {
-    if (!this.fileExplorerContext.paneSupportsEditing) return 'Not Supported'
     if (!this.canEdit) return 'No Access'
     return 'Edit'
   }
@@ -76,6 +75,7 @@ export default class FileExplorerHeaderControls extends WebComponent {
 
   render () {
     const isContainerResource = isContainerSubject(this.fileExplorerContext.store, this.fileExplorerContext.subjectUri)
+    const supportsEditing = this.fileExplorerContext.paneSupportsEditing
 
     return html`
       <div>
@@ -85,15 +85,19 @@ export default class FileExplorerHeaderControls extends WebComponent {
               <solid-ui-button class="file-explorer-header-action-button" variant="ghost" title="Manage Access" @click=${this.fileExplorerContext.handleAccessClick}>
                 <icon-lucide-user-round-cog slot="icon"></icon-lucide-user-round-cog>
               </solid-ui-button>
-              <solid-ui-button
-                class="file-explorer-header-action-button"
-                variant="ghost"
-                title=${this.getEditTooltip()}
-                ?disabled=${!this.fileExplorerContext.paneSupportsEditing || !this.canEdit}
-                @click=${this.fileExplorerContext.edit?.onEdit}
-              >
-                <icon-lucide-pencil slot="icon"></icon-lucide-pencil>
-              </solid-ui-button>
+              ${supportsEditing
+                ? html`
+                    <solid-ui-button
+                      class="file-explorer-header-action-button"
+                      variant="ghost"
+                      title=${this.getEditTooltip()}
+                      ?disabled=${!this.canEdit}
+                      @click=${this.fileExplorerContext.edit?.onEdit}
+                    >
+                      <icon-lucide-pencil slot="icon"></icon-lucide-pencil>
+                    </solid-ui-button>
+                  `
+                : nothing}
             `
           : nothing}
         <resource-actions-menu
