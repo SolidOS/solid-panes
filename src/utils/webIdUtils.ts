@@ -13,16 +13,6 @@ export async function loadProfileFromURI (
   uri: NamedNode
 ): Promise<NamedNode> {
   try {
-    const pod = uri.site().uri
-    // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
-    const webId = sym(`${pod}${DEFAULT_PROFILE_PATH}`)
-    try {
-      await store.fetcher.load(webId)
-      return webId
-    } catch (err) {
-      // ignore any failure and continue fallback lookup
-    }
-
     // we try a prefixed pod structure
     try {
       const uriUrl = new URL(uri.uri)
@@ -33,6 +23,10 @@ export async function loadProfileFromURI (
         await store.fetcher.load(derivedWebId)
         return derivedWebId
       }
+
+      const rootWebId = sym(`${uriUrl.origin}/profile/card#me`)
+      await store.fetcher.load(rootWebId)
+      return rootWebId
     } catch (err) {
       // ignore any failure and continue fallback lookup
     }
@@ -71,17 +65,6 @@ export function isWebIdUri (uri: NamedNode): boolean {
 export async function getNameOfPodOwner (
   pod: NamedNode
 ): Promise<string> {
-  // TODO: This is a hack - we cannot assume that the profile is at this document, but we will live with it for now
-  const webId = sym(`${pod.uri}${DEFAULT_PROFILE_PATH}`)
-  try {
-    await store.fetcher.load(webId)
-    return getName(store, webId)
-  } catch (err) {
-    if (!isFetchErrorStatus(err, 403)) {
-      console.error('getNameOfPodOwner failed on default profile:', err)
-    }
-  }
-
   // we try a prefixed pod structure
   try {
     const uriUrl = new URL(pod.uri)
@@ -92,6 +75,10 @@ export async function getNameOfPodOwner (
       await store.fetcher.load(derivedWebId)
       return getName(store, derivedWebId)
     }
+
+      const rootWebId = sym(`${uriUrl.origin}/profile/card#me`)
+      await store.fetcher.load(rootWebId)
+      return getName(store, rootWebId)
   } catch (err) {
     if (!isFetchErrorStatus(err, 403)) {
       console.error('getNameOfPodOwner failed on derived profile:', err)
