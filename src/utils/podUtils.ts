@@ -96,18 +96,6 @@ export async function loadContainerRepresentation (subject) {
   }
 }
 
-export function isContainerSubject (store: LiveStore | undefined, subjectUri: string | undefined): boolean {
-  if (!store || !subjectUri) return false
-
-  const subject = store.sym(subjectUri)
-  const typeUris = store.findTypeURIs(subject)
-  return Boolean(
-    typeUris[ns.ldp('Container').uri] ||
-    typeUris[ns.ldp('BasicContainer').uri] ||
-    subject.uri.endsWith('/')
-  )
-}
-
 // The shared rdflib store can hold duplicate ldp:contains statements for the
 // same child resource when the container and companion metadata are both loaded.
 // Count unique visible children here so the header summary matches the list UI.

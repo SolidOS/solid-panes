@@ -13,9 +13,8 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
-import '../components/file-explorer-header'
+import 'solid-ui/components/file-explorer-header'
 import { createOutlineDomHelpers } from './outlineDomHelpers.js'
-import '../components/file-explorer-header/FileExplorerProvider'
 
 export default function (context) {
   const dom = context.dom
@@ -243,38 +242,6 @@ export default function (context) {
     }
   }
 
-  async function getRelevantPanes (subject, context) {
-    // make sure container representation is loaded (when server returns index.html)
-    if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
-    const panes = context.session.paneRegistry
-    const relevantPanes = panes.list.filter(
-      pane => pane.label(subject, context) && !pane.global && pane.name !== 'sharing'
-    )
-    if (relevantPanes.length === 0) {
-      // there are no relevant panes, simply return default pane (which ironically is internalPane)
-      return [panes.byName('internal')]
-    }
-    const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
-    if (filteredPanes.length === 0) {
-      // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
-      return [relevantPanes[0]]
-    }
-    const firstRelevantPaneIndex = panes.list.indexOf(relevantPanes[0])
-    const firstFilteredPaneIndex = panes.list.indexOf(filteredPanes[0])
-    // if the first relevant pane is loaded before the panes available wrt role, we still want to offer the most relevant pane
-    return firstRelevantPaneIndex < firstFilteredPaneIndex
-      ? [relevantPanes[0]].concat(filteredPanes)
-      : filteredPanes
-  }
-
-  function getPane (relevantPanes, subject) {
-    return (
-      relevantPanes.find(
-        pane => pane.shouldGetFocus && pane.shouldGetFocus(subject)
-      ) || relevantPanes[0]
-    )
-  }
-
   function setQueryButtonVisibility (shouldShow) {
     const queryButton = dom.getElementById('queryButton')
     if (!queryButton) return
@@ -348,10 +315,10 @@ export default function (context) {
 
     const relevantPanes = options.hideList
       ? []
-      : await getRelevantPanes(subject, context)
+      : await UI.getRelevantPanes(subject, context)
 
     provider.relevantPanes = relevantPanes
-    provider.pane = requiredPane || getPane(relevantPanes, subject)
+    provider.pane = requiredPane || UI.getRelevantPane(relevantPanes, subject)
     await loadContainerRepresentation(subject)
     const isStorageRoot = !!store.holds(subject, UI.ns.rdf('type'), UI.ns.space('Storage'), subject.doc())
     provider.showHeader = !isStorageRoot && !isWebIdUri(subject)
@@ -359,7 +326,7 @@ export default function (context) {
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
     // TODO: for now we do this until we create sharing dialog in solid-panes
-    provider.handleSharingClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
+    provider.handleAccessClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
