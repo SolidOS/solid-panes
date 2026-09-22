@@ -6,7 +6,7 @@ import * as paneRegistry from 'pane-registry'
 import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
-import { store } from 'solid-logic'
+import { solidLogicSingleton, store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
@@ -327,6 +327,9 @@ export default function (context) {
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
     // TODO: for now we do this until we create sharing dialog in solid-panes
     provider.handleAccessClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
+    provider.handleDeleteClick = () => {
+      void solidLogicSingleton.resource.moveToTrash(subject)
+    }
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
