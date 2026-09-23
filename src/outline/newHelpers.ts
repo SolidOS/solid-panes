@@ -49,7 +49,8 @@ export function createOutlineRenderHelpers ({
 
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
-    provider.showHeader = !(await isStorageRootSubject(subject)) && !isWebIdUri(subject)
+    const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+    provider.showHeader = !(await isStorageRootSubject(subject)) && !isWebIdUri(subject) && !isRootResource
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))

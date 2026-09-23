@@ -321,7 +321,8 @@ export default function (context) {
     provider.pane = requiredPane || UI.getRelevantPane(relevantPanes, subject)
     await loadContainerRepresentation(subject)
     const isStorageRoot = !!store.holds(subject, UI.ns.rdf('type'), UI.ns.space('Storage'), subject.doc())
-    provider.showHeader = !isStorageRoot && !isWebIdUri(subject)
+    const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+    provider.showHeader = !isStorageRoot && !isWebIdUri(subject) && !isRootResource
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
