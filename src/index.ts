@@ -26,7 +26,6 @@ import {
 } from 'pane-registry'
 import { createContext } from './outline/context'
 import { initMainPage, refreshUI } from './mainPage'
-import './toberemoved/ItemsAndTheirTicketsDialog'
 
 function getOutliner (dom, environment?: RenderEnvironment): OutlineManager {
   if (!dom.outlineManager) {
