@@ -8,6 +8,7 @@ import '~icons/lucide/users'
 import '~icons/lucide/folder-open'
 import '~icons/lucide/layout-dashboard'
 import '~icons/lucide/settings-2'
+import 'solid-ui/components/provider'
 import '../components/header'
 import { getProfilePaneFromURI, getSocialPaneFromURI, getFolderPanesFromURI } from '../utils/paneUtils'
 import { sym } from 'rdflib'
@@ -91,7 +92,7 @@ export async function createHeader (outliner: OutlineManager) {
   ]
 
   render(
-    html`<solid-panes-header .menuItems=${menuItems}></solid-panes-header>`,
+    html`<solid-ui-provider><solid-panes-header .menuItems=${menuItems}></solid-panes-header></solid-ui-provider>`,
     tmpContainer
   )
 
