@@ -67,12 +67,12 @@
     "marked": "^18.0.3",
     "meeting-pane": "4.0.0-0",
     "mime-types": "^3.0.2",
-    "pane-registry": "5.0.0-0",
+    "pane-registry": "5.0.0-1",
     "profile-pane": "4.0.0-0",
-    "rdflib": "2.4.0",
-    "solid-logic": "6.0.0-0",
+    "rdflib": "2.4.1",
+    "solid-logic": "6.0.0-2",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "5.0.0-1",
+    "solid-ui": "5.0.0-2",
     "source-pane": "4.0.0-0"
   },
   "overrides": {
