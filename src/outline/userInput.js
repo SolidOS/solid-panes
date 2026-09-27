@@ -54,6 +54,23 @@ export function UserInput (outline) {
 
   let movedArrow = false // hq
 
+  function getStatementRow (node) {
+    let current = node
+    while (current && current !== myDocument) {
+      if (current.AJAR_statement) {
+        return current
+      }
+      current = current.parentNode
+    }
+
+    return UI.utils.ancestor(node, 'DIV') || UI.utils.ancestor(node, 'TR')
+  }
+
+  function getStatementContainer (node) {
+    const row = getStatementRow(node)
+    return row?.parentNode || UI.utils.ancestor(node, 'TABLE')
+  }
+
   // var updateService=new updateCenter(kb);
 
   if (!UserInputFormula) {
@@ -87,11 +104,11 @@ export function UserInput (outline) {
       const target = UI.utils.getTarget(e)
 
       // UI.log.warn(ancestor(target,'TABLE').textContent);
-      const insertTr = myDocument.createElement('tr')
-      UI.utils
-        .ancestor(target, 'DIV')
-        .insertBefore(insertTr, UI.utils.ancestor(target, 'TR'))
-      const tempTr = myDocument.createElement('tr')
+      const insertTr = myDocument.createElement('div')
+      const targetRow = getStatementRow(target)
+      const targetContainer = getStatementContainer(target)
+      targetContainer.insertBefore(insertTr, targetRow)
+      const tempTr = myDocument.createElement('div')
       const reqTerm1 = This.generateRequest('(TBD)', tempTr, true)
       insertTr.appendChild(tempTr.firstChild)
       const reqTerm2 = This.generateRequest(
@@ -104,11 +121,10 @@ export function UserInput (outline) {
 
       // Take the why of the last TR and write to it.
       if (
-        UI.utils.ancestor(target, 'TR').previousSibling && // there is a previous predicate/object line
-        UI.utils.ancestor(target, 'TR').previousSibling.AJAR_statement
+        targetRow.previousSibling && // there is a previous predicate/object line
+        targetRow.previousSibling.AJAR_statement
       ) {
-        const preStat = UI.utils.ancestor(target, 'TR').previousSibling
-          .AJAR_statement
+        const preStat = targetRow.previousSibling.AJAR_statement
         // This should always(?) input a non-inverse statement
         This.formUndetStat(
           insertTr,
@@ -122,7 +138,7 @@ export function UserInput (outline) {
         // no previous row: write to the document defining the subject
         const subject = UI.utils.getAbout(
           store,
-          UI.utils.ancestor(target.parentNode.parentNode, 'TD')
+          targetContainer.parentNode
         )
         const doc = store.sym($rdf.Util.uri.docpart(subject.uri))
         This.formUndetStat(insertTr, subject, reqTerm1, reqTerm2, doc, false)
@@ -321,7 +337,7 @@ export function UserInput (outline) {
       let trNode
       try {
         obj = UI.utils.getTerm(target)
-        trNode = UI.utils.ancestor(target, 'TR')
+          trNode = getStatementRow(target)
       } catch (e) {
         UI.log.warn('userinput.js: ' + e + UI.utils.getAbout(store, selectedTd))
         UI.log.error(target + ' getStatement Error:' + e)
@@ -449,7 +465,7 @@ export function UserInput (outline) {
           )
           // TODO: DEFINE ERROR CALLBACK
           defaultpropview = this.views.defaults[s.predicate.uri]
-          trCache = UI.utils.ancestor(this.lastModified, 'TR')
+          trCache = getStatementRow(this.lastModified)
           try {
             store.updater.update([], [s], function (
               uri,
@@ -493,7 +509,7 @@ export function UserInput (outline) {
 
               // TODO: DEFINE ERROR CALLBACK
               const valueCache = this.lastModified.value
-              trCache = UI.utils.ancestor(this.lastModified, 'TR')
+              trCache = getStatementRow(this.lastModified)
               const oldValue = this.lastModified.defaultValue
               s2 = $rdf.st(
                 s.subject,
@@ -548,10 +564,7 @@ export function UserInput (outline) {
                     bnodeTerm: s.subject
                   })
                 } else {
-                  s1 = UI.utils.ancestor(
-                    UI.utils.ancestor(this.lastModified, 'TR').parentNode,
-                    'TR'
-                  ).AJAR_statement
+                  s1 = getStatementRow(this.lastModified).AJAR_statement
                   s2 = $rdf.st(s.subject, selectedPredicate, textTerm, s.why)
                   const type = store.the(s.subject, rdf('type'))
                   s3 = store.anyStatementMatching(
@@ -562,10 +575,7 @@ export function UserInput (outline) {
                   )
                   // TODO: DEFINE ERROR CALLBACK
                   // because the table is repainted, so...
-                  trCache = UI.utils.ancestor(
-                    UI.utils.ancestor(this.lastModified, 'TR'),
-                    'TD'
-                  ).parentNode
+                  trCache = getStatementRow(this.lastModified).parentNode
                   try {
                     store.updater.update([], [s1, s2, s3], function (
                       uri,
@@ -593,10 +603,7 @@ export function UserInput (outline) {
                   // a subtle bug occurs here, if foaf:nick hasn't been dereferneced,
                   // this add will cause a repainting
                 }
-                const enclosingTd = UI.utils.ancestor(
-                  this.lastModified.parentNode.parentNode,
-                  'TD'
-                )
+                const enclosingTd = getStatementContainer(this.lastModified).parentNode
                 const defaultPane = panes.byName('default') // @@ check
                 outline.outlineExpand(enclosingTd, s.subject, {
                   pane: defaultPane,
@@ -618,7 +625,7 @@ export function UserInput (outline) {
         }
       } else if (this.lastModified.isNew) {
         // generate 'Request', there is no way you can input ' (Please Input) '
-        trNode = UI.utils.ancestor(this.lastModified, 'TR')
+        trNode = getStatementRow(this.lastModified)
         reqTerm = this.generateRequest(
           '(To be determined. Re-type of drag an object onto this field)'
         )
@@ -638,10 +645,7 @@ export function UserInput (outline) {
         return
       } else if (s.predicate.termType === 'Collection') {
         store.removeMany(s.subject)
-        const upperTr = UI.utils.ancestor(
-          UI.utils.ancestor(this.lastModified, 'TR').parentNode,
-          'TR'
-        )
+        const upperTr = getStatementRow(this.lastModified)
         preStat = upperTr.AJAR_statement
         reqTerm = this.generateRequest(
           '(To be determined. Re-type of drag an object onto this field)'
@@ -678,7 +682,7 @@ export function UserInput (outline) {
         }
       }
       // case modified - literal modification only(for now).
-      trNode = UI.utils.ancestor(this.lastModified, 'TR')
+      trNode = getStatementRow(this.lastModified)
       // var defaultpropview = this.views.defaults[s.predicate.uri]
 
       if (!this.statIsInverse) {
@@ -913,9 +917,9 @@ export function UserInput (outline) {
           break
         }
         case 'selected': { // header <TD>, undetermined generated
-          const paneDiv = UI.utils.ancestor(selectedTd, 'TABLE').lastChild
+          const paneDiv = getStatementContainer(selectedTd)
           const newTr = paneDiv.insertBefore(
-            myDocument.createElement('tr'),
+            myDocument.createElement('div'),
             paneDiv.lastChild
           )
           // var titleTerm=UI.utils.getAbout(kb,UI.utils.ancestor(newTr,'TD'));
@@ -1000,7 +1004,7 @@ export function UserInput (outline) {
             */
           subject = UI.utils.getAbout(
             store,
-            UI.utils.ancestor(selectedTd, 'TABLE').parentNode
+            getStatementContainer(selectedTd).parentNode
           )
           subjectClass = store.any(subject, rdf('type'))
           sparqlText = []
@@ -1057,7 +1061,7 @@ export function UserInput (outline) {
             */
           subject = UI.utils.getAbout(
             store,
-            UI.utils.ancestor(selectedTd, 'TABLE').parentNode
+            getStatementContainer(selectedTd).parentNode
           )
           subjectClass = store.any(subject, rdf('type'))
           const object = selectedTd.parentNode.AJAR_statement.object
@@ -1498,7 +1502,7 @@ export function UserInput (outline) {
 
     getStatementAbout: function getStatementAbout (something) {
       // var trNode=something.parentNode;
-      const trNode = UI.utils.ancestor(something, 'TR')
+      const trNode = getStatementRow(something)
       if (!trNode) {
         throw new Error('No ancestor TR for the TD we clicked on:' + something)
       }
@@ -1611,7 +1615,7 @@ export function UserInput (outline) {
       }
       // if(!isEnd && HCIoptions["bottom insert highlights"].enabled) trIterator=trIterator.previousSibling;
 
-      const insertTr = myDocument.createElement('tr')
+      const insertTr = myDocument.createElement('div')
       // style stuff, I'll have to investigate appendPropertyTRs() somehow
       insertTr.style.colspan = '1'
       insertTr.style.display = 'block'
@@ -1657,7 +1661,7 @@ export function UserInput (outline) {
         if (trNew) {
           trNode = trNew
         } else {
-          trNode = UI.utils.ancestor(this.lastModified, 'TR')
+          trNode = getStatementRow(this.lastModified)
         }
         UI.utils.emptyNode(trNode)
       }
