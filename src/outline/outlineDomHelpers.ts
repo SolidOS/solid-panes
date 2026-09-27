@@ -107,7 +107,7 @@ export function createOutlineDomHelpers ({
     const objectDiv = dom.createElement('div')
     objectDiv.classList.add('obj')
     objectDiv.setAttribute('notSelectable', 'false')
-    objectDiv.setAttribute('role', 'option')
+    objectDiv.setAttribute('role', 'gridcell')
     objectDiv.setAttribute('tabindex', '0')
     objectDiv.setAttribute('data-outline-node', 'object')
     if (!obj) {
@@ -169,7 +169,7 @@ export function createOutlineDomHelpers ({
     const predicateTD = dom.createElement('div')
     predicateTD.setAttribute('about', predicate.toNT())
     predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
-    predicateTD.setAttribute('role', 'row')
+    predicateTD.setAttribute('role', 'gridcell')
     predicateTD.setAttribute('data-outline-node', 'predicate')
 
     let lab

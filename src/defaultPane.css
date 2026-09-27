@@ -17,13 +17,13 @@
   margin-bottom: var(--spacing-base, 0.5rem);
 }
 
-.defaultPane > tr {
+.defaultPane > div {
 	display: grid;
 	grid-template-columns: minmax(0, var(--default-pane-predicate-column)) minmax(0, 1fr);
 	align-items: flex-start;
 }
 
-.defaultPane > tr > td.pred {
+.defaultPane > div > div.pred {
 	grid-column: 1;
 	display: flex;
 	align-items: flex-start;
@@ -32,7 +32,7 @@
 	min-width: 0;
 }
 
-.defaultPane > tr > td.pred > .labelTD {
+.defaultPane > div > div.pred > .labelTD {
 	flex: 1 1 auto;
 	min-width: 0;
 	margin: 0;
@@ -40,61 +40,61 @@
 	padding-bottom: 0;
 }
 
-.defaultPane > tr > td.pred > .iconTD {
+.defaultPane > div > div.pred > .iconTD {
 	flex: 0 0 auto;
 	width: auto;
 	margin: 0;
 }
 
-.defaultPane > tr > td.obj {
+.defaultPane > div > div.obj {
 	grid-column: 2;
 	min-width: 0;
 	box-sizing: border-box;
 	align-self: start;
 }
 
-.defaultPane > tr > td[colspan='2'] {
+.defaultPane > div > div[colspan='2'] {
 	grid-column: 1 / -1;
 }
 
-.defaultPane[data-layout='mobile'] > tr {
+.defaultPane[data-layout='mobile'] > div {
 	grid-template-columns: minmax(0, 1fr);
 }
 
-.defaultPane[data-layout='mobile'] > tr > td.pred,
-.defaultPane[data-layout='mobile'] > tr > td.obj {
+.defaultPane[data-layout='mobile'] > div > div.pred,
+.defaultPane[data-layout='mobile'] > div > div.obj {
 	display: block;
 	grid-column: 1;
 	width: 100%;
 	box-sizing: border-box;
 }
 
-.defaultPane[data-layout='mobile'] > tr > td.pred {
+.defaultPane[data-layout='mobile'] > div > div.pred {
 	padding-bottom: var(--spacing-small, 0.1rem);
 }
 
-.defaultPane[data-layout='mobile'] > tr > td.obj {
+.defaultPane[data-layout='mobile'] > div > div.obj {
 	padding-left: var(--default-pane-object-indent) !important;
 }
 
 @media (max-width: 700px) {
-	.defaultPane > tr {
+	.defaultPane > div {
 		grid-template-columns: minmax(0, 1fr);
 	}
 
-	.defaultPane > tr > td.pred,
-	.defaultPane > tr > td.obj {
+	.defaultPane > div > div.pred,
+	.defaultPane > div > div.obj {
 		display: block;
 		grid-column: 1;
 		width: 100%;
 		box-sizing: border-box;
 	}
 
-	.defaultPane > tr > td.pred {
+	.defaultPane > div > div.pred {
 		padding-bottom: var(--spacing-small, 0.1rem);
 	}
 
-	.defaultPane > tr > td.obj {
+	.defaultPane > div > div.obj {
 		padding-left: var(--default-pane-object-indent) !important;
 	}
 }

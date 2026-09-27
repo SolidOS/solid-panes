@@ -41,8 +41,8 @@ export default function (context) {
   this.UserInput = new UserInput(this)
   this.clipboardAddress = 'tabulator:clipboard' // Weird
   this.UserInput.clipboardInit(this.clipboardAddress)
-  
-   const {
+
+  const {
     outlineObjectDiv,
     outlinePredicateDiv,
     termWidget
@@ -220,7 +220,6 @@ export default function (context) {
    * @returns {HTMLElement}
    */
   function getOrCreateContainer (id) {
-
     // OutlineView is a simple block container
     if (id === 'OutlineView') {
       const existingOutline = document.getElementById('OutlineView')
@@ -337,6 +336,7 @@ export default function (context) {
     provider = provider || dom.createElement('file-explorer-provider')
     provider.classList.add('paneView', 'tdFlex')
     provider.setAttribute('notSelectable', 'true')
+    provider.setAttribute('role', 'grid')
     provider.setAttribute('about', subject.toNT())
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
@@ -660,51 +660,6 @@ export default function (context) {
 
   this.appendPropertyTRs = appendPropertyTRs
 
-  /*   termWidget
-   **
-   */
-  globalThis.termWidget = termWidget
-  termWidget.construct = function (dom) {
-    dom = dom || document
-    const td = dom.createElement('TD')
-    td.setAttribute('class', 'iconTD')
-    td.setAttribute('notSelectable', 'true')
-    return td
-  }
-  termWidget.addIcon = function (td, icon, listener) {
-    const iconTD = td.childNodes[1]
-    if (!iconTD) return
-    const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
-    iconTD.appendChild(img)
-    if (listener) {
-      img.addEventListener('click', listener)
-    }
-  }
-  termWidget.removeIcon = function (td, icon) {
-    const iconTD = td.childNodes[1]
-    let baseURI
-    if (!iconTD) return
-    for (let x = 0; x < iconTD.childNodes.length; x++) {
-      const elt = iconTD.childNodes[x]
-      const eltSrc = elt.src
-
-      // ignore first '?' and everything after it //Kenny doesn't know what this is for
-      try {
-        baseURI = dom.location.href.split('?')[0]
-      } catch (e) {
-        baseURI = ''
-      }
-      const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
-      if (eltSrc === relativeIconSrc) {
-        iconTD.removeChild(elt)
-      }
-    }
-  }
-  termWidget.replaceIcon = function (td, oldIcon, newIcon, listener) {
-    termWidget.removeIcon(td, oldIcon)
-    termWidget.addIcon(td, newIcon, listener)
-  }
-
   // / /////////////////////////////////////////////////// VALUE BROWSER VIEW
 
   // / /////////////////////////////////////////////////////// TABLE VIEW
@@ -773,9 +728,16 @@ export default function (context) {
   function setSelectedParent (node, inc) {
     const onIcon = outlineIcons.termWidgets.optOn
     const offIcon = outlineIcons.termWidgets.optOff
+    const isPredicateRow = (element) => {
+      return Boolean(
+        element &&
+        typeof element.getAttribute === 'function' &&
+        (element.getAttribute('predTR') === 'true' || element.getAttribute('data-outline-node') === 'predicate')
+      )
+    }
     for (let n = node; n.parentNode; n = n.parentNode) {
       while (true) {
-        if (n.getAttribute('predTR')) {
+        if (isPredicateRow(n)) {
           let num = n.getAttribute('parentOfSelected')
           if (!num) num = 0
           else num = parseInt(num)
@@ -798,8 +760,8 @@ export default function (context) {
             )
           }
           break
-        } else if (n.previousSibling && n.previousSibling.nodeName === 'TR') {
-          n = n.previousSibling
+        } else if (n.previousElementSibling) {
+          n = n.previousElementSibling
         } else break
       }
     }
@@ -852,7 +814,7 @@ export default function (context) {
     // UI.log.info('selection has ' +selection.map(function(item){return item.textContent;}).join(', '));
     // UI.log.debug('@outline setSelected, intended to '+(newValue?'select ':'deselect ')+node+node.textContent);
     // if (newValue === selected(node)) return; //we might not need this anymore...
-    if (node.nodeName !== 'TD' && node.nodeName !== 'DIV')  {
+    if (node.nodeName !== 'TD' && node.nodeName !== 'DIV') {
       UI.log.debug('down' + node.nodeName)
       throw new Error(
         'Expected TD or DIV in setSelected: ' +
@@ -921,7 +883,7 @@ export default function (context) {
     selection = []
   }
 
-   /* srcElement is the old IE-era version of event.target. */
+  /* srcElement is the old IE-era version of event.target. */
   /** Get the target of an event **/
   this.targetOf = function (e) {
     let target
@@ -1108,8 +1070,10 @@ export default function (context) {
         break
       case 37: { // left
         if (this.walk('left')) return
-        const titleTd = UI.utils.ancestor(selectedTd.parentNode, 'TD')
-        outlineCollapse(selectedTd, UI.utils.getAbout(kb, titleTd))
+        const subjectNode = selectedTd.firstElementChild?.matches('file-explorer-provider')
+          ? selectedTd.firstElementChild
+          : selectedTd.querySelector('file-explorer-provider')
+        outlineCollapse(selectedTd, UI.utils.getAbout(kb, subjectNode))
         break
       }
       case 39: // right
@@ -1233,7 +1197,7 @@ export default function (context) {
     const target = thisOutline.targetOf(e)
     const subject = UI.utils.getAbout(kb, target)
     const pane = e.altKey ? paneRegistry.byName('internal') : undefined
-    const p = target.parentNode.parentNode
+    const p = target.closest?.('[data-outline-node="object"]') || target.parentNode?.parentNode || target
     outlineCollapse(p, subject, pane)
   }
 
@@ -1288,9 +1252,9 @@ export default function (context) {
     // var p = target.parentNode
     let node
     for (
-      node = UI.utils.ancestor(target, 'td') || UI.utils.ancestor(target, 'div');
+      node = UI.utils.ancestor(target, 'td') || UI.utils.ancestor(target, 'tr') || UI.utils.ancestor(target, 'div');
       node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
-      node = UI.utils.ancestor(node.parentNode, 'td') || UI.utils.ancestor(node.parentNode, 'div')
+      node = UI.utils.ancestor(node.parentNode, 'td') || UI.utils.ancestor(node.parentNode, 'tr') || UI.utils.ancestor(node.parentNode, 'div')
     ) {
       // ...
     }
@@ -1700,7 +1664,7 @@ export default function (context) {
       return subjectBlock
     }
 
-    const subjectBlock = solo ? createSubjectBlock() : host
+    const subjectBlock = createSubjectBlock()
 
     if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 

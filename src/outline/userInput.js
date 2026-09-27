@@ -337,7 +337,7 @@ export function UserInput (outline) {
       let trNode
       try {
         obj = UI.utils.getTerm(target)
-          trNode = getStatementRow(target)
+        trNode = getStatementRow(target)
       } catch (e) {
         UI.log.warn('userinput.js: ' + e + UI.utils.getAbout(store, selectedTd))
         UI.log.error(target + ' getStatement Error:' + e)
