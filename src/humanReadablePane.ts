@@ -19,7 +19,7 @@ type HumanReadableIcon = string | Promise<string>
 type HumanReadablePaneDefinition = {
   icon: (subject: NamedNode, context: DataBrowserContext) => HumanReadableIcon
   name: string
-  label: (subject: NamedNode, context: DataBrowserContext) => 'view' | 'View' | null
+  label: (subject: NamedNode, context: DataBrowserContext) => 'Webpage' | 'View' | null
   render: (subject: NamedNode, context: DataBrowserContext) => HTMLDivElement
 }
 
@@ -105,7 +105,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
   label: function (
     subject: NamedNode,
     context: DataBrowserContext
-  ): 'view' | 'View' | null {
+  ): 'Webpage' | 'View' | null {
     const kb = context.session.store
 
     //   See also the source pane, which has lower precedence.
@@ -157,7 +157,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     if (!subject.uri) return null // no bnodes
 
     const t = kb.findTypeURIs(subject)
-    if (t[ns.link('WebPage').uri]) return 'view'
+    if (t[ns.link('WebPage').uri]) return 'Webpage'
 
     // Check file extension for markdown files
     if (isMarkdownFile(subject.uri)) {

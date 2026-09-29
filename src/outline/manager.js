@@ -6,26 +6,14 @@ import * as paneRegistry from 'pane-registry'
 import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
-import { authn, authSession, store } from 'solid-logic'
+import { store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { getNameOfPodOwner } from '../profileUtils/ownerProfile'
-import personIcon from '../icons/person.svg'
-import friendsIcon from '../icons/friends.svg'
-import folderIcon from '../icons/folder.svg'
-import dashboardIcon from '../icons/dashboard.svg'
-
-const PERSON_ICON = personIcon
-const FRIENDS_ICON = friendsIcon
-const FOLDER_ICON = folderIcon
-const DASHBOARD_ICON = dashboardIcon
-
-/* global alert XPathResult sourceWidget */
-// XPathResult?
-
-// const iconHeight = '24px'
+import { loadContainerRepresentation } from '../utils/podUtils'
+import { isWebIdUri } from '../utils/webIdUtils'
+import '../components/file-explorer-header'
 
 export default function (context) {
   const dom = context.dom
@@ -177,6 +165,7 @@ export default function (context) {
       outlineIcons.tooltips[icon].replace(/[Tt]his resource/, docuri),
       dom
     )
+    img.classList.add('objectValueAccessIcon')
     img.setAttribute('uri', uri)
     img.addEventListener('click', listener) // @@ seemed to be missing 2017-08
     addButtonCallbacks(img, docuri)
@@ -198,14 +187,10 @@ export default function (context) {
     const td = dom.createElement('td')
     td.classList.add('obj')
     td.setAttribute('notSelectable', 'false')
-    td.style.margin = '0.2em'
     if (!obj) {
       td.textContent = 'No object available.'
       return td
     }
-    td.style.border = 'none'
-    td.style.padding = '0'
-    td.style.verticalAlign = 'top'
     const theClass = 'obj'
 
     // set about and put 'expand' icon
@@ -311,259 +296,19 @@ export default function (context) {
     return predicateTD
   } // outlinePredicateTD
 
-  /**
-   * Render Tabbed set of home app panes
-   *
-   * @param {Object} [options] A set of options you can provide
-   * @param {string} [options.selectedTab] To open a specific dashboard pane
-   * @param {Function} [options.onClose] If given, will present an X for the dashboard, and call this method when clicked
-   * @returns Promise<{Element}> - the div that holds the dashboard
-   */
-  async function globalAppTabs (options = {}) {
-    console.log('globalAppTabs @@')
-    const div = dom.createElement('div')
-    const me = authn.currentUser()
-    if (!me) {
-      alert('Must be logged in for this')
-      throw new Error('Not logged in')
-    }
-    const items = await getDashboardItems()
-
-    const selectedItem = options.selectedTab
-      ? items.find(
-        item => item.paneName === options.selectedTab || item.tabName === options.selectedTab
-      )
-      : items[0]
-
-    if (!selectedItem) {
-      return div
-    }
-
-    div.dataset.globalPaneName = selectedItem.tabName || selectedItem.paneName
-
-    const content = div.appendChild(dom.createElement('div'))
-    const pane = paneRegistry.byName(selectedItem.paneName) // 20190701
-    const table = content.appendChild(dom.createElement('table'))
-    thisOutline.GotoSubject(
-      selectedItem.subject || me,
-      true,
-      pane,
-      false,
-      undefined,
-      table
-    )
-
-    return div
-  }
-  this.getDashboard = globalAppTabs
-
-  async function getDashboardItems () {
-    const me = authn.currentUser()
-    if (!me) return []
-    const div = dom.createElement('div')
-    const panes = [
-      {
-        paneName: 'profile',
-        subject: me,
-        label: 'Your profile',
-        icon: PERSON_ICON
-      },
-      {
-        paneName: 'social', // loads socialPane
-        subject: me,
-        label: 'Your friends',
-        icon: FRIENDS_ICON
-      }
-    ]
-
-    const [pods] = await Promise.all([getPods()])
-
-    panes.push(...pods)
-
-    panes.push(
-      /* not in use since redesign of profile-pane
-      {
-        paneName: 'editProfile',
-        label: 'Edit your Profile',
-        icon: UI.icons.iconBase + 'noun_492246.svg'
-      },
-      */
-      {
-        paneName: 'home',
-        label: 'Your dashboard',
-        icon: DASHBOARD_ICON
-      },
-      {
-        paneName: 'basicPreferences',
-        label: 'Your preferences',
-        icon: UI.icons.iconBase + 'noun_Sliders_341315_000000.svg'
-      }
-    )
-
-    return panes
-
-    async function getPods () {
-      async function addPodStorage (pod) { // namedNode
-        await loadContainerRepresentation(pod)
-        if (kb.holds(pod, ns.rdf('type'), ns.space('Storage'), pod.doc())) {
-          pods.push(pod)
-          return true
-        }
-        return false
-      }
-      async function addPodStorageFromUrl (url) {
-        const podStorage = new URL(url)
-        // check for predicate pim:Storage in containers up the path tree
-        let pathStorage = podStorage.pathname
-        while (pathStorage.length) {
-          pathStorage = pathStorage.substring(0, pathStorage.lastIndexOf('/'))
-          if (await addPodStorage(kb.sym(`${podStorage.origin}${pathStorage}/`))) return
-        }
-        // TODO should url.origin be added to pods list when there are no pim:Storage ???
-      }
-
-      try {
-        // need to make sure that profile is loaded
-        await kb.fetcher.load(me.doc())
-      } catch (err) {
-        console.error('Unable to load profile', err)
-        return []
-      }
-      // load pod's storages from profile
-      let pods = kb.each(me, ns.space('storage'), null, me.doc())
-      await Promise.all(
-        pods.map(async (pod) => {
-          // TODO use addPodStorageFromUrl(pod.uri) to check for pim:Storage ???
-          await loadContainerRepresentation(pod)
-        })
-      )
-
-      try {
-        // if uri then SolidOS is a browse.html web app
-        const uri = (new URL(window.location.href)).searchParams.get('uri')
-        const podUrl = uri || window.location.href
-        await addPodStorageFromUrl(podUrl)
-      } catch (err) {
-        console.error('cannot load container', err)
-      }
-      // remove namedNodes duplicates
-      function uniques (nodes) {
-        const uniqueNodes = []
-        nodes.forEach(node => {
-          if (!uniqueNodes.find(uniqueNode => uniqueNode.equals(node))) uniqueNodes.push(node)
-        })
-        return uniqueNodes
-      }
-      pods = uniques(pods)
-      if (!pods.length) return []
-      return Promise.all(
-        pods.map(async (pod, index) => {
-          function split (item) { return item.uri.split('//')[1].slice(0, -1) }
-          const ownerName = (await getNameOfPodOwner(pod, kb, sf)) || ''
-          const label = split(me).startsWith(split(pod))
-            ? 'Your storage'
-            : ownerName.trim() !== ''
-              ? ownerName + '\'s storage'
-              : split(pod)
-          return {
-            paneName: 'folder',
-            tabName: `folder-${index}`,
-            label,
-            subject: pod,
-            icon: FOLDER_ICON
-          }
-        })
-      )
-    }
-
-    async function getAddressBooks () {
-      try {
-        const context = await UI.login.findAppInstances(
-          { me, div, dom },
-          ns.vcard('AddressBook')
-        )
-        return (context.instances || []).map((book, index) => ({
-          paneName: 'contact',
-          tabName: `contact-${index}`,
-          label: 'Contacts',
-          subject: book,
-          icon: UI.icons.iconBase + 'noun_15695.svg'
-        }))
-      } catch (err) {
-        console.error('oops in globalAppTabs AddressBook')
-      }
-      return []
-    }
-  }
-  this.getDashboardItems = getDashboardItems
-
-  /**
-   * Call this method to show the global dashboard.
-   *
-   * @param {Object} [options] A set of options that can be passed
-   * @param {string} [options.pane] To open a specific dashboard pane
-   * @returns {Promise<void>}
-   */
-  function closeDashboard () {
-    const dashboardContainer = getDashboardContainer()
-    const outlineContainer = getOutlineContainer()
-    dashboardContainer.innerHTML = ''
-    hideGlobalContainer(dashboardContainer)
-    showGlobalContainer(outlineContainer)
-  }
-
-  // Register the closeDashboard listener only once
-  authSession.events.on('logout', closeDashboard)
-
-  function showGlobalContainer (container) {
-    container.removeAttribute('hidden')
-    container.style.display = ''
-  }
-
-  function hideGlobalContainer (container) {
-    container.setAttribute('hidden', '')
-    container.style.display = 'none'
-  }
-
-  async function showDashboard (subject, options = {}) {
-    const dashboardContainer = getDashboardContainer()
-    const outlineContainer = getOutlineContainer()
-
-    // reuse existing dashboard if already rendered for the same pane and subject
-    if (dashboardContainer.childNodes.length > 0) {
-      const existingDashboard = dashboardContainer.firstElementChild
-      if (
-        existingDashboard &&
-        options.pane &&
-        existingDashboard.dataset.globalPaneName === options.pane &&
-          existingDashboard.dataset.subject === ((subject && subject.value) || '')
-      ) {
-        hideGlobalContainer(outlineContainer)
-        showGlobalContainer(dashboardContainer)
-        return
-      }
-      dashboardContainer.innerHTML = ''
-    }
-
-    // create a new dashboard if not already present
-    const dashboard = await globalAppTabs({
-      selectedTab: options.pane,
-      // onClose: closeDashboard
-    })
-
-    // finally - switch to showing dashboard
-    hideGlobalContainer(outlineContainer)
-    showGlobalContainer(dashboardContainer)
-    dashboardContainer.appendChild(dashboard)
-  }
-  this.showDashboard = showDashboard
-
-  function getDashboardContainer () {
-    return getOrCreateContainer('GlobalDashboard', 'Dashboard')
-  }
-
   function getOutlineContainer () {
     return getOrCreateContainer('OutlineView', 'Resource browser')
+  }
+
+  function getNavbarElement () {
+    return document.querySelector('solid-panes-navbar')
+  }
+
+  function showSolidPanesNavbar () {
+    const navbar = getNavbarElement()
+    if (navbar) {
+      navbar.classList.remove('navbar--hidden')
+    }
   }
 
   /**
@@ -575,9 +320,7 @@ export default function (context) {
    */
   function getOrCreateContainer (id) {
     const containerHost =
-      document.getElementById('app-view') ||
       document.getElementById('MainContent') ||
-      document.querySelector('[role="main"]') ||
       document.body
 
     // OutlineView is a table
@@ -586,6 +329,10 @@ export default function (context) {
       if (existingOutline) {
         return existingOutline
       }
+
+      const containerHost =
+      document.getElementById('MainContent') ||
+      document.body
 
       if (containerHost) {
         const OutlineView = document.createElement('table')
@@ -596,27 +343,6 @@ export default function (context) {
         return OutlineView
       }
     }
-
-    // or we deal with the section GlobalDashboard
-    return (
-      document.getElementById(id) ||
-      (() => {
-        const GlobalDashboard = document.createElement('section')
-        GlobalDashboard.id = id
-        GlobalDashboard.setAttribute('aria-label', 'Dashboard')
-        GlobalDashboard.classList.add('global-dashboard')
-        return containerHost.appendChild(GlobalDashboard)
-      })()
-    )
-  }
-
-  async function loadContainerRepresentation (subject) {
-    // force reload for index.html with RDFa
-    if (!kb.any(subject, ns.ldp('contains'), undefined, subject.doc())) {
-      const response = await kb.fetcher.webOperation('GET', subject.uri, kb.fetcher.initFetchOptions(subject.uri, { headers: { accept: 'text/turtle' } }))
-      const containerTurtle = response.responseText
-      $rdf.parse(containerTurtle, kb, subject.uri, 'text/turtle')
-    }
   }
 
   async function getRelevantPanes (subject, context) {
@@ -624,7 +350,7 @@ export default function (context) {
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
     const panes = context.session.paneRegistry
     const relevantPanes = panes.list.filter(
-      pane => pane.label(subject, context) && !pane.global
+      pane => pane.label(subject, context) && !pane.global && pane.name !== 'sharing'
     )
     if (relevantPanes.length === 0) {
       // there are no relevant panes, simply return default pane (which ironically is internalPane)
@@ -651,219 +377,112 @@ export default function (context) {
     )
   }
 
-  async function expandedHeaderTR (subject, requiredPane, options) {
-    async function renderPaneIconTray (td, options = {}) {
-      const paneShownStyle =
-        'width: 24px; border-radius: 0.5em; border-top: solid #222 1px; border-left: solid #222 0.1em; border-bottom: solid #eee 0.1em; border-right: solid #eee 0.1em; margin-left: 1em; padding: 3px; background-color:   #ffd;'
-      const paneHiddenStyle =
-        'width: 24px; border-radius: 0.5em; margin-left: 1em; padding: 3px'
-      const paneIconTray = td.appendChild(dom.createElement('nav'))
-      paneIconTray.style =
-        'display:flex; justify-content: flex-start; align-items: center;'
+  function setQueryButtonVisibility (shouldShow) {
+    const queryButton = dom.getElementById('queryButton')
+    if (!queryButton) return
+    if (shouldShow) {
+      queryButton.removeAttribute('style')
+    } else {
+      queryButton.setAttribute('style', 'display:none;')
+    }
+  }
 
-      const relevantPanes = options.hideList
-        ? []
-        : await getRelevantPanes(subject, context)
-      tr.firstPane = requiredPane || getPane(relevantPanes, subject)
-      const paneNumber = relevantPanes.indexOf(tr.firstPane)
+  function findContainingTable (td) {
+    let containingTable
+    for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
+      if (containingTable.nodeName === 'TABLE') break
+    }
+    if (containingTable.nodeName !== 'TABLE') {
+      throw new Error('outline: internal error.')
+    }
+    return containingTable
+  }
 
-      if (relevantPanes.length !== 1) {
-        // if only one, simplify interface
-        relevantPanes.forEach((pane, index) => {
-          const label = pane.label(subject, context)
+  function renderPaneIntoProvider (provider, subject, pane, options) {
+    if (!provider || !pane) return
 
-          let iconSrc = ''
-          if (pane.name === 'profile') {
-            iconSrc = PERSON_ICON
-          } else if (pane.name === 'social') {
-            iconSrc = FRIENDS_ICON
-          } else {
-            iconSrc = typeof pane.icon === 'function' ? pane.icon(subject, context) : pane.icon
-          }
-          const ico = UI.utils.AJARImage(iconSrc, label, label, dom)
+    let paneDiv
+    try {
+      UI.log.info('outline: Rendering pane (menu): ' + pane.name)
+      paneDiv = pane.render(subject, context, options)
+    } catch (e) {
+      paneDiv = dom.createElement('div')
+      paneDiv.setAttribute('class', 'exceptionPane')
+      const pre = dom.createElement('pre')
+      paneDiv.appendChild(pre)
+      pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
+    }
 
-          // Handle async icon functions
-          if (iconSrc instanceof Promise) {
-            iconSrc.then(resolvedIconSrc => {
-              ico.setAttribute('src', resolvedIconSrc)
-            }).catch(err => {
-              console.error('Error resolving async icon:', err)
-            })
-          }
+    paneDiv.classList.add('paneDiv')
+    const existingPaneDiv = provider.querySelector('.paneDiv')
+    if (existingPaneDiv) {
+      existingPaneDiv.replaceWith(paneDiv)
+    } else {
+      provider.appendChild(paneDiv)
+    }
+  }
 
-          ico.style = pane === tr.firstPane ? paneShownStyle : paneHiddenStyle // init to something at least
-          // ico.setAttribute('align','right');   @@ Should be better, but ffox bug pushes them down
-          // ico.style.width = iconHeight
-          // ico.style.height = iconHeight
-          const listen = function (ico, pane) {
-            // Freeze scope for event time
-            ico.addEventListener(
-              'click',
-              function (event) {
-                let containingTable
-                // Find the containing table for this subject
-                for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-                  if (containingTable.nodeName === 'TABLE') break
-                }
-                if (containingTable.nodeName !== 'TABLE') {
-                  throw new Error('outline: internal error.')
-                }
-                const removePanes = function (specific) {
-                  for (let d = containingTable.firstChild; d; d = d.nextSibling) {
-                    if (typeof d.pane !== 'undefined') {
-                      if (!specific || d.pane === specific) {
-                        if (d.paneButton) {
-                          d.paneButton.setAttribute('class', 'paneHidden')
-                          d.paneButton.style = paneHiddenStyle
-                        }
-                        removeAndRefresh(d)
-                        // If we just delete the node d, ffox doesn't refresh the display properly.
-                        // state = 'paneHidden';
-                        if (
-                          d.pane.requireQueryButton &&
-                          containingTable.parentNode.className /* outer table */ &&
-                          numberOfPanesRequiringQueryButton === 1 &&
-                          dom.getElementById('queryButton')
-                        ) {
-                          dom
-                            .getElementById('queryButton')
-                            .setAttribute('style', 'display:none;')
-                        }
-                      }
-                    }
-                  }
-                }
-                const renderPane = function (pane) {
-                  let paneDiv
-                  UI.log.info('outline: Rendering pane (2): ' + pane.name)
+  function openPaneInPlace (subject, pane) {
+    const outlineView = dom.getElementById('OutlineView')
+    if (!outlineView) return
 
-                  try {
-                    paneDiv = pane.render(subject, context, options)
-                  } catch (e) {
-                    // Easier debugging for pane developers
-                    paneDiv = dom.createElement('div')
-                    paneDiv.setAttribute('class', 'exceptionPane')
-                    const pre = dom.createElement('pre')
-                    paneDiv.appendChild(pre)
-                    pre.appendChild(
-                      dom.createTextNode(UI.utils.stackString(e))
-                    )
-                  }
+    const subjectId = subject.toNT()
+    const subjectTd = outlineView.querySelector('td.paneView[about="' + subjectId + '"]')
+    if (!subjectTd) return
 
-                  if (
-                    pane.requireQueryButton &&
-                    dom.getElementById('queryButton')
-                  ) {
-                    dom.getElementById('queryButton').removeAttribute('style')
-                  }
-                  const second = containingTable.firstChild.nextSibling
-                  const row = dom.createElement('tr')
-                  const cell = row.appendChild(dom.createElement('td'))
-                  cell.setAttribute('colspan', '2')
-                  cell.style.textAlign = 'left'
-                  cell.style.width = '100%'
-                  cell.appendChild(paneDiv)
-                  if (second) containingTable.insertBefore(row, second)
-                  else containingTable.appendChild(row)
-                  row.pane = pane
-                  row.paneButton = ico
-                }
-                const state = ico.getAttribute('class')
-                if (state === 'paneHidden') {
-                  if (!event.shiftKey) {
-                    // shift means multiple select
-                    removePanes()
-                  }
-                  renderPane(pane)
-                  ico.setAttribute('class', 'paneShown')
-                  ico.style = paneShownStyle
-                } else {
-                  removePanes(pane)
-                  ico.setAttribute('class', 'paneHidden')
-                  ico.style = paneHiddenStyle
-                }
+    const provider = subjectTd.querySelector('file-explorer-provider')
+    if (!provider) return
+    if (!pane) {
+      UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
+      return
+    }
 
-                let numberOfPanesRequiringQueryButton = 0
-                for (let d = containingTable.firstChild; d; d = d.nextSibling) {
-                  if (d.pane && d.pane.requireQueryButton) {
-                    numberOfPanesRequiringQueryButton++
-                  }
-                }
-              },
-              false
-            )
-          } // listen
+    setQueryButtonVisibility(!!pane.requireQueryButton)
+    provider.openSelectedPane?.(pane)
+    renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
+  }
 
-          listen(ico, pane)
-          ico.setAttribute(
-            'class',
-            index !== paneNumber ? 'paneHidden' : 'paneShown'
-          )
-          if (index === paneNumber) tr.paneButton = ico
-          paneIconTray.appendChild(ico)
-        })
-      }
-      return paneIconTray
-    } // renderPaneIconTray
+  async function expandedProviderTR (subject, requiredPane, options) {
+    options = options || {}
 
-    // Body of expandedHeaderTR
+    // TODO: hide the main storage header
+    // const showHeader = !!requiredPane
     const tr = dom.createElement('tr')
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
-      tr.setAttribute('class', 'hoverControl')
+      tr.classList.add('hoverControl')
     }
     const td = tr.appendChild(dom.createElement('td'))
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding-top: 0; padding-bottom: 0; vertical-align: top;' +
-        'display:flex; justify-content: space-between; flex-direction: row;' +
-        'background-color: var(--color-background, #F8F9FB);'
-    )
+    td.classList.add('paneView', 'tdFlex')
     td.setAttribute('notSelectable', 'true')
     td.setAttribute('about', subject.toNT())
     td.setAttribute('colspan', '2')
 
-    // Stuff at the right about the subject
-    const header = td.appendChild(dom.createElement('div'))
-    header.style =
-      'display:flex; justify-content: flex-start; align-items: center; flex-wrap: wrap;'
+    const provider = td.appendChild(dom.createElement('file-explorer-provider'))
+    provider.context = context
+    provider.subjectUri = subject.uri
+    provider.onBack = () => collapseMouseDownListener({ target: provider })
 
-    const showHeader = !!requiredPane
+    const relevantPanes = options.hideList
+      ? []
+      : await getRelevantPanes(subject, context)
 
-    if (!options.solo && !showHeader) {
-      const icon = header.appendChild(
-        UI.utils.AJARImage(
-          UI.icons.originalIconBase + 'tbl-collapse.png',
-          'collapse',
-          undefined,
-          dom
-        )
-      )
-      icon.addEventListener('click', collapseMouseDownListener)
+    provider.relevantPanes = relevantPanes
+    provider.pane = requiredPane || getPane(relevantPanes, subject)
+    const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+    provider.showHeader = !isRootResource && !isWebIdUri(subject)
+    provider.paneRenderOptions = options
+    provider.soloPane = options.solo
+    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
+    // TODO: for now we do this until we create sharing dialog in solid-panes
+    provider.handleAccessClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
 
-      const strong = header.appendChild(dom.createElement('h1'))
-      strong.appendChild(dom.createTextNode(UI.utils.label(subject)))
-      strong.style =
-        'font-size: 150%; margin: 0 0.6em 0 0; padding: 0.1em 0.4em;' +
-        'background-color: var(--color-background, #F8F9FB);'
-      UI.widgets.makeDraggable(strong, subject)
-    }
-
-    header.appendChild(
-      await renderPaneIconTray(td, {
-        hideList: showHeader
-      })
-    )
-
-    // set DOM methods
-    tr.firstChild.tabulatorSelect = function () {
-      setSelected(this, true)
-    }
-    tr.firstChild.tabulatorDeselect = function () {
-      setSelected(this, false)
+    if (provider.pane) {
+      tr.classList.add('outlinePaneRow')
+      renderPaneIntoProvider(provider, subject, provider.pane, options)
     }
     return tr
-  } // expandedHeaderTR
+  }
 
   // / //////////////////////////////////////////////////////////////////////////
 
@@ -903,51 +522,19 @@ export default function (context) {
   const propertyTable = (this.propertyTable = function propertyTable (
     subject,
     table,
-    pane,
+    requiredPane,
     options
   ) {
     UI.log.debug('Property table for: ' + subject)
     subject = kb.canon(subject)
-    // if (!pane) pane = panes.defaultPane;
+    // if (!requiredPane) requiredPane = panes.defaultPane;
 
     if (!table) {
       // Create a new property table
       table = dom.createElement('table')
       table.classList.add('tableFullWidth')
-      expandedHeaderTR(subject, pane, options).then(tr1 => {
-        table.appendChild(tr1)
-
-        if (tr1.firstPane) {
-          let paneDiv
-          try {
-            UI.log.info('outline: Rendering pane (1): ' + tr1.firstPane.name)
-            paneDiv = tr1.firstPane.render(subject, context, options)
-          } catch (e) {
-            // Easier debugging for pane developers
-            paneDiv = dom.createElement('div')
-            paneDiv.setAttribute('class', 'exceptionPane')
-            const pre = dom.createElement('pre')
-            paneDiv.appendChild(pre)
-            pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
-          }
-
-          const row = dom.createElement('tr')
-          const cell = row.appendChild(dom.createElement('td'))
-          cell.setAttribute('colspan', '2')
-          cell.style.textAlign = 'left'
-          cell.style.width = '100%'
-          cell.style.backgroundColor = 'var(--color-background, #F8F9FB)'
-          cell.appendChild(paneDiv)
-          if (
-            tr1.firstPane.requireQueryButton &&
-            dom.getElementById('queryButton')
-          ) {
-            dom.getElementById('queryButton').removeAttribute('style')
-          }
-          table.appendChild(row)
-          row.pane = tr1.firstPane
-          row.paneButton = tr1.paneButton
-        }
+      expandedProviderTR(subject, requiredPane, options).then(providerTR => {
+        table.appendChild(providerTR)
       })
 
       return table
@@ -1124,10 +711,7 @@ export default function (context) {
           // Add the x more <TR> here
           const moreTR = dom.createElement('tr')
           const moreTD = moreTR.appendChild(dom.createElement('td'))
-          moreTD.setAttribute(
-            'style',
-            'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-          )
+          moreTD.classList.add('obj')
           moreTD.setAttribute('notSelectable', 'false')
           if (predDups > n) {
             // what is this for??
@@ -1199,27 +783,18 @@ export default function (context) {
    **
    */
   const termWidget = {} // @@@@@@ global
-  global.termWidget = termWidget
+  globalThis.termWidget = termWidget
   termWidget.construct = function (dom) {
     dom = dom || document
     const td = dom.createElement('TD')
-    td.setAttribute(
-      'style',
-      'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
-    )
     td.setAttribute('class', 'iconTD')
     td.setAttribute('notSelectable', 'true')
-    td.style.width = '0px'
     return td
   }
   termWidget.addIcon = function (td, icon, listener) {
     const iconTD = td.childNodes[1]
     if (!iconTD) return
-    let width = iconTD.style.width
     const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
-    width = parseInt(width)
-    width = width + icon.width
-    iconTD.style.width = width + 'px'
     iconTD.appendChild(img)
     if (listener) {
       img.addEventListener('click', listener)
@@ -1229,10 +804,6 @@ export default function (context) {
     const iconTD = td.childNodes[1]
     let baseURI
     if (!iconTD) return
-    let width = iconTD.style.width
-    width = parseInt(width)
-    width = width - icon.width
-    iconTD.style.width = width + 'px'
     for (let x = 0; x < iconTD.childNodes.length; x++) {
       const elt = iconTD.childNodes[x]
       const eltSrc = elt.src
@@ -1241,7 +812,6 @@ export default function (context) {
       try {
         baseURI = dom.location.href.split('?')[0]
       } catch (e) {
-        console.log(e)
         baseURI = ''
       }
       const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
@@ -1261,73 +831,11 @@ export default function (context) {
 
   //  Summarize a thing as a table cell
 
-  /**********************
-
-    query global vars
-
-  ***********************/
-
-  // const doesn't work in Opera
-  // const BLANK_QUERY = { pat: kb.formula(), vars: [], orderBy: [] };
-  // @ pat: the query pattern in an RDFIndexedFormula. Statements are in pat.statements
-  // @ vars: the free variables in the query
-  // @ orderBy: the variables to order the table
-
-  function QueryObj () {
-    this.pat = kb.formula()
-    this.vars = []
-    // this.orderBy = []
-  }
-
-  const queries = []
-  queries[0] = new QueryObj()
-  /*
-  function querySave () {
-    queries.push(queries[0])
-    var choices = dom.getElementById('queryChoices')
-    var next = dom.createElement('option')
-    var box = dom.createElement('input')
-    var index = queries.length - 1
-    box.setAttribute('type', 'checkBox')
-    box.setAttribute('value', index)
-    choices.appendChild(box)
-    choices.appendChild(dom.createTextNode('Saved query #' + index))
-    choices.appendChild(dom.createElement('br'))
-    next.setAttribute('value', index)
-    next.appendChild(dom.createTextNode('Saved query #' + index))
-    dom.getElementById('queryJump').appendChild(next)
-  }
-*/
-  /*
-  function resetQuery () {
-    function resetOutliner (pat) {
-      var n = pat.statements.length
-      var pattern, tr
-      for (let i = 0; i < n; i++) {
-        pattern = pat.statements[i]
-        tr = pattern.tr
-        // UI.log.debug('tr: ' + tr.AJAR_statement);
-        if (typeof tr !== 'undefined') {
-          delete tr.AJAR_pattern
-          delete tr.AJAR_variable
-        }
-      }
-      for (let x in pat.optional) { resetOutliner(pat.optional[x]) }
-    }
-    resetOutliner(myQuery.pat)
-    UI.utils.clearVariableNames()
-    queries[0] = myQuery = new QueryObj()
-  }
-*/
   function addButtonCallbacks (target, fireOn) {
     UI.log.debug('Button callbacks for ' + fireOn + ' added')
     const makeIconCallback = function (icon) {
       return function IconCallback (req) {
         if (req.indexOf('#') >= 0) {
-          console.log(
-            '@@ makeIconCallback: Not expecting # in URI whose state changed: ' +
-              req
-          )
           // alert('Should have no hash in '+req)
         }
         if (!target) {
@@ -1434,6 +942,8 @@ export default function (context) {
     }
   }
 
+  /* global alert XPathResult sourceWidget */
+
   this.showSource = function showSource () {
     if (typeof sourceWidget === 'undefined') return
     // deselect all before going on, this is necessary because you would switch tab,
@@ -1443,7 +953,6 @@ export default function (context) {
     } // .class doesn't work. Be careful!
     for (let i = 0; i < selection.length; i++) {
       if (!selection[i].parentNode) {
-        console.log('showSource: EH? no parentNode? ' + selection[i] + '\n')
         continue
       }
       const st = selection[i].parentNode.AJAR_statement
@@ -1795,28 +1304,6 @@ export default function (context) {
     } // end of switch
 
     showURI(UI.utils.getAbout(kb, selection[0]))
-    // alert(window);alert(doc);
-    /*
-    var wm = Components.classes['@mozilla.org/appshell/window-mediator;1']
-               .getService(Components.interfaces.nsIWindowMediator);
-    var gBrowser = wm.getMostRecentWindow('navigator:browser') */
-    // gBrowser.addTab('http://www.w3.org/');
-    // alert(gBrowser.addTab);alert(gBrowser.scroll);alert(gBrowser.scrollBy)
-    // gBrowser.scrollBy(0,100);
-
-    // var thisHtml=selection[0].owner
-    if (selection[0]) {
-      const PosY = UI.utils.findPos(selection[0])[1]
-      if (
-        PosY + selection[0].clientHeight >
-        window.scrollY + window.innerHeight
-      ) {
-        UI.utils.getEyeFocus(selection[0], true, true, window)
-      }
-      if (PosY < window.scrollY + 54) {
-        UI.utils.getEyeFocus(selection[0], true, undefined, window)
-      }
-    }
   }
   this.OutlinerMouseclickPanel = function (e) {
     switch (thisOutline.UserInput._tabulatorMode) {
@@ -2352,22 +1839,29 @@ export default function (context) {
 
   /** Display the subject in an outline view
 
-  @param subject -- RDF term for teh thing to be presented
+  @param subject -- RDF term for the thing to be presented
   @param expand  -- flag -- open the subject rather than keep folded closed
   @param pane    -- optional -- pane to be used for expanded display
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
   @param table   -- option  -- default is an HTML table element in which to put the outline.
+  @param showNavbar -- optional -- when false, suppress automatic navbar reveal
 */
-  this.GotoSubject = function (subject, expand, pane, solo, referrer, table) {
-    table = table || getOutlineContainer('OutlineView') // if does not exist create a compatible host in the current shell
+  this.GotoSubject = function (subject, expand, pane, solo, referrer, table, showNavbar = true) {
+    const outlineContainer = getOutlineContainer()
+    if (showNavbar && (!table || table === outlineContainer)) {
+      showSolidPanesNavbar()
+    }
+
+    table = table || outlineContainer // if does not exist create a compatible host in the current shell
     if (solo) {
       UI.utils.emptyNode(table)
       table.style.width = '100%'
     }
 
     function GotoSubjectDefault () {
-      const tr = dom.createElement('TR')
+      const tr = dom.createElement('tr')
+      tr.classList.add('outlineRow1')
       tr.style.verticalAlign = 'top'
       table.appendChild(tr)
       const td = thisOutline.outlineObjectTD(subject, undefined, tr)
@@ -2384,28 +1878,31 @@ export default function (context) {
         pane,
         solo
       })
-      const tr = td.parentNode
-      UI.utils.getEyeFocus(tr, false, undefined, window) // instantly: false
     }
 
     if (
       solo &&
       dom &&
       dom.defaultView &&
-      dom.defaultView.history &&
-      // Don't add the new location to the history if we arrived here through a direct link
-      // (i.e. when static/databrowser.html in node-solid-server called this method):
-      document.location.href !== subject.uri
+      dom.defaultView.history
     ) {
-      const stateObj = pane ? { paneName: pane.name } : {}
+      const currentState = dom.defaultView.history.state || {}
+      const paneState = pane ? { paneName: pane.name } : {}
+      if (pane && pane.subject && typeof pane.subject.uri === 'string') {
+        paneState.paneUri = pane.subject.uri
+      }
+      const stateObj = { ...currentState, ...paneState }
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
         if (currentUrl.origin === targetUrl.origin) {
-          dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+          if (document.location.href !== subject.uri) {
+            dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+          } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
+            dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
+          }
         }
       } catch (e) {
-        console.log(e)
       }
     }
 
@@ -2420,8 +1917,6 @@ export default function (context) {
   //
   // / /////////////////////////////////////////////////////
 
-  const ns = UI.ns
-
   const views = propertyViews(dom)
 
   // var thisOutline = this   dup
@@ -2432,24 +1927,19 @@ export default function (context) {
     let rep // representation in html
 
     if (obj.termType === 'Literal') {
-      const styles = {
-        integer: 'text-align: right;',
-        decimal: 'text-align: \'.\';',
-        double: 'text-align: \'.\';'
-      }
       rep = dom.createElement('span')
+      rep.classList.add('objectValue', 'objectValue--literal')
       rep.textContent = obj.value
       // Newlines have effect and overlong lines wrapped automatically
-      let style = ''
       if (obj.datatype && obj.datatype.uri) {
         const xsd = UI.ns.xsd('').uri
         if (obj.datatype.uri.slice(0, xsd.length) === xsd) {
-          style = styles[obj.datatype.uri.slice(xsd.length)]
+          rep.classList.add('objectValue--' + obj.datatype.uri.slice(xsd.length))
         }
       }
-      rep.setAttribute('style', style || 'white-space: pre-wrap;')
     } else if (obj.termType === 'NamedNode' || obj.termType === 'BlankNode') {
       rep = dom.createElement('span')
+      rep.classList.add('objectValue', 'objectValue--resource')
       rep.setAttribute('about', obj.toNT())
       thisOutline.appendAccessIcons(kb, rep, obj)
 
@@ -2469,10 +1959,14 @@ export default function (context) {
           )
           rep.appendChild(anchor)
           anchor.firstChild.setAttribute('class', 'phoneIcon')
+          anchor.firstChild.classList.add('objectValueLinkIcon')
         } else {
           // not tel:
           rep.appendChild(dom.createTextNode(UI.utils.label(obj)))
           const anchor = UI.widgets.linkIcon(dom, obj)
+          if (anchor.firstChild) {
+            anchor.firstChild.classList.add('objectValueLinkIcon')
+          }
           rep.appendChild(anchor)
           UI.widgets.makeDraggable(rep, obj) // 2017
         }

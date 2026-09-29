@@ -9,7 +9,7 @@
   min-width: 100%;
   box-sizing: border-box;
   max-width: none;
-  margin: 0;
+  margin-top: 20px;
 }
 
 .social-pane__header-content {
@@ -981,12 +981,6 @@
 
 /* From tabbedtab.css */
 /* ***************** Social Pane **********/
-
-div.social-pane {
-  padding-top: 0;
-  padding-bottom: 0;
-  margin: 0;
-}
 
 .social-pane a {
   color: var(--color-primary, #7C4DFF);

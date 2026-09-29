@@ -1,12 +1,12 @@
 import { Fetcher, IndexedFormula, NamedNode } from 'rdflib'
-import { loadProfileFromURI, getName } from '../profileUtils/ownerProfile'
+import { loadProfileFromURI, getName } from '../utils/webIdUtils'
 
 export async function generateHomepage (
   uri: NamedNode,
   store: IndexedFormula,
   fetcher: Fetcher
 ): Promise<HTMLElement> {
-  const ownersProfile = await loadProfileFromURI(uri, store, fetcher)
+  const ownersProfile = await loadProfileFromURI(uri)
   const name = getName(store, ownersProfile)
 
   const wrapper = document.createElement('div')

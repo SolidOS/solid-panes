@@ -1,4 +1,4 @@
-/* eslint-env jest */
+import { describe, expect, it } from 'vitest'
 import * as $rdf from 'rdflib'
 import solidNamespace from 'solid-namespace'
 import { generateRandomString, getStatementsToDelete, getStatementsToAdd } from '../../../src/trustedApplications/trustedApplications.utils'
