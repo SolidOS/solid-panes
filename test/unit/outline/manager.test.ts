@@ -32,7 +32,7 @@ const mockPaneRegistry = {
 }
 
 describe('manager', () => {
-  describe('outline object td', () => {
+  describe('outline object div', () => {
     describe('for a named node', () => {
       let result
       beforeAll(() => {
@@ -40,11 +40,11 @@ describe('manager', () => {
         const row = document.createElement('tr')
         table.appendChild(row)
         const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
-        result = manager.outlineObjectTD(sym('https://namednode.example/'), null, null, null)
+        result = manager.outlineObjectDiv(sym('https://namednode.example/'), null, null, null)
         row.appendChild(result)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('about attribute refers to node', () => {
         expect(result).toHaveAttribute('about', '<https://namednode.example/>')
@@ -95,10 +95,10 @@ describe('manager', () => {
       let result
       beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
-        result = manager.outlineObjectTD(sym('tel:+1-201-555-0123'), null, null, null)
+        result = manager.outlineObjectDiv(sym('tel:+1-201-555-0123'), null, null, null)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('about attribute refers to tel uri', () => {
         expect(result).toHaveAttribute('about', '<tel:+1-201-555-0123>')
@@ -142,10 +142,10 @@ describe('manager', () => {
       let result
       beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
-        result = manager.outlineObjectTD(lit('some text'), null, null, null)
+        result = manager.outlineObjectDiv(lit('some text'), null, null, null)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('has no about attribute', () => {
         expect(result).not.toHaveAttribute('about')
@@ -172,10 +172,10 @@ describe('manager', () => {
       let result
       beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
-        result = manager.outlineObjectTD(blankNode('blank-node'), null, null, null)
+        result = manager.outlineObjectDiv(blankNode('blank-node'), null, null, null)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('has about attribute', () => {
         expect(result).toHaveAttribute('about', '_:blank-node')
@@ -191,6 +191,17 @@ describe('manager', () => {
       })
       it('shows 3 dots', () => {
         expect(result).toHaveTextContent('...')
+      })
+    })
+
+    describe('outlineObjectTD compatibility alias', () => {
+      it('returns the same div-based object block', () => {
+        const manager = new OutlineManager({ dom: document })
+        const result = manager.outlineObjectTD(sym('https://alias.example/'), null, null, null)
+
+        expect(result.nodeName).toBe('DIV')
+        expect(result).toHaveAttribute('about', '<https://alias.example/>')
+        expect(result).toHaveClass('obj')
       })
     })
   })
