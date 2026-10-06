@@ -4,6 +4,7 @@ import { createHeadingEditDialog, getViewerMode, presentProfile } from 'profile-
 import type { ProfileDetails } from 'profile-pane'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
+import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
 const PROFILE_HEADING_TAG = 'solid-panes-profile-heading'
 const PROFILE_HEADING_MOUNT_ID = 'profile-heading-mount'
@@ -93,15 +94,30 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   }
 
   if (!paneName || !PROFILE_PANE_NAMES.has(paneName)) {
-    refreshRequest++
-    loadingPaneKey = ''
-    displayedPaneKey = ''
-    mount.hidden = true
-    mount.replaceChildren()
-    return
+    const navbar = document.querySelector('solid-panes-navbar') as (HTMLElement & {
+      navbarItems?: NavbarMenuItem[]
+    }) | null
+    const selectedNavbarItem = navbar?.navbarItems?.find(item => item.paneName === paneName)
+    const viewer = authn.currentUser()
+    const viewedProfileUri = selectedNavbarItem?.profileSubjectUri
+    if (!viewedProfileUri || viewedProfileUri === viewer?.value) {
+      refreshRequest++
+      loadingPaneKey = ''
+      displayedPaneKey = ''
+      mount.hidden = true
+      mount.replaceChildren()
+      return
+    }
   }
 
-  const subjectUri = window.history.state?.paneUri || window.location.href
+  const navbar = document.querySelector('solid-panes-navbar') as (HTMLElement & {
+    navbarItems?: NavbarMenuItem[]
+  }) | null
+  const selectedNavbarItem = navbar?.navbarItems?.find(item => item.paneName === paneName)
+  const subjectUri = PROFILE_PANE_NAMES.has(paneName)
+    ? window.history.state?.paneUri || selectedNavbarItem?.profileSubjectUri || window.location.href
+    : selectedNavbarItem?.profileSubjectUri
+  if (!subjectUri) return
   const paneKey = `${paneName}:${subjectUri}`
   if (paneKey === displayedPaneKey || paneKey === loadingPaneKey) return
 

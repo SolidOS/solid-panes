@@ -193,6 +193,47 @@ describe('page-level profile heading', () => {
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).not.toBeNull()
   })
 
+  it('keeps another person\'s heading visible on their other navbar panes', async () => {
+    const subject = sym('https://another-profile-heading.example/profile/card#me')
+    const storage = sym('https://profile-heading.example/storage/')
+    const viewer = sym('https://viewer.example/profile/card#me')
+    store.add(subject, ns.vcard('fn'), lit('Another Person'), subject.doc())
+
+    const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & {
+      navbarItems?: Array<{ paneName: string, profileSubjectUri: string }>
+    }
+    navbar.navbarItems = [{
+      paneName: 'folder',
+      profileSubjectUri: subject.value
+    }]
+    mainContent.appendChild(navbar)
+    document.body.appendChild(mainContent)
+    window.history.replaceState({
+      paneName: 'folder',
+      paneUri: storage.value
+    }, '', '/')
+
+    await refreshProfileHeading(true)
+
+    const mount = document.getElementById('profile-heading-mount')
+    const heading = mount?.querySelector('solid-panes-profile-heading') as (HTMLElement & {
+      profileData?: { name: string }
+      canEdit?: boolean
+      updateComplete?: Promise<unknown>
+    }) | null
+    await heading?.updateComplete
+
+    expect(mount?.hidden).toBe(false)
+    expect(heading?.profileData?.name).toBe('Another Person')
+    expect(heading?.canEdit).toBe(false)
+    expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
+
+    currentUser.mockRestore()
+  })
+
   it('hides the mount for panes other than profile and social', async () => {
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'

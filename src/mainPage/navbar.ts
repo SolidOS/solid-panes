@@ -21,11 +21,15 @@ function showNavbar () {
 
 function createNavItem (
   label: string,
+  paneName: string,
+  profileSubjectUri: string,
   onSelected: () => void,
   selected = false
 ): NavbarMenuItem {
   return {
     label,
+    paneName,
+    profileSubjectUri,
     onSelected () {
       showNavbar()
       return onSelected()
@@ -48,11 +52,11 @@ async function createNavbarMenuItems (
 
   if (webId) {
     menuItems.push(
-      createNavItem('Profile', async () => {
+      createNavItem('Profile', 'profile', webId.value, async () => {
         const profilePane = await getProfilePaneFromURI(webId)
         outliner.GotoSubject(subject, true, profilePane, true, undefined, outlineView)
       }, selectedPane === 'profile'),
-      createNavItem('Friends', async () => {
+      createNavItem('Friends', 'social', webId.value, async () => {
         const socialPane = await getSocialPaneFromURI(webId)
         outliner.GotoSubject(subject, true, socialPane, true, undefined, outlineView)
       }, selectedPane === 'social')
@@ -64,6 +68,8 @@ async function createNavbarMenuItems (
     menuItems.push(
       createNavItem(
         pane.label(),
+        pane.paneName,
+        webId?.value ?? '',
         async () => {
           outliner.GotoSubject(subject, true, pane, true, undefined, outlineView)
         },
