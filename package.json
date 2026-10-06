@@ -68,7 +68,7 @@
     "meeting-pane": "4.0.0",
     "mime-types": "^3.0.2",
     "pane-registry": "5.0.1",
-    "profile-pane": "4.0.0",
+    "profile-pane": "4.1.0",
     "rdflib": "2.4.1",
     "solid-logic": "6.0.0",
     "solid-namespace": "^0.5.4",

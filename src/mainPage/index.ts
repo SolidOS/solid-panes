@@ -11,6 +11,7 @@ import { createHeader } from './header'
 import { createNavbar } from './navbar'
 import { getProfilePaneFromURI } from '../utils/paneUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
+import { initializeProfileHeading, refreshProfileHeading } from './profileHeading'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
@@ -40,6 +41,7 @@ export async function initMainPage (
   environment?: RenderEnvironment
 ) {
   ensureMainContent()
+  initializeProfileHeading()
   const outliner = getOutliner(document, environment)
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
@@ -54,6 +56,7 @@ export async function initMainPage (
       : undefined)
 
   outliner.GotoSubject(subject, true, initialPane, true, undefined, undefined, true, false)
+  await refreshProfileHeading()
 
   const header = await createHeader(outliner)
   const navbar = await createNavbar(outliner)
@@ -81,6 +84,7 @@ export async function refreshUI (outliner: OutlineManager) {
 
   if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
     outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined, undefined, true, false)
+    await refreshProfileHeading()
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
 }
