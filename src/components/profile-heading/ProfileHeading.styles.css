@@ -70,9 +70,11 @@
   box-sizing: border-box;
 }
 
-.hero-fallback svg {
+.hero-fallback icon-lucide-circle-user-round {
   display: block;
   width: 100%;
+  height: 100%;
+  color: #cbd5e1;
 }
 
 .image-frame--fallback .hero-fallback {
@@ -117,10 +119,10 @@
   transform: translateY(0);
 }
 
-.profile__add-more-icon svg {
+.profile__add-more-icon icon-lucide-pencil {
   display: block;
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 14px;
+  height: 14px;
 }
 
 .header-bar {
@@ -203,15 +205,14 @@
   margin-top: 1px;
 }
 
-.detail-icon svg {
+.detail-icon > icon-lucide-calendar-days,
+.detail-icon > icon-lucide-map-pin,
+.detail-icon > icon-lucide-phone,
+.detail-icon > icon-lucide-mail {
   display: block;
   width: 16px;
   height: 16px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  color: currentColor;
 }
 
 .detail-value {
@@ -272,7 +273,7 @@
     padding: 0;
   }
 
-  .hero-fallback svg {
+  .hero-fallback icon-lucide-circle-user-round {
     width: 3rem;
     height: 3rem;
   }

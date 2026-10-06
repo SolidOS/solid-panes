@@ -62,7 +62,7 @@ describe('page-level profile heading', () => {
     expect(heading?.profileData?.name).toBe('Profile Heading Test')
     expect(heading?.shadowRoot?.querySelector('h1')?.textContent).toBe('Profile Heading Test')
     expect(heading?.shadowRoot?.querySelector('.image-frame')).toHaveClass('image-frame--fallback')
-    expect(heading?.shadowRoot?.querySelectorAll('.hero-fallback svg path')).toHaveLength(3)
+    expect(heading?.shadowRoot?.querySelector('.hero-fallback icon-lucide-circle-user-round')).not.toBeNull()
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
   })
 
@@ -83,11 +83,37 @@ describe('page-level profile heading', () => {
     expect(desktopEditButton).toHaveAttribute('variant', 'tertiary')
     const mobileEditButton = heading.shadowRoot?.querySelector('.mobile-edit-button')
     expect(mobileEditButton).toHaveAttribute('variant', 'ghost')
-    expect(mobileEditButton?.querySelector('svg')).toHaveAttribute('width', '14')
-    expect(mobileEditButton?.querySelector('svg')).toHaveAttribute('height', '14')
+    expect(mobileEditButton?.querySelector('icon-lucide-pencil')).not.toBeNull()
     desktopEditButton?.click()
 
     expect(editRequested).toHaveBeenCalledOnce()
+  })
+
+  it('renders Lucide icons for profile detail rows', async () => {
+    const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
+      profileData?: {
+        name: string
+        dateOfBirth: string
+        location: string
+        primaryPhone: { valueNode: ReturnType<typeof lit> }
+        primaryEmail: { valueNode: ReturnType<typeof lit> }
+      }
+      updateComplete?: Promise<unknown>
+    }
+    heading.profileData = {
+      name: 'Profile Heading Test',
+      dateOfBirth: '2001-02-03',
+      location: 'Example City',
+      primaryPhone: { valueNode: lit('tel:+123456789') },
+      primaryEmail: { valueNode: lit('mailto:person@example.com') }
+    }
+    document.body.appendChild(heading)
+    await heading.updateComplete
+
+    expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-calendar-days')).not.toBeNull()
+    expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-map-pin')).not.toBeNull()
+    expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-phone')).not.toBeNull()
+    expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-mail')).not.toBeNull()
   })
 
   it('rechecks owner edit access after a restored session', async () => {
