@@ -159,6 +159,40 @@ describe('page-level profile heading', () => {
     checkUser.mockRestore()
   })
 
+  it('only enables heading editing on the profile pane', async () => {
+    getViewerModeMock.mockReset().mockResolvedValue('owner')
+    const subject = sym('https://profile-heading.example/profile/card#me')
+    store.add(subject, ns.vcard('fn'), lit('Profile Heading Test'), subject.doc())
+
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+
+    window.history.replaceState({
+      paneName: 'social',
+      paneUri: subject.value
+    }, '', '/')
+    await refreshProfileHeading(true)
+
+    const heading = document.querySelector('solid-panes-profile-heading') as (HTMLElement & {
+      canEdit?: boolean
+      updateComplete?: Promise<unknown>
+    }) | null
+    await heading?.updateComplete
+    expect(heading?.canEdit).toBe(false)
+    expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
+
+    window.history.replaceState({
+      paneName: 'profile',
+      paneUri: subject.value
+    }, '', '/')
+    await refreshProfileHeading(true)
+    await heading?.updateComplete
+
+    expect(heading?.canEdit).toBe(true)
+    expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).not.toBeNull()
+  })
+
   it('hides the mount for panes other than profile and social', async () => {
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'

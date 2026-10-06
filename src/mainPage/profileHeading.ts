@@ -22,6 +22,8 @@ function installEditListener (heading: HTMLElement & { canEdit?: boolean }) {
   if (editListeners.has(heading)) return
 
   heading.addEventListener('solid-panes-profile-heading-edit', (event) => {
+    if (window.history.state?.paneName !== 'profile') return
+
     const subjectUri = window.history.state?.paneUri || window.location.href
     loadProfileFromURI(store.sym(subjectUri))
       .then(async (subject) => {
@@ -111,7 +113,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   try {
     subject = await loadProfileFromURI(store.sym(subjectUri))
     profileData = presentProfile(subject, store)
-    canEdit = await getViewerMode(subject) === 'owner'
+    canEdit = paneName === 'profile' && await getViewerMode(subject) === 'owner'
   } catch (error) {
     if (request === refreshRequest) loadingPaneKey = ''
     throw error
