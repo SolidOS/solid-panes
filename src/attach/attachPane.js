@@ -37,7 +37,7 @@ export default {
       QU('Transaction') in kb.findSuperClassesNT(subject) ||
       kb.holds(subject, WF('attachment'))
     ) {
-      return 'attachments'
+      return 'Attachments'
     }
     return null
   },

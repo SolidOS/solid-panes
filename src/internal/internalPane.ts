@@ -16,7 +16,7 @@ const pane: PaneDefinition = {
   name: 'internal',
 
   label: function () {
-    return 'under the hood' // There is often a URI even of no statements
+    return 'Under The Hood' // There is often a URI even of no statements
   },
 
   render: function (subject, context) {

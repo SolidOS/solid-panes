@@ -39,9 +39,9 @@ const sharingPane = {
     function getNoun () {
       const t = store.findTypeURIs(subject)
       if (t[ns.ldp('BasicContainer').uri] || t[ns.ldp('Container').uri]) {
-        return 'folder'
+        return 'Folder'
       }
-      return 'file'
+      return 'File'
     }
   }
 }

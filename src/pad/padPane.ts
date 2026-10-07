@@ -20,7 +20,7 @@ const paneDef: PaneDefinition = {
     // @ts-ignore
     const t = (context.session.store as Store).findTypeURIs(subject)
     if (t['http://www.w3.org/ns/pim/pad#Notepad']) {
-      return 'pad'
+      return 'Notepad'
     }
     return null // No under other circumstances
   },

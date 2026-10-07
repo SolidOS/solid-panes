@@ -27,7 +27,7 @@ export default {
       return null
     }
 
-    return 'playlist slot'
+    return 'Playlist Slot'
   },
 
   render: function (subject, context) {

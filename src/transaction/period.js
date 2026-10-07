@@ -19,7 +19,7 @@ export default {
   label: function (subject, context) {
     const kb = context.session.store
     const t = kb.findTypeURIs(subject)
-    if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) return 'period'
+    if (t['http://www.w3.org/2000/10/swap/pim/qif#Period']) return 'Period'
     return null // No under other circumstances (while testing at least!)
   },
 

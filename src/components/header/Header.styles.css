@@ -5,6 +5,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    box-sizing: border-box;
     background: var(--solid-ui-color-slate-800);
     color: var(--solid-ui-color-white);
     padding: 7px 20px;
@@ -29,6 +30,8 @@
     }
 
     @media (--solid-ui-mobile) {
+        padding: 0 16px 10px 16px;
+
         a.logo,
         solid-ui-menu,
         .separator {

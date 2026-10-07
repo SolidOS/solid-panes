@@ -55,12 +55,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('uses main inline layout styles', () => {
-        expect(result).toHaveStyle({
-          margin: '0.2em',
-          padding: '0px',
-          verticalAlign: 'top'
-        })
+      it('uses object cell class for layout styling', () => {
+        expect(result).toHaveClass('obj')
       })
       it('shows an expand icon', () => {
         const img = result.firstChild
@@ -113,12 +109,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('uses main inline layout styles', () => {
-        expect(result).toHaveStyle({
-          margin: '0.2em',
-          padding: '0px',
-          verticalAlign: 'top'
-        })
+      it('uses object cell class for layout styling', () => {
+        expect(result).toHaveClass('obj')
       })
       it('shows an expand icon', () => {
         const img = result.firstChild
@@ -164,19 +156,15 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('uses main inline layout styles', () => {
-        expect(result).toHaveStyle({
-          margin: '0.2em',
-          padding: '0px',
-          verticalAlign: 'top'
-        })
+      it('uses object cell class for layout styling', () => {
+        expect(result).toHaveClass('obj')
       })
       it('shows the literal text', () => {
         expect(result).toHaveTextContent('some text')
       })
-      it('literal text preserves white space', () => {
+      it('literal text uses literal styling class', () => {
         const text = getByText(result, 'some text')
-        expect(text).toHaveStyle('white-space: pre-wrap;')
+        expect(text).toHaveClass('objectValue--literal')
       })
     })
 
@@ -198,12 +186,8 @@ describe('manager', () => {
       it('is selectable', () => {
         expect(result).toHaveAttribute('notselectable', 'false')
       })
-      it('uses main inline layout styles', () => {
-        expect(result).toHaveStyle({
-          margin: '0.2em',
-          padding: '0px',
-          verticalAlign: 'top'
-        })
+      it('uses object cell class for layout styling', () => {
+        expect(result).toHaveClass('obj')
       })
       it('shows 3 dots', () => {
         expect(result).toHaveTextContent('...')
