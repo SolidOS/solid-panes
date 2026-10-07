@@ -4,6 +4,7 @@ import { createHeadingEditDialog, getViewerMode, presentProfile } from 'profile-
 import type { ProfileDetails } from 'profile-pane'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
+import './profileHeading.css'
 import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
 const PROFILE_HEADING_TAG = 'solid-panes-profile-heading'
@@ -20,6 +21,95 @@ let displayedPaneKey = ''
 let displayedSubjectUri = ''
 let loadingPaneKey = ''
 const editListeners = new WeakSet<HTMLElement>()
+const hideAnimations = new WeakMap<HTMLElement, Animation>()
+const showAnimations = new WeakMap<HTMLElement, Animation>()
+
+function showHeading (mount: HTMLElement): void {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
+      typeof mount.animate !== 'function') return
+
+  const style = getComputedStyle(mount)
+  const animation = mount.animate([
+    { height: '0px', opacity: 0, marginTop: '0px', marginBottom: '0px', overflow: 'hidden' },
+    {
+      height: `${mount.getBoundingClientRect().height}px`,
+      opacity: 1,
+      marginTop: style.marginTop,
+      marginBottom: style.marginBottom,
+      overflow: 'hidden'
+    }
+  ], { duration: 300, easing: 'ease', fill: 'both' })
+  showAnimations.set(mount, animation)
+  const finish = () => {
+    if (showAnimations.get(mount) !== animation) return
+    showAnimations.delete(mount)
+    animation.cancel()
+  }
+  animation.finished.then(finish, (error: unknown) => {
+    if (showAnimations.get(mount) !== animation) return
+    console.error('Failed to animate profile heading appearance.', error)
+    finish()
+  })
+}
+
+function cancelHeadingHide (mount: HTMLElement): void {
+  const animation = hideAnimations.get(mount)
+  hideAnimations.delete(mount)
+  animation?.cancel()
+  mount.inert = false
+  mount.removeAttribute('aria-hidden')
+}
+
+function hideHeading (mount: HTMLElement): void {
+  if (hideAnimations.has(mount)) return
+
+  const style = getComputedStyle(mount)
+  const height = mount.getBoundingClientRect().height
+  const opacity = style.opacity
+  const marginTop = style.marginTop
+  const marginBottom = style.marginBottom
+  const showing = showAnimations.get(mount)
+  showAnimations.delete(mount)
+  showing?.cancel()
+
+  const finish = () => {
+    mount.hidden = true
+    mount.replaceChildren()
+  }
+  mount.inert = true
+  mount.setAttribute('aria-hidden', 'true')
+
+  if (mount.hidden || !mount.firstElementChild ||
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
+      typeof mount.animate !== 'function') {
+    finish()
+    return
+  }
+
+  const animation = mount.animate([
+    {
+      height: `${height}px`,
+      opacity,
+      marginTop,
+      marginBottom,
+      overflow: 'hidden'
+    },
+    { height: '0px', opacity: 0, marginTop: '0px', marginBottom: '0px', overflow: 'hidden' }
+  ], { duration: 300, easing: 'ease', fill: 'forwards' })
+  hideAnimations.set(mount, animation)
+  animation.finished.then(() => {
+    if (hideAnimations.get(mount) !== animation) return
+    finish()
+    hideAnimations.delete(mount)
+    animation.cancel()
+  }, (error: unknown) => {
+    if (hideAnimations.get(mount) !== animation) return
+    console.error('Failed to animate profile heading disappearance.', error)
+    finish()
+    hideAnimations.delete(mount)
+    animation.cancel()
+  })
+}
 
 function installEditListener (heading: HTMLElement & { canEdit?: boolean }) {
   if (editListeners.has(heading)) return
@@ -63,8 +153,6 @@ function ensureMountPoint (): HTMLElement | null {
     mount = document.createElement('div')
     mount.id = PROFILE_HEADING_MOUNT_ID
     mount.setAttribute('aria-label', 'Profile heading')
-    mount.style.marginBottom = '20px'
-    mount.style.marginTop = '18px'
   }
 
   const navbar = document.querySelector('solid-panes-navbar')
@@ -107,8 +195,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
       loadingPaneKey = ''
       displayedPaneKey = ''
       displayedSubjectUri = ''
-      mount.hidden = true
-      mount.replaceChildren()
+      hideHeading(mount)
       return
     }
   }
@@ -121,6 +208,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     ? window.history.state?.paneUri || selectedNavbarItem?.profileSubjectUri || window.location.href
     : selectedNavbarItem?.profileSubjectUri
   if (!subjectUri) return
+  cancelHeadingHide(mount)
   const paneKey = `${paneName}:${subjectUri}`
   if (paneKey === displayedPaneKey || paneKey === loadingPaneKey) return
 
@@ -143,15 +231,25 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     document.createElement(PROFILE_HEADING_TAG)) as HTMLElement & {
       profileData?: ProfileDetails
       canEdit?: boolean
+      compact?: boolean
+      updateComplete?: Promise<unknown>
     }
   installEditListener(heading)
   heading.profileData = profileData
   heading.canEdit = canEdit
+  heading.compact = paneName !== 'profile'
+  const appearing = mount.hidden || !mount.firstElementChild
   mount.hidden = false
   if (heading.parentNode !== mount) mount.replaceChildren(heading)
   displayedPaneKey = paneKey
   displayedSubjectUri = subject.value
   loadingPaneKey = ''
+  if (appearing) {
+    await heading.updateComplete
+    if (request === refreshRequest && mount.isConnected && !mount.hidden && !hideAnimations.has(mount)) {
+      showHeading(mount)
+    }
+  }
 }
 
 export function initializeProfileHeading (): void {

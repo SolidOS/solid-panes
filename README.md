@@ -49,6 +49,25 @@ Volunteers are always welcome!
 - [Visual Language](https://solidos.github.io/solid-panes/Documentation/VisualLanguage.html)
 - [Conventions](./Documentation/conventions.md)
 
+### Profile heading
+
+The `solid-panes-profile-heading` component accepts presentation data through
+`profileData`. Its boolean `compact` property (also available as an attribute)
+halves the responsive avatar size and shows only the photo, name, and job title.
+The page controller uses the full heading on the profile pane and compact mode
+on every other pane where the heading is visible. Owner editing remains exclusive
+to the profile pane.
+
+Navigation reuses the mounted heading, with a 300ms CSS transition for the avatar,
+padding, and detail rows in both directions. Transitions are disabled when the
+user prefers reduced motion.
+When navigating to a pane without a heading, the entire heading fades and
+collapses (including its outer spacing) over 300ms before removal. Navigating
+back during that animation cancels it and reuses the existing component.
+The reverse navigation fades and expands the full or compact heading and its
+outer spacing over 300ms, after the component has rendered. Reduced-motion users
+get immediate appearance and removal instead.
+
 ## Development
 
 To get started, make sure you have Node.js installed (for instance through [nvm](https://github.com/nvm-sh/nvm)), then:

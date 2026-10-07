@@ -159,6 +159,57 @@ describe('page-level profile heading', () => {
     checkUser.mockRestore()
   })
 
+  it('hides extra information and editing in compact mode, then restores the full heading', async () => {
+    const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
+      profileData: {
+        name: string
+        jobTitle: string
+        pronouns: string
+        dateOfBirth: string
+        location: string
+        primaryEmail: { valueNode: ReturnType<typeof sym> }
+      }
+      compact: boolean
+      canEdit: boolean
+      updateComplete: Promise<unknown>
+    }
+    heading.profileData = {
+      name: 'Compact Heading Test',
+      jobTitle: 'Engineer',
+      pronouns: 'she/her',
+      dateOfBirth: '2000-01-02',
+      location: 'Paris, France',
+      primaryEmail: { valueNode: sym('mailto:compact@example.com') }
+    }
+    heading.canEdit = true
+    document.body.appendChild(heading)
+    await heading.updateComplete
+    const avatar = heading.shadowRoot?.querySelector('.image-frame')
+    const details = heading.shadowRoot?.querySelector('.details-collapse')
+    expect(details).toHaveAttribute('aria-hidden', 'false')
+    expect(heading.shadowRoot?.querySelector('.pronouns')).not.toHaveAttribute('hidden')
+
+    heading.compact = true
+    await heading.updateComplete
+    expect(heading).toHaveAttribute('compact')
+    expect(details).toHaveAttribute('aria-hidden', 'true')
+    expect(details).toHaveAttribute('inert')
+    expect(heading.shadowRoot?.querySelector('.pronouns')).toHaveAttribute('hidden')
+    expect(heading.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
+    expect(heading.shadowRoot?.querySelector('.name')?.textContent).toBe('Compact Heading Test')
+    expect(heading.shadowRoot?.querySelector('.role')?.textContent).toBe('Engineer')
+    expect(heading.shadowRoot?.querySelector('.image-frame')).toBe(avatar)
+
+    heading.compact = false
+    await heading.updateComplete
+    expect(heading).not.toHaveAttribute('compact')
+    expect(details).not.toHaveAttribute('inert')
+    expect(details).toHaveAttribute('aria-hidden', 'false')
+    expect(heading.shadowRoot?.querySelector('.pronouns')).not.toHaveAttribute('hidden')
+    expect(heading.shadowRoot?.querySelector('.profile__heading-edit-action')).not.toBeNull()
+    expect(heading.shadowRoot?.querySelector('.image-frame')).toBe(avatar)
+  })
+
   it('only enables heading editing on the profile pane', async () => {
     getViewerModeMock.mockReset().mockResolvedValue('owner')
     const subject = sym('https://profile-heading.example/profile/card#me')
@@ -176,10 +227,12 @@ describe('page-level profile heading', () => {
 
     const heading = document.querySelector('solid-panes-profile-heading') as (HTMLElement & {
       canEdit?: boolean
+      compact?: boolean
       updateComplete?: Promise<unknown>
     }) | null
     await heading?.updateComplete
     expect(heading?.canEdit).toBe(false)
+    expect(heading?.compact).toBe(true)
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
 
     window.history.replaceState({
@@ -190,7 +243,19 @@ describe('page-level profile heading', () => {
     await heading?.updateComplete
 
     expect(heading?.canEdit).toBe(true)
+    expect(heading?.compact).toBe(false)
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).not.toBeNull()
+
+    window.history.replaceState({
+      paneName: 'social',
+      paneUri: subject.value
+    }, '', '/')
+    await refreshProfileHeading()
+    await heading?.updateComplete
+
+    expect(document.querySelector('solid-panes-profile-heading')).toBe(heading)
+    expect(heading?.compact).toBe(true)
+    expect(heading?.canEdit).toBe(false)
   })
 
   it('refreshes the heading job title when the displayed profile saves resume changes', async () => {
@@ -397,6 +462,7 @@ describe('page-level profile heading', () => {
     const heading = mount?.querySelector('solid-panes-profile-heading') as (HTMLElement & {
       profileData?: { name: string }
       canEdit?: boolean
+      compact?: boolean
       updateComplete?: Promise<unknown>
     }) | null
     await heading?.updateComplete
@@ -404,6 +470,7 @@ describe('page-level profile heading', () => {
     expect(mount?.hidden).toBe(false)
     expect(heading?.profileData?.name).toBe('Another Person')
     expect(heading?.canEdit).toBe(false)
+    expect(heading?.compact).toBe(true)
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
 
     currentUser.mockRestore()
@@ -418,5 +485,173 @@ describe('page-level profile heading', () => {
     await refreshProfileHeading()
 
     expect(document.getElementById('profile-heading-mount')?.hidden).toBe(true)
+  })
+
+  it.each(['profile', 'social'])('animates appearance on %s from a pane without a heading', async (paneName) => {
+    const subject = sym(`https://show-${paneName}.example/profile/card#me`)
+    getViewerModeMock.mockResolvedValue('owner')
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({ paneName: 'folder' }, '', '/')
+    await refreshProfileHeading(true)
+    const mount = document.getElementById('profile-heading-mount')!
+    let complete!: () => void
+    const finished = new Promise<void>(resolve => { complete = resolve })
+    const cancel = vi.fn()
+    const animate = vi.fn(() => ({ finished, cancel }))
+    Object.defineProperty(mount, 'animate', { value: animate })
+    window.history.replaceState({ paneName, paneUri: subject.value }, '', '/')
+    await refreshProfileHeading()
+    await refreshProfileHeading()
+
+    expect(animate).toHaveBeenCalledOnce()
+    expect(animate).toHaveBeenCalledWith([
+      expect.objectContaining({ height: '0px', opacity: 0, marginTop: '0px', marginBottom: '0px' }),
+      expect.objectContaining({ opacity: 1, marginTop: '18px', marginBottom: '20px' })
+    ], { duration: 300, easing: 'ease', fill: 'both' })
+    const heading = mount.firstElementChild as HTMLElement & { compact: boolean }
+    expect(heading.compact).toBe(paneName !== 'profile')
+    expect(heading.shadowRoot?.querySelector('.profile-heading')).not.toBeNull()
+    expect(mount.hidden).toBe(false)
+    expect(mount.inert).toBe(false)
+    complete()
+    await finished
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(mount.firstElementChild).toBe(heading)
+    expect(mount.hidden).toBe(false)
+  })
+
+  it('cancels appearance when navigating away before it finishes', async () => {
+    const subject = sym('https://cancel-show.example/profile/card#me')
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({ paneName: 'folder' }, '', '/')
+    await refreshProfileHeading(true)
+    const mount = document.getElementById('profile-heading-mount')!
+    let completeShow!: () => void
+    let completeHide!: () => void
+    const shown = new Promise<void>(resolve => { completeShow = resolve })
+    const hidden = new Promise<void>(resolve => { completeHide = resolve })
+    const cancelShow = vi.fn()
+    const animate = vi.fn()
+      .mockReturnValueOnce({ finished: shown, cancel: cancelShow })
+      .mockReturnValueOnce({ finished: hidden, cancel: vi.fn() })
+    Object.defineProperty(mount, 'animate', { value: animate })
+    window.history.replaceState({ paneName: 'social', paneUri: subject.value }, '', '/')
+    await refreshProfileHeading()
+    window.history.replaceState({ paneName: 'folder' }, '', '/')
+    await refreshProfileHeading()
+    expect(cancelShow).toHaveBeenCalledOnce()
+    expect(animate).toHaveBeenCalledTimes(2)
+    completeShow()
+    await shown
+    expect(mount.hidden).toBe(false)
+    completeHide()
+    await hidden
+    expect(mount.hidden).toBe(true)
+    expect(mount.firstElementChild).toBeNull()
+  })
+
+  it.each(['profile', 'social'])('animates disappearance from %s before removing the heading', async (paneName) => {
+    const subject = sym(`https://hide-${paneName}.example/profile/card#me`)
+    getViewerModeMock.mockResolvedValue('owner')
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({ paneName, paneUri: subject.value }, '', '/')
+    await refreshProfileHeading(true)
+
+    const mount = document.getElementById('profile-heading-mount')!
+    const heading = mount.firstElementChild
+    let complete!: () => void
+    const finished = new Promise<void>(resolve => { complete = resolve })
+    const cancel = vi.fn()
+    const animate = vi.fn(() => ({ finished, cancel }))
+    Object.defineProperty(mount, 'animate', { value: animate })
+    window.history.replaceState({ paneName: 'folder' }, '', '/')
+    await refreshProfileHeading()
+    await refreshProfileHeading()
+
+    expect(animate).toHaveBeenCalledOnce()
+    expect(animate).toHaveBeenCalledWith(expect.arrayContaining([
+      expect.objectContaining({ height: '0px', opacity: 0, marginTop: '0px', marginBottom: '0px' })
+    ]), { duration: 300, easing: 'ease', fill: 'forwards' })
+    expect(mount.hidden).toBe(false)
+    expect(mount.firstElementChild).toBe(heading)
+    expect(mount.inert).toBe(true)
+    expect(mount).toHaveAttribute('aria-hidden', 'true')
+
+    complete()
+    await finished
+    expect(mount.hidden).toBe(true)
+    expect(mount.firstElementChild).toBeNull()
+    expect(cancel).toHaveBeenCalledOnce()
+  })
+
+  it('cancels disappearance when navigating back before it finishes', async () => {
+    const subject = sym('https://cancel-hide.example/profile/card#me')
+    getViewerModeMock.mockResolvedValue('owner')
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({ paneName: 'profile', paneUri: subject.value }, '', '/')
+    await refreshProfileHeading(true)
+
+    const mount = document.getElementById('profile-heading-mount')!
+    const heading = mount.firstElementChild
+    let complete!: () => void
+    const finished = new Promise<void>(resolve => { complete = resolve })
+    const cancel = vi.fn()
+    Object.defineProperty(mount, 'animate', { value: vi.fn(() => ({ finished, cancel })) })
+    window.history.replaceState({ paneName: 'folder' }, '', '/')
+    await refreshProfileHeading()
+    window.history.replaceState({ paneName: 'social', paneUri: subject.value }, '', '/')
+    await refreshProfileHeading()
+    expect(cancel).toHaveBeenCalledOnce()
+    expect(mount.inert).toBe(false)
+    expect(mount).not.toHaveAttribute('aria-hidden')
+
+    complete()
+    await finished
+    expect(mount.hidden).toBe(false)
+    expect(mount.firstElementChild).toBe(heading)
+  })
+
+  it('skips appearance and disappearance animations when reduced motion is requested', async () => {
+    const subject = sym('https://reduced-hide.example/profile/card#me')
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({ paneName: 'social', paneUri: subject.value }, '', '/')
+    await refreshProfileHeading(true)
+    const mount = document.getElementById('profile-heading-mount')!
+    const animate = vi.fn()
+    Object.defineProperty(mount, 'animate', { value: animate })
+    vi.stubGlobal('matchMedia', vi.fn(() => ({
+      matches: true,
+      media: '(prefers-reduced-motion: reduce)',
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn()
+    })))
+    try {
+      window.history.replaceState({ paneName: 'folder' }, '', '/')
+      await refreshProfileHeading()
+      expect(animate).not.toHaveBeenCalled()
+      expect(mount.hidden).toBe(true)
+      expect(mount.firstElementChild).toBeNull()
+      window.history.replaceState({ paneName: 'social', paneUri: subject.value }, '', '/')
+      await refreshProfileHeading()
+      expect(animate).not.toHaveBeenCalled()
+      expect(mount.hidden).toBe(false)
+      expect(mount.firstElementChild).not.toBeNull()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

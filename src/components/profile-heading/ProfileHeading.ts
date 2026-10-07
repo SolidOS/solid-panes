@@ -35,6 +35,9 @@ export default class ProfileHeading extends WebComponent {
   @property({ type: Boolean })
   accessor canEdit = false
 
+  @property({ type: Boolean, reflect: true })
+  accessor compact = false
+
   @state()
   accessor failedImageSrc: string | undefined = undefined
 
@@ -81,15 +84,15 @@ export default class ProfileHeading extends WebComponent {
 
         <div class="info">
           <header class="header-bar">
-            <div class="identity" role="group" aria-label="Name and pronouns">
+            <div class="identity" role="group" aria-label=${this.compact ? 'Name' : 'Name and pronouns'}>
               <h1 id="profile-heading-name" class="name">${profile.name}</h1>
-              ${profile.pronouns ? html`<span class="pronouns">(${profile.pronouns})</span>` : nothing}
+              ${profile.pronouns ? html`<span class="pronouns" ?hidden=${this.compact}>(${profile.pronouns})</span>` : nothing}
             </div>
             ${profile.jobTitle ? html`<div class="role">${profile.jobTitle}</div>` : nothing}
           </header>
         </div>
 
-        ${this.canEdit
+        ${this.canEdit && !this.compact
           ? html`
             <div class="profile__actions profile__heading-edit-action">
               <solid-ui-button
@@ -117,14 +120,16 @@ export default class ProfileHeading extends WebComponent {
           `
           : nothing}
 
-        <div class="details">
-          <div class="detail-row" role="group" aria-label="Additional profile information">
-            ${this.renderLine(dateOfBirth, 'birthday')}
-            ${this.renderLine(profile.location, 'location')}
-          </div>
-          <div class="detail-row" role="group" aria-label="Contact information">
-            ${this.renderLine(phone, 'phone')}
-            ${this.renderLine(email, 'email')}
+        <div class="details-collapse" aria-hidden=${this.compact ? 'true' : 'false'} ?inert=${this.compact}>
+          <div class="details">
+            <div class="detail-row" role="group" aria-label="Additional profile information">
+              ${this.renderLine(dateOfBirth, 'birthday')}
+              ${this.renderLine(profile.location, 'location')}
+            </div>
+            <div class="detail-row" role="group" aria-label="Contact information">
+              ${this.renderLine(phone, 'phone')}
+              ${this.renderLine(email, 'email')}
+            </div>
           </div>
         </div>
       </section>

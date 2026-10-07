@@ -1,4 +1,6 @@
 :host {
+  --profile-avatar-size: 8.75rem;
+  --profile-fallback-padding: 36.4px;
   display: block;
   width: 100%;
   color: var(--color-text-secondary, #4a5565);
@@ -21,7 +23,7 @@
   background: var(--solid-ui-color-white, #fff);
   border: 1px solid var(--solid-ui-color-slate-200, #e2e8f0);
   border-radius: 5px;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, padding 0.3s ease, row-gap 0.3s ease;
 }
 
 .profile-heading:hover {
@@ -36,9 +38,10 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 8.75rem;
+  width: var(--profile-avatar-size);
   aspect-ratio: 1;
   overflow: hidden;
+  transition: width 0.3s ease;
 }
 
 .image-frame--fallback {
@@ -66,8 +69,9 @@
   justify-content: center;
   width: 100%;
   height: 100%;
-  padding: 0 36.4px;
+  padding: 0 var(--profile-fallback-padding);
   box-sizing: border-box;
+  transition: padding 0.3s ease;
 }
 
 .hero-fallback icon-lucide-circle-user-round {
@@ -169,16 +173,56 @@
   overflow-wrap: anywhere;
 }
 
-.details {
+.details-collapse {
   grid-area: details;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.3s ease, opacity 0.3s ease;
+}
+
+.details {
   display: flex;
   flex-wrap: wrap;
   align-content: flex-start;
   align-items: flex-start;
   gap: 12px 32px;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   width: 100%;
   font-size: var(--font-size-sm, 0.875rem);
+}
+
+:host([compact]) .profile-heading {
+  padding: 12.5px;
+  row-gap: 0;
+}
+
+:host([compact]) .image-frame {
+  width: calc(var(--profile-avatar-size) / 2);
+}
+
+:host([compact]) .hero-fallback {
+  padding-inline: calc(var(--profile-fallback-padding) / 2);
+}
+
+:host([compact]) .info {
+  align-self: center;
+}
+
+:host([compact]) .name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+:host([compact]) .details-collapse {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.pronouns[hidden] {
+  display: none;
 }
 
 .detail-row {
@@ -222,30 +266,29 @@
 }
 
 @media (max-width: 1200px) {
+  :host {
+    --profile-avatar-size: 6.5rem;
+    --profile-fallback-padding: 27px;
+  }
+
   .profile-heading {
     column-gap: 15px;
   }
 
-  .image-frame {
-    width: 6.5rem;
-  }
-
-  .hero-fallback {
-    padding: 0 27px;
-  }
 }
 
 @media (max-width: 768px) {
+  :host {
+    --profile-avatar-size: 4.375rem;
+    --profile-fallback-padding: 0px;
+  }
+
   .profile-heading {
     grid-template-areas:
       "avatar info edit"
       "details details details";
     column-gap: 8px;
     row-gap: 12px;
-  }
-
-  .image-frame {
-    width: 4.375rem;
   }
 
   .profile-section-collapsible__edit-button {
@@ -269,13 +312,15 @@
     column-gap: 10px;
   }
 
-  .hero-fallback {
-    padding: 0;
-  }
-
   .hero-fallback icon-lucide-circle-user-round {
     width: 3rem;
     height: 3rem;
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+
+  :host([compact]) .hero-fallback icon-lucide-circle-user-round {
+    width: 1.5rem;
+    height: 1.5rem;
   }
 
   .name {
@@ -308,5 +353,15 @@
 
   .detail-row {
     column-gap: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-heading,
+  .image-frame,
+  .hero-fallback,
+  .hero-fallback icon-lucide-circle-user-round,
+  .details-collapse {
+    transition: none;
   }
 }
