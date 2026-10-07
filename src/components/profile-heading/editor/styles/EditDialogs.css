@@ -137,7 +137,7 @@
 }
 
 .profile-edit-dialog__image-preview-header {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .profile-edit-dialog__image-preview-actions {
@@ -163,27 +163,141 @@
   margin: 0;
 }
 
+.profile-edit-dialog--heading {
+  --profile-edit-dialog-avatar-size: 5.625rem;
+}
+
 .profile-edit-dialog__image-frame {
   position: relative;
   display: inline-block;
+  width: var(--profile-edit-dialog-avatar-size, 5.625rem);
+  height: var(--profile-edit-dialog-avatar-size, 5.625rem);
   line-height: 0;
+  font-size: 0;
+  vertical-align: top;
+  overflow: visible;
+}
+
+.profile-edit-dialog__image-frame > solid-ui-photo-capture {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.profile-edit-dialog__image-frame > solid-ui-photo-capture > * {
+  pointer-events: auto;
+}
+
+.profile__image-frame {
+  position: relative;
+  display: block;
+  width: var(--profile-edit-dialog-avatar-size, 5.625rem);
+  height: var(--profile-edit-dialog-avatar-size, 5.625rem);
+  overflow: hidden;
+  border-radius: 10px;
+  border: 1px solid var(--solid-ui-color-primary, #7c4dff);
+  background: var(--solid-ui-color-slate-50, #F8FAFC);
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+.profile__image-frame--fallback {
+  border: 1px dashed var(--solid-ui-color-slate-200, #E2E8F0);
+  background: var(--solid-ui-color-slate-50, #F8FAFC);
+}
+
+.profile__hero,
+.profile__hero-alt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+}
+
+.profile__hero {
+  object-fit: cover;
+  object-position: center;
+  background: var(--color-surface-placeholder, var(--gray-300, #d1d5dc)) 50% / cover no-repeat;
+}
+
+.profile__hero-alt {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--solid-ui-color-slate-50, #F8FAFC);
+}
+
+.profile__image-frame--fallback .profile__hero-alt {
+  display: flex;
+}
+
+.profile__hero-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1.125rem;
+  box-sizing: border-box;
+}
+
+.profile__hero-icon icon-lucide-circle-user-round,
+.profile__hero-alt icon-lucide-circle-user-round {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  color: #D9E1F2;
 }
 
 .profile-edit-dialog__image-camera-button {
-  display: inline-flex;
   position: absolute;
-  align-items: center;
-  justify-content: center;
   right: 5px;
   bottom: 5px;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+  border-radius: 7px;
+  background: var(--solid-ui-color-white, #FFFFFF);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  color: var(--solid-ui-color-gray-700, #364153);
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: none;
+  line-height: 0;
 }
 
-.profile-edit-dialog__image-camera-button svg {
-  width: 0.875rem !important;
-  height: 0.875rem !important;
+.profile-edit-dialog__image-camera-button:hover,
+.profile-edit-dialog__image-camera-button:focus-visible,
+.profile-edit-dialog__image-camera-button:active {
+  width: 1.75rem;
+  height: 1.75rem;
+  min-width: 1.75rem;
+  min-height: 1.75rem;
+  padding: 0;
+  border-color: var(--solid-ui-color-slate-200, #E2E8F0);
+  background: color-mix(in srgb, var(--solid-ui-color-primary, #7c4dff) 12%, #FFFFFF);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  transform: none;
+  color: var(--solid-ui-color-primary, #7c4dff);
+}
+
+.profile-edit-dialog__image-camera-button icon-lucide-camera {
   display: block;
+  width: 0.875rem;
+  height: 0.875rem;
   flex-shrink: 0;
+  vertical-align: middle;
+  margin: 0.05rem;
 }
 
 .profile-edit-dialog__image-camera-capture-row {
@@ -299,7 +413,7 @@ solid-ui-button.profile-edit-dialog__drag-handle:active {
 .profile__edit-form--heading {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
 }
 
 /* Section-specific edit dialog overrides */
@@ -390,6 +504,11 @@ solid-ui-button.profile-edit-dialog__drag-handle:active {
   margin-bottom: calc(25px / -2);
 }
 
+/* An empty capture row would still add a flex gap below the divider. */
+.profile-edit-dialog--heading .profile-edit-dialog__image-camera-capture-row:has(> [hidden]) {
+  display: none;
+}
+
 .profile-edit-dialog--heading .profile-edit-dialog__image-camera-capture-frame {
   margin-top: calc(12px / 4);
   margin-bottom: calc(12px / 2);
@@ -439,6 +558,16 @@ solid-ui-button.profile-edit-dialog__drag-handle:active {
   max-width: 100%;
   box-sizing: border-box;
   align-self: stretch;
+}
+
+/* The combobox input is transparent and inherits its font from the host, so the host provides the field background and matches the 42px plain input height. */
+.profile__edit-form solid-ui-combobox {
+  background: var(--solid-ui-color-white, #FFFFFF);
+  border-radius: 5px;
+  color: var(--color-text-subheading, var(--gray-900, #101828));
+  font-size: var(--solid-ui-font-size-sm, 0.875rem);
+  font-weight: 500;
+  line-height: calc(var(--solid-ui-clickable-area, 42px) - 22px);
 }
 
 .profile-edit-dialog__field--resume-location {
@@ -500,12 +629,6 @@ solid-ui-button.profile-edit-dialog__drag-handle:active {
 
 .profile-edit-dialog--heading .profile-edit {
   gap: calc(25px / 2);
-}
-
-.profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero,
-.profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
-  width: 5.625rem;
-  height: 5.625rem;
 }
 
 .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {

@@ -662,17 +662,15 @@ function renderHeadingInfoInput (
             facing-mode="user"
             @input=${handleCameraInput}
           >
-            <solid-ui-button
+            <button
               slot="trigger"
+              type="button"
               class="profile-edit-dialog__image-camera-button"
-              variant="ghost"
               aria-label="Take a photo"
               title="Take a photo"
             >
-              <span slot="icon">
-                <icon-lucide-camera></icon-lucide-camera>
-              </span>
-            </solid-ui-button>
+              <icon-lucide-camera aria-hidden="true"></icon-lucide-camera>
+            </button>
           </solid-ui-photo-capture>
         </div>
       </header>

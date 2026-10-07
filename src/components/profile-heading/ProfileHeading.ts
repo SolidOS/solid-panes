@@ -2,7 +2,7 @@ import { customElement, WebComponent } from 'solid-ui'
 import { html, nothing, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import 'solid-ui/components/button'
-import '~icons/lucide/calendar-days'
+import '~icons/lucide/cake'
 import '~icons/lucide/circle-user-round'
 import '~icons/lucide/mail'
 import '~icons/lucide/map-pin'
@@ -152,7 +152,7 @@ export default class ProfileHeading extends WebComponent {
   private renderIcon (icon: 'birthday' | 'location' | 'phone' | 'email'): TemplateResult {
     switch (icon) {
       case 'birthday':
-        return html`<icon-lucide-calendar-days aria-hidden="true"></icon-lucide-calendar-days>`
+        return html`<icon-lucide-cake aria-hidden="true"></icon-lucide-cake>`
       case 'location':
         return html`<icon-lucide-map-pin aria-hidden="true"></icon-lucide-map-pin>`
       case 'phone':

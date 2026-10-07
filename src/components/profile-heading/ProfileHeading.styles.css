@@ -123,7 +123,8 @@
   transform: translateY(0);
 }
 
-.profile__add-more-icon icon-lucide-pencil {
+.profile__add-more-icon icon-lucide-pencil,
+.profile-section-collapsible__edit-icon icon-lucide-pencil {
   display: block;
   width: 14px;
   height: 14px;
@@ -249,7 +250,7 @@
   margin-top: 1px;
 }
 
-.detail-icon > icon-lucide-calendar-days,
+.detail-icon > icon-lucide-cake,
 .detail-icon > icon-lucide-map-pin,
 .detail-icon > icon-lucide-phone,
 .detail-icon > icon-lucide-mail {
@@ -306,6 +307,9 @@
 
   .profile-section-collapsible__edit-icon {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 0;
   }
 
   .profile-heading {

@@ -134,10 +134,8 @@ html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__r
   flex: 0 0 auto;
 }
 
-html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero,
-html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
-  width: 5rem;
-  height: 5rem;
+html[data-layout='mobile'] .profile-edit-dialog--heading {
+  --profile-edit-dialog-avatar-size: 5rem;
 }
 
 html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
@@ -232,10 +230,8 @@ html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__r
     flex: 0 0 auto;
   }
 
-  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero,
-  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
-    width: 5rem;
-    height: 5rem;
+  .profile__edit-form.profile-edit-dialog--heading {
+    --profile-edit-dialog-avatar-size: 5rem;
   }
 
   .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {

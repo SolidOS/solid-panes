@@ -110,7 +110,7 @@ describe('page-level profile heading', () => {
     document.body.appendChild(heading)
     await heading.updateComplete
 
-    expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-calendar-days')).not.toBeNull()
+    expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-cake')).not.toBeNull()
     expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-map-pin')).not.toBeNull()
     expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-phone')).not.toBeNull()
     expect(heading.shadowRoot?.querySelector('.detail-icon icon-lucide-mail')).not.toBeNull()
