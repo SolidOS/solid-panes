@@ -7,8 +7,8 @@ const { getViewerModeMock } = vi.hoisted(() => ({
   getViewerModeMock: vi.fn()
 }))
 
-vi.mock('profile-pane', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('profile-pane')>()
+vi.mock('../../../src/components/profile-heading/profileHeadingData', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../src/components/profile-heading/profileHeadingData')>()
 
   return {
     ...actual,

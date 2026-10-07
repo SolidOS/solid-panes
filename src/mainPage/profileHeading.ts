@@ -1,7 +1,8 @@
 import { authn, authSession, store } from 'solid-logic'
 import { NamedNode } from 'rdflib'
-import { createHeadingEditDialog, getViewerMode, presentProfile } from 'profile-pane'
-import type { ProfileDetails } from 'profile-pane'
+import { createHeadingEditDialog } from '../components/profile-heading/editor/sections/heading/HeadingEditDialog'
+import type { ProfileDetails } from '../components/profile-heading/editor/sections/heading/types'
+import { getViewerMode, presentProfile } from '../components/profile-heading/profileHeadingData'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
 import './profileHeading.css'
@@ -29,13 +30,15 @@ function showHeading (mount: HTMLElement): void {
       typeof mount.animate !== 'function') return
 
   const style = getComputedStyle(mount)
+  const marginTop = style.marginTop || '18px'
+  const marginBottom = style.marginBottom || '20px'
   const animation = mount.animate([
     { height: '0px', opacity: 0, marginTop: '0px', marginBottom: '0px', overflow: 'hidden' },
     {
       height: `${mount.getBoundingClientRect().height}px`,
       opacity: 1,
-      marginTop: style.marginTop,
-      marginBottom: style.marginBottom,
+      marginTop,
+      marginBottom,
       overflow: 'hidden'
     }
   ], { duration: 300, easing: 'ease', fill: 'both' })

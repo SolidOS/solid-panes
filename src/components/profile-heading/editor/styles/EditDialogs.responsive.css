@@ -1,0 +1,281 @@
+html[data-layout='mobile'] .profile-edit-dialog__row {
+  max-width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog__row--equal > .profile-edit-dialog__field,
+html[data-layout='mobile'] .profile-edit-dialog__row--equal > .profile-edit-dialog__field-type,
+html[data-layout='mobile'] .profile-edit-dialog__field-type {
+  flex: 1 1 auto;
+}
+
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__field--dob {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  align-self: stretch;
+}
+
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__row--heading-dob {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__row--heading-dob > .profile-edit-dialog__field,
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__row--heading-dob > .profile-edit-dialog__field-type {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob {
+  display: block;
+  height: var(--solid-ui-clickable-area, 42px);
+  min-height: var(--solid-ui-clickable-area, 42px);
+  max-height: var(--solid-ui-clickable-area, 42px);
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  line-height: var(--line-height-base, 1.5);
+}
+
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-date-and-time-value,
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-datetime-edit,
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-datetime-edit-fields-wrapper {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-align: center;
+}
+
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-date-and-time-value {
+  text-align: center;
+  white-space: nowrap;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  /* Native mobile date pickers can overflow the shared field sizing. */
+  html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob {
+    height: var(--solid-ui-clickable-area, 42px);
+    min-height: var(--solid-ui-clickable-area, 42px);
+    max-height: var(--solid-ui-clickable-area, 42px);
+    line-height: calc(var(--solid-ui-clickable-area, 42px) - 2px);
+    padding-block: 0;
+    width: calc(100% - 24px);
+    max-width: calc(100% - 24px);
+  }
+
+  html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-date-and-time-value,
+  html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-datetime-edit,
+  html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-datetime-edit-fields-wrapper {
+    line-height: calc(var(--solid-ui-clickable-area, 42px) - 2px);
+  }
+
+  html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog--heading .profile-edit-dialog__input--dob::-webkit-calendar-picker-indicator {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+html[data-layout='mobile'] .profile__edit-form {
+  --profile-edit-dialog-mobile-image-button-font-size: var(--solid-ui-font-size-md, 1rem);
+  --profile-edit-dialog-mobile-image-label-font-size: var(--solid-ui-font-size-sm, 0.875rem);
+  --profile-edit-dialog-mobile-image-description-font-size: 0.625rem;
+}
+
+html[data-layout='mobile'] #profile-modal .modal label.profile-edit-dialog__field,
+html[data-layout='mobile'] #profile-modal .modal label.profile-edit-dialog__field-type,
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog__field > .label,
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog__field-type > .label,
+html[data-layout='mobile'] #profile-modal .modal .profile-edit-dialog__field-description {
+  font-size: var(--solid-ui-font-size-sm, 0.875rem);
+  line-height: 1.5;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog__field input,
+html[data-layout='mobile'] .profile-edit-dialog__field-type input {
+  font-size: var(--solid-ui-font-size-md, 1rem);
+}
+
+html[data-layout='mobile'] .profile-edit-dialog__field-type--contact-point {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 100%;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--contact-point {
+  flex-direction: row;
+  align-items: stretch;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--contact-point.profile-edit-dialog__row--equal > .profile-edit-dialog__field-type.profile-edit-dialog__field-type--contact-point {
+  flex: 0 0 103px;
+  width: 103px;
+  min-width: 103px;
+  max-width: 103px;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo > header {
+  margin-bottom: 0;
+  flex: 0 0 auto;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero,
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
+  width: 5rem;
+  height: 5rem;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
+  padding: 0;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__image-frame--fallback .profile__hero-alt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview {
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 5px;
+  width: 100%;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview-label {
+  font-size: var(--profile-edit-dialog-mobile-image-label-font-size);
+  line-height: 1.25;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview-description {
+  font-size: var(--profile-edit-dialog-mobile-image-description-font-size);
+  line-height: 1.4;
+}
+
+html[data-layout='mobile'] .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview-actions {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 8px;
+  width: 100%;
+  align-items: stretch;
+  justify-content: start;
+}
+
+@media (max-width: 576px) {
+  .profile-edit-dialog__row {
+    max-width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile__edit-form {
+    --profile-edit-dialog-mobile-image-button-font-size: var(--solid-ui-font-size-md, 1rem);
+    --profile-edit-dialog-mobile-image-label-font-size: var(--solid-ui-font-size-sm, 0.875rem);
+    --profile-edit-dialog-mobile-image-description-font-size: 0.625rem;
+  }
+
+  .profile-edit-dialog__row--equal > .profile-edit-dialog__field,
+  .profile-edit-dialog__row--equal > .profile-edit-dialog__field-type,
+  .profile-edit-dialog__field-type {
+    flex: 1 1 auto;
+  }
+
+  .profile-edit-dialog__field input,
+  .profile-edit-dialog__field-type input {
+    font-size: var(--solid-ui-font-size-sm, 0.875rem);
+  }
+
+  .profile-edit-dialog__field-type--contact-point {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--contact-point {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--contact-point.profile-edit-dialog__row--equal > .profile-edit-dialog__field-type.profile-edit-dialog__field-type--contact-point {
+    flex: 0 0 103px;
+    width: 103px;
+    min-width: 103px;
+    max-width: 103px;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo > header {
+    margin-bottom: 0;
+    flex: 0 0 auto;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero,
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__hero-alt {
+    padding: 0;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile__image-frame--fallback .profile__hero-alt {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview {
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 5px;
+    width: 100%;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview-label {
+    font-size: var(--profile-edit-dialog-mobile-image-label-font-size);
+    line-height: var(--line-height-tight, 1.25);
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview-description {
+    font-size: var(--profile-edit-dialog-mobile-image-description-font-size);
+    line-height: var(--line-height-base, 1.4);
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-preview-actions {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    gap: 8px;
+    width: 100%;
+    align-items: stretch;
+    justify-content: start;
+  }
+
+  .profile-edit-dialog--heading .profile-edit-dialog__row--heading-photo .profile-edit-dialog__image-button {
+    width: auto;
+    min-width: 0;
+  }
+}
