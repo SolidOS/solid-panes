@@ -193,6 +193,181 @@ describe('page-level profile heading', () => {
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).not.toBeNull()
   })
 
+  it('refreshes the heading job title when the displayed profile saves resume changes', async () => {
+    const subject = sym('https://resume-heading.example/profile/card#me')
+    const membership = sym('https://resume-heading.example/profile/card#role')
+    const doc = subject.doc()
+    store.add(subject, ns.vcard('fn'), lit('Resume Heading Test'), doc)
+    store.add(membership, ns.org('member'), subject, doc)
+    store.add(membership, ns.rdf('type'), ns.solid('CurrentRole'), doc)
+    store.add(membership, ns.vcard('role'), lit('Engineer'), doc)
+    getViewerModeMock.mockResolvedValue('owner')
+
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    const profilePane = document.createElement('div')
+    mainContent.appendChild(profilePane)
+    document.body.appendChild(mainContent)
+    window.history.replaceState({
+      paneName: 'profile',
+      paneUri: subject.value
+    }, '', '/')
+    initializeProfileHeading()
+    await refreshProfileHeading(true)
+
+    const heading = document.querySelector('solid-panes-profile-heading') as HTMLElement & {
+      updateComplete: Promise<unknown>
+    }
+    await heading.updateComplete
+    expect(heading.shadowRoot?.querySelector('.role')?.textContent).toBe('Engineer')
+
+    store.removeMany(membership, ns.vcard('role'), null, doc)
+    store.add(membership, ns.vcard('role'), lit('Staff Engineer'), doc)
+
+    profilePane.dispatchEvent(new CustomEvent('profile-pane-saved', {
+      bubbles: true,
+      composed: true,
+      detail: { subjectUri: 'https://unrelated.example/profile/card#me' }
+    }))
+    await Promise.resolve()
+    expect(heading.shadowRoot?.querySelector('.role')?.textContent).toBe('Engineer')
+
+    profilePane.dispatchEvent(new CustomEvent('profile-pane-saved', {
+      bubbles: true,
+      composed: true,
+      detail: { subjectUri: subject.value }
+    }))
+    await vi.waitFor(async () => {
+      await heading.updateComplete
+      expect(heading.shadowRoot?.querySelector('.role')?.textContent).toBe('Staff Engineer')
+    })
+
+    store.removeMany(membership, ns.vcard('role'), null, doc)
+    profilePane.dispatchEvent(new CustomEvent('profile-pane-saved', {
+      bubbles: true,
+      composed: true,
+      detail: { subjectUri: subject.value }
+    }))
+    await vi.waitFor(async () => {
+      await heading.updateComplete
+      expect(heading.shadowRoot?.querySelector('.role')).toBeNull()
+    })
+  })
+
+  it('refreshes heading contact details after More contacts saves additions, edits, and removals', async () => {
+    const subject = sym('https://contacts-heading.example/profile/card#me')
+    const doc = subject.doc()
+    const phone = sym(`${doc.value}#phone`)
+    const email = sym(`${doc.value}#email`)
+    const address = sym(`${doc.value}#address`)
+    store.add(subject, ns.vcard('fn'), lit('Contacts Heading Test'), doc)
+    getViewerModeMock.mockResolvedValue('owner')
+
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    const profilePane = document.createElement('div')
+    mainContent.appendChild(profilePane)
+    document.body.appendChild(mainContent)
+    window.history.replaceState({
+      paneName: 'profile',
+      paneUri: subject.value
+    }, '', '/')
+    initializeProfileHeading()
+    await refreshProfileHeading(true)
+
+    const heading = document.querySelector('solid-panes-profile-heading') as HTMLElement & {
+      updateComplete: Promise<unknown>
+    }
+    const values = () => Array.from(
+      heading.shadowRoot?.querySelectorAll('.detail-value') ?? [],
+      element => element.textContent
+    )
+    const notifySaved = () => profilePane.dispatchEvent(new CustomEvent('profile-pane-saved', {
+      bubbles: true,
+      composed: true,
+      detail: { subjectUri: subject.value }
+    }))
+    await heading.updateComplete
+    expect(values()).toEqual([])
+
+    store.add(subject, ns.vcard('hasTelephone'), phone, doc)
+    store.add(phone, ns.vcard('value'), sym('tel:+123456789'), doc)
+    store.add(phone, ns.rdf('type'), ns.vcard('Work'), doc)
+    store.add(subject, ns.vcard('hasEmail'), email, doc)
+    store.add(email, ns.vcard('value'), sym('mailto:work@example.com'), doc)
+    store.add(email, ns.rdf('type'), ns.vcard('Work'), doc)
+    store.add(subject, ns.vcard('hasAddress'), address, doc)
+    store.add(address, ns.vcard('locality'), lit('Paris'), doc)
+    store.add(address, ns.vcard('country-name'), lit('France'), doc)
+    notifySaved()
+    await vi.waitFor(async () => {
+      await heading.updateComplete
+      expect(values()).toEqual(['Paris, France', '+123456789', 'work@example.com'])
+    })
+
+    store.removeMany(phone, ns.vcard('value'), null, doc)
+    store.add(phone, ns.vcard('value'), sym('tel:+987654321'), doc)
+    store.removeMany(email, ns.vcard('value'), null, doc)
+    store.add(email, ns.vcard('value'), sym('mailto:updated@example.com'), doc)
+    store.removeMany(address, ns.vcard('locality'), null, doc)
+    store.add(address, ns.vcard('locality'), lit('Lyon'), doc)
+    notifySaved()
+    await vi.waitFor(async () => {
+      await heading.updateComplete
+      expect(values()).toEqual(['Lyon, France', '+987654321', 'updated@example.com'])
+    })
+
+    store.removeMany(subject, ns.vcard('hasTelephone'), null, doc)
+    store.removeMany(subject, ns.vcard('hasEmail'), null, doc)
+    store.removeMany(subject, ns.vcard('hasAddress'), null, doc)
+    notifySaved()
+    await vi.waitFor(async () => {
+      await heading.updateComplete
+      expect(values()).toEqual([])
+    })
+  })
+
+  it('uses fresh contact data from the saving pane instead of reloading older store values', async () => {
+    const subject = sym('https://saved-contacts.example/profile/card#me')
+    store.add(subject, ns.vcard('fn'), lit('Saved Contacts Test'), subject.doc())
+    store.add(subject, ns.vcard('hasEmail'), sym('mailto:old@example.com'), subject.doc())
+    getViewerModeMock.mockResolvedValue('owner')
+
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({
+      paneName: 'profile',
+      paneUri: subject.value
+    }, '', '/')
+    initializeProfileHeading()
+    await refreshProfileHeading(true)
+    const heading = document.querySelector('solid-panes-profile-heading') as HTMLElement & {
+      updateComplete: Promise<unknown>
+    }
+    await heading.updateComplete
+    expect(heading.shadowRoot?.textContent).toContain('old@example.com')
+
+    mainContent.dispatchEvent(new CustomEvent('profile-pane-saved', {
+      bubbles: true,
+      composed: true,
+      detail: {
+        subjectUri: subject.value,
+        profileData: {
+          name: 'Saved Contacts Test',
+          primaryPhone: { valueNode: sym('tel:+123456789') },
+          primaryEmail: { valueNode: sym('mailto:new@example.com') },
+          location: 'Lyon, France'
+        }
+      }
+    }))
+    await heading.updateComplete
+    expect(heading.shadowRoot?.textContent).toContain('new@example.com')
+    expect(heading.shadowRoot?.textContent).toContain('+123456789')
+    expect(heading.shadowRoot?.textContent).toContain('Lyon, France')
+    expect(heading.shadowRoot?.textContent).not.toContain('old@example.com')
+  })
+
   it('keeps another person\'s heading visible on their other navbar panes', async () => {
     const subject = sym('https://another-profile-heading.example/profile/card#me')
     const storage = sym('https://profile-heading.example/storage/')

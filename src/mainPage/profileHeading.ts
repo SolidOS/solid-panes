@@ -14,8 +14,10 @@ let observer: MutationObserver | undefined
 let refreshRequest = 0
 let popstateListenerRegistered = false
 let authListenersRegistered = false
+let profileSavedListenerRegistered = false
 let authReady: Promise<void> | undefined
 let displayedPaneKey = ''
+let displayedSubjectUri = ''
 let loadingPaneKey = ''
 const editListeners = new WeakSet<HTMLElement>()
 
@@ -104,6 +106,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
       refreshRequest++
       loadingPaneKey = ''
       displayedPaneKey = ''
+      displayedSubjectUri = ''
       mount.hidden = true
       mount.replaceChildren()
       return
@@ -147,11 +150,33 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   mount.hidden = false
   if (heading.parentNode !== mount) mount.replaceChildren(heading)
   displayedPaneKey = paneKey
+  displayedSubjectUri = subject.value
   loadingPaneKey = ''
 }
 
 export function initializeProfileHeading (): void {
   ensureMountPoint()
+
+  if (!profileSavedListenerRegistered) {
+    document.addEventListener('profile-pane-saved', (event) => {
+      if (!(event instanceof CustomEvent) || event.detail?.subjectUri !== displayedSubjectUri) return
+
+      const heading = document.querySelector<HTMLElement & {
+        profileData?: ProfileDetails
+      }>(`#${PROFILE_HEADING_MOUNT_ID} ${PROFILE_HEADING_TAG}`)
+      if (heading && event.detail.profileData) {
+        refreshRequest++
+        loadingPaneKey = ''
+        heading.profileData = event.detail.profileData
+        return
+      }
+
+      refreshProfileHeading(true).catch((error: unknown) => {
+        console.error('Failed to refresh profile heading after saving profile information.', error)
+      })
+    })
+    profileSavedListenerRegistered = true
+  }
 
   const readiness = authReady ?? authn.checkUser().then(() => undefined)
   authReady = readiness
