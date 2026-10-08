@@ -63,6 +63,19 @@ After a successful save the component also dispatches a bubbling, composed
 `profile-heading-saved` event with `detail.subjectUri`, which profile-pane uses to
 rerender sections such as More contacts.
 The heading editor includes its own dialog and responsive styles.
+On mobile, the edit icon sits closer to the heading's top-right edge while
+preserving its full touch target.
+
+On the profile pane, logged-in visitors viewing someone else's profile also see
+an "Add as friend" action to the left of Edit (when available). The page controller
+sets `friendSubject` only in that context. The action loads the viewer's profile,
+checks `foaf:knows`, and saves the new friendship in the viewer's profile document.
+Existing friends have a disabled "Already a friend" button (hidden on mobile).
+Success and error messages are centered below the button, announced and focused,
+and dismissed after 10 seconds; failed operations can be
+retried. Anonymous visitors, owners, and other panes do not show this action.
+On mobile, friend actions sit in the top-right corner beside the name, which
+wraps as needed.
 
 Navigation reuses the mounted heading, with a 300ms CSS transition for the avatar,
 padding, and detail rows in both directions. Transitions are disabled when the

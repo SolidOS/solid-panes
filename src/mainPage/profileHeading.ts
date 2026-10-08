@@ -208,10 +208,15 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     document.createElement(PROFILE_HEADING_TAG)) as HTMLElement & {
       profileData?: ProfileDetails
       editContext?: ProfileHeadingEditContext
+      friendSubject?: NamedNode
       compact?: boolean
       updateComplete?: Promise<unknown>
     }
   heading.profileData = profileData
+  const viewer = authn.currentUser()
+  heading.friendSubject = paneName === 'profile' && viewer && !viewer.sameTerm(subject)
+    ? subject
+    : undefined
   heading.editContext = canEdit
     ? {
         subject,

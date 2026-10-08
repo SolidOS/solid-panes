@@ -1,11 +1,13 @@
-import { store } from 'solid-logic'
+import { authn, store } from 'solid-logic'
 import type { NamedNode } from 'rdflib'
 import { customElement, WebComponent } from 'solid-ui'
-import { html, nothing, type TemplateResult } from 'lit'
+import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { createHeadingEditDialog } from './editor/sections/heading/HeadingEditDialog'
 import type { ProfileDetails } from './editor/sections/heading/types'
 import type { ViewerMode } from './profileHeadingData'
+import { addFriend, checkFriend, friendTexts } from './friendActions'
+import { formatDisplayError } from './editor/utils/errorDisplay'
 import 'solid-ui/components/button'
 import '~icons/lucide/cake'
 import '~icons/lucide/circle-user-round'
@@ -47,11 +49,91 @@ export default class ProfileHeading extends WebComponent {
   @property({ attribute: false })
   accessor editContext: ProfileHeadingEditContext | undefined = undefined
 
+  @property({ attribute: false })
+  accessor friendSubject: NamedNode | undefined = undefined
+
   @property({ type: Boolean, reflect: true })
   accessor compact = false
 
   @state()
   accessor failedImageSrc: string | undefined = undefined
+
+  @state()
+  accessor friendState: 'loading' | 'available' | 'exists' | 'saving' | 'error' = 'loading'
+
+  @state()
+  accessor friendMessage = ''
+
+  @state()
+  accessor friendError = false
+
+  private friendRequest = 0
+  private friendMessageTimer: ReturnType<typeof setTimeout> | undefined
+
+  disconnectedCallback (): void {
+    super.disconnectedCallback()
+    this.clearFriendMessage()
+  }
+
+  private clearFriendMessage (): void {
+    clearTimeout(this.friendMessageTimer)
+    this.friendMessageTimer = undefined
+    this.friendMessage = ''
+  }
+
+  protected willUpdate (changed: PropertyValues<this>): void {
+    super.willUpdate(changed)
+    if (!changed.has('friendSubject')) return
+    const request = ++this.friendRequest
+    this.friendState = 'loading'
+    this.clearFriendMessage()
+    this.friendError = false
+    const subject = this.friendSubject
+    const viewer = authn.currentUser()
+    if (!subject || !viewer || viewer.sameTerm(subject)) return
+
+    checkFriend(viewer, subject).then((exists) => {
+      if (request !== this.friendRequest || this.friendSubject !== subject) return
+      this.friendState = exists ? 'exists' : 'available'
+    }).catch((error: unknown) => {
+      if (request !== this.friendRequest || this.friendSubject !== subject) return
+      this.friendState = 'error'
+      this.showFriendMessage(error, true)
+    })
+  }
+
+  private async showFriendMessage (message: unknown, error: boolean): Promise<void> {
+    this.clearFriendMessage()
+    this.friendMessage = formatDisplayError(message)
+    this.friendError = error
+    this.friendMessageTimer = setTimeout(() => {
+      this.clearFriendMessage()
+    }, 10000)
+    await this.updateComplete
+    this.shadowRoot?.querySelector<HTMLElement>('.friend-message')?.focus()
+  }
+
+  private handleAddFriend = async (event: Event): Promise<void> => {
+    event.preventDefault()
+    if (this.friendState !== 'available' && this.friendState !== 'error') return
+    const subject = this.friendSubject
+    if (!subject) return
+    const request = this.friendRequest
+    this.friendState = 'saving'
+    this.clearFriendMessage()
+    try {
+      const viewer = authn.currentUser()
+      if (!viewer) throw new Error(friendTexts.loginRequired)
+      await addFriend(viewer, subject)
+      if (request !== this.friendRequest || this.friendSubject !== subject) return
+      this.friendState = 'exists'
+      await this.showFriendMessage(friendTexts.success, false)
+    } catch (error: unknown) {
+      if (request !== this.friendRequest || this.friendSubject !== subject) return
+      this.friendState = 'error'
+      await this.showFriendMessage(error, true)
+    }
+  }
 
   private handleEdit = (event: Event) => {
     const context = this.editContext
@@ -88,6 +170,8 @@ export default class ProfileHeading extends WebComponent {
     const email = textValue(profile.primaryEmail?.valueNode).replace(/^mailto:/i, '')
     const dateOfBirth = displayDate(profile.dateOfBirth)
     const showImage = Boolean(profile.imageSrc && this.failedImageSrc !== profile.imageSrc)
+    const viewer = authn.currentUser()
+    const showFriend = Boolean(this.friendSubject && viewer && !viewer.sameTerm(this.friendSubject))
 
     return html`
       <section class="profile-heading" aria-labelledby="profile-heading-name">
@@ -120,9 +204,31 @@ export default class ProfileHeading extends WebComponent {
           </header>
         </div>
 
-        ${this.editContext && !this.compact
+        ${(this.editContext || showFriend) && !this.compact
           ? html`
             <div class="profile__actions profile__heading-edit-action">
+              ${showFriend
+                ? html`
+                <div class="profile-friends-button__section" aria-label="Add me to your friends actions">
+                  <solid-ui-button
+                    variant="secondary"
+                    class="profile__btn-friends"
+                    ?disabled=${this.friendState === 'loading' || this.friendState === 'saving' || this.friendState === 'exists'}
+                    aria-busy=${this.friendState === 'loading' || this.friendState === 'saving' ? 'true' : 'false'}
+                    @click=${this.handleAddFriend}
+                  >${this.friendState === 'exists' ? friendTexts.exists : friendTexts.add}</solid-ui-button>
+                  ${this.friendMessage
+                    ? html`
+                    <div class="friend-message" role=${this.friendError ? 'alert' : 'status'}
+                      aria-live=${this.friendError ? 'assertive' : 'polite'} tabindex="0">
+                      ${this.friendMessage}
+                    </div>`
+                    : nothing}
+                </div>
+              `
+                : nothing}
+              ${this.editContext
+                ? html`
               <solid-ui-button
                 variant="tertiary"
                 class="profile-section-collapsible__edit-button desktop-edit-button"
@@ -144,6 +250,8 @@ export default class ProfileHeading extends WebComponent {
                   ${this.renderEditIcon()}
                 </span>
               </solid-ui-button>
+              `
+                : nothing}
             </div>
           `
           : nothing}

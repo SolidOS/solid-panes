@@ -100,7 +100,28 @@
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
+  gap: 8px;
   padding: 0;
+}
+
+.profile-friends-button__section {
+  display: grid;
+  gap: 8px;
+  max-width: 16rem;
+}
+
+.friend-message {
+  text-align: center;
+  font-size: var(--solid-ui-font-size-sm, 0.875rem);
+  overflow-wrap: anywhere;
+}
+
+.friend-message[role="alert"] {
+  color: var(--solid-ui-color-red-700, #b91c1c);
+}
+
+.friend-message[role="status"] {
+  color: var(--solid-ui-color-green-700, #15803d);
 }
 
 .profile-section-collapsible__edit-button {
@@ -279,6 +300,15 @@
 }
 
 @media (max-width: 768px) {
+  .profile-heading:has(.profile-friends-button__section) .name {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .profile__btn-friends[disabled]:not([aria-busy="true"]) {
+    display: none;
+  }
+
   :host {
     --profile-avatar-size: 4.375rem;
     --profile-fallback-padding: 0px;
@@ -303,6 +333,9 @@
 
   .mobile-edit-button {
     display: inline-flex;
+    position: relative;
+    top: -12px;
+    right: -12px;
   }
 
   .profile-section-collapsible__edit-icon {
