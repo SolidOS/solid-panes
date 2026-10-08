@@ -3,8 +3,13 @@ import { authn, authSession, store } from 'solid-logic'
 import { lit, sym } from 'rdflib'
 import { ns } from 'solid-ui'
 
-const { getViewerModeMock } = vi.hoisted(() => ({
-  getViewerModeMock: vi.fn()
+const { getViewerModeMock, createHeadingEditDialogMock } = vi.hoisted(() => ({
+  getViewerModeMock: vi.fn(),
+  createHeadingEditDialogMock: vi.fn()
+}))
+
+vi.mock('../../../src/components/profile-heading/editor/sections/heading/HeadingEditDialog', () => ({
+  createHeadingEditDialog: createHeadingEditDialogMock
 }))
 
 vi.mock('../../../src/components/profile-heading/profileHeadingData', async (importOriginal) => {
@@ -64,6 +69,71 @@ describe('page-level profile heading', () => {
     expect(heading?.shadowRoot?.querySelector('.image-frame')).toHaveClass('image-frame--fallback')
     expect(heading?.shadowRoot?.querySelector('.hero-fallback icon-lucide-circle-user-round')).not.toBeNull()
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
+  })
+
+  it('opens the heading editor from Edit and announces the save to other views', async () => {
+    const subject = sym('https://edit-flow.example/profile/card#me')
+    const profileData = { entryNode: subject, name: 'Profile Heading Test' }
+    const onSaved = vi.fn()
+    createHeadingEditDialogMock.mockReset().mockImplementation(
+      async (_event, _store, _subject, _profile, _viewerMode, saved) => saved()
+    )
+    const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
+      profileData?: typeof profileData
+      editContext?: unknown
+      updateComplete?: Promise<unknown>
+    }
+    heading.profileData = profileData
+    heading.editContext = { subject, profileData, viewerMode: 'owner', onSaved }
+    document.body.appendChild(heading)
+    await heading.updateComplete
+
+    const headingSaved = vi.fn()
+    document.addEventListener('profile-heading-saved', headingSaved)
+    try {
+      const desktopEditButton = heading.shadowRoot?.querySelector<HTMLElement>('.desktop-edit-button')
+      expect(desktopEditButton).toHaveAttribute('variant', 'tertiary')
+      const mobileEditButton = heading.shadowRoot?.querySelector('.mobile-edit-button')
+      expect(mobileEditButton).toHaveAttribute('variant', 'ghost')
+      expect(mobileEditButton?.querySelector('icon-lucide-pencil')).not.toBeNull()
+      desktopEditButton?.click()
+
+      await vi.waitFor(() => expect(onSaved).toHaveBeenCalledOnce())
+      expect(createHeadingEditDialogMock).toHaveBeenCalledWith(
+        expect.any(Event), store, subject, profileData, 'owner', expect.any(Function)
+      )
+      expect(headingSaved).toHaveBeenCalledOnce()
+      expect((headingSaved.mock.calls[0][0] as CustomEvent).detail).toEqual({ subjectUri: subject.value })
+    } finally {
+      document.removeEventListener('profile-heading-saved', headingSaved)
+    }
+  })
+
+  it('does not announce a save when the editor is closed without saving', async () => {
+    const subject = sym('https://edit-flow-cancel.example/profile/card#me')
+    const profileData = { entryNode: subject, name: 'Profile Heading Test' }
+    const onSaved = vi.fn()
+    createHeadingEditDialogMock.mockReset().mockResolvedValue(undefined)
+    const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
+      profileData?: typeof profileData
+      editContext?: unknown
+      updateComplete?: Promise<unknown>
+    }
+    heading.profileData = profileData
+    heading.editContext = { subject, profileData, viewerMode: 'owner', onSaved }
+    document.body.appendChild(heading)
+    await heading.updateComplete
+
+    const headingSaved = vi.fn()
+    document.addEventListener('profile-heading-saved', headingSaved)
+    try {
+      heading.shadowRoot?.querySelector<HTMLElement>('.desktop-edit-button')?.click()
+      await vi.waitFor(() => expect(createHeadingEditDialogMock).toHaveBeenCalledOnce())
+      expect(headingSaved).not.toHaveBeenCalled()
+      expect(onSaved).not.toHaveBeenCalled()
+    } finally {
+      document.removeEventListener('profile-heading-saved', headingSaved)
+    }
   })
 
   it('renders Lucide icons for profile detail rows', async () => {

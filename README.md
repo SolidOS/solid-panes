@@ -59,6 +59,9 @@ on every other pane where the heading is visible. Owner editing remains exclusiv
 to the profile pane. Solid-panes locally presents the heading data and checks
 viewer edit access; the component owns the edit interaction and opens the local
 heading editor. The page controller refreshes the heading after a successful save.
+After a successful save the component also dispatches a bubbling, composed
+`profile-heading-saved` event with `detail.subjectUri`, which profile-pane uses to
+rerender sections such as More contacts.
 The heading editor includes its own dialog and responsive styles.
 
 Navigation reuses the mounted heading, with a 300ms CSS transition for the avatar,
@@ -86,6 +89,15 @@ npm start
 2. Open http://localhost:5173 in your browser. You should see the pane development sandbox.
 
 3. You can change the `subject` in the sandbox to determine which pane gets rendered. For example, the default subject loads the `profile-pane`.
+
+### Using a local profile-pane
+
+When working inside the SolidOS monorepo, `profile-pane` (and the other local
+workspaces) are symlinked by `npx lerna bootstrap --force-local` (run from the
+monorepo root, as `npm run watch-pivot` does), even if the version in
+`package.json` is not published to npm. Use a plain version in `package.json`
+(not a `file:` path, which lerna does not link) and avoid a bare `npm install`
+here, which fails for unpublished versions and removes the links.
 
 ## Contributing panes
 When you created a pane, you can either add it as an npm dependency

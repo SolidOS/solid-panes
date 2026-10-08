@@ -63,7 +63,14 @@ export default class ProfileHeading extends WebComponent {
       context.subject,
       context.profileData,
       context.viewerMode,
-      context.onSaved
+      async () => {
+        this.dispatchEvent(new CustomEvent('profile-heading-saved', {
+          bubbles: true,
+          composed: true,
+          detail: { subjectUri: context.subject.value }
+        }))
+        await context.onSaved()
+      }
     ).catch((error: unknown) => {
       console.error('Failed to edit profile heading.', error)
     })
