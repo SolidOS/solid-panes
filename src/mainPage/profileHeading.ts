@@ -1,8 +1,8 @@
 import { authn, authSession, store } from 'solid-logic'
 import { NamedNode } from 'rdflib'
-import { createHeadingEditDialog } from '../components/profile-heading/editor/sections/heading/HeadingEditDialog'
 import type { ProfileDetails } from '../components/profile-heading/editor/sections/heading/types'
-import { getViewerMode, presentProfile } from '../components/profile-heading/profileHeadingData'
+import type { ProfileHeadingEditContext } from '../components/profile-heading/ProfileHeading'
+import { getViewerMode, presentProfile, type ViewerMode } from '../components/profile-heading/profileHeadingData'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
 import './profileHeading.css'
@@ -21,7 +21,6 @@ let authReady: Promise<void> | undefined
 let displayedPaneKey = ''
 let displayedSubjectUri = ''
 let loadingPaneKey = ''
-const editListeners = new WeakSet<HTMLElement>()
 const hideAnimations = new WeakMap<HTMLElement, Animation>()
 const showAnimations = new WeakMap<HTMLElement, Animation>()
 
@@ -114,33 +113,6 @@ function hideHeading (mount: HTMLElement): void {
   })
 }
 
-function installEditListener (heading: HTMLElement & { canEdit?: boolean }) {
-  if (editListeners.has(heading)) return
-
-  heading.addEventListener('solid-panes-profile-heading-edit', (event) => {
-    if (window.history.state?.paneName !== 'profile') return
-
-    const subjectUri = window.history.state?.paneUri || window.location.href
-    loadProfileFromURI(store.sym(subjectUri))
-      .then(async (subject) => {
-        const viewerMode = await getViewerMode(subject)
-        await createHeadingEditDialog(
-          event,
-          store,
-          subject,
-          presentProfile(subject, store),
-          viewerMode,
-          () => refreshProfileHeading(true)
-        )
-      })
-      .catch((error: unknown) => {
-        console.error('Failed to edit profile heading.', error)
-      })
-  })
-
-  editListeners.add(heading)
-}
-
 function refreshAfterAuthChange (): void {
   refreshProfileHeading(true).catch((error: unknown) => {
     console.error('Failed to refresh profile heading after an authentication change.', error)
@@ -220,10 +192,12 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   let subject: NamedNode
   let profileData: ProfileDetails
   let canEdit: boolean
+  let viewerMode: ViewerMode
   try {
     subject = await loadProfileFromURI(store.sym(subjectUri))
     profileData = presentProfile(subject, store)
-    canEdit = paneName === 'profile' && await getViewerMode(subject) === 'owner'
+    viewerMode = paneName === 'profile' ? await getViewerMode(subject) : 'anonymous'
+    canEdit = viewerMode === 'owner'
   } catch (error) {
     if (request === refreshRequest) loadingPaneKey = ''
     throw error
@@ -233,13 +207,19 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   const heading = (mount.querySelector(PROFILE_HEADING_TAG) ||
     document.createElement(PROFILE_HEADING_TAG)) as HTMLElement & {
       profileData?: ProfileDetails
-      canEdit?: boolean
+      editContext?: ProfileHeadingEditContext
       compact?: boolean
       updateComplete?: Promise<unknown>
     }
-  installEditListener(heading)
   heading.profileData = profileData
-  heading.canEdit = canEdit
+  heading.editContext = canEdit
+    ? {
+        subject,
+        profileData,
+        viewerMode,
+        onSaved: () => refreshProfileHeading(true)
+      }
+    : undefined
   heading.compact = paneName !== 'profile'
   const appearing = mount.hidden || !mount.firstElementChild
   mount.hidden = false

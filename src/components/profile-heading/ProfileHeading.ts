@@ -1,6 +1,11 @@
+import { store } from 'solid-logic'
+import type { NamedNode } from 'rdflib'
 import { customElement, WebComponent } from 'solid-ui'
 import { html, nothing, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
+import { createHeadingEditDialog } from './editor/sections/heading/HeadingEditDialog'
+import type { ProfileDetails } from './editor/sections/heading/types'
+import type { ViewerMode } from './profileHeadingData'
 import 'solid-ui/components/button'
 import '~icons/lucide/cake'
 import '~icons/lucide/circle-user-round'
@@ -25,6 +30,13 @@ export interface ProfileHeadingData {
   primaryEmail?: ProfileHeadingPoint
 }
 
+export interface ProfileHeadingEditContext {
+  subject: NamedNode
+  profileData: ProfileDetails
+  viewerMode: ViewerMode
+  onSaved: () => Promise<void> | void
+}
+
 @customElement('solid-panes-profile-heading')
 export default class ProfileHeading extends WebComponent {
   static styles = styles
@@ -32,8 +44,8 @@ export default class ProfileHeading extends WebComponent {
   @property({ attribute: false })
   accessor profileData: ProfileHeadingData | undefined = undefined
 
-  @property({ type: Boolean })
-  accessor canEdit = false
+  @property({ attribute: false })
+  accessor editContext: ProfileHeadingEditContext | undefined = undefined
 
   @property({ type: Boolean, reflect: true })
   accessor compact = false
@@ -41,11 +53,20 @@ export default class ProfileHeading extends WebComponent {
   @state()
   accessor failedImageSrc: string | undefined = undefined
 
-  private handleEdit = () => {
-    this.dispatchEvent(new CustomEvent('solid-panes-profile-heading-edit', {
-      bubbles: true,
-      composed: true
-    }))
+  private handleEdit = (event: Event) => {
+    const context = this.editContext
+    if (!context) return
+
+    createHeadingEditDialog(
+      event,
+      store,
+      context.subject,
+      context.profileData,
+      context.viewerMode,
+      context.onSaved
+    ).catch((error: unknown) => {
+      console.error('Failed to edit profile heading.', error)
+    })
   }
 
   private handleImageError = (event: Event) => {
@@ -92,7 +113,7 @@ export default class ProfileHeading extends WebComponent {
           </header>
         </div>
 
-        ${this.canEdit && !this.compact
+        ${this.editContext && !this.compact
           ? html`
             <div class="profile__actions profile__heading-edit-action">
               <solid-ui-button

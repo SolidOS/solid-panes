@@ -56,8 +56,9 @@ The `solid-panes-profile-heading` component accepts presentation data through
 halves the responsive avatar size and shows only the photo, name, and job title.
 The page controller uses the full heading on the profile pane and compact mode
 on every other pane where the heading is visible. Owner editing remains exclusive
-to the profile pane. Solid-panes locally presents the heading data, checks viewer
-edit access, and owns the heading editor.
+to the profile pane. Solid-panes locally presents the heading data and checks
+viewer edit access; the component owns the edit interaction and opens the local
+heading editor. The page controller refreshes the heading after a successful save.
 The heading editor includes its own dialog and responsive styles.
 
 Navigation reuses the mounted heading, with a 300ms CSS transition for the avatar,

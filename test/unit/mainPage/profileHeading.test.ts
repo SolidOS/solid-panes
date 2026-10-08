@@ -66,29 +66,6 @@ describe('page-level profile heading', () => {
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
   })
 
-  it('dispatches an edit event when the owner selects Edit', async () => {
-    const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
-      profileData?: { name: string }
-      canEdit?: boolean
-      updateComplete?: Promise<unknown>
-    }
-    heading.profileData = { name: 'Profile Heading Test' }
-    heading.canEdit = true
-    document.body.appendChild(heading)
-
-    const editRequested = vi.fn()
-    heading.addEventListener('solid-panes-profile-heading-edit', editRequested)
-    await heading.updateComplete
-    const desktopEditButton = heading.shadowRoot?.querySelector<HTMLElement>('.desktop-edit-button')
-    expect(desktopEditButton).toHaveAttribute('variant', 'tertiary')
-    const mobileEditButton = heading.shadowRoot?.querySelector('.mobile-edit-button')
-    expect(mobileEditButton).toHaveAttribute('variant', 'ghost')
-    expect(mobileEditButton?.querySelector('icon-lucide-pencil')).not.toBeNull()
-    desktopEditButton?.click()
-
-    expect(editRequested).toHaveBeenCalledOnce()
-  })
-
   it('renders Lucide icons for profile detail rows', async () => {
     const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
       profileData?: {
@@ -139,13 +116,13 @@ describe('page-level profile heading', () => {
     expect(checkUser).toHaveBeenCalledOnce()
 
     const getHeading = () => document.querySelector('solid-panes-profile-heading') as (HTMLElement & {
-      canEdit?: boolean
+      editContext?: unknown
       updateComplete?: Promise<unknown>
     }) | null
 
     await vi.waitFor(async () => {
       await getHeading()?.updateComplete
-      expect(getHeading()?.canEdit).toBe(true)
+      expect(getHeading()?.editContext).toBeTruthy()
     })
 
     sessionReady = false
@@ -153,7 +130,7 @@ describe('page-level profile heading', () => {
 
     await vi.waitFor(async () => {
       await getHeading()?.updateComplete
-      expect(getHeading()?.canEdit).toBe(false)
+      expect(getHeading()?.editContext).toBeUndefined()
     })
 
     checkUser.mockRestore()
@@ -170,7 +147,12 @@ describe('page-level profile heading', () => {
         primaryEmail: { valueNode: ReturnType<typeof sym> }
       }
       compact: boolean
-      canEdit: boolean
+      editContext: {
+        subject: ReturnType<typeof sym>
+        profileData: { entryNode: ReturnType<typeof sym>; name: string }
+        viewerMode: 'owner'
+        onSaved: () => void
+      }
       updateComplete: Promise<unknown>
     }
     heading.profileData = {
@@ -181,7 +163,15 @@ describe('page-level profile heading', () => {
       location: 'Paris, France',
       primaryEmail: { valueNode: sym('mailto:compact@example.com') }
     }
-    heading.canEdit = true
+    heading.editContext = {
+      subject: sym('https://compact-heading.example/profile/card#me'),
+      profileData: {
+        entryNode: sym('https://compact-heading.example/profile/card#me'),
+        name: 'Compact Heading Test'
+      },
+      viewerMode: 'owner',
+      onSaved: vi.fn()
+    }
     document.body.appendChild(heading)
     await heading.updateComplete
     const avatar = heading.shadowRoot?.querySelector('.image-frame')
@@ -226,12 +216,12 @@ describe('page-level profile heading', () => {
     await refreshProfileHeading(true)
 
     const heading = document.querySelector('solid-panes-profile-heading') as (HTMLElement & {
-      canEdit?: boolean
+      editContext?: unknown
       compact?: boolean
       updateComplete?: Promise<unknown>
     }) | null
     await heading?.updateComplete
-    expect(heading?.canEdit).toBe(false)
+    expect(heading?.editContext).toBeUndefined()
     expect(heading?.compact).toBe(true)
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
 
@@ -242,7 +232,7 @@ describe('page-level profile heading', () => {
     await refreshProfileHeading(true)
     await heading?.updateComplete
 
-    expect(heading?.canEdit).toBe(true)
+    expect(heading?.editContext).toBeTruthy()
     expect(heading?.compact).toBe(false)
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).not.toBeNull()
 
@@ -255,7 +245,7 @@ describe('page-level profile heading', () => {
 
     expect(document.querySelector('solid-panes-profile-heading')).toBe(heading)
     expect(heading?.compact).toBe(true)
-    expect(heading?.canEdit).toBe(false)
+    expect(heading?.editContext).toBeUndefined()
   })
 
   it('refreshes the heading job title when the displayed profile saves resume changes', async () => {
@@ -461,7 +451,7 @@ describe('page-level profile heading', () => {
     const mount = document.getElementById('profile-heading-mount')
     const heading = mount?.querySelector('solid-panes-profile-heading') as (HTMLElement & {
       profileData?: { name: string }
-      canEdit?: boolean
+      editContext?: unknown
       compact?: boolean
       updateComplete?: Promise<unknown>
     }) | null
@@ -469,7 +459,7 @@ describe('page-level profile heading', () => {
 
     expect(mount?.hidden).toBe(false)
     expect(heading?.profileData?.name).toBe('Another Person')
-    expect(heading?.canEdit).toBe(false)
+    expect(heading?.editContext).toBeUndefined()
     expect(heading?.compact).toBe(true)
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
 
