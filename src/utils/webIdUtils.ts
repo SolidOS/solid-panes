@@ -5,9 +5,14 @@
 
 import { IndexedFormula, NamedNode, sym } from 'rdflib'
 import { ns } from 'solid-ui'
-import { store } from 'solid-logic'
+import { authn, store } from 'solid-logic'
 
 const DEFAULT_PROFILE_PATH = 'profile/card#me'
+
+export function isOwnWebIdProfile (subject: NamedNode): boolean {
+  const viewer = authn.currentUser()
+  return Boolean(viewer && (viewer.sameTerm(subject) || viewer.doc().sameTerm(subject)))
+}
 
 export async function loadProfileFromURI (
   uri: NamedNode

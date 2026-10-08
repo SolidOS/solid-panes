@@ -503,10 +503,11 @@ describe('page-level profile heading', () => {
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'
     const navbar = document.createElement('solid-panes-navbar') as HTMLElement & {
-      navbarItems?: Array<{ paneName: string, profileSubjectUri: string }>
+      navbarItems?: Array<{ paneName: string, paneUri: string, profileSubjectUri: string }>
     }
     navbar.navbarItems = [{
       paneName: 'folder',
+      paneUri: storage.value,
       profileSubjectUri: subject.value
     }]
     mainContent.appendChild(navbar)
@@ -534,6 +535,56 @@ describe('page-level profile heading', () => {
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
 
     currentUser.mockRestore()
+  })
+
+  it('hides another person\'s heading when the account menu opens the viewer\'s storage', async () => {
+    const subject = sym(`${window.location.origin}/other/profile/card#me`)
+    const viewer = sym(`${window.location.origin}/profile/card#me`)
+    const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & {
+      navbarItems: Array<{ paneName: string, paneUri: string, profileSubjectUri: string }>
+    }
+    navbar.navbarItems = [1, 2].map(index => ({
+      paneName: 'folder',
+      paneUri: `${window.location.origin}/other/storage-${index}/`,
+      profileSubjectUri: subject.value
+    }))
+    mainContent.appendChild(navbar)
+    document.body.appendChild(mainContent)
+
+    try {
+      window.history.replaceState({ paneName: 'profile', paneUri: subject.value }, '', subject.value)
+      await refreshProfileHeading(true)
+      const mount = document.getElementById('profile-heading-mount')!
+      expect(mount.hidden).toBe(false)
+
+      navbar.classList.add('navbar--hidden')
+      window.history.replaceState({
+        paneName: 'folder',
+        paneUri: `${window.location.origin}/storage/`
+      }, '', subject.value)
+      await refreshProfileHeading()
+
+      expect(window.location.href).toBe(subject.value)
+      expect(mount.hidden).toBe(true)
+      expect(mount.firstElementChild).toBeNull()
+
+      navbar.classList.remove('navbar--hidden')
+      await refreshProfileHeading()
+      expect(mount.hidden).toBe(true)
+
+      window.history.replaceState({
+        paneName: 'folder',
+        paneUri: navbar.navbarItems[1].paneUri
+      }, '', subject.value)
+      await refreshProfileHeading()
+      expect(mount.hidden).toBe(false)
+      expect(mount.firstElementChild).not.toBeNull()
+    } finally {
+      currentUser.mockRestore()
+    }
   })
 
   it('hides the mount for panes other than profile and social', async () => {

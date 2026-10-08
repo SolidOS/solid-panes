@@ -15,6 +15,7 @@ export interface NavbarMenuItem {
   label: string | TemplateResult
   selected?: boolean
   paneName?: string
+  paneUri?: string
   profileSubjectUri?: string
   onSelected?(): void | Promise<void>
 }

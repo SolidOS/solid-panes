@@ -15,6 +15,7 @@ import '~icons/lucide/mail'
 import '~icons/lucide/map-pin'
 import '~icons/lucide/pencil'
 import '~icons/lucide/phone'
+import '~icons/lucide/user-round-plus'
 import styles from './ProfileHeading.styles.css'
 
 export interface ProfileHeadingPoint {
@@ -216,7 +217,9 @@ export default class ProfileHeading extends WebComponent {
                     ?disabled=${this.friendState === 'loading' || this.friendState === 'saving' || this.friendState === 'exists'}
                     aria-busy=${this.friendState === 'loading' || this.friendState === 'saving' ? 'true' : 'false'}
                     @click=${this.handleAddFriend}
-                  >${this.friendState === 'exists' ? friendTexts.exists : friendTexts.add}</solid-ui-button>
+                  >${this.friendState === 'exists'
+                    ? nothing
+                    : html`<icon-lucide-user-round-plus slot="icon" class="profile__btn-friends-icon" aria-hidden="true"></icon-lucide-user-round-plus>`}${this.friendState === 'exists' ? friendTexts.exists : friendTexts.add}</solid-ui-button>
                   ${this.friendMessage
                     ? html`
                     <div class="friend-message" role=${this.friendError ? 'alert' : 'status'}

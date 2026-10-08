@@ -56,7 +56,10 @@ The `solid-panes-profile-heading` component accepts presentation data through
 halves the responsive avatar size and shows only the photo, name, and job title.
 The page controller uses the full heading on the profile pane and compact mode
 on every other pane where the heading is visible. Owner editing remains exclusive
-to the profile pane. Solid-panes locally presents the heading data and checks
+to the profile pane. On storage panes, the heading is shown only when the active
+storage URI matches the viewed profile's navbar entry. Opening the logged-in
+user's storage from the header menu hides the heading, even when the URL still
+points to someone else's profile. Solid-panes locally presents the heading data and checks
 viewer edit access; the component owns the edit interaction and opens the local
 heading editor. The page controller refreshes the heading after a successful save.
 After a successful save the component also dispatches a bubbling, composed
@@ -86,6 +89,10 @@ back during that animation cancels it and reuses the existing component.
 The reverse navigation fades and expands the full or compact heading and its
 outer spacing over 300ms, after the component has rendered. Reduced-motion users
 get immediate appearance and removal instead.
+
+The navbar is hidden when the loaded URL is the logged-in user's WebID or its
+fragment-free profile document URL. Other URLs in the same pod and other users'
+profiles keep the navbar. Account-menu navigation continues to hide it.
 
 ## Development
 

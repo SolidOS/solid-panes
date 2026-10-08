@@ -149,6 +149,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   await authReady
 
   const paneName = window.history.state?.paneName
+  const paneUri = window.history.state?.paneUri
   const mount = ensureMountPoint()
   if (!mount) return
 
@@ -158,11 +159,14 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     loadingPaneKey = ''
   }
 
+  const navbar = document.querySelector('solid-panes-navbar') as (HTMLElement & {
+    navbarItems?: NavbarMenuItem[]
+  }) | null
+  const selectedNavbarItem = navbar?.navbarItems?.find(item =>
+    item.paneName === paneName && (!paneUri || item.paneUri === paneUri)
+  )
+
   if (!paneName || !PROFILE_PANE_NAMES.has(paneName)) {
-    const navbar = document.querySelector('solid-panes-navbar') as (HTMLElement & {
-      navbarItems?: NavbarMenuItem[]
-    }) | null
-    const selectedNavbarItem = navbar?.navbarItems?.find(item => item.paneName === paneName)
     const viewer = authn.currentUser()
     const viewedProfileUri = selectedNavbarItem?.profileSubjectUri
     if (!viewedProfileUri || viewedProfileUri === viewer?.value) {
@@ -175,12 +179,8 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     }
   }
 
-  const navbar = document.querySelector('solid-panes-navbar') as (HTMLElement & {
-    navbarItems?: NavbarMenuItem[]
-  }) | null
-  const selectedNavbarItem = navbar?.navbarItems?.find(item => item.paneName === paneName)
   const subjectUri = PROFILE_PANE_NAMES.has(paneName)
-    ? window.history.state?.paneUri || selectedNavbarItem?.profileSubjectUri || window.location.href
+    ? paneUri || selectedNavbarItem?.profileSubjectUri || window.location.href
     : selectedNavbarItem?.profileSubjectUri
   if (!subjectUri) return
   cancelHeadingHide(mount)

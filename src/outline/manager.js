@@ -12,7 +12,7 @@ import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
-import { isWebIdUri } from '../utils/webIdUtils'
+import { isOwnWebIdProfile, isWebIdUri } from '../utils/webIdUtils'
 import '../components/file-explorer-header'
 
 export default function (context) {
@@ -304,10 +304,10 @@ export default function (context) {
     return document.querySelector('solid-panes-navbar')
   }
 
-  function showSolidPanesNavbar () {
+  function showSolidPanesNavbar (subject) {
     const navbar = getNavbarElement()
     if (navbar) {
-      navbar.classList.remove('navbar--hidden')
+      navbar.classList.toggle('navbar--hidden', isOwnWebIdProfile(subject))
     }
   }
 
@@ -1850,7 +1850,7 @@ export default function (context) {
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table, showNavbar = true) {
     const outlineContainer = getOutlineContainer()
     if (showNavbar && (!table || table === outlineContainer)) {
-      showSolidPanesNavbar()
+      showSolidPanesNavbar(subject)
     }
 
     table = table || outlineContainer // if does not exist create a compatible host in the current shell

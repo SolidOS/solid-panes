@@ -3,7 +3,7 @@ import { NamedNode } from 'rdflib'
 import { getSocialPaneFromURI, getProfilePaneFromURI, getFolderPanesFromURI } from '../utils/paneUtils'
 import { html, render } from 'lit-html'
 import type { OutlineManager } from '../outline/manager'
-import { isWebIdUri, loadProfileFromURI } from '../utils/webIdUtils'
+import { isOwnWebIdProfile, isWebIdUri, loadProfileFromURI } from '../utils/webIdUtils'
 
 import '~icons/lucide/user'
 import '~icons/lucide/users'
@@ -15,7 +15,7 @@ import type { NavbarMenuItem } from '../components/navbar/Navbar'
 function showNavbar () {
   const navbar = document.querySelector<HTMLElement>('solid-panes-navbar')
   if (navbar) {
-    navbar.classList.remove('navbar--hidden')
+    navbar.classList.toggle('navbar--hidden', isOwnWebIdProfile(store.sym(window.location.href)))
   }
 }
 
@@ -23,12 +23,14 @@ function createNavItem (
   label: string,
   paneName: string,
   profileSubjectUri: string,
+  paneUri: string,
   onSelected: () => void,
   selected = false
 ): NavbarMenuItem {
   return {
     label,
     paneName,
+    paneUri,
     profileSubjectUri,
     onSelected () {
       showNavbar()
@@ -52,11 +54,11 @@ async function createNavbarMenuItems (
 
   if (webId) {
     menuItems.push(
-      createNavItem('Profile', 'profile', webId.value, async () => {
+      createNavItem('Profile', 'profile', webId.value, webId.value, async () => {
         const profilePane = await getProfilePaneFromURI(webId)
         outliner.GotoSubject(subject, true, profilePane, true, undefined, outlineView)
       }, selectedPane === 'profile'),
-      createNavItem('Friends', 'social', webId.value, async () => {
+      createNavItem('Friends', 'social', webId.value, webId.value, async () => {
         const socialPane = await getSocialPaneFromURI(webId)
         outliner.GotoSubject(subject, true, socialPane, true, undefined, outlineView)
       }, selectedPane === 'social')
@@ -70,6 +72,7 @@ async function createNavbarMenuItems (
         pane.label(),
         pane.paneName,
         webId?.value ?? '',
+        pane.subject.value,
         async () => {
           outliner.GotoSubject(subject, true, pane, true, undefined, outlineView)
         },
@@ -86,7 +89,7 @@ export async function createNavbar (outliner: OutlineManager) {
   const existingNavbar = document.querySelector<HTMLElement>('solid-panes-navbar')
 
   if (existingNavbar) {
-    existingNavbar.classList.remove('navbar--hidden')
+    showNavbar()
     return existingNavbar
   }
 
@@ -140,6 +143,8 @@ export async function createNavbar (outliner: OutlineManager) {
   } else {
     document.body.prepend(navbar)
   }
+
+  showNavbar()
 
   return navbar
 }

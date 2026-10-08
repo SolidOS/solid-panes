@@ -110,6 +110,14 @@
   max-width: 16rem;
 }
 
+.profile__btn-friends-icon {
+  display: block;
+  width: 14px;
+  height: 14px;
+  align-self: center;
+  transform: translateY(-3px);
+}
+
 .friend-message {
   text-align: center;
   font-size: var(--solid-ui-font-size-sm, 0.875rem);
@@ -303,6 +311,10 @@
   .profile-heading:has(.profile-friends-button__section) .name {
     white-space: normal;
     overflow-wrap: anywhere;
+  }
+
+  .profile__btn-friends-icon {
+    display: none;
   }
 
   .profile__btn-friends[disabled]:not([aria-busy="true"]) {

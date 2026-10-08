@@ -3,6 +3,7 @@
     position: relative;
     z-index: 1;
     flex-shrink: 0;
+    margin-bottom: 20px;
 }
 
 :host(.navbar--hidden) {

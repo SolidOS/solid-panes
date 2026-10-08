@@ -1,4 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { authn } from 'solid-logic'
 
 vi.mock('solid-ui', async () => {
   const actual = await vi.importActual<typeof import('solid-ui')>('solid-ui')
@@ -32,6 +33,42 @@ const mockPaneRegistry = {
 }
 
 describe('manager', () => {
+  describe('navbar visibility during navigation', () => {
+    afterEach(() => {
+      vi.restoreAllMocks()
+      document.body.replaceChildren()
+    })
+
+    it.each([
+      ['https://owner.example/profile/card#me', true],
+      ['https://owner.example/profile/card', true],
+      ['https://owner.example/storage/file.ttl', false],
+      ['https://visitor.example/profile/card#me', false]
+    ])('sets navbar visibility for %s', (uri, hidden) => {
+      vi.spyOn(authn, 'currentUser').mockReturnValue(sym('https://owner.example/profile/card#me'))
+      const navbar = document.createElement('solid-panes-navbar')
+      navbar.classList.toggle('navbar--hidden', !hidden)
+      document.body.appendChild(navbar)
+      const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+
+      manager.GotoSubject(sym(uri), false)
+
+      expect(navbar.classList.contains('navbar--hidden')).toBe(hidden)
+    })
+
+    it('preserves account-menu hiding when automatic reveal is suppressed', () => {
+      vi.spyOn(authn, 'currentUser').mockReturnValue(sym('https://owner.example/profile/card#me'))
+      const navbar = document.createElement('solid-panes-navbar')
+      navbar.classList.add('navbar--hidden')
+      document.body.appendChild(navbar)
+      const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+
+      manager.GotoSubject(sym('https://visitor.example/profile/card#me'), false, undefined, false, undefined, undefined, false)
+
+      expect(navbar).toHaveClass('navbar--hidden')
+    })
+  })
+
   describe('outline object td', () => {
     describe('for a named node', () => {
       let result

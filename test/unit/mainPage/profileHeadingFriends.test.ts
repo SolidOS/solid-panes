@@ -87,10 +87,12 @@ describe('profile heading friends', () => {
     const heading = await createHeading()
     expect(store.fetcher.load).toHaveBeenCalledWith(viewer)
     expect(button(heading)?.textContent).toBe('Add as friend')
+    expect(button(heading)?.querySelector('icon-lucide-user-round-plus')).toHaveAttribute('slot', 'icon')
     button(heading)?.click()
     button(heading)?.click()
     await vi.waitFor(() => expect(heading.friendState).toBe('exists'))
     await heading.updateComplete
+    expect(button(heading)?.querySelector('icon-lucide-user-round-plus')).toBeNull()
     expect(store.updater.update).toHaveBeenCalledExactlyOnceWith(
       [], [st(viewer, ns.foaf('knows'), subject, viewer.doc())]
     )
@@ -107,6 +109,7 @@ describe('profile heading friends', () => {
     const heading = await createHeading()
     expect(button(heading)).toHaveAttribute('disabled')
     expect(button(heading)?.textContent).toBe('Already a friend')
+    expect(button(heading)?.querySelector('icon-lucide-user-round-plus')).toBeNull()
     button(heading)?.dispatchEvent(new Event('click'))
     expect(store.updater.update).not.toHaveBeenCalled()
   })
