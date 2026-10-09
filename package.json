@@ -67,10 +67,10 @@
     "marked": "^18.0.3",
     "meeting-pane": "4.0.0",
     "mime-types": "^3.0.2",
-    "pane-registry": "5.0.1",
-    "profile-pane": "4.1.0-rc.0",
+    "pane-registry": "5.0.2-0",
+    "profile-pane": "4.0.0",
     "rdflib": "2.4.1",
-    "solid-logic": "6.0.0",
+    "solid-logic": "6.0.1-1",
     "solid-namespace": "^0.5.4",
     "solid-ui": "5.0.1",
     "source-pane": "4.0.0"
