@@ -19,6 +19,12 @@ function showNavbar () {
   }
 }
 
+let selectPaneInNavbar: ((paneName: string, paneUri?: string) => void) | undefined
+
+export function selectNavbarPane (paneName: string, paneUri?: string): void {
+  selectPaneInNavbar?.(paneName, paneUri)
+}
+
 function createNavItem (
   label: string,
   paneName: string,
@@ -131,6 +137,14 @@ export async function createNavbar (outliner: OutlineManager) {
   }
 
   renderNavbar()
+
+  selectPaneInNavbar = (paneName, paneUri) => {
+    const panes = menuItems.filter(menuItem => menuItem.paneName === paneName)
+    const item = panes.find(menuItem => menuItem.paneUri === paneUri) ?? panes[0]
+    if (!item) return
+    setSelectedItem(item)
+    renderNavbar()
+  }
 
   const navbar = tmpContainer.firstElementChild as HTMLElement | null
 

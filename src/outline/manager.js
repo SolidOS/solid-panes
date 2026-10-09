@@ -11,7 +11,7 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { loadContainerRepresentation } from '../utils/podUtils'
+import { isInViewerPod, loadContainerRepresentation } from '../utils/podUtils'
 import { isOwnWebIdProfile, isWebIdUri } from '../utils/webIdUtils'
 import '../components/file-explorer-header'
 
@@ -470,7 +470,11 @@ export default function (context) {
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
-    provider.showHeader = !isRootResource && !isWebIdUri(subject)
+    // Views opened for the viewer's own content (account menu) or for a person's own
+    // subject (navbar) are not a view of the page URL's resource, so the resource
+    // header only makes sense when the page URL is inside the viewer's own pod.
+    const hideOutsideViewerPod = !!options.headerOnlyInViewerPod && !(await isInViewerPod(document.location.href))
+    provider.showHeader = !isRootResource && !isWebIdUri(subject) && !hideOutsideViewerPod
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
@@ -1832,6 +1836,58 @@ export default function (context) {
     const subject = kb.sym(uri)
     this.GotoSubject(subject, true)
   }
+  let openPathRequest = 0
+
+  // Opens, one level at a time, the containers from `root` down to `target` (the last
+  // one being the container or resource itself) inside the rows of a rendered container.
+  function openPathWithin (table, root, target) {
+    const request = ++openPathRequest
+    const rootUri = root.uri
+    const targetUri = target.uri.split('#')[0]
+    if (!rootUri.endsWith('/') || !targetUri.startsWith(rootUri) || targetUri === rootUri) return
+
+    const steps = []
+    const parts = targetUri.slice(rootUri.length).split('/')
+    let uri = rootUri
+    parts.forEach((part, index) => {
+      if (!part) return
+      uri += index < parts.length - 1 ? part + '/' : part
+      steps.push(uri)
+    })
+
+    const findRow = stepUri => Array.from(table.querySelectorAll('td.obj[about]'))
+      .find(td => td.getAttribute('about') === kb.sym(stepUri).toNT())
+
+    // The rows only exist once their container has been fetched and rendered
+    const whenRow = stepUri => new Promise(resolve => {
+      const existing = findRow(stepUri)
+      if (existing) return resolve(existing)
+
+      const timer = setTimeout(() => { observer.disconnect(); resolve(null) }, 10000)
+      const observer = new MutationObserver(() => {
+        const row = findRow(stepUri)
+        if (!row && request === openPathRequest) return
+        clearTimeout(timer)
+        observer.disconnect()
+        resolve(row)
+      })
+      observer.observe(table, { childList: true, subtree: true })
+    })
+
+    ;(async () => {
+      for (const stepUri of steps) {
+        const row = await whenRow(stepUri)
+        if (!row || request !== openPathRequest) return
+        if (!row.firstChild || row.firstChild.nodeName !== 'TABLE') {
+          outlineExpand(row, kb.sym(stepUri))
+        }
+        if (stepUri === steps[steps.length - 1] && typeof row.scrollIntoView === 'function') {
+          row.scrollIntoView({ block: 'nearest' })
+        }
+      }
+    })().catch(err => UI.log.warn('outline: could not open ' + target.uri + ' inside ' + rootUri + ': ' + err))
+  }
+
   this.GotoURIinit = function (uri) {
     const subject = kb.sym(uri)
     this.GotoSubject(subject)
@@ -1841,11 +1897,14 @@ export default function (context) {
 
   @param subject -- RDF term for the thing to be presented
   @param expand  -- flag -- open the subject rather than keep folded closed
-  @param pane    -- optional -- pane to be used for expanded display
+  @param pane    -- optional -- pane to be used for expanded display. When the pane has its own
+                    subject (the profile, friends or storage of a person), that subject is displayed
+                    instead of `subject`, which only stays the page URL; for a storage the container
+                    or resource `subject` points at is opened inside it
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
   @param table   -- option  -- default is an HTML table element in which to put the outline.
-  @param showNavbar -- optional -- when false, suppress automatic navbar reveal
+  @param showNavbar -- optional -- when false, suppress automatic navbar reveal (used by the account menu)
 */
   this.GotoSubject = function (subject, expand, pane, solo, referrer, table, showNavbar = true) {
     const outlineContainer = getOutlineContainer()
@@ -1859,25 +1918,34 @@ export default function (context) {
       table.style.width = '100%'
     }
 
+    // The URL and history always follow `subject`; what is displayed may differ:
+    // a pane with its own subject (profile, friends or storage of a person) is displayed
+    // for that subject, not for the resource the page URL points at.
+    const displayedSubject = pane && pane.subject && pane.subject.uri
+      ? pane.subject
+      : subject
+
     function GotoSubjectDefault () {
       const tr = dom.createElement('tr')
       tr.classList.add('outlineRow1')
       tr.style.verticalAlign = 'top'
       table.appendChild(tr)
-      const td = thisOutline.outlineObjectTD(subject, undefined, tr)
+      const td = thisOutline.outlineObjectTD(displayedSubject, undefined, tr)
       tr.appendChild(td)
       return td
     }
 
     const td = GotoSubjectDefault()
 
-    if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
+    if (solo) setUrlBarAndTitle(displayedSubject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
-      outlineExpand(td, subject, {
+      outlineExpand(td, displayedSubject, {
         pane,
-        solo
+        solo,
+        headerOnlyInViewerPod: !showNavbar || !!(pane && pane.subject && pane.subject.uri)
       })
+      if (solo && displayedSubject !== subject) openPathWithin(table, displayedSubject, subject)
     }
 
     if (
@@ -1892,11 +1960,23 @@ export default function (context) {
         paneState.paneUri = pane.subject.uri
       }
       const stateObj = { ...currentState, ...paneState }
+      // Pane details describe what was displayed, so they must not leak into
+      // another subject's entry, nor outlive the pane they were saved for.
+      const leavingPage = document.location.href !== subject.uri
+      if (leavingPage && !pane) delete stateObj.paneName
+      if ((leavingPage && !pane) || (pane && !paneState.paneUri)) delete stateObj.paneUri
+      // The account menu shows the viewer's own content while keeping the URL,
+      // so a later page load must not restore that pane over the URL's subject.
+      if (showNavbar) {
+        delete stateObj.viaAccountMenu
+      } else {
+        stateObj.viaAccountMenu = true
+      }
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
         if (currentUrl.origin === targetUrl.origin) {
-          if (document.location.href !== subject.uri) {
+          if (leavingPage) {
             dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
           } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
             dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)

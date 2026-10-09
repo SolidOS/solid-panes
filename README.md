@@ -59,7 +59,17 @@ on every other pane where the heading is visible. Owner editing remains exclusiv
 to the profile pane. On storage panes, the heading is shown only when the active
 storage URI matches the viewed profile's navbar entry. Opening the logged-in
 user's storage from the header menu hides the heading, even when the URL still
-points to someone else's profile. Solid-panes locally presents the heading data and checks
+points to someone else's profile. Reloading a WebID URL always shows its profile
+with Profile selected in the navbar. On a container or resource URL (not a WebID) the page
+shows the resource as usual with the navbar visible and nothing selected; choosing Storage
+in the navbar replaces that view with the whole storage, with the container or resource
+from the URL opened inside it. Any other pane on a page inside someone else's pod
+(for example their container) shows the compact heading of that pod's owner; it is
+hidden inside the viewer's own pod and for account-menu views. Pressing Enter on the current URL, or using the browser's
+back and forward buttons, re-renders the page without a reload: Enter shows the
+URL's own profile (and selects it in the navbar), while back and forward restore
+what each history entry displayed, including account-menu entries that keep a
+different profile in the URL. Solid-panes locally presents the heading data and checks
 viewer edit access; the component owns the edit interaction and opens the local
 heading editor. The page controller refreshes the heading after a successful save.
 After a successful save the component also dispatches a bubbling, composed

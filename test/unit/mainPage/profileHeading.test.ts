@@ -587,6 +587,72 @@ describe('page-level profile heading', () => {
     }
   })
 
+  it('shows a compact heading for the owner on a container in someone else\'s pod', async () => {
+    const other = sym(`${window.location.origin}/other/profile/card#me`)
+    const viewer = sym(`${window.location.origin}/profile/card#me`)
+    store.add(other, ns.vcard('fn'), lit('Pod Owner'), other.doc())
+    const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & { navbarItems: object[] }
+    navbar.navbarItems = [
+      { paneName: 'profile', paneUri: other.value, profileSubjectUri: other.value },
+      { paneName: 'social', paneUri: other.value, profileSubjectUri: other.value }
+    ]
+    mainContent.appendChild(navbar)
+    document.body.appendChild(mainContent)
+
+    try {
+      for (const state of [{}, { paneName: 'folder' }, { paneName: 'source' }]) {
+        window.history.replaceState(state, '', '/other/container/')
+        await refreshProfileHeading(true)
+
+        const mount = document.getElementById('profile-heading-mount')!
+        const heading = mount.querySelector('solid-panes-profile-heading') as HTMLElement & {
+          profileData?: { name: string }
+          editContext?: unknown
+          friendSubject?: unknown
+          compact?: boolean
+          updateComplete: Promise<unknown>
+        }
+        await heading.updateComplete
+        expect(mount.hidden).toBe(false)
+        expect(heading.profileData?.name).toBe('Pod Owner')
+        expect(heading.compact).toBe(true)
+        expect(heading.editContext).toBeUndefined()
+        expect(heading.friendSubject).toBeUndefined()
+      }
+    } finally {
+      currentUser.mockRestore()
+    }
+  })
+
+  it.each([
+    ['the viewer\'s own pod', {}, 'viewer'],
+    ['an account-menu view', { paneName: 'home', viaAccountMenu: true }, 'other'],
+    ['an account-menu storage view', { paneName: 'folder', paneUri: 'https://x.example/s/', viaAccountMenu: true }, 'other']
+  ])('hides the heading on a container for %s', async (_name, state, owner) => {
+    const other = sym(`${window.location.origin}/other/profile/card#me`)
+    const viewer = sym(`${window.location.origin}/profile/card#me`)
+    const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & { navbarItems: object[] }
+    const ownerUri = owner === 'viewer' ? viewer.value : other.value
+    navbar.navbarItems = [{ paneName: 'profile', paneUri: ownerUri, profileSubjectUri: ownerUri }]
+    mainContent.appendChild(navbar)
+    document.body.appendChild(mainContent)
+
+    try {
+      window.history.replaceState(state, '', '/other/container/')
+      await refreshProfileHeading(true)
+
+      expect(document.getElementById('profile-heading-mount')?.hidden).toBe(true)
+    } finally {
+      currentUser.mockRestore()
+    }
+  })
+
   it('hides the mount for panes other than profile and social', async () => {
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'

@@ -165,10 +165,15 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   const selectedNavbarItem = navbar?.navbarItems?.find(item =>
     item.paneName === paneName && (!paneUri || item.paneUri === paneUri)
   )
+  // Any other pane on a page inside someone's pod (for example their container)
+  // shows that pod owner's heading. Account-menu views show the viewer's own content.
+  const profileNavbarItem = navbar?.navbarItems?.find(item => item.paneName === 'profile')
+  const viewedProfileUri = (
+    selectedNavbarItem ?? (window.history.state?.viaAccountMenu ? undefined : profileNavbarItem)
+  )?.profileSubjectUri
 
   if (!paneName || !PROFILE_PANE_NAMES.has(paneName)) {
     const viewer = authn.currentUser()
-    const viewedProfileUri = selectedNavbarItem?.profileSubjectUri
     if (!viewedProfileUri || viewedProfileUri === viewer?.value) {
       refreshRequest++
       loadingPaneKey = ''
@@ -181,7 +186,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
 
   const subjectUri = PROFILE_PANE_NAMES.has(paneName)
     ? paneUri || selectedNavbarItem?.profileSubjectUri || window.location.href
-    : selectedNavbarItem?.profileSubjectUri
+    : viewedProfileUri
   if (!subjectUri) return
   cancelHeadingHide(mount)
   const paneKey = `${paneName}:${subjectUri}`

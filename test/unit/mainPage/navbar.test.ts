@@ -16,7 +16,7 @@ vi.mock('../../../src/utils/webIdUtils', async (importOriginal) => ({
   loadProfileFromURI: async (subject: ReturnType<typeof sym>) => subject
 }))
 
-import { createNavbar } from '../../../src/mainPage/navbar'
+import { createNavbar, selectNavbarPane } from '../../../src/mainPage/navbar'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -27,6 +27,45 @@ afterEach(() => {
 
 describe('page navbar visibility', () => {
   const outliner = {} as OutlineManager
+
+  it('selects a menu item by pane name and ignores unknown panes', async () => {
+    vi.spyOn(authn, 'currentUser').mockReturnValue(null)
+    window.history.replaceState({ paneName: 'social' }, '', '/other/profile/card#me')
+
+    const navbar = await createNavbar(outliner) as HTMLElement & { navbarItems: NavbarMenuItem[] }
+    const selected = () => navbar.navbarItems.filter(item => item.selected).map(item => item.paneName)
+    expect(selected()).toEqual(['social'])
+
+    selectNavbarPane('profile')
+    expect(selected()).toEqual(['profile'])
+
+    selectNavbarPane('unknown')
+    expect(selected()).toEqual(['profile'])
+  })
+
+  it('selects the storage item matching the pane URI', async () => {
+    const storages = [1, 2].map(index => sym(`${window.location.origin}/other/storage-${index}/`))
+    vi.mocked(getFolderPanesFromURI).mockResolvedValue(storages.map(storage => ({
+      name: 'folder',
+      paneName: 'folder',
+      subject: storage,
+      label: () => 'Storage',
+      render: vi.fn(),
+      shouldGetFocus: () => false,
+      requireQueryButton: false,
+      icon: ''
+    })))
+    window.history.replaceState({}, '', '/other/profile/card#me')
+
+    const navbar = await createNavbar(outliner) as HTMLElement & { navbarItems: NavbarMenuItem[] }
+    const selected = () => navbar.navbarItems.filter(item => item.selected).map(item => item.paneUri)
+
+    selectNavbarPane('folder', storages[1].value)
+    expect(selected()).toEqual([storages[1].value])
+
+    selectNavbarPane('folder', `${window.location.origin}/unknown/`)
+    expect(selected()).toEqual([storages[0].value])
+  })
 
   it('associates each storage menu item with its own pane URI', async () => {
     const subject = sym(`${window.location.origin}/other/profile/card#me`)
