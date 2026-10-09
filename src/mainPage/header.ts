@@ -32,14 +32,26 @@ export async function createHeader (outliner: OutlineManager) {
     }
   }
 
+  // The header outlives logins, so the viewer is resolved when an item is chosen.
+  async function currentViewer () {
+    return authn.currentUser() ?? await authn.checkUser()
+  }
+
+  function showPane (pane: Awaited<ReturnType<typeof getProfilePaneFromURI>>) {
+    // Without a pane the outline would fall back to the page URL's own default view.
+    if (!pane) {
+      console.warn('Could not open the requested view for the logged-in user.')
+      return
+    }
+    outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)
+  }
+
   const storagePanes = me ? await getFolderPanesFromURI(me) : []
   const storageMenuItems: AccountMenuItem[] = storagePanes.map(pane => ({
     label: html`<icon-lucide-folder-open slot="left-icon"></icon-lucide-folder-open> ${pane.label()}`,
     async onSelected () {
       hideNavbar()
-      if (me) {
-        outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)
-      }
+      if (await currentViewer()) showPane(pane)
     }
   }))
   const menuItems: AccountMenuItem[] = [
@@ -47,28 +59,24 @@ export async function createHeader (outliner: OutlineManager) {
       label: html`<icon-lucide-user slot="left-icon"></icon-lucide-user> Profile`,
       async onSelected () {
         hideNavbar()
-        if (me) {
-          const profilePane = await getProfilePaneFromURI(me)
-          outliner.GotoSubject(sym(window.location.href), true, profilePane, true, undefined, outlineView, false)
-        }
+        const viewer = await currentViewer()
+        if (viewer) showPane(await getProfilePaneFromURI(viewer))
       }
     },
     {
       label: html`<icon-lucide-users slot="left-icon"></icon-lucide-users> Friends`,
       async onSelected () {
         hideNavbar()
-        if (me) {
-          const socialPane = await getSocialPaneFromURI(me)
-          outliner.GotoSubject(sym(window.location.href), true, socialPane, true, undefined, outlineView, false)
-        }
+        const viewer = await currentViewer()
+        if (viewer) showPane(await getSocialPaneFromURI(viewer))
       }
     },
     ...storageMenuItems,
     {
       label: html`<icon-lucide-layout-dashboard slot="left-icon"></icon-lucide-layout-dashboard> Dashboard`,
-      onSelected () {
+      async onSelected () {
         hideNavbar()
-        if (me) {
+        if (await currentViewer()) {
           const pane = outliner.context.session.paneRegistry.byName('home')
           if (pane) {
             outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)
@@ -78,9 +86,9 @@ export async function createHeader (outliner: OutlineManager) {
     },
     {
       label: html`<icon-lucide-settings-2 slot="left-icon"></icon-lucide-settings-2> Preferences`,
-      onSelected () {
+      async onSelected () {
         hideNavbar()
-        if (me) {
+        if (await currentViewer()) {
           const pane = outliner.context.session.paneRegistry.byName('basicPreferences')
           if (pane) {
             outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)

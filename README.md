@@ -49,6 +49,61 @@ Volunteers are always welcome!
 - [Visual Language](https://solidos.github.io/solid-panes/Documentation/VisualLanguage.html)
 - [Conventions](./Documentation/conventions.md)
 
+### Profile heading
+
+The `solid-panes-profile-heading` component accepts presentation data through
+`profileData`. Its boolean `compact` property (also available as an attribute)
+halves the responsive avatar size and shows only the photo, name, and job title.
+The page controller uses the full heading on the profile pane and compact mode
+on every other pane where the heading is visible. Owner editing remains exclusive
+to the profile pane. On storage panes, the heading is shown only when the active
+storage URI matches the viewed profile's navbar entry. Opening the logged-in
+user's storage from the header menu hides the heading, even when the URL still
+points to someone else's profile. Reloading a WebID URL always shows its profile
+with Profile selected in the navbar. On a container or resource URL (not a WebID) the page
+shows the resource as usual with the navbar visible and nothing selected; choosing Storage
+in the navbar replaces that view with the whole storage, with the container or resource
+from the URL opened inside it. Any other pane on a page inside someone else's pod
+(for example their container) shows the compact heading of that pod's owner; it is
+hidden inside the viewer's own pod and for account-menu views. Pressing Enter on the current URL, or using the browser's
+back and forward buttons, re-renders the page without a reload: Enter shows the
+URL's own profile (and selects it in the navbar), while back and forward restore
+what each history entry displayed, including account-menu entries that keep a
+different profile in the URL. Solid-panes locally presents the heading data and checks
+viewer edit access; the component owns the edit interaction and opens the local
+heading editor. The page controller refreshes the heading after a successful save.
+After a successful save the component also dispatches a bubbling, composed
+`profile-heading-saved` event with `detail.subjectUri`, which profile-pane uses to
+rerender sections such as More contacts.
+The heading editor includes its own dialog and responsive styles.
+On mobile, the edit icon sits closer to the heading's top-right edge while
+preserving its full touch target.
+
+On the profile pane, logged-in visitors viewing someone else's profile also see
+an "Add as friend" action to the left of Edit (when available). The page controller
+sets `friendSubject` only in that context. The action loads the viewer's profile,
+checks `foaf:knows`, and saves the new friendship in the viewer's profile document.
+Existing friends have a disabled "Already a friend" button (hidden on mobile).
+Success and error messages are centered below the button, announced and focused,
+and dismissed after 10 seconds; failed operations can be
+retried. Anonymous visitors, owners, and other panes do not show this action.
+On mobile, friend actions sit in the top-right corner beside the name, which
+wraps as needed.
+
+Navigation reuses the mounted heading, with a 300ms CSS transition for the avatar,
+padding, and detail rows in both directions. Transitions are disabled when the
+user prefers reduced motion.
+When navigating to a pane without a heading, the entire heading fades and
+collapses (including its outer spacing) over 300ms before removal. Navigating
+back during that animation cancels it and reuses the existing component.
+The reverse navigation fades and expands the full or compact heading and its
+outer spacing over 300ms, after the component has rendered. Reduced-motion users
+get immediate appearance and removal instead.
+
+The navbar is hidden when the loaded URL is the logged-in user's WebID or its
+fragment-free profile document URL. Other URLs in the same pod and other users'
+profiles keep the navbar. Account-menu navigation continues to hide it.
+
 ## Development
 
 To get started, make sure you have Node.js installed (for instance through [nvm](https://github.com/nvm-sh/nvm)), then:
@@ -64,6 +119,15 @@ npm start
 2. Open http://localhost:5173 in your browser. You should see the pane development sandbox.
 
 3. You can change the `subject` in the sandbox to determine which pane gets rendered. For example, the default subject loads the `profile-pane`.
+
+### Using a local profile-pane
+
+When working inside the SolidOS monorepo, `profile-pane` (and the other local
+workspaces) are symlinked by `npx lerna bootstrap --force-local` (run from the
+monorepo root, as `npm run watch-pivot` does), even if the version in
+`package.json` is not published to npm. Use a plain version in `package.json`
+(not a `file:` path, which lerna does not link) and avoid a bare `npm install`
+here, which fails for unpublished versions and removes the links.
 
 ## Contributing panes
 When you created a pane, you can either add it as an npm dependency

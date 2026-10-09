@@ -1,4 +1,4 @@
-import { store } from 'solid-logic'
+import { authn, store } from 'solid-logic'
 import { ns } from 'solid-ui'
 import { LiveStore, NamedNode, parse } from 'rdflib'
 import { isWebIdUri } from './webIdUtils'
@@ -54,6 +54,15 @@ export async function getPodStorages (url: NamedNode): Promise<NamedNode[]> {
     console.error('cannot load container', err)
     return []
   }
+}
+
+// Whether a URL lies within one of the logged-in user's own storages.
+export async function isInViewerPod (uri: string): Promise<boolean> {
+  const viewer = authn.currentUser()
+  if (!viewer) return false
+
+  const storages = await getPodStorages(viewer)
+  return storages.some(storage => uri.startsWith(storage.uri))
 }
 
 async function findPodStorageFromUrl (url: NamedNode): Promise<NamedNode | null> {

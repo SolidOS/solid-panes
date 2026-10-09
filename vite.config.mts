@@ -16,6 +16,8 @@ if (isWatch && build && Array.isArray(build.rolldownOptions?.output)) {
     build.rolldownOptions.output = build.rolldownOptions.output.filter(
         (o: { format?: string }) => o.format === 'es',
     )
+    build.emptyOutDir = false
+    build.watch = { exclude: ['**/dist/**'] }
 }
 
 type ConcretePlugin = Extract<PluginOption, { name: string }>

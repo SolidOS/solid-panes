@@ -16,12 +16,9 @@ import { DataBrowserContext } from 'pane-registry'
 import { locationIcon } from './icons'
 import {
   createAllFriendsSection,
-  createHeaderSection,
   FriendRowRenderers,
   createMutualSection,
-  createRequestsSection,
-  HeaderControls,
-  SocialHeaderElement
+  createRequestsSection
 } from './socialSections'
 import type { ViewerMode } from './socialSections'
 import { FriendshipTriage, loadFriendshipTriage, triageFriends } from './triage'
@@ -225,7 +222,6 @@ export const socialPane = {
     const mutualConnections = me && !thisIsYou
       ? uniqueNodes(common(uniqueFriends, myFriends)).filter(friend => !kb.sameThings(friend, me))
       : []
-    const mutualFriendCount = me && !thisIsYou ? mutualConnections.length : null
     const viewerMode = getViewerMode(s, me)
 
     // Do I have a public profile document?
@@ -320,36 +316,9 @@ export const socialPane = {
     } // me is defined
     // End of you and s
 
-    const shouldShowHeaderAddFriendAction = (mode: ViewerMode) => {
-      return mode === 'authenticated' && !thisIsYou && !outgoing
-    }
-
     const canEditOwnedProfile = viewerMode === 'owner' && editable
     const canManageRelationship = viewerMode === 'authenticated' && !thisIsYou && editable && Boolean(profile)
     const canModifyFriendsTab = canEditOwnedProfile
-
-    let headerControls: HeaderControls = {
-      canEdit: canEditOwnedProfile,
-      viewerMode,
-      showAddFriendAction: shouldShowHeaderAddFriendAction(viewerMode)
-    }
-
-    const header = createHeaderSection(context, s, headerControls, {
-      friendCount: uniqueFriends.length,
-      mutualFriendCount,
-      onSelectFriends: function () {
-        setActivePanel('all-friends')
-      },
-      onSelectMutual: typeof mutualFriendCount === 'number'
-        ? function () {
-          setActivePanel('mutual')
-        }
-        : undefined
-    }, function () {
-      return selectProfileData(context, s)
-    })
-    header.classList.add('social-pane__header-section', 'flex-column')
-    socialPane.prepend(header)
 
     // div.appendChild(dom.createTextNode(plural(friends.length, 'acquaintance') +'. '))
 
@@ -547,11 +516,6 @@ export const socialPane = {
 
     refreshRelationshipUi = function () {
       rebuildMutualSection()
-      headerControls = {
-        ...headerControls,
-        showAddFriendAction: shouldShowHeaderAddFriendAction(headerControls.viewerMode)
-      }
-      ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       requestsTriage = triageFriends(kb, s)
       requestsSection.refreshRequests(requestsTriage)
       setActivePanel(activePanel)
@@ -628,24 +592,9 @@ export const socialPane = {
       .then(webId => {
         const confirmedViewerMode = getViewerMode(s, webId)
         applyViewerMode(confirmedViewerMode)
-        const confirmedCanEditOwnedProfile = confirmedViewerMode === 'owner' && editable
-        headerControls = {
-          ...headerControls,
-          canEdit: confirmedCanEditOwnedProfile,
-          viewerMode: confirmedViewerMode,
-          showAddFriendAction: shouldShowHeaderAddFriendAction(confirmedViewerMode)
-        }
-        ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
       .catch(() => {
         applyViewerMode('anonymous')
-        headerControls = {
-          ...headerControls,
-          canEdit: false,
-          viewerMode: 'anonymous',
-          showAddFriendAction: false
-        }
-        ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
 
     return socialPane

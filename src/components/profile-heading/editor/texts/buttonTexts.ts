@@ -1,0 +1,8 @@
+export const addMeToYourFriendsButtonText = 'Add as friend'
+export const logInAddMeToYourFriendsButtonText = 'Log in to add as friend'
+export const addMeToYourContactsButtonText = 'Add as Contact'
+export const logInAddMeToYourContactsButtonText = 'Login to add me to your contacts'
+export const logInToChatWithMeButtonText = 'Login to chat with me'
+export const friendExistsAlreadyButtonText = 'Already a friend'
+export const contactExistsAlreadyButtonText = 'Already part of contacts'
+export const contactExistsAlreadyByNameButtonText = 'Add webID to contact'

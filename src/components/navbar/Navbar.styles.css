@@ -1,5 +1,9 @@
 :host {
     display: block;
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+    margin-bottom: 20px;
 }
 
 :host(.navbar--hidden) {
@@ -12,6 +16,11 @@
     display: flex;
     background: var(--solid-ui-color-white, #fff);
     overflow: hidden;
+    transition: box-shadow 0.2s ease;
+}
+
+.navbar:hover {
+    box-shadow: 0 8px 10px rgba(124, 77, 255, 0.1);
 }
 
 button {

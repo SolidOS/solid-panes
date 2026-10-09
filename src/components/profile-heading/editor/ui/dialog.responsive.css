@@ -1,0 +1,107 @@
+#profile-modal .modal:has(#modal-desc > .profile__edit-form solid-ui-combobox:focus-within) #modal-desc {
+  padding-bottom: calc(var(--profile-modal-panel-inline-padding) + 30px);
+}
+
+@media (max-width: 576px) {
+  #profile-modal {
+    --profile-modal-panel-max-height: calc(100dvh - 4 * 15px);
+    padding-top: max(15px, env(safe-area-inset-top));
+    padding-right: 0;
+    padding-bottom: max(15px, env(safe-area-inset-bottom));
+    padding-left: 0;
+    place-items: center;
+  }
+
+  #profile-modal .modal {
+    width: var(--profile-modal-panel-width);
+    max-width: var(--profile-modal-panel-max-width);
+    min-width: 0;
+    padding: 0;
+    border-radius: 5px;
+    overscroll-behavior: contain;
+    justify-self: center;
+    align-self: center;
+    margin: 0;
+  }
+
+  #profile-modal .modal .modal-header {
+    gap: 25px;
+    padding: 15px;
+  }
+
+  #profile-modal .modal #modal-title {
+    font-size: var(--solid-ui-font-size-lg, 1.125rem);
+    line-height: 1.4;
+  }
+
+  #profile-modal .modal #modal-desc {
+    padding: 15px 15px 25px;
+  }
+
+  #profile-modal #modal-buttons {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--profile-modal-button-gap);
+    padding: var(--profile-modal-compact-padding);
+    width: 100%;
+  }
+
+  #profile-modal #modal-buttons > solid-ui-button {
+    flex: 1 0 0;
+    width: auto;
+    min-width: 0;
+  }
+}
+
+html[data-layout='mobile'] #profile-modal {
+  --profile-modal-panel-max-height: calc(100dvh - 4 * 15px);
+  padding-top: max(15px, env(safe-area-inset-top));
+  padding-right: 0;
+  padding-bottom: max(15px, env(safe-area-inset-bottom));
+  padding-left: 0;
+  place-items: center;
+}
+
+html[data-layout='mobile'] #profile-modal .modal {
+  width: var(--profile-modal-panel-width);
+  height: auto;
+  max-height: var(--profile-modal-panel-max-height);
+  max-width: var(--profile-modal-panel-max-width);
+  min-width: 0;
+  padding: 0;
+  border-radius: 5px;
+  overscroll-behavior: contain;
+  justify-self: center;
+  align-self: center;
+  margin: 0;
+}
+
+html[data-layout='mobile'] #profile-modal .modal .modal-header {
+  gap: 25px;
+  padding: 15px;
+}
+
+html[data-layout='mobile'] #profile-modal .modal #modal-title {
+  font-size: var(--solid-ui-font-size-lg, 1.125rem);
+  line-height: 1.4;
+}
+
+html[data-layout='mobile'] #profile-modal .modal #modal-desc {
+  padding: 15px 15px 25px;
+}
+
+html[data-layout='mobile'] #profile-modal #modal-buttons {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--profile-modal-button-gap);
+  padding: var(--profile-modal-compact-padding);
+  width: 100%;
+}
+
+html[data-layout='mobile'] #profile-modal #modal-buttons > solid-ui-button {
+  flex: 1 0 0;
+  width: auto;
+  min-width: 0;
+}
