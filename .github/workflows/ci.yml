@@ -37,7 +37,7 @@ jobs:
         with:
           ref: ${{ github.event_name == 'pull_request' && (github.event.pull_request.head.repo.fork && github.sha || github.head_ref) || github.ref_name }}
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
@@ -89,7 +89,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: build
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 22 # for npm@latest
           registry-url: 'https://registry.npmjs.org'
