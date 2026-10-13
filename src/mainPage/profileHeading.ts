@@ -255,11 +255,15 @@ export function initializeProfileHeading (): void {
 
       const heading = document.querySelector<HTMLElement & {
         profileData?: ProfileDetails
+        editContext?: ProfileHeadingEditContext
       }>(`#${PROFILE_HEADING_MOUNT_ID} ${PROFILE_HEADING_TAG}`)
       if (heading && event.detail.profileData) {
         refreshRequest++
         loadingPaneKey = ''
         heading.profileData = event.detail.profileData
+        if (heading.editContext) {
+          heading.editContext = { ...heading.editContext, profileData: event.detail.profileData }
+        }
         return
       }
 
