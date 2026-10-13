@@ -138,6 +138,7 @@
 
 .mobile-edit-button {
   display: none;
+  color: var(--solid-ui-color-primary, #7c4dff);
 }
 
 .profile-section-collapsible__action-label {
