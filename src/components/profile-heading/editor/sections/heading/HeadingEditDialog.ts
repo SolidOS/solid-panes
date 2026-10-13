@@ -831,6 +831,10 @@ function isValidHeadingPhoneNumber (value: string): boolean {
 }
 
 function validateHeadingDataBeforeSave (formState: HeadingFormState): string | null {
+  if (!hasNonEmptyText(formState.basicInfo.name)) {
+    return 'Full Name is required.'
+  }
+
   const { localNumber } = splitPhoneValue(formState.phone?.value || '')
   if (rowHasContent(formState.phone) && !isValidHeadingPhoneNumber(localNumber)) {
     return 'Phone Number 1 should contain only numbers.'
