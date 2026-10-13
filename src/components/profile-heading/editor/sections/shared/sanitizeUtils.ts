@@ -1,7 +1,7 @@
 import { sanitizeTextValue } from '../../textUtils'
 
 export function sanitizeEmailValue (value: string): string {
-  return sanitizeTextValue(value).replace(/\s+/g, '').toLowerCase()
+  return sanitizeTextValue(value).replace(/\s+/g, '')
 }
 
 export function sanitizePhoneLocalValue (value: string): string {
