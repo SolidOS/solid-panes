@@ -88,6 +88,9 @@ export async function uploadPhotoFile (store: LiveStore, subject: NamedNode, fil
   if (!detectedContentType.startsWith('image/')) {
     throw new Error('Selected file is not an image.')
   }
+  if (file.size > 2 * 1024 * 1024) {
+    throw new Error('Selected image must be 2 MB or smaller.')
+  }
 
   const extension = mime.extension(detectedContentType) || 'bin'
   let filename = encodeURIComponent(file.name || `image.${extension}`)
