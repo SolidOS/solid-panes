@@ -1,10 +1,11 @@
 import { authn, store } from 'solid-logic'
-import type { NamedNode } from 'rdflib'
+import type { NamedNode, Node } from 'rdflib'
 import { customElement, WebComponent } from 'solid-ui'
 import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { createHeadingEditDialog } from './editor/sections/heading/HeadingEditDialog'
-import type { ProfileDetails } from './editor/sections/heading/types'
+import type { ProfileDetails, ProfilePresentation } from './editor/sections/heading/types'
+import type { PointDetails } from './editor/sections/contactInfo/types'
 import type { ViewerMode } from '../../types'
 import { addFriend, checkFriend, friendTexts } from './friendActions'
 import { formatDisplayError } from './editor/utils/errorDisplay'
@@ -18,20 +19,14 @@ import '~icons/lucide/phone'
 import '~icons/lucide/user-round-plus'
 import styles from './ProfileHeading.styles.css'
 
-export interface ProfileHeadingPoint {
-  valueNode?: unknown
-}
+export type ProfileHeadingPoint = Pick<PointDetails, 'valueNode'>
 
-export interface ProfileHeadingData {
-  name: string
-  imageSrc?: string
-  location?: string
-  pronouns?: string
-  dateOfBirth?: string
-  jobTitle?: string
-  primaryPhone?: ProfileHeadingPoint
-  primaryEmail?: ProfileHeadingPoint
-}
+// The heading renders a subset of the shared presentation model used by the editor.
+export type ProfileHeadingData =
+  Pick<ProfilePresentation, 'name' | 'imageSrc' | 'location' | 'pronouns' | 'dateOfBirth' | 'jobTitle'> & {
+    primaryPhone?: ProfileHeadingPoint
+    primaryEmail?: ProfileHeadingPoint
+  }
 
 export interface ProfileHeadingEditContext {
   subject: NamedNode
@@ -97,6 +92,9 @@ export default class ProfileHeading extends WebComponent {
 
   protected willUpdate (changed: PropertyValues<this>): void {
     super.willUpdate(changed)
+    if (changed.has('profileData') && changed.get('profileData')?.imageSrc !== this.profileData?.imageSrc) {
+      this.failedImageSrc = undefined
+    }
     if (!changed.has('friendSubject')) return
     this.friendRequestInterrupted = false
     this.startFriendCheck()
@@ -228,7 +226,7 @@ export default class ProfileHeading extends WebComponent {
             <div class="profile__actions profile__heading-edit-action">
               ${showFriend
                 ? html`
-                <div class="profile-friends-button__section" aria-label="Add me to your friends actions">
+                <div class="profile-friends-button__section" role="group" aria-label="Friend relationship actions">
                   <solid-ui-button
                     variant="secondary"
                     class="profile__btn-friends"
@@ -324,13 +322,8 @@ export default class ProfileHeading extends WebComponent {
   }
 }
 
-function textValue (value: unknown): string {
-  if (typeof value === 'string') return value
-  if (value && typeof value === 'object' && 'value' in value) {
-    const nested = (value as { value?: unknown }).value
-    return typeof nested === 'string' ? nested : ''
-  }
-  return ''
+function textValue (value: Node | undefined): string {
+  return value?.value ?? ''
 }
 
 function displayDate (value?: string): string {
