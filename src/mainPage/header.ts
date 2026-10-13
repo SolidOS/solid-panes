@@ -1,4 +1,3 @@
-import { authn } from 'solid-logic'
 import { html, render } from 'lit-html'
 import type { AccountMenuItem } from 'solid-ui/components/account'
 import type { NavigationController } from '../navigation/controller'
@@ -10,6 +9,7 @@ import '~icons/lucide/layout-dashboard'
 import '~icons/lucide/settings-2'
 import '../components/header'
 import { getFolderPanesFromURI } from '../utils/paneUtils'
+import { getCurrentViewer } from '../utils/viewerUtils'
 
 export async function createHeader (navigation: NavigationController) {
   const existingHeader = document.querySelector('solid-panes-header')
@@ -18,49 +18,52 @@ export async function createHeader (navigation: NavigationController) {
     return existingHeader
   }
 
-  const me = authn.currentUser()
-
+  const viewer = await getCurrentViewer()
+  const storagePanes = viewer ? await getFolderPanesFromURI(viewer) : []
   const main = document.getElementById('MainContent')
   const tmpContainer = document.createElement('div')
-
-  // The header outlives logins, so the viewer is resolved when an item is chosen.
-  async function currentViewer () {
-    return authn.currentUser() ?? await authn.checkUser()
-  }
-
-  const storagePanes = me ? await getFolderPanesFromURI(me) : []
   const storageMenuItems: AccountMenuItem[] = storagePanes.map(pane => ({
     label: html`<icon-lucide-folder-open slot="left-icon"></icon-lucide-folder-open> ${pane.label()}`,
     async onSelected () {
-      if (await currentViewer()) await navigation.show({ kind: 'storage', pane, source: 'accountMenu' })
+      if (await getCurrentViewer()) {
+        await navigation.show({ kind: 'storage', pane, source: 'accountMenu' })
+      }
     }
   }))
   const menuItems: AccountMenuItem[] = [
     {
       label: html`<icon-lucide-user slot="left-icon"></icon-lucide-user> Profile`,
       async onSelected () {
-        const viewer = await currentViewer()
-        if (viewer) await navigation.show({ kind: 'profile', subject: viewer.value, source: 'accountMenu' })
+        const currentViewer = await getCurrentViewer()
+        if (currentViewer) {
+          await navigation.show({ kind: 'profile', subject: currentViewer.value, source: 'accountMenu' })
+        }
       }
     },
     {
       label: html`<icon-lucide-users slot="left-icon"></icon-lucide-users> Friends`,
       async onSelected () {
-        const viewer = await currentViewer()
-        if (viewer) await navigation.show({ kind: 'friends', subject: viewer.value, source: 'accountMenu' })
+        const currentViewer = await getCurrentViewer()
+        if (currentViewer) {
+          await navigation.show({ kind: 'friends', subject: currentViewer.value, source: 'accountMenu' })
+        }
       }
     },
     ...storageMenuItems,
     {
       label: html`<icon-lucide-layout-dashboard slot="left-icon"></icon-lucide-layout-dashboard> Dashboard`,
       async onSelected () {
-        if (await currentViewer()) await navigation.show({ kind: 'app', pane: 'home', source: 'accountMenu' })
+        if (await getCurrentViewer()) {
+          await navigation.show({ kind: 'app', pane: 'home', source: 'accountMenu' })
+        }
       }
     },
     {
       label: html`<icon-lucide-settings-2 slot="left-icon"></icon-lucide-settings-2> Preferences`,
       async onSelected () {
-        if (await currentViewer()) await navigation.show({ kind: 'app', pane: 'basicPreferences', source: 'accountMenu' })
+        if (await getCurrentViewer()) {
+          await navigation.show({ kind: 'app', pane: 'basicPreferences', source: 'accountMenu' })
+        }
       }
     },
   ]

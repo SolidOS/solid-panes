@@ -1,7 +1,7 @@
 import { Node } from 'rdflib'
 import { RowStatus } from '../shared/types'
 import { MutationOps } from '../shared/types'
-import type { AddressDetails, ContactAddressRow, ContactPointRow, PointDetails } from '../contactInfo/types'
+import type { AddressDetails, ContactAddressRow, ContactPointRow, PointDetails } from 'profile-pane'
 
 export interface ProfilePresentation {
   name: string;

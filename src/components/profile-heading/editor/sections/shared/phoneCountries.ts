@@ -1,3 +1,5 @@
+// Not in use now.
+
 export type CountryDialOption = {
   iso2: string
   dialCode: string
@@ -311,7 +313,7 @@ export const COUNTRY_PREFIX_OPTIONS = Array.from(
   }, new Map<string, CountryDialOption>()).values()
 )
 
-const DIAL_CODES_DESC = Array.from(new Set(COUNTRY_DIAL_OPTIONS.map((option) => option.dialCode))).sort(
+const DIAL_CODES_DESC = Array.from(new Set(COUNTRY_PREFIX_OPTIONS.map((option) => option.dialCode))).sort(
   (a, b) => b.length - a.length
 )
 

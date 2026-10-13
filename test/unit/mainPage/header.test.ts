@@ -51,6 +51,18 @@ describe('account menu', () => {
     const { show, items } = await setup(viewer, null, [storage])
 
     expect(items).toHaveLength(5)
+    expect(getFolderPanes).toHaveBeenCalledWith(viewer)
+    await items[2].onSelected?.()
+
+    expect(show).toHaveBeenCalledWith({ kind: 'storage', pane: storage, source: 'accountMenu' })
+  })
+
+  it('loads storage choices for a viewer restored by the initial session check', async () => {
+    const storage = { paneName: 'folder', label: () => 'Storage' }
+    const { show, items } = await setup(null, viewer, [storage])
+
+    expect(getFolderPanes).toHaveBeenCalledWith(viewer)
+    expect(items).toHaveLength(5)
     await items[2].onSelected?.()
 
     expect(show).toHaveBeenCalledWith({ kind: 'storage', pane: storage, source: 'accountMenu' })

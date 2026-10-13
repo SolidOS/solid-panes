@@ -2,7 +2,8 @@ import { authn, authSession, store } from 'solid-logic'
 import { NamedNode } from 'rdflib'
 import type { ProfileDetails } from '../components/profile-heading/editor/sections/heading/types'
 import type { ProfileHeadingEditContext } from '../components/profile-heading/ProfileHeading'
-import { getViewerMode, presentProfile, type ViewerMode } from '../components/profile-heading/profileHeadingData'
+import { getViewerMode, presentProfile } from '../components/profile-heading/profileHeadingData'
+import type { ViewerMode } from '../types'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
 import './profileHeading.css'
@@ -251,11 +252,15 @@ export function initializeProfileHeading (): void {
 
       const heading = document.querySelector<HTMLElement & {
         profileData?: ProfileDetails
+        editContext?: ProfileHeadingEditContext
       }>(`#${PROFILE_HEADING_MOUNT_ID} ${PROFILE_HEADING_TAG}`)
       if (heading && event.detail.profileData) {
         refreshRequest++
         loadingPaneKey = ''
         heading.profileData = event.detail.profileData
+        if (heading.editContext) {
+          heading.editContext = { ...heading.editContext, profileData: event.detail.profileData }
+        }
         return
       }
 

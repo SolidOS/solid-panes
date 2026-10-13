@@ -20,7 +20,8 @@ import {
   createMutualSection,
   createRequestsSection
 } from './socialSections'
-import type { ViewerMode } from './socialSections'
+import type { ViewerMode } from '../types'
+import { getViewerRelation } from '../utils/viewerUtils'
 import { FriendshipTriage, loadFriendshipTriage, triageFriends } from './triage'
 
 function applyEnvironmentAttributes (
@@ -222,7 +223,7 @@ export const socialPane = {
     const mutualConnections = me && !thisIsYou
       ? uniqueNodes(common(uniqueFriends, myFriends)).filter(friend => !kb.sameThings(friend, me))
       : []
-    const viewerMode = getViewerMode(s, me)
+    const viewerMode = getViewerRelation(s, me)
 
     // Do I have a public profile document?
     let profile: NamedNode | null = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
@@ -590,7 +591,7 @@ export const socialPane = {
 
     authn.checkUser()
       .then(webId => {
-        const confirmedViewerMode = getViewerMode(s, webId)
+        const confirmedViewerMode = getViewerRelation(s, webId)
         applyViewerMode(confirmedViewerMode)
       })
       .catch(() => {
@@ -781,21 +782,4 @@ export function selectProfileData (context: DataBrowserContext, subject: NamedNo
     location,
     pronouns
   }
-}
-
-export type { ViewerMode } from './socialSections'
-
-function getViewerMode (subject: NamedNode, currentUser: unknown = authn.currentUser()): ViewerMode {
-  const currentUserUri =
-    typeof currentUser === 'string'
-      ? currentUser
-      : typeof currentUser === 'object' && currentUser !== null
-        ? ((currentUser as { value?: string, uri?: string }).value ||
-            (currentUser as { value?: string, uri?: string }).uri ||
-            null)
-        : null
-  let mode: ViewerMode = 'anonymous'
-  if (currentUserUri === subject.value) mode = 'owner'
-  if (currentUserUri && currentUserUri !== subject.value) mode = 'authenticated'
-  return mode
 }

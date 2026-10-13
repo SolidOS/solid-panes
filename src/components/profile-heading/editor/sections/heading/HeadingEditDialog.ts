@@ -11,7 +11,7 @@ import { Image } from './imagePreview'
 import '../../styles/EditDialogs.css'
 import { LiveStore, NamedNode } from 'rdflib'
 import { processHeadingMutations } from './mutations'
-import { ViewerMode } from '../../types'
+import { ViewerMode } from '../../../../../types'
 import {
   combinePhoneValue,
   splitPhoneValue
@@ -831,6 +831,10 @@ function isValidHeadingPhoneNumber (value: string): boolean {
 }
 
 function validateHeadingDataBeforeSave (formState: HeadingFormState): string | null {
+  if (!hasNonEmptyText(formState.basicInfo.name)) {
+    return 'Full Name is required.'
+  }
+
   const { localNumber } = splitPhoneValue(formState.phone?.value || '')
   if (rowHasContent(formState.phone) && !isValidHeadingPhoneNumber(localNumber)) {
     return 'Phone Number 1 should contain only numbers.'

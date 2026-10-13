@@ -138,6 +138,7 @@
 
 .mobile-edit-button {
   display: none;
+  color: var(--solid-ui-color-primary, #7c4dff);
 }
 
 .profile-section-collapsible__action-label {
@@ -376,8 +377,8 @@
     display: inline;
     font-size: 1.375rem;
     line-height: 1.15;
-    white-space: nowrap;
-    overflow-wrap: normal;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   .identity {

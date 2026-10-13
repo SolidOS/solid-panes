@@ -1,15 +1,14 @@
-import { authn, store } from 'solid-logic'
+import { store } from 'solid-logic'
+import { getViewerRelation } from '../../utils/viewerUtils'
 import { NamedNode, type LiveStore, type Node } from 'rdflib'
 import { ns, utils, widgets } from 'solid-ui'
 import type { AddressDetails, PointDetails } from './editor/sections/contactInfo/types'
 import type { ProfileDetails } from './editor/sections/heading/types'
-
-export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
+import type { ViewerMode } from '../../types'
 
 export async function getViewerMode (subject: NamedNode): Promise<ViewerMode> {
-  const currentUser = authn.currentUser()
-  if (!currentUser) return 'anonymous'
-  if (!currentUser.sameTerm(subject)) return 'authenticated'
+  const relation = getViewerRelation(subject)
+  if (relation !== 'owner') return relation
 
   try {
     return store.updater?.editable?.(subject.doc()) ? 'owner' : 'anonymous'

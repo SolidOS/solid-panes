@@ -14,7 +14,7 @@ const subject = sym('https://friends-subject.example/profile/card#me')
 
 beforeEach(() => {
   vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
-  vi.spyOn(store.fetcher, 'load').mockResolvedValue(undefined)
+  vi.spyOn(store.fetcher, 'load').mockResolvedValue(new Response())
   vi.spyOn(store, 'whether').mockReturnValue(0)
   vi.spyOn(store.updater, 'update').mockResolvedValue(undefined)
 })
@@ -80,6 +80,57 @@ describe('profile heading friends', () => {
     expect(vi.getTimerCount()).toBe(1)
     heading.remove()
     expect(vi.getTimerCount()).toBe(0)
+    expect(heading.friendMessage).toBe('')
+  })
+
+  it('ignores a pending friend check after disconnection', async () => {
+    let finish: (() => void) | undefined
+    vi.mocked(store.fetcher.load).mockImplementationOnce(() => new Promise<Response>(resolve => {
+      finish = () => resolve(new Response())
+    }))
+    const heading = document.createElement('solid-panes-profile-heading') as ProfileHeading
+    heading.profileData = { name: 'Pending' }
+    heading.friendSubject = subject
+    document.body.appendChild(heading)
+    await heading.updateComplete
+    heading.remove()
+    vi.mocked(store.whether).mockReturnValue(1)
+    finish?.()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(heading.friendState).toBe('loading')
+  })
+
+  it('ignores a pending friend addition after disconnection', async () => {
+    const heading = await createHeading()
+    let finish: (() => void) | undefined
+    vi.mocked(store.updater.update).mockImplementationOnce(() => new Promise<undefined>(resolve => {
+      finish = () => resolve(undefined)
+    }))
+    vi.useFakeTimers()
+    button(heading)?.click()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(heading.friendState).toBe('saving')
+    heading.remove()
+    finish?.()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(heading.friendState).toBe('saving')
+    expect(heading.friendMessage).toBe('')
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('rechecks an interrupted friend request when reconnected', async () => {
+    const heading = await createHeading()
+    let finish: (() => void) | undefined
+    vi.mocked(store.updater.update).mockImplementationOnce(() => new Promise<undefined>(resolve => {
+      finish = () => resolve(undefined)
+    }))
+    button(heading)?.click()
+    await vi.waitFor(() => expect(store.updater.update).toHaveBeenCalled())
+    heading.remove()
+    vi.mocked(store.whether).mockReturnValue(1)
+    finish?.()
+    document.body.appendChild(heading)
+    await vi.waitFor(() => expect(heading.friendState).toBe('exists'))
     expect(heading.friendMessage).toBe('')
   })
 
@@ -157,7 +208,7 @@ describe('profile heading friends', () => {
     const heading = await createHeading()
     vi.mocked(store.fetcher.load).mockImplementationOnce(async () => {
       vi.mocked(authn.currentUser).mockReturnValue(null)
-      return undefined
+      return new Response()
     })
     button(heading)?.click()
     await vi.waitFor(() => expect(heading.friendState).toBe('error'))
@@ -166,8 +217,8 @@ describe('profile heading friends', () => {
 
   it('ignores a stale friend check after navigation', async () => {
     let finish: (() => void) | undefined
-    vi.mocked(store.fetcher.load).mockImplementationOnce(() => new Promise(resolve => {
-      finish = () => resolve(undefined)
+    vi.mocked(store.fetcher.load).mockImplementationOnce(() => new Promise<Response>(resolve => {
+      finish = () => resolve(new Response())
     }))
     const heading = document.createElement('solid-panes-profile-heading') as ProfileHeading
     heading.profileData = { name: 'First' }

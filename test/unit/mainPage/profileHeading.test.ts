@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { authn, authSession, store } from 'solid-logic'
 import { lit, sym } from 'rdflib'
 import { ns } from 'solid-ui'
+import type { ProfileHeadingEditContext } from '../../../src/components/profile-heading/ProfileHeading'
 
 const { getViewerModeMock, createHeadingEditDialogMock, pod } = vi.hoisted(() => ({
   getViewerModeMock: vi.fn(),
@@ -465,11 +466,12 @@ describe('page-level profile heading', () => {
     })
   })
 
-  it('uses fresh contact data from the saving pane instead of reloading older store values', async () => {
+  it.each(['owner', 'anonymous'] as const)('uses fresh saved data for the heading and editor in %s mode', async (viewerMode) => {
     const subject = sym('https://saved-contacts.example/profile/card#me')
     store.add(subject, ns.vcard('fn'), lit('Saved Contacts Test'), subject.doc())
     store.add(subject, ns.vcard('hasEmail'), sym('mailto:old@example.com'), subject.doc())
-    getViewerModeMock.mockResolvedValue('owner')
+    getViewerModeMock.mockResolvedValue(viewerMode)
+    createHeadingEditDialogMock.mockReset().mockResolvedValue(undefined)
 
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'
@@ -481,29 +483,53 @@ describe('page-level profile heading', () => {
     initializeProfileHeading()
     await refreshProfileHeading(true)
     const heading = document.querySelector('solid-panes-profile-heading') as HTMLElement & {
+      profileData?: unknown
+      editContext?: ProfileHeadingEditContext
       updateComplete: Promise<unknown>
     }
     await heading.updateComplete
     expect(heading.shadowRoot?.textContent).toContain('old@example.com')
+    const previousEditContext = heading.editContext
+    const profileData = {
+      entryNode: subject,
+      name: 'Saved Contacts Test',
+      primaryPhone: { valueNode: sym('tel:+123456789') },
+      primaryEmail: { valueNode: sym('mailto:new@example.com') },
+      location: 'Lyon, France',
+      jobTitle: 'Staff Engineer'
+    }
 
     mainContent.dispatchEvent(new CustomEvent('profile-pane-saved', {
       bubbles: true,
       composed: true,
       detail: {
         subjectUri: subject.value,
-        profileData: {
-          name: 'Saved Contacts Test',
-          primaryPhone: { valueNode: sym('tel:+123456789') },
-          primaryEmail: { valueNode: sym('mailto:new@example.com') },
-          location: 'Lyon, France'
-        }
+        profileData
       }
     }))
     await heading.updateComplete
     expect(heading.shadowRoot?.textContent).toContain('new@example.com')
     expect(heading.shadowRoot?.textContent).toContain('+123456789')
     expect(heading.shadowRoot?.textContent).toContain('Lyon, France')
+    expect(heading.shadowRoot?.querySelector('.role')?.textContent).toBe('Staff Engineer')
     expect(heading.shadowRoot?.textContent).not.toContain('old@example.com')
+    expect(heading.profileData).toBe(profileData)
+    if (viewerMode === 'owner') {
+      expect(previousEditContext).toBeDefined()
+      expect(heading.editContext).not.toBe(previousEditContext)
+      expect(heading.editContext).toEqual({ ...previousEditContext, profileData })
+      expect(heading.editContext?.profileData).toBe(profileData)
+      expect(heading.editContext?.onSaved).toBe(previousEditContext?.onSaved)
+
+      heading.shadowRoot?.querySelector<HTMLElement>('.desktop-edit-button')?.click()
+      await vi.waitFor(() => expect(createHeadingEditDialogMock).toHaveBeenCalledOnce())
+      expect(createHeadingEditDialogMock).toHaveBeenCalledWith(
+        expect.any(Event), store, subject, profileData, viewerMode, expect.any(Function)
+      )
+    } else {
+      expect(heading.editContext).toBeUndefined()
+      expect(heading.shadowRoot?.querySelector('.desktop-edit-button')).toBeNull()
+    }
   })
 
   it('keeps another person\'s heading visible on their storage', async () => {
