@@ -11,8 +11,14 @@ import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
-import { isInViewerPod, loadContainerRepresentation } from '../utils/podUtils'
+import { loadContainerRepresentation } from '../utils/podUtils'
 import { isOwnWebIdProfile, isWebIdUri } from '../utils/webIdUtils'
+import { deriveExplorerHeader, isNavbarHidden } from '../navigation/chrome'
+import { isPageInViewerPod } from '../navigation/podContext'
+import { nextHistoryState } from '../navigation/state'
+import { announceNavigation } from '../navigation/events'
+import { resolveSource } from '../navigation/options'
+import { setNavbarHidden } from '../navigation/navbarVisibility'
 import '../components/file-explorer-header'
 
 export default function (context) {
@@ -300,15 +306,8 @@ export default function (context) {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
-  function getNavbarElement () {
-    return document.querySelector('solid-panes-navbar')
-  }
-
   function showSolidPanesNavbar (subject) {
-    const navbar = getNavbarElement()
-    if (navbar) {
-      navbar.classList.toggle('navbar--hidden', isOwnWebIdProfile(subject))
-    }
+    setNavbarHidden(isNavbarHidden({ viaAccountMenu: false, ownProfile: isOwnWebIdProfile(subject) }))
   }
 
   /**
@@ -470,11 +469,14 @@ export default function (context) {
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
-    // Views opened for the viewer's own content (account menu) or for a person's own
-    // subject (navbar) are not a view of the page URL's resource, so the resource
-    // header only makes sense when the page URL is inside the viewer's own pod.
-    const hideOutsideViewerPod = !!options.headerOnlyInViewerPod && !(await isInViewerPod(document.location.href))
-    provider.showHeader = !isRootResource && !isWebIdUri(subject) && !hideOutsideViewerPod
+    const viewerPodOnly = !!options.headerOnlyInViewerPod
+    provider.showHeader = deriveExplorerHeader({
+      isRootResource,
+      isWebId: isWebIdUri(subject),
+      viewerPodOnly,
+      // Only worth looking up when the view does not show the page URL's own resource
+      inViewerPod: viewerPodOnly ? await isPageInViewerPod(document.location.href) : true
+    })
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
@@ -1904,9 +1906,14 @@ export default function (context) {
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
   @param table   -- option  -- default is an HTML table element in which to put the outline.
-  @param showNavbar -- optional -- when false, suppress automatic navbar reveal (used by the account menu)
+  @param options -- optional -- who asked for the view: `{ source: 'accountMenu' }` for the viewer's
+                    own content, which suppresses the automatic navbar reveal and is remembered in
+                    the history entry. The old form, `false` for the account menu, is still accepted.
+
+  Afterwards, when `solo`, `solid-panes:navigated` is dispatched on the document.
 */
-  this.GotoSubject = function (subject, expand, pane, solo, referrer, table, showNavbar = true) {
+  this.GotoSubject = function (subject, expand, pane, solo, referrer, table, options) {
+    const showNavbar = resolveSource(options) !== 'accountMenu'
     const outlineContainer = getOutlineContainer()
     if (showNavbar && (!table || table === outlineContainer)) {
       showSolidPanesNavbar(subject)
@@ -1955,23 +1962,14 @@ export default function (context) {
       dom.defaultView.history
     ) {
       const currentState = dom.defaultView.history.state || {}
-      const paneState = pane ? { paneName: pane.name } : {}
-      if (pane && pane.subject && typeof pane.subject.uri === 'string') {
-        paneState.paneUri = pane.subject.uri
-      }
-      const stateObj = { ...currentState, ...paneState }
-      // Pane details describe what was displayed, so they must not leak into
-      // another subject's entry, nor outlive the pane they were saved for.
       const leavingPage = document.location.href !== subject.uri
-      if (leavingPage && !pane) delete stateObj.paneName
-      if ((leavingPage && !pane) || (pane && !paneState.paneUri)) delete stateObj.paneUri
-      // The account menu shows the viewer's own content while keeping the URL,
-      // so a later page load must not restore that pane over the URL's subject.
-      if (showNavbar) {
-        delete stateObj.viaAccountMenu
-      } else {
-        stateObj.viaAccountMenu = true
-      }
+      const stateObj = nextHistoryState(currentState, {
+        pane: pane
+          ? { name: pane.name, subject: pane.subject && typeof pane.subject.uri === 'string' ? pane.subject.uri : undefined }
+          : undefined,
+        leavingPage,
+        viaAccountMenu: !showNavbar
+      })
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
@@ -1985,6 +1983,8 @@ export default function (context) {
       } catch (e) {
       }
     }
+
+    if (solo) announceNavigation(dom)
 
     return subject
   }

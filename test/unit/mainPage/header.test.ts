@@ -1,19 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { authn } from 'solid-logic'
 import { sym } from 'rdflib'
-import type { OutlineManager } from '../../../src/outline/manager'
+import type { NavigationController } from '../../../src/navigation/controller'
 
-const { getProfilePane, getSocialPane, getFolderPanes } = vi.hoisted(() => ({
-  getProfilePane: vi.fn(),
-  getSocialPane: vi.fn(),
-  getFolderPanes: vi.fn()
-}))
+const { getFolderPanes } = vi.hoisted(() => ({ getFolderPanes: vi.fn() }))
 
-vi.mock('../../../src/utils/paneUtils', () => ({
-  getProfilePaneFromURI: getProfilePane,
-  getSocialPaneFromURI: getSocialPane,
-  getFolderPanesFromURI: getFolderPanes
-}))
+vi.mock('../../../src/utils/paneUtils', () => ({ getFolderPanesFromURI: getFolderPanes }))
 
 import { createHeader } from '../../../src/mainPage/header'
 
@@ -21,7 +13,6 @@ afterEach(() => {
   vi.restoreAllMocks()
   vi.resetAllMocks()
   document.body.replaceChildren()
-  window.history.replaceState({}, '', '/')
 })
 
 type MenuItem = { onSelected?: () => unknown }
@@ -29,68 +20,66 @@ type MenuItem = { onSelected?: () => unknown }
 describe('account menu', () => {
   const viewer = sym('https://viewer.example/profile/card#me')
 
-  async function setup (currentUser: typeof viewer | null, checkUser: typeof viewer | null = null) {
-    const GotoSubject = vi.fn()
-    const outliner = { GotoSubject, context: { session: { paneRegistry: { byName: vi.fn() } } } } as unknown as OutlineManager
-    const outlineView = document.createElement('table')
-    outlineView.id = 'OutlineView'
-    document.body.append(outlineView)
-    const currentUserSpy = vi.spyOn(authn, 'currentUser').mockReturnValue(currentUser)
+  async function setup (currentUser: typeof viewer | null, checkUser: typeof viewer | null = null, storages: object[] = []) {
+    const show = vi.fn().mockResolvedValue(undefined)
+    vi.spyOn(authn, 'currentUser').mockReturnValue(currentUser)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(checkUser)
-    getFolderPanes.mockResolvedValue([])
-    window.history.replaceState({}, '', '/other/container/')
-    const header = await createHeader(outliner) as HTMLElement & { menuItems: MenuItem[] }
-    const [profile, friends] = header.menuItems
-    return { GotoSubject, currentUserSpy, profile, friends, outlineView }
+    getFolderPanes.mockResolvedValue(storages)
+    const header = await createHeader({ show } as NavigationController) as HTMLElement & { menuItems: MenuItem[] }
+    return { show, header, items: header.menuItems }
   }
 
-  it('opens the profile pane for the viewer without changing the URL', async () => {
-    const profilePane = { name: 'profile', subject: viewer }
-    getProfilePane.mockResolvedValue(profilePane)
-    const { GotoSubject, profile, outlineView } = await setup(viewer)
+  it('shows the viewer\'s profile, friends, dashboard and preferences as the account menu', async () => {
+    const { show, items } = await setup(viewer)
+    const [profile, friends, dashboard, preferences] = items
 
     await profile.onSelected?.()
+    await friends.onSelected?.()
+    await dashboard.onSelected?.()
+    await preferences.onSelected?.()
 
-    expect(getProfilePane).toHaveBeenCalledWith(viewer)
-    expect(GotoSubject).toHaveBeenCalledWith(
-      sym(window.location.href), true, profilePane, true, undefined, outlineView, false
-    )
+    expect(show.mock.calls.map(call => call[0])).toEqual([
+      { kind: 'profile', subject: viewer.value, source: 'accountMenu' },
+      { kind: 'friends', subject: viewer.value, source: 'accountMenu' },
+      { kind: 'app', pane: 'home', source: 'accountMenu' },
+      { kind: 'app', pane: 'basicPreferences', source: 'accountMenu' }
+    ])
+  })
+
+  it('offers each of the viewer\'s storages, between friends and the dashboard', async () => {
+    const storage = { paneName: 'folder', label: () => 'Storage' }
+    const { show, items } = await setup(viewer, null, [storage])
+
+    expect(items).toHaveLength(5)
+    await items[2].onSelected?.()
+
+    expect(show).toHaveBeenCalledWith({ kind: 'storage', pane: storage, source: 'accountMenu' })
   })
 
   it.each([
     ['logged in after the header was created', null, viewer, null],
     ['restored by a session check', null, null, viewer]
-  ])('opens the profile and friends panes when the viewer was %s', async (_name, atCreation, later, fromCheck) => {
-    const profilePane = { name: 'profile', subject: viewer }
-    const socialPane = { name: 'social', subject: viewer }
-    getProfilePane.mockResolvedValue(profilePane)
-    getSocialPane.mockResolvedValue(socialPane)
-    const { GotoSubject, currentUserSpy, profile, friends } = await setup(atCreation, fromCheck)
-    currentUserSpy.mockReturnValue(later)
+  ])('uses the viewer when it was %s', async (_name, atCreation, later, fromCheck) => {
+    const { show, items } = await setup(atCreation, fromCheck)
+    vi.mocked(authn.currentUser).mockReturnValue(later)
 
-    await profile.onSelected?.()
-    await friends.onSelected?.()
+    await items[0].onSelected?.()
+    await items[1].onSelected?.()
 
-    expect(GotoSubject.mock.calls.map(call => call[2])).toEqual([profilePane, socialPane])
+    expect(show.mock.calls.map(call => call[0].subject)).toEqual([viewer.value, viewer.value])
   })
 
   it('does nothing when nobody is logged in', async () => {
-    const { GotoSubject, profile } = await setup(null, null)
+    const { show, items } = await setup(null, null)
 
-    await profile.onSelected?.()
+    for (const item of items) await item.onSelected?.()
 
-    expect(getProfilePane).not.toHaveBeenCalled()
-    expect(GotoSubject).not.toHaveBeenCalled()
+    expect(show).not.toHaveBeenCalled()
   })
 
-  it('does not fall back to the URL\'s default view when the pane cannot be built', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
-    getProfilePane.mockResolvedValue(null)
-    const { GotoSubject, profile } = await setup(viewer)
+  it('is created once', async () => {
+    const { header, show } = await setup(viewer)
 
-    await profile.onSelected?.()
-
-    expect(GotoSubject).not.toHaveBeenCalled()
-    expect(warn).toHaveBeenCalled()
+    expect(await createHeader({ show } as NavigationController)).toBe(header)
   })
 })

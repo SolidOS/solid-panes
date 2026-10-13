@@ -46,8 +46,9 @@ to new users.
 Volunteers are always welcome!
 
 ## Documentation
-- [Visual Language](https://solidos.github.io/solid-panes/Documentation/VisualLanguage.html)
-- [Conventions](./Documentation/conventions.md)
+- [Visual Language](https://solidos.github.io/solid-panes/docs/VisualLanguage.html)
+- [Conventions](./docs/conventions.md)
+- [Navigation design](./docs/navigation-design.md)
 
 ### Profile heading
 
@@ -65,11 +66,11 @@ shows the resource as usual with the navbar visible and nothing selected; choosi
 in the navbar replaces that view with the whole storage, with the container or resource
 from the URL opened inside it. Any other pane on a page inside someone else's pod
 (for example their container) shows the compact heading of that pod's owner; it is
-hidden inside the viewer's own pod and for account-menu views. Pressing Enter on the current URL, or using the browser's
-back and forward buttons, re-renders the page without a reload: Enter shows the
-URL's own profile (and selects it in the navbar), while back and forward restore
-what each history entry displayed, including account-menu entries that keep a
-different profile in the URL. Solid-panes locally presents the heading data and checks
+hidden inside the viewer's own pod and for account-menu views. Pressing Enter on the current URL,
+or using the browser's back and forward buttons, re-renders the page without a reload, and
+like a reload shows what the URL is: the profile on a WebID (selected in the navbar), otherwise
+the container or resource itself, whatever the history entry last displayed through the navbar
+or the account menu. Solid-panes locally presents the heading data and checks
 viewer edit access; the component owns the edit interaction and opens the local
 heading editor. The page controller refreshes the heading after a successful save.
 After a successful save the component also dispatches a bubbling, composed

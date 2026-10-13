@@ -3,9 +3,9 @@ import { authn, store } from 'solid-logic'
 
 const { isInViewerPodMock } = vi.hoisted(() => ({ isInViewerPodMock: vi.fn() }))
 
-vi.mock('../../../src/utils/podUtils', async (importOriginal) => ({
-  ...await importOriginal<typeof import('../../../src/utils/podUtils')>(),
-  isInViewerPod: isInViewerPodMock
+vi.mock('../../../src/navigation/podContext', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../../../src/navigation/podContext')>(),
+  isPageInViewerPod: isInViewerPodMock
 }))
 
 vi.mock('solid-ui', async () => {
@@ -20,6 +20,7 @@ vi.mock('solid-ui', async () => {
 })
 
 import OutlineManager from '../../../src/outline/manager'
+import { onNavigated, type NavigatedDetail } from '../../../src/navigation/events'
 import { lit, NamedNode, sym, blankNode } from 'rdflib'
 import { findByText, getByText } from '@testing-library/dom'
 
@@ -80,6 +81,68 @@ describe('manager', () => {
     afterEach(() => {
       document.body.replaceChildren()
       window.history.replaceState({}, '', '/')
+    })
+
+    it.each([
+      ['the options form', { source: 'accountMenu' }, true],
+      ['the old boolean form', false, true],
+      ['default options', {}, false],
+      ['the old default', true, false],
+      ['no options', undefined, false]
+    ])('marks the entry as opened by the account menu with %s: %s', (_name, options, marked) => {
+      const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+      const pane = { ...MockPane, subject: sym(`${window.location.origin}/profile/card#me`) }
+      window.history.replaceState({ viaAccountMenu: !marked }, '', '/')
+
+      manager.GotoSubject(sym(window.location.href), false, pane, true, undefined, undefined, options as never)
+
+      expect(Boolean(window.history.state.viaAccountMenu)).toBe(marked)
+    })
+
+    describe('announcing the navigation', () => {
+      it('announces once after a solo display, with the entry it wrote', () => {
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+        const pane = { ...MockPane, subject: sym(`${window.location.origin}/profile/card#me`) }
+        const seen: NavigatedDetail[] = []
+        const stop = onNavigated(detail => seen.push(detail))
+
+        manager.GotoSubject(sym(window.location.href), false, pane, true, undefined, undefined, { source: 'accountMenu' })
+        stop()
+
+        expect(seen).toEqual([{
+          url: window.location.href,
+          state: {
+            view: { kind: 'pane', pane: 'mock', subject: `${window.location.origin}/profile/card#me` },
+            viaAccountMenu: true
+          }
+        }])
+      })
+
+      it('announces the new URL when a different subject is displayed', () => {
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+        const target = sym(`${window.location.origin}/elsewhere/`)
+        const listener = vi.fn()
+        const stop = onNavigated(listener)
+
+        manager.GotoSubject(target, false, undefined, true)
+        stop()
+
+        expect(listener).toHaveBeenCalledWith({
+          url: target.uri,
+          state: { view: { kind: 'default' }, viaAccountMenu: false }
+        })
+      })
+
+      it('does not announce displays inside the page that do not change what is shown as a whole', () => {
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+        const listener = vi.fn()
+        const stop = onNavigated(listener)
+
+        manager.GotoSubject(sym(window.location.href), false, MockPane, false, undefined, document.createElement('table'))
+        stop()
+
+        expect(listener).not.toHaveBeenCalled()
+      })
     })
 
     it('marks account-menu navigation and clears the mark on other navigation', () => {

@@ -1,9 +1,12 @@
 import { store } from 'solid-logic'
-import { NamedNode } from 'rdflib'
-import { getSocialPaneFromURI, getProfilePaneFromURI, getFolderPanesFromURI } from '../utils/paneUtils'
 import { html, render } from 'lit-html'
-import type { OutlineManager } from '../outline/manager'
-import { isOwnWebIdProfile, isWebIdUri, loadProfileFromURI } from '../utils/webIdUtils'
+import type { NavigationController } from '../navigation/controller'
+import { isOwnWebIdProfile, isWebIdUri } from '../utils/webIdUtils'
+import { deriveNavbarSelection, isNavbarHidden, isNavbarItemSelected, pickNavbarItem } from '../navigation/chrome'
+import { onNavigated } from '../navigation/events'
+import { readNavigationState, type NavigationView } from '../navigation/state'
+import { getPodContext, isSamePod, type PodContext } from '../navigation/podContext'
+import { setNavbarHidden } from '../navigation/navbarVisibility'
 
 import '~icons/lucide/user'
 import '~icons/lucide/users'
@@ -13,10 +16,10 @@ import '../components/navbar'
 import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
 function showNavbar () {
-  const navbar = document.querySelector<HTMLElement>('solid-panes-navbar')
-  if (navbar) {
-    navbar.classList.toggle('navbar--hidden', isOwnWebIdProfile(store.sym(window.location.href)))
-  }
+  setNavbarHidden(isNavbarHidden({
+    viaAccountMenu: false,
+    ownProfile: isOwnWebIdProfile(store.sym(window.location.href))
+  }))
 }
 
 let selectPaneInNavbar: ((paneName: string, paneUri?: string) => void) | undefined
@@ -28,7 +31,6 @@ export function selectNavbarPane (paneName: string, paneUri?: string): void {
 function createNavItem (
   label: string,
   paneName: string,
-  profileSubjectUri: string,
   paneUri: string,
   onSelected: () => void,
   selected = false
@@ -37,7 +39,6 @@ function createNavItem (
     label,
     paneName,
     paneUri,
-    profileSubjectUri,
     onSelected () {
       showNavbar()
       return onSelected()
@@ -46,44 +47,39 @@ function createNavItem (
   }
 }
 
-async function createNavbarMenuItems (
-  outliner: OutlineManager,
-  subject: NamedNode,
-  outlineView: HTMLElement | null,
-  selectedPaneName?: string,
-  selectedPaneUri?: string
-): Promise<NavbarMenuItem[]> {
-  const webId = await loadProfileFromURI(subject)
-  const selectedPane = selectedPaneName || (isWebIdUri(subject) ? 'profile' : undefined)
+// The items offered for the pod the page is in. Choosing one displays that pane while the
+// page URL stays as it is.
+function createNavbarMenuItems (
+  context: PodContext,
+  navigation: NavigationController,
+  view: NavigationView
+): NavbarMenuItem[] {
+  const selection = deriveNavbarSelection(view, isWebIdUri(store.sym(window.location.href)))
 
   const menuItems: NavbarMenuItem[] = []
 
-  if (webId) {
+  if (context.owner) {
+    const owner = context.owner
     menuItems.push(
-      createNavItem('Profile', 'profile', webId.value, webId.value, async () => {
-        const profilePane = await getProfilePaneFromURI(webId)
-        outliner.GotoSubject(subject, true, profilePane, true, undefined, outlineView)
-      }, selectedPane === 'profile'),
-      createNavItem('Friends', 'social', webId.value, webId.value, async () => {
-        const socialPane = await getSocialPaneFromURI(webId)
-        outliner.GotoSubject(subject, true, socialPane, true, undefined, outlineView)
-      }, selectedPane === 'social')
+      createNavItem('Profile', 'profile', owner, () => navigation.show({ kind: 'profile', subject: owner }),
+        isNavbarItemSelected({ paneName: 'profile' }, selection, 0)),
+      createNavItem('Friends', 'social', owner, () => navigation.show({ kind: 'friends', subject: owner }),
+        isNavbarItemSelected({ paneName: 'social' }, selection, 0))
     )
   }
 
-  const storagePanes = await getFolderPanesFromURI(subject)
-  storagePanes.forEach(pane => {
+  context.storagePanes.forEach(pane => {
     menuItems.push(
       createNavItem(
         pane.label(),
         pane.paneName,
-        webId?.value ?? '',
         pane.subject.value,
-        async () => {
-          outliner.GotoSubject(subject, true, pane, true, undefined, outlineView)
-        },
-        selectedPane === pane.paneName &&
-          (selectedPaneUri ? selectedPaneUri === pane.subject.value : storagePanes.length === 1)
+        () => navigation.show({ kind: 'storage', pane }),
+        isNavbarItemSelected(
+          { paneName: pane.paneName, paneUri: pane.subject.value },
+          selection,
+          context.storagePanes.length
+        )
       )
     )
   })
@@ -91,7 +87,7 @@ async function createNavbarMenuItems (
   return menuItems
 }
 
-export async function createNavbar (outliner: OutlineManager) {
+export async function createNavbar (navigation: NavigationController) {
   const existingNavbar = document.querySelector<HTMLElement>('solid-panes-navbar')
 
   if (existingNavbar) {
@@ -99,17 +95,10 @@ export async function createNavbar (outliner: OutlineManager) {
     return existingNavbar
   }
 
-  const OutlineView = document.getElementById('OutlineView')
   const mainContent = document.getElementById('MainContent')
   const tmpContainer = document.createElement('div')
-  const uri = window.location.href
-  const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  const selectedPaneName = window.history.state?.paneName
-  const selectedPaneUri = window.history.state?.paneUri
-  let menuItems = await createNavbarMenuItems(outliner, subject, OutlineView, selectedPaneName, selectedPaneUri).catch((err) => {
-    console.error('Failed to build navbar menu items:', err)
-    return []
-  })
+  let podContext = await getPodContext(window.location.href)
+  let menuItems = createNavbarMenuItems(podContext, navigation, readNavigationState().view)
 
   function setSelectedItem (selectedItem: NavbarMenuItem) {
     menuItems = menuItems.map((menuItem) => ({
@@ -139,8 +128,7 @@ export async function createNavbar (outliner: OutlineManager) {
   renderNavbar()
 
   selectPaneInNavbar = (paneName, paneUri) => {
-    const panes = menuItems.filter(menuItem => menuItem.paneName === paneName)
-    const item = panes.find(menuItem => menuItem.paneUri === paneUri) ?? panes[0]
+    const item = pickNavbarItem(menuItems, paneName, paneUri)
     if (!item) return
     setSelectedItem(item)
     renderNavbar()
@@ -159,6 +147,21 @@ export async function createNavbar (outliner: OutlineManager) {
   }
 
   showNavbar()
+
+  // The items belong to one pod. When a navigation (a link, back or forward) lands in another
+  // pod, they would offer the wrong profile and storages, so build them again.
+  let rebuildRequest = 0
+  const stopListening = onNavigated(({ url, state }) => {
+    if (!navbar.isConnected) return stopListening()
+
+    const request = ++rebuildRequest
+    getPodContext(url).then(next => {
+      if (request !== rebuildRequest || isSamePod(podContext, next)) return
+      podContext = next
+      menuItems = createNavbarMenuItems(next, navigation, state.view)
+      renderNavbar()
+    }).catch(error => console.error('Failed to rebuild the navbar for the new pod:', error))
+  })
 
   return navbar
 }
