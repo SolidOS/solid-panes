@@ -11,7 +11,7 @@ import { Image } from './imagePreview'
 import '../../styles/EditDialogs.css'
 import { LiveStore, NamedNode } from 'rdflib'
 import { processHeadingMutations } from './mutations'
-import { ViewerMode } from '../../types'
+import { ViewerMode } from '../../../../../types'
 import {
   combinePhoneValue,
   splitPhoneValue

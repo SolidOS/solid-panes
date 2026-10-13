@@ -63,7 +63,7 @@ describe('page reload of a WebID', () => {
     store.add(other, ns.vcard('fn'), lit('Someone Else'), other.doc())
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(viewer)
-    vi.spyOn(authSession.events, 'on').mockReturnValue(authSession.events)
+    vi.spyOn(authSession.events, 'on').mockImplementation(() => {})
     getViewerModeMock.mockResolvedValue('visitor')
     window.history.replaceState(savedState(other.value), '', other.value)
 

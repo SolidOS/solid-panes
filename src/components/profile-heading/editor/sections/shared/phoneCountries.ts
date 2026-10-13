@@ -1,3 +1,5 @@
+// Not in use now.
+
 export type CountryDialOption = {
   iso2: string
   dialCode: string

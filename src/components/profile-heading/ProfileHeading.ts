@@ -5,7 +5,7 @@ import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { createHeadingEditDialog } from './editor/sections/heading/HeadingEditDialog'
 import type { ProfileDetails } from './editor/sections/heading/types'
-import type { ViewerMode } from './profileHeadingData'
+import type { ViewerMode } from '../../types'
 import { addFriend, checkFriend, friendTexts } from './friendActions'
 import { formatDisplayError } from './editor/utils/errorDisplay'
 import 'solid-ui/components/button'
@@ -69,10 +69,23 @@ export default class ProfileHeading extends WebComponent {
   accessor friendError = false
 
   private friendRequest = 0
+  private friendRequestInterrupted = false
   private friendMessageTimer: ReturnType<typeof setTimeout> | undefined
+
+  connectedCallback (): void {
+    super.connectedCallback()
+    if (this.friendRequestInterrupted) {
+      this.friendRequestInterrupted = false
+      this.startFriendCheck()
+    }
+  }
 
   disconnectedCallback (): void {
     super.disconnectedCallback()
+    this.friendRequest++
+    if (this.friendState === 'loading' || this.friendState === 'saving') {
+      this.friendRequestInterrupted = true
+    }
     this.clearFriendMessage()
   }
 
@@ -85,6 +98,11 @@ export default class ProfileHeading extends WebComponent {
   protected willUpdate (changed: PropertyValues<this>): void {
     super.willUpdate(changed)
     if (!changed.has('friendSubject')) return
+    this.friendRequestInterrupted = false
+    this.startFriendCheck()
+  }
+
+  private startFriendCheck (): void {
     const request = ++this.friendRequest
     this.friendState = 'loading'
     this.clearFriendMessage()
