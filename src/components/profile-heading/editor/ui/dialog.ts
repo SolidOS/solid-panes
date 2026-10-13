@@ -319,10 +319,8 @@ function findPreferredInitialFocusTarget (container: ParentNode): HTMLElement | 
 
 function focusInitialDialogTarget (dialog: HTMLDialogElement, description: HTMLDivElement, buttons: HTMLDivElement): void {
   if (isMobileDialogLayout(dialog.ownerDocument)) {
-    const activeElement = dialog.ownerDocument.activeElement as HTMLElement | null
-    if (activeElement && dialog.contains(activeElement)) {
-      activeElement.blur()
-    }
+    dialog.tabIndex = -1
+    dialog.focus()
     return
   }
 
