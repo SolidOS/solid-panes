@@ -47,7 +47,7 @@ navigation controller, which always applies the same follow-up effects.
 | Navbar click (`navbar.ts`) | controller | selection kept by the navbar, then `selectNavbarPane` | refreshed by the controller |
 | Enter, back and forward | controller (`restore`, after clearing the saved pane) | `selectNavbarPane` | refreshed by the controller |
 | Layout or theme change | controller (`restore`, keeps the saved pane and the account-menu marker) | `selectNavbarPane`, or hidden | refreshed by the controller |
-| Links and buttons in `solid-ui`, `GotoSubject` calls from mashlib | none (default pane); not through the controller | rebuilt on a pod change, via the `navigated` event | refreshed via the `navigated` event |
+| Links and buttons in `solid-ui`, `GotoSubject` calls from mashlib | none (default pane); not through the controller | selection updated within the same pod; rebuilt on a pod change, via the `navigated` event | refreshed via the `navigated` event |
 
 `GotoSubject` is called directly, with `solo` true, by `solid-ui` (`buttons.ts`, `forms.js`) and
 mashlib. Those callers rely on it to push the history entry and the URL, so it is the one place that
@@ -84,7 +84,8 @@ writes history, and it announces what it did.
   their storages, including resources opened through storage links. Also hidden by the account
   menu. Shown for other URLs, including when logged out.
 - Built from the pod the page is in. Profile and Friends are only offered when the owner of the pod
-  is known. When a navigation lands in another pod, the items are built again.
+  is known. When a navigation lands in another pod, the items are built again. Within the same pod,
+  navigation events update the selection from the displayed view without rebuilding the menu.
 - On a container or resource URL nothing is selected; on a WebID, Profile is.
 - Choosing an item displays it for the URL the page has at that moment, not the one it had when the
   items were built.

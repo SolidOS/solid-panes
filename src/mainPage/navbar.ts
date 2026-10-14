@@ -156,7 +156,19 @@ export async function createNavbar (navigation: NavigationController) {
 
     const request = ++rebuildRequest
     getPodContext(url).then(next => {
-      if (request !== rebuildRequest || isSamePod(podContext, next)) return
+      if (request !== rebuildRequest) return
+      if (isSamePod(podContext, next)) {
+        const selection = deriveNavbarSelection(state.view, isWebIdUri(store.sym(url)))
+        const selectedItems = menuItems.map(menuItem => ({
+          ...menuItem,
+          selected: isNavbarItemSelected(menuItem, selection, podContext.storagePanes.length)
+        }))
+        if (selectedItems.some((item, index) => item.selected !== menuItems[index].selected)) {
+          menuItems = selectedItems
+          renderNavbar()
+        }
+        return
+      }
       podContext = next
       menuItems = createNavbarMenuItems(next, navigation, state.view)
       renderNavbar()

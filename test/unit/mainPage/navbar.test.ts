@@ -277,9 +277,43 @@ describe('page navbar visibility', () => {
 
         window.history.replaceState({}, '', '/a/docs/')
         announceNavigation(document)
-        await new Promise(resolve => setTimeout(resolve, 20))
+        await vi.waitFor(() => expect(navbar.navbarItems.filter(item => item.selected)).toEqual([]))
 
-        expect(navbar.navbarItems).toBe(items)
+        expect(navbar.navbarItems.map(item => item.onSelected)).toEqual(items.map(item => item.onSelected))
+        expect(navbar.navbarItems.map(item => item.paneUri)).toEqual(items.map(item => item.paneUri))
+      })
+
+      it.each([
+        ['social', undefined, '/a/docs/', ['social']],
+        ['profile', undefined, '/a/docs/', ['profile']],
+        ['folder', '/a/storage-2/', '/a/docs/', ['folder']],
+        ['folder', '/a/unknown/', '/a/docs/', []],
+        ['unknown', undefined, '/a/docs/', []],
+        [undefined, undefined, '/a/docs/', []],
+        [undefined, undefined, '/a/profile/card#me', ['profile']]
+      ])('updates selection for a same-pod direct navigation to %s at %s (%s)', async (paneName, paneUri, url, selectedPanes) => {
+        const storages = [1, 2].map(index => sym(`${window.location.origin}/a/storage-${index}/`))
+        vi.mocked(getFolderPanesFromURI).mockResolvedValue(storages.map(folderPane))
+        window.history.replaceState({ paneName: 'social' }, '', '/a/docs/')
+        const navbar = await createNavbar(navigation) as HTMLElement & { navbarItems: NavbarMenuItem[] }
+        const items = navbar.navbarItems
+        expect(items.filter(item => item.selected).map(item => item.paneName)).toEqual(['social'])
+        vi.mocked(getFolderPanesFromURI).mockClear()
+
+        window.history.replaceState({
+          paneName,
+          paneUri: paneUri ? `${window.location.origin}${paneUri}` : undefined
+        }, '', url)
+        announceNavigation(document)
+
+        await vi.waitFor(() => {
+          expect(navbar.navbarItems.filter(item => item.selected).map(item => item.paneName)).toEqual(selectedPanes)
+        })
+        if (paneName === 'folder' && selectedPanes.length) {
+          expect(navbar.navbarItems.filter(item => item.selected).map(item => item.paneUri)).toEqual([storages[1].value])
+        }
+        expect(navbar.navbarItems.map(item => item.onSelected)).toEqual(items.map(item => item.onSelected))
+        expect(getFolderPanesFromURI).not.toHaveBeenCalled()
       })
 
       it('stops following navigations once the navbar is gone', async () => {
