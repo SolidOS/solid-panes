@@ -169,12 +169,14 @@ describe('navbar', () => {
 
   describe('isNavbarHidden', () => {
     it.each([
-      [false, false, false],
-      [true, false, true],
-      [false, true, true],
-      [true, true, true]
-    ])('account menu %s, own profile %s -> hidden %s', (viaAccountMenu, ownProfile, hidden) => {
-      expect(isNavbarHidden({ viaAccountMenu, ownProfile })).toBe(hidden)
+      [false, false, false, false],
+      [true, false, false, true],
+      [false, true, false, true],
+      [true, true, false, true],
+      [false, false, true, true],
+      [true, false, true, true]
+    ])('account menu %s, own profile %s, own pod %s -> hidden %s', (viaAccountMenu, ownProfile, inViewerPod, hidden) => {
+      expect(isNavbarHidden({ viaAccountMenu, ownProfile, inViewerPod })).toBe(hidden)
     })
   })
 })

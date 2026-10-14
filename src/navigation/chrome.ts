@@ -116,9 +116,9 @@ export function pickNavbarItem<Item extends NavbarItemRef> (
   return forPane.find(item => item.paneUri === paneUri) ?? forPane[0]
 }
 
-/** The navbar is not offered on the viewer's own profile, nor over account-menu content. */
-export function isNavbarHidden (input: { viaAccountMenu: boolean, ownProfile: boolean }): boolean {
-  return input.viaAccountMenu || input.ownProfile
+/** The navbar is not offered in the viewer's own pod, nor over account-menu content. */
+export function isNavbarHidden (input: { viaAccountMenu: boolean, ownProfile: boolean, inViewerPod: boolean }): boolean {
+  return input.viaAccountMenu || input.ownProfile || input.inViewerPod
 }
 
 // File explorer header

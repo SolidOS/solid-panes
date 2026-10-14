@@ -1,12 +1,12 @@
 import { store } from 'solid-logic'
 import { html, render } from 'lit-html'
 import type { NavigationController } from '../navigation/controller'
-import { isOwnWebIdProfile, isWebIdUri } from '../utils/webIdUtils'
-import { deriveNavbarSelection, isNavbarHidden, isNavbarItemSelected, pickNavbarItem } from '../navigation/chrome'
+import { isWebIdUri } from '../utils/webIdUtils'
+import { deriveNavbarSelection, isNavbarItemSelected, pickNavbarItem } from '../navigation/chrome'
 import { onNavigated } from '../navigation/events'
 import { readNavigationState, type NavigationView } from '../navigation/state'
 import { getPodContext, isSamePod, type PodContext } from '../navigation/podContext'
-import { setNavbarHidden } from '../navigation/navbarVisibility'
+import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
 
 import '~icons/lucide/user'
 import '~icons/lucide/users'
@@ -16,10 +16,7 @@ import '../components/navbar'
 import type { NavbarMenuItem } from '../components/navbar/Navbar'
 
 function showNavbar () {
-  setNavbarHidden(isNavbarHidden({
-    viaAccountMenu: false,
-    ownProfile: isOwnWebIdProfile(store.sym(window.location.href))
-  }))
+  return refreshNavbarVisibility(window.location.href, readNavigationState().viaAccountMenu)
 }
 
 let selectPaneInNavbar: ((paneName: string, paneUri?: string) => void) | undefined
@@ -39,8 +36,8 @@ function createNavItem (
     label,
     paneName,
     paneUri,
-    onSelected () {
-      showNavbar()
+    async onSelected () {
+      await showNavbar()
       return onSelected()
     },
     selected
@@ -91,7 +88,7 @@ export async function createNavbar (navigation: NavigationController) {
   const existingNavbar = document.querySelector<HTMLElement>('solid-panes-navbar')
 
   if (existingNavbar) {
-    showNavbar()
+    await showNavbar()
     return existingNavbar
   }
 
@@ -146,13 +143,16 @@ export async function createNavbar (navigation: NavigationController) {
     document.body.prepend(navbar)
   }
 
-  showNavbar()
+  await showNavbar()
 
   // The items belong to one pod. When a navigation (a link, back or forward) lands in another
   // pod, they would offer the wrong profile and storages, so build them again.
   let rebuildRequest = 0
   const stopListening = onNavigated(({ url, state }) => {
     if (!navbar.isConnected) return stopListening()
+
+    refreshNavbarVisibility(url, state.viaAccountMenu)
+      .catch(error => console.error('Failed to update navbar visibility:', error))
 
     const request = ++rebuildRequest
     getPodContext(url).then(next => {

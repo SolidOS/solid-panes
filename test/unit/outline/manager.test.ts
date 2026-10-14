@@ -42,6 +42,10 @@ const mockPaneRegistry = {
 
 describe('manager', () => {
   describe('navbar visibility during navigation', () => {
+    beforeEach(() => {
+      isInViewerPodMock.mockReset().mockResolvedValue(false)
+    })
+
     afterEach(() => {
       vi.restoreAllMocks()
       document.body.replaceChildren()
@@ -52,7 +56,7 @@ describe('manager', () => {
       ['https://owner.example/profile/card', true],
       ['https://owner.example/storage/file.ttl', false],
       ['https://visitor.example/profile/card#me', false]
-    ])('sets navbar visibility for %s', (uri, hidden) => {
+    ])('sets navbar visibility for %s', async (uri, hidden) => {
       vi.spyOn(authn, 'currentUser').mockReturnValue(sym('https://owner.example/profile/card#me'))
       const navbar = document.createElement('solid-panes-navbar')
       navbar.classList.toggle('navbar--hidden', !hidden)
@@ -61,7 +65,23 @@ describe('manager', () => {
 
       manager.GotoSubject(sym(uri), false)
 
-      expect(navbar.classList.contains('navbar--hidden')).toBe(hidden)
+      await vi.waitFor(() => expect(navbar.classList.contains('navbar--hidden')).toBe(hidden))
+    })
+
+    it('keeps the navbar hidden when a storage link navigates to an owned resource', async () => {
+      vi.spyOn(authn, 'currentUser').mockReturnValue(sym(`${window.location.origin}/profile/card#me`))
+      isInViewerPodMock.mockResolvedValue(true)
+      const navbar = document.createElement('solid-panes-navbar')
+      document.body.appendChild(navbar)
+      const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+      const uri = `${window.location.origin}/storage/file.ttl`
+
+      manager.GotoSubject(sym(uri), false, undefined, true)
+
+      expect(window.location.href).toBe(uri)
+      await vi.waitFor(() => expect(navbar).toHaveClass('navbar--hidden'))
+      expect(isInViewerPodMock).toHaveBeenCalledWith(uri)
+      window.history.replaceState({}, '', '/')
     })
 
     it('preserves account-menu hiding when automatic reveal is suppressed', () => {

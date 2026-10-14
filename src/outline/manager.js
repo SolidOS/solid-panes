@@ -12,13 +12,13 @@ import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
-import { isOwnWebIdProfile, isWebIdUri } from '../utils/webIdUtils'
-import { deriveExplorerHeader, isNavbarHidden } from '../navigation/chrome'
+import { isWebIdUri } from '../utils/webIdUtils'
+import { deriveExplorerHeader } from '../navigation/chrome'
 import { isPageInViewerPod } from '../navigation/podContext'
 import { nextHistoryState } from '../navigation/state'
 import { announceNavigation } from '../navigation/events'
 import { resolveSource } from '../navigation/options'
-import { setNavbarHidden } from '../navigation/navbarVisibility'
+import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
 import '../components/file-explorer-header'
 
 export default function (context) {
@@ -307,7 +307,8 @@ export default function (context) {
   }
 
   function showSolidPanesNavbar (subject) {
-    setNavbarHidden(isNavbarHidden({ viaAccountMenu: false, ownProfile: isOwnWebIdProfile(subject) }))
+    refreshNavbarVisibility(subject.uri)
+      .catch(error => UI.log.error('Failed to update navbar visibility: ' + error))
   }
 
   /**

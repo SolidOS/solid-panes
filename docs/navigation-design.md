@@ -80,8 +80,9 @@ writes history, and it announces what it did.
 - For a storage, the container or resource from the URL is opened inside it, level by level.
 
 ### Navbar
-- Shown for any URL except the viewer's own profile (WebID or its document); hidden by the account
-  menu.
+- Hidden for the logged-in viewer's own profile (WebID or its document) and URLs inside any of
+  their storages, including resources opened through storage links. Also hidden by the account
+  menu. Shown for other URLs, including when logged out.
 - Built from the pod the page is in. Profile and Friends are only offered when the owner of the pod
   is known. When a navigation lands in another pod, the items are built again.
 - On a container or resource URL nothing is selected; on a WebID, Profile is.

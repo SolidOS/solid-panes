@@ -6,11 +6,16 @@ import type { NavbarMenuItem } from '../../../src/components/navbar/Navbar'
 import { getFolderPanesFromURI } from '../../../src/utils/paneUtils'
 import { announceNavigation } from '../../../src/navigation/events'
 import { resetPodContexts } from '../../../src/navigation/podContext'
+import { getPodStorages } from '../../../src/utils/podUtils'
 
 const { loadProfile } = vi.hoisted(() => ({ loadProfile: vi.fn() }))
 
 vi.mock('../../../src/utils/paneUtils', () => ({
   getFolderPanesFromURI: vi.fn(async () => [])
+}))
+
+vi.mock('../../../src/utils/podUtils', () => ({
+  getPodStorages: vi.fn(async () => [])
 }))
 
 vi.mock('../../../src/utils/webIdUtils', async (importOriginal) => ({
@@ -41,6 +46,7 @@ afterEach(() => {
   resetPodContexts()
   loadProfile.mockReset().mockImplementation(noProfile)
   vi.mocked(getFolderPanesFromURI).mockResolvedValue([])
+  vi.mocked(getPodStorages).mockReset().mockResolvedValue([])
   document.body.replaceChildren()
   window.history.replaceState({}, '', '/')
 })
@@ -121,6 +127,40 @@ describe('page navbar visibility', () => {
     const navbar = await createNavbar(navigation)
 
     expect(navbar).not.toHaveClass('navbar--hidden')
+  })
+
+  it.each(['/storage/', '/storage/docs/', '/storage/docs/file.ttl'])('hides the navbar within an owned storage at %s', async url => {
+    vi.spyOn(authn, 'currentUser').mockReturnValue(sym(`${window.location.origin}/profile/card#me`))
+    vi.mocked(getPodStorages).mockResolvedValue([sym(`${window.location.origin}/storage/`)])
+    window.history.replaceState({}, '', url)
+
+    expect(await createNavbar(navigation)).toHaveClass('navbar--hidden')
+  })
+
+  it('shows the navbar for the same storage resource when logged out', async () => {
+    vi.spyOn(authn, 'currentUser').mockReturnValue(null)
+    window.history.replaceState({}, '', '/storage/docs/file.ttl')
+
+    expect(await createNavbar(navigation)).not.toHaveClass('navbar--hidden')
+    expect(getPodStorages).not.toHaveBeenCalled()
+  })
+
+  it('updates visibility for resource links even when the navbar items do not change', async () => {
+    vi.spyOn(authn, 'currentUser').mockReturnValue(sym(`${window.location.origin}/profile/card#me`))
+    vi.mocked(getPodStorages).mockResolvedValue([sym(`${window.location.origin}/storage/owned/`)])
+    window.history.replaceState({}, '', '/storage/other/file.ttl')
+    const navbar = await createNavbar(navigation) as HTMLElement & { navbarItems: NavbarMenuItem[] }
+    const items = navbar.navbarItems
+    expect(navbar).not.toHaveClass('navbar--hidden')
+
+    window.history.replaceState({}, '', '/storage/owned/file.ttl')
+    announceNavigation(document)
+    await vi.waitFor(() => expect(navbar).toHaveClass('navbar--hidden'))
+    expect(navbar.navbarItems).toBe(items)
+
+    window.history.replaceState({}, '', '/storage/other/file.ttl')
+    announceNavigation(document)
+    await vi.waitFor(() => expect(navbar).not.toHaveClass('navbar--hidden'))
   })
 
   it('updates an existing navbar when moving to and from the own profile', async () => {
