@@ -10,10 +10,10 @@ import styles from './FileExplorerProvider.styles.css'
 import personIcon from '../../icons/person.svg'
 import friendsIcon from '../../icons/friends.svg'
 import '~icons/lucide/share-2'
+import { explorerHeaderForPane } from '../../navigation/chrome'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
-const PERSON_PANE_NAMES = ['profile', 'social']
 
 function createFileExplorerContextValue (value: {
   store: LiveStore | undefined
@@ -242,7 +242,7 @@ export default class FileExplorerProvider extends WebComponent {
     const store = this.context?.session.store as LiveStore
     const subject = store.sym(this.subjectUri as string)
     // Profile and friends panes present a person, not the resource they are opened on.
-    const showHeader = this.showHeader && !PERSON_PANE_NAMES.includes(this.pane?.name ?? '')
+    const showHeader = explorerHeaderForPane(this.showHeader, this.pane?.name)
     return html`
       <div class="file-explorer-provider">
         ${showHeader

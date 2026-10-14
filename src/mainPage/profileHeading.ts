@@ -7,15 +7,16 @@ import type { ViewerMode } from '../types'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
 import './profileHeading.css'
-import type { NavbarMenuItem } from '../components/navbar/Navbar'
+import { deriveHeading } from '../navigation/chrome'
+import { getPodContext } from '../navigation/podContext'
+import { onNavigated } from '../navigation/events'
+import { readNavigationState } from '../navigation/state'
 
 const PROFILE_HEADING_TAG = 'solid-panes-profile-heading'
 const PROFILE_HEADING_MOUNT_ID = 'profile-heading-mount'
-const PROFILE_PANE_NAMES = new Set(['profile', 'social'])
 
-let observer: MutationObserver | undefined
 let refreshRequest = 0
-let popstateListenerRegistered = false
+let navigatedListenerRegistered = false
 let authListenersRegistered = false
 let profileSavedListenerRegistered = false
 let authReady: Promise<void> | undefined
@@ -149,8 +150,7 @@ function ensureMountPoint (): HTMLElement | null {
 export async function refreshProfileHeading (force = false): Promise<void> {
   await authReady
 
-  const paneName = window.history.state?.paneName
-  const paneUri = window.history.state?.paneUri
+  const pod = await getPodContext(window.location.href)
   const mount = ensureMountPoint()
   if (!mount) return
 
@@ -160,37 +160,29 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     loadingPaneKey = ''
   }
 
-  const navbar = document.querySelector('solid-panes-navbar') as (HTMLElement & {
-    navbarItems?: NavbarMenuItem[]
-  }) | null
-  const selectedNavbarItem = navbar?.navbarItems?.find(item =>
-    item.paneName === paneName && (!paneUri || item.paneUri === paneUri)
-  )
-  // Any other pane on a page inside someone's pod (for example their container)
-  // shows that pod owner's heading. Account-menu views show the viewer's own content.
-  const profileNavbarItem = navbar?.navbarItems?.find(item => item.paneName === 'profile')
-  const viewedProfileUri = (
-    selectedNavbarItem ?? (window.history.state?.viaAccountMenu ? undefined : profileNavbarItem)
-  )?.profileSubjectUri
+  const { view, viaAccountMenu } = readNavigationState()
+  const decision = deriveHeading({
+    view,
+    viaAccountMenu,
+    viewer: authn.currentUser()?.value,
+    pageUrl: window.location.href,
+    owner: pod.owner,
+    storageUris: pod.storagePanes.map(pane => pane.subject.value)
+  })
 
-  if (!paneName || !PROFILE_PANE_NAMES.has(paneName)) {
-    const viewer = authn.currentUser()
-    if (!viewedProfileUri || viewedProfileUri === viewer?.value) {
-      refreshRequest++
-      loadingPaneKey = ''
-      displayedPaneKey = ''
-      displayedSubjectUri = ''
-      hideHeading(mount)
-      return
-    }
+  if (decision.mode === 'none') {
+    refreshRequest++
+    loadingPaneKey = ''
+    displayedPaneKey = ''
+    displayedSubjectUri = ''
+    hideHeading(mount)
+    return
   }
 
-  const subjectUri = PROFILE_PANE_NAMES.has(paneName)
-    ? paneUri || selectedNavbarItem?.profileSubjectUri || window.location.href
-    : viewedProfileUri
-  if (!subjectUri) return
+  const { subjectUri } = decision
+  const isProfilePane = decision.mode === 'full'
   cancelHeadingHide(mount)
-  const paneKey = `${paneName}:${subjectUri}`
+  const paneKey = `${decision.paneName}:${subjectUri}`
   if (paneKey === displayedPaneKey || paneKey === loadingPaneKey) return
 
   const request = ++refreshRequest
@@ -202,7 +194,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   try {
     subject = await loadProfileFromURI(store.sym(subjectUri))
     profileData = presentProfile(subject, store)
-    viewerMode = paneName === 'profile' ? await getViewerMode(subject) : 'anonymous'
+    viewerMode = isProfilePane ? await getViewerMode(subject) : 'anonymous'
     canEdit = viewerMode === 'owner'
   } catch (error) {
     if (request === refreshRequest) loadingPaneKey = ''
@@ -220,7 +212,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     }
   heading.profileData = profileData
   const viewer = authn.currentUser()
-  heading.friendSubject = paneName === 'profile' && viewer && !viewer.sameTerm(subject)
+  heading.friendSubject = isProfilePane && viewer && !viewer.sameTerm(subject)
     ? subject
     : undefined
   heading.editContext = canEdit
@@ -231,7 +223,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
         onSaved: () => refreshProfileHeading(true)
       }
     : undefined
-  heading.compact = paneName !== 'profile'
+  heading.compact = !isProfilePane
   const appearing = mount.hidden || !mount.firstElementChild
   mount.hidden = false
   if (heading.parentNode !== mount) mount.replaceChildren(heading)
@@ -244,6 +236,11 @@ export async function refreshProfileHeading (force = false): Promise<void> {
       showHeading(mount)
     }
   }
+}
+
+/** Put the heading where it belongs, above the navbar, after the navbar has been added. */
+export function placeProfileHeading (): void {
+  ensureMountPoint()
 }
 
 export function initializeProfileHeading (): void {
@@ -286,25 +283,14 @@ export function initializeProfileHeading (): void {
     authListenersRegistered = true
   }
 
-  if (!observer && typeof MutationObserver !== 'undefined') {
-    observer = new MutationObserver(() => {
+  // Navigations the page's own navigation does not make, such as links and buttons in solid-ui
+  if (!navigatedListenerRegistered) {
+    onNavigated(() => {
       refreshProfileHeading().catch((error: unknown) => {
         console.error('Failed to refresh profile heading.', error)
       })
     })
-    observer.observe(document.getElementById('MainContent') || document.body, {
-      childList: true,
-      subtree: true
-    })
-  }
-
-  if (!popstateListenerRegistered) {
-    window.addEventListener('popstate', () => {
-      refreshProfileHeading().catch((error: unknown) => {
-        console.error('Failed to refresh profile heading.', error)
-      })
-    })
-    popstateListenerRegistered = true
+    navigatedListenerRegistered = true
   }
 
   readiness.then(() => refreshProfileHeading(true)).catch((error: unknown) => {

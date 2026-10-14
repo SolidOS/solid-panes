@@ -16,7 +16,6 @@ export interface NavbarMenuItem {
   selected?: boolean
   paneName?: string
   paneUri?: string
-  profileSubjectUri?: string
   onSelected?(): void | Promise<void>
 }
 

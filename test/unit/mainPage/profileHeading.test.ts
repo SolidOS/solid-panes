@@ -4,9 +4,16 @@ import { lit, sym } from 'rdflib'
 import { ns } from 'solid-ui'
 import type { ProfileHeadingEditContext } from '../../../src/components/profile-heading/ProfileHeading'
 
-const { getViewerModeMock, createHeadingEditDialogMock } = vi.hoisted(() => ({
+const { getViewerModeMock, createHeadingEditDialogMock, pod } = vi.hoisted(() => ({
   getViewerModeMock: vi.fn(),
-  createHeadingEditDialogMock: vi.fn()
+  createHeadingEditDialogMock: vi.fn(),
+  // What the page knows about the pod it is in
+  pod: { current: { owner: undefined as string | undefined, storagePanes: [] as Array<{ subject: { value: string } }>, viewerStorages: [] as string[] } }
+}))
+
+vi.mock('../../../src/navigation/podContext', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../../../src/navigation/podContext')>(),
+  getPodContext: async () => pod.current
 }))
 
 vi.mock('../../../src/components/profile-heading/editor/sections/heading/HeadingEditDialog', () => ({
@@ -30,11 +37,17 @@ vi.mock('../../../src/utils/webIdUtils', async () => {
   }
 })
 
-import { initializeProfileHeading, refreshProfileHeading } from '../../../src/mainPage/profileHeading'
+import { initializeProfileHeading, placeProfileHeading, refreshProfileHeading } from '../../../src/mainPage/profileHeading'
+import { announceNavigation } from '../../../src/navigation/events'
+
+function podOf (owner: string | undefined, ...storages: string[]) {
+  pod.current = { owner, storagePanes: storages.map(value => ({ subject: { value } })), viewerStorages: [] }
+}
 
 afterEach(() => {
   document.body.replaceChildren()
   window.history.replaceState({}, '', '/')
+  podOf(undefined)
 })
 
 describe('page-level profile heading', () => {
@@ -519,24 +532,16 @@ describe('page-level profile heading', () => {
     }
   })
 
-  it('keeps another person\'s heading visible on their other navbar panes', async () => {
+  it('keeps another person\'s heading visible on their storage', async () => {
     const subject = sym('https://another-profile-heading.example/profile/card#me')
     const storage = sym('https://profile-heading.example/storage/')
     const viewer = sym('https://viewer.example/profile/card#me')
     store.add(subject, ns.vcard('fn'), lit('Another Person'), subject.doc())
+    podOf(subject.value, storage.value)
 
     const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'
-    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & {
-      navbarItems?: Array<{ paneName: string, paneUri: string, profileSubjectUri: string }>
-    }
-    navbar.navbarItems = [{
-      paneName: 'folder',
-      paneUri: storage.value,
-      profileSubjectUri: subject.value
-    }]
-    mainContent.appendChild(navbar)
     document.body.appendChild(mainContent)
     window.history.replaceState({
       paneName: 'folder',
@@ -566,18 +571,12 @@ describe('page-level profile heading', () => {
   it('hides another person\'s heading when the account menu opens the viewer\'s storage', async () => {
     const subject = sym(`${window.location.origin}/other/profile/card#me`)
     const viewer = sym(`${window.location.origin}/profile/card#me`)
+    const viewerStorage = `${window.location.origin}/storage/`
+    const ownStorages = [1, 2].map(index => `${window.location.origin}/other/storage-${index}/`)
+    podOf(subject.value, ...ownStorages)
     const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'
-    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & {
-      navbarItems: Array<{ paneName: string, paneUri: string, profileSubjectUri: string }>
-    }
-    navbar.navbarItems = [1, 2].map(index => ({
-      paneName: 'folder',
-      paneUri: `${window.location.origin}/other/storage-${index}/`,
-      profileSubjectUri: subject.value
-    }))
-    mainContent.appendChild(navbar)
     document.body.appendChild(mainContent)
 
     try {
@@ -586,25 +585,19 @@ describe('page-level profile heading', () => {
       const mount = document.getElementById('profile-heading-mount')!
       expect(mount.hidden).toBe(false)
 
-      navbar.classList.add('navbar--hidden')
-      window.history.replaceState({
-        paneName: 'folder',
-        paneUri: `${window.location.origin}/storage/`
-      }, '', subject.value)
+      window.history.replaceState({ paneName: 'folder', paneUri: viewerStorage, viaAccountMenu: true }, '', subject.value)
       await refreshProfileHeading()
 
       expect(window.location.href).toBe(subject.value)
       expect(mount.hidden).toBe(true)
       expect(mount.firstElementChild).toBeNull()
 
-      navbar.classList.remove('navbar--hidden')
+      // The same storage opened another way is just a view of a page in their pod
+      window.history.replaceState({ paneName: 'folder', paneUri: viewerStorage }, '', subject.value)
       await refreshProfileHeading()
-      expect(mount.hidden).toBe(true)
+      expect(mount.hidden).toBe(false)
 
-      window.history.replaceState({
-        paneName: 'folder',
-        paneUri: navbar.navbarItems[1].paneUri
-      }, '', subject.value)
+      window.history.replaceState({ paneName: 'folder', paneUri: ownStorages[1] }, '', subject.value)
       await refreshProfileHeading()
       expect(mount.hidden).toBe(false)
       expect(mount.firstElementChild).not.toBeNull()
@@ -617,15 +610,10 @@ describe('page-level profile heading', () => {
     const other = sym(`${window.location.origin}/other/profile/card#me`)
     const viewer = sym(`${window.location.origin}/profile/card#me`)
     store.add(other, ns.vcard('fn'), lit('Pod Owner'), other.doc())
+    podOf(other.value)
     const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'
-    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & { navbarItems: object[] }
-    navbar.navbarItems = [
-      { paneName: 'profile', paneUri: other.value, profileSubjectUri: other.value },
-      { paneName: 'social', paneUri: other.value, profileSubjectUri: other.value }
-    ]
-    mainContent.appendChild(navbar)
     document.body.appendChild(mainContent)
 
     try {
@@ -653,21 +641,39 @@ describe('page-level profile heading', () => {
     }
   })
 
+  it('shows the heading even when the navbar does not exist yet', async () => {
+    const other = sym(`${window.location.origin}/other/profile/card#me`)
+    store.add(other, ns.vcard('fn'), lit('Early Owner'), other.doc())
+    podOf(other.value)
+    const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(sym(`${window.location.origin}/profile/card#me`))
+    const mainContent = document.createElement('main')
+    mainContent.id = 'MainContent'
+    document.body.appendChild(mainContent)
+    window.history.replaceState({}, '', '/other/container/')
+
+    try {
+      expect(document.querySelector('solid-panes-navbar')).toBeNull()
+      await refreshProfileHeading(true)
+
+      expect(document.getElementById('profile-heading-mount')?.hidden).toBe(false)
+    } finally {
+      currentUser.mockRestore()
+    }
+  })
+
   it.each([
     ['the viewer\'s own pod', {}, 'viewer'],
     ['an account-menu view', { paneName: 'home', viaAccountMenu: true }, 'other'],
-    ['an account-menu storage view', { paneName: 'folder', paneUri: 'https://x.example/s/', viaAccountMenu: true }, 'other']
+    ['an account-menu storage view', { paneName: 'folder', paneUri: 'https://x.example/s/', viaAccountMenu: true }, 'other'],
+    ['a pod without a known owner', {}, 'unknown']
   ])('hides the heading on a container for %s', async (_name, state, owner) => {
     const other = sym(`${window.location.origin}/other/profile/card#me`)
     const viewer = sym(`${window.location.origin}/profile/card#me`)
     const currentUser = vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     const mainContent = document.createElement('main')
     mainContent.id = 'MainContent'
-    const navbar = document.createElement('solid-panes-navbar') as HTMLElement & { navbarItems: object[] }
-    const ownerUri = owner === 'viewer' ? viewer.value : other.value
-    navbar.navbarItems = [{ paneName: 'profile', paneUri: ownerUri, profileSubjectUri: ownerUri }]
-    mainContent.appendChild(navbar)
     document.body.appendChild(mainContent)
+    podOf(owner === 'viewer' ? viewer.value : owner === 'other' ? other.value : undefined)
 
     try {
       window.history.replaceState(state, '', '/other/container/')
@@ -856,5 +862,57 @@ describe('page-level profile heading', () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+
+  describe('following navigations', () => {
+    async function setup () {
+      const subject = sym('https://announced.example/profile/card#me')
+      store.add(subject, ns.vcard('fn'), lit('Announced Person'), subject.doc())
+      const mainContent = document.createElement('main')
+      mainContent.id = 'MainContent'
+      document.body.appendChild(mainContent)
+      initializeProfileHeading()
+      await refreshProfileHeading(true)
+      const mount = document.getElementById('profile-heading-mount')!
+      expect(mount.hidden).toBe(true)
+      return { subject, mainContent, mount }
+    }
+
+    it('refreshes when a navigation is announced, whoever made it', async () => {
+      const { subject, mount } = await setup()
+
+      window.history.replaceState({ paneName: 'profile', paneUri: subject.value }, '', '/')
+      announceNavigation(document)
+
+      await vi.waitFor(() => expect(mount.hidden).toBe(false))
+      const heading = mount.querySelector('solid-panes-profile-heading') as HTMLElement & { profileData?: { name: string } }
+      expect(heading.profileData?.name).toBe('Announced Person')
+    })
+
+    it('does not look at what the page has been changed to without a navigation', async () => {
+      const { subject, mainContent, mount } = await setup()
+      window.history.replaceState({ paneName: 'profile', paneUri: subject.value }, '', '/')
+      announceNavigation(document)
+      await vi.waitFor(() => expect(mount.hidden).toBe(false))
+
+      window.history.replaceState({}, '', '/')
+      mainContent.appendChild(document.createElement('div'))
+      window.dispatchEvent(new PopStateEvent('popstate'))
+      await new Promise(resolve => setTimeout(resolve, 20))
+
+      expect(mount.hidden).toBe(false)
+    })
+
+    it('places the heading above a navbar that was added after it', async () => {
+      const { mainContent, mount } = await setup()
+      const navbar = document.createElement('solid-panes-navbar')
+      mainContent.insertBefore(navbar, mainContent.firstChild)
+      expect(mount.nextElementSibling).not.toBe(navbar)
+
+      placeProfileHeading()
+
+      expect(mount.nextElementSibling).toBe(navbar)
+      expect(mainContent.firstElementChild).toBe(mount)
+    })
   })
 })

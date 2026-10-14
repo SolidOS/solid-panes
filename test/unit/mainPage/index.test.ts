@@ -20,6 +20,7 @@ vi.mock('../../../src/mainPage/header', () => ({ createHeader: vi.fn() }))
 vi.mock('../../../src/mainPage/navbar', () => ({ createNavbar: vi.fn(), selectNavbarPane }))
 vi.mock('../../../src/mainPage/profileHeading', () => ({
   initializeProfileHeading: vi.fn(),
+  placeProfileHeading: vi.fn(),
   refreshProfileHeading: refreshHeading
 }))
 vi.mock('../../../src/utils/paneUtils', () => ({
@@ -30,6 +31,7 @@ vi.mock('../../../src/utils/paneUtils', () => ({
 vi.mock('../../../src/utils/webIdUtils', () => ({ isWebIdUri: isWebId }))
 
 import { initMainPage, refreshUI } from '../../../src/mainPage'
+import { resolveSource } from '../../../src/navigation/options'
 
 const navigationListeners: Record<string, (event: unknown) => void> = {}
 Object.defineProperty(window, 'navigation', {
@@ -63,14 +65,14 @@ const urlProfilePane = {
 
 function setup (state: object, webId = true) {
   // Mirrors how the outline manager records the displayed pane in history.state
-  const GotoSubject = vi.fn((_subject, _expand, pane, _solo, _referrer, _table, showNavbar = true) => {
+  const GotoSubject = vi.fn((_subject, _expand, pane, _solo, _referrer, _table, options) => {
     const next = { ...window.history.state }
     if (pane) {
       next.paneName = pane.name
       if (pane.subject) next.paneUri = pane.subject.value
     }
-    if (showNavbar) delete next.viaAccountMenu
-    else next.viaAccountMenu = true
+    if (resolveSource(options) === 'accountMenu') next.viaAccountMenu = true
+    else delete next.viaAccountMenu
     window.history.replaceState(next, '', window.location.href)
   })
   getOutliner.mockReturnValue({ GotoSubject })
@@ -117,17 +119,20 @@ describe('main page load', () => {
     })
   })
 
-  it('still restores the pane selected on a non-WebID page', async () => {
-    const storagePane = { name: 'folder', paneName: 'folder', subject: store.sym(`${origin}/other/storage/`) }
-    getFolderPane.mockResolvedValue(storagePane)
-    const GotoSubject = setup({ paneName: 'folder', paneUri: `${origin}/other/storage/` }, false)
+  it.each([
+    ['a storage from the navbar', { paneName: 'folder', paneUri: `${origin}/other/storage/` }],
+    ['friends from the navbar', { paneName: 'social', paneUri: `${origin}/other/profile/card#me` }],
+    ['a pane of the application', { paneName: 'home' }]
+  ])('shows what the URL is on a reload, whatever pane was selected before: %s', async (_name, saved) => {
+    const GotoSubject = setup({ ...saved, other: 'kept' }, false)
 
     await initMainPage(store)
 
-    expect(getFolderPane).toHaveBeenCalledWith(store.sym(`${origin}/other/storage/`))
-    expect(getProfilePane).not.toHaveBeenCalled()
-    expect(GotoSubject.mock.calls[0][2]).toBe(storagePane)
-    expect(window.history.state.paneUri).toBe(`${origin}/other/storage/`)
+    expect(getFolderPane).not.toHaveBeenCalled()
+    expect(getSocialPane).not.toHaveBeenCalled()
+    expect(byName).not.toHaveBeenCalled()
+    expect(GotoSubject.mock.calls[0][2]).toBeUndefined()
+    expect(window.history.state).toEqual({ other: 'kept' })
   })
 
   it('drops account-menu content on a non-WebID page', async () => {
@@ -146,8 +151,8 @@ describe('main page load', () => {
 })
 
 describe('browser navigation without a reload', () => {
-  async function setupLoaded (state: object = {}) {
-    const GotoSubject = setup(state)
+  async function setupLoaded (state: object = {}, webId = true) {
+    const GotoSubject = setup(state, webId)
     await initMainPage(store)
     GotoSubject.mockClear()
     refreshHeading.mockClear()
@@ -196,60 +201,64 @@ describe('browser navigation without a reload', () => {
 
     expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
     expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
-    expect(GotoSubject.mock.calls[0][6]).toBe(true)
+    expect(resolveSource(GotoSubject.mock.calls[0][6])).toBe('default')
     expect(selectNavbarPane).toHaveBeenCalledWith('profile', urlProfilePane.subject.value)
     expect(window.history.state).toEqual({ paneName: 'profile', paneUri: urlProfilePane.subject.value })
     expect(refreshHeading).toHaveBeenCalledWith(true)
   })
 
-  it('restores an account-menu storage entry on back or forward and hides the navbar', async () => {
+  it('shows a container\'s own default view when Enter is pressed on its URL after a storage was selected', async () => {
+    const GotoSubject = await setupLoaded({}, false)
+    window.history.replaceState({ paneName: 'folder', paneUri: `${origin}/other/` }, '', window.location.href)
+
+    const intercept = enter()
+    expect(intercept).toHaveBeenCalledOnce()
+    await intercept.mock.calls[0][0].handler()
+
+    expect(getFolderPane).not.toHaveBeenCalled()
+    expect(GotoSubject.mock.calls[0][2]).toBeUndefined()
+    expect(window.history.state).toEqual({})
+    expect(selectNavbarPane).not.toHaveBeenCalled()
+    expect(refreshHeading).toHaveBeenCalledWith(true)
+  })
+
+  it.each([
+    ['an account-menu storage', { paneName: 'folder', paneUri: `${origin}/storage/`, viaAccountMenu: true }],
+    ['a storage from the navbar', { paneName: 'folder', paneUri: `${origin}/other/storage/` }],
+    ['friends from the navbar', { paneName: 'social', paneUri: `${origin}/other/profile/card#me` }],
+    ['an account-menu dashboard', { paneName: 'home', viaAccountMenu: true }]
+  ])('shows what the URL is on back or forward, not %s the entry displayed', async (_name, saved) => {
     const GotoSubject = await setupLoaded()
-    const navbar = document.createElement('solid-panes-navbar')
-    document.body.appendChild(navbar)
-    const storage = `${origin}/storage/`
-    const storagePane = { name: 'folder', paneName: 'folder', subject: store.sym(storage) }
-    getFolderPane.mockResolvedValue(storagePane)
-    window.history.replaceState({ paneName: 'folder', paneUri: storage, viaAccountMenu: true }, '', window.location.href)
+    window.history.replaceState({ ...saved, other: 'kept' }, '', window.location.href)
 
     traverse()
-    await vi.waitFor(() => expect(refreshHeading).toHaveBeenCalledWith(false))
+    await vi.waitFor(() => expect(refreshHeading).toHaveBeenCalledWith(true))
 
-    expect(getFolderPane).toHaveBeenCalledWith(store.sym(storage))
-    const [subject, , pane, , , , showNavbar] = GotoSubject.mock.calls[0]
-    expect(subject.value).toBe(window.location.href)
-    expect(pane).toBe(storagePane)
-    expect(showNavbar).toBe(false)
-    expect(navbar).toHaveClass('navbar--hidden')
-    expect(selectNavbarPane).not.toHaveBeenCalled()
+    expect(getFolderPane).not.toHaveBeenCalled()
+    expect(getSocialPane).not.toHaveBeenCalled()
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
+    expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
+    expect(resolveSource(GotoSubject.mock.calls[0][6])).toBe('default')
+    expect(selectNavbarPane).toHaveBeenCalledWith('profile', urlProfilePane.subject.value)
+    expect(window.history.state).toEqual({
+      paneName: 'profile',
+      paneUri: urlProfilePane.subject.value,
+      other: 'kept'
+    })
     expect(window.location.pathname).toBe('/other/profile/card')
   })
 
-  it('restores a navbar entry on back or forward and selects it in the navbar', async () => {
-    const GotoSubject = await setupLoaded()
-    const webId = urlProfilePane.subject.value
-    const socialPane = { name: 'social', paneName: 'social', subject: urlProfilePane.subject }
-    getSocialPane.mockResolvedValue(socialPane)
-    window.history.replaceState({ paneName: 'social', paneUri: webId }, '', window.location.href)
+  it('shows a container\'s own default view on back or forward after a storage was selected', async () => {
+    const GotoSubject = await setupLoaded({}, false)
+    window.history.replaceState({ paneName: 'folder', paneUri: `${origin}/other/` }, '', window.location.href)
 
     traverse()
-    await vi.waitFor(() => expect(refreshHeading).toHaveBeenCalledWith(false))
+    await vi.waitFor(() => expect(refreshHeading).toHaveBeenCalledWith(true))
 
-    expect(getSocialPane).toHaveBeenCalledWith(store.sym(webId))
-    expect(GotoSubject.mock.calls[0][2]).toBe(socialPane)
-    expect(GotoSubject.mock.calls[0][6]).toBe(true)
-    expect(selectNavbarPane).toHaveBeenCalledWith('social', webId)
-  })
-
-  it('shows the URL\'s profile when the history entry has no saved pane', async () => {
-    const GotoSubject = await setupLoaded({ paneName: 'social', paneUri: urlProfilePane.subject.value })
-    window.history.replaceState({}, '', window.location.href)
-
-    traverse()
-    await vi.waitFor(() => expect(refreshHeading).toHaveBeenCalledWith(false))
-
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
-    expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
-    expect(selectNavbarPane).toHaveBeenCalledWith('profile', urlProfilePane.subject.value)
+    expect(getFolderPane).not.toHaveBeenCalled()
+    expect(GotoSubject.mock.calls[0][2]).toBeUndefined()
+    expect(window.history.state).toEqual({})
+    expect(selectNavbarPane).not.toHaveBeenCalled()
   })
 
   it('ignores entry changes that are not back or forward', async () => {
@@ -257,47 +266,25 @@ describe('browser navigation without a reload', () => {
 
     traverse('replace')
     traverse('push')
-    await Promise.resolve()
+    await new Promise(resolve => setTimeout(resolve, 10))
 
     expect(GotoSubject).not.toHaveBeenCalled()
   })
 
-  it('only renders the latest entry when navigating quickly', async () => {
+  it('only renders the latest when navigating quickly', async () => {
     const GotoSubject = await setupLoaded()
-    const webId = urlProfilePane.subject.value
     let resolveFirst!: (pane: unknown) => void
-    getSocialPane.mockReturnValueOnce(new Promise(resolve => { resolveFirst = resolve }))
-    window.history.replaceState({ paneName: 'social', paneUri: webId }, '', window.location.href)
+    getProfilePane.mockReturnValueOnce(new Promise(resolve => { resolveFirst = resolve }))
     traverse()
-    await vi.waitFor(() => expect(getSocialPane).toHaveBeenCalled())
+    await vi.waitFor(() => expect(getProfilePane).toHaveBeenCalledOnce())
 
-    window.history.replaceState({}, '', window.location.href)
     traverse()
     await vi.waitFor(() => expect(GotoSubject).toHaveBeenCalledOnce())
-    resolveFirst({ name: 'social', paneName: 'social', subject: urlProfilePane.subject })
+    resolveFirst({ name: 'profile', paneName: 'profile', subject: urlProfilePane.subject })
     await new Promise(resolve => setTimeout(resolve))
 
     expect(GotoSubject).toHaveBeenCalledOnce()
     expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
-  })
-
-  it('renders after the page\'s own popstate handlers so the restored entry wins', async () => {
-    const GotoSubject = await setupLoaded()
-    const storage = `${origin}/storage/`
-    getFolderPane.mockResolvedValue({ name: 'folder', paneName: 'folder', subject: store.sym(storage) })
-    window.history.replaceState({ paneName: 'folder', paneUri: storage, viaAccountMenu: true }, '', window.location.href)
-    let handlersFinished = false
-    // mashlib's own handler re-renders the default pane, dropping the marker from the entry
-    window.addEventListener('popstate', () => {
-      window.history.replaceState({ paneName: 'folder', paneUri: storage }, '', window.location.href)
-      handlersFinished = true
-    }, { once: true })
-    GotoSubject.mockImplementationOnce(() => { expect(handlersFinished).toBe(true) })
-
-    traverse()
-    window.dispatchEvent(new PopStateEvent('popstate'))
-    await vi.waitFor(() => expect(GotoSubject).toHaveBeenCalledOnce())
-    expect(GotoSubject.mock.calls[0][6]).toBe(false)
   })
 
   it('keeps the URL and account-menu view when the render environment changes', async () => {
@@ -314,10 +301,10 @@ describe('browser navigation without a reload', () => {
 
     await refreshUI(outliner)
 
-    const [subject, , pane, , , , showNavbar] = GotoSubject.mock.calls[0]
+    const [subject, , pane, , , , options] = GotoSubject.mock.calls[0]
     expect(subject.value).toBe(pageUrl)
     expect(pane).toBe(storagePane)
-    expect(showNavbar).toBe(false)
+    expect(options).toEqual({ source: 'accountMenu' })
     expect(window.location.href).toBe(pageUrl)
     expect(window.history.state).toMatchObject({ paneName: 'folder', paneUri: storage, viaAccountMenu: true })
     expect(navbar).toHaveClass('navbar--hidden')
