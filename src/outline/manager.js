@@ -13,7 +13,12 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
-import { createOutlineDomHelpers } from './outlineDomHelpers'
+import { deriveExplorerHeader } from '../navigation/chrome'
+import { isPageInViewerPod } from '../navigation/podContext'
+import { nextHistoryState } from '../navigation/state'
+import { announceNavigation } from '../navigation/events'
+import { resolveSource } from '../navigation/options'
+import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
 import '../components/file-explorer-header'
 import AccessControlModal from 'solid-ui/components/access-control-modal'
 
@@ -202,15 +207,9 @@ export default function (context) {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
 
-  function getNavbarElement () {
-    return document.querySelector('solid-panes-navbar')
-  }
-
-  function showSolidPanesNavbar () {
-    const navbar = getNavbarElement()
-    if (navbar) {
-      navbar.classList.remove('navbar--hidden')
-    }
+  function showSolidPanesNavbar (subject) {
+    refreshNavbarVisibility(subject.uri)
+      .catch(error => UI.log.error('Failed to update navbar visibility: ' + error))
   }
 
   /**
@@ -355,7 +354,14 @@ export default function (context) {
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
-    provider.showHeader = !isRootResource && !isWebIdUri(subject)
+    const viewerPodOnly = !!options.headerOnlyInViewerPod
+    provider.showHeader = deriveExplorerHeader({
+      isRootResource,
+      isWebId: isWebIdUri(subject),
+      viewerPodOnly,
+      // Only worth looking up when the view does not show the page URL's own resource
+      inViewerPod: viewerPodOnly ? await isPageInViewerPod(document.location.href) : true
+    })
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
@@ -1637,6 +1643,58 @@ export default function (context) {
     const subject = kb.sym(uri)
     this.GotoSubject(subject, true)
   }
+  let openPathRequest = 0
+
+  // Opens, one level at a time, the containers from `root` down to `target` (the last
+  // one being the container or resource itself) inside the rows of a rendered container.
+  function openPathWithin (table, root, target) {
+    const request = ++openPathRequest
+    const rootUri = root.uri
+    const targetUri = target.uri.split('#')[0]
+    if (!rootUri.endsWith('/') || !targetUri.startsWith(rootUri) || targetUri === rootUri) return
+
+    const steps = []
+    const parts = targetUri.slice(rootUri.length).split('/')
+    let uri = rootUri
+    parts.forEach((part, index) => {
+      if (!part) return
+      uri += index < parts.length - 1 ? part + '/' : part
+      steps.push(uri)
+    })
+
+    const findRow = stepUri => Array.from(table.querySelectorAll('td.obj[about]'))
+      .find(td => td.getAttribute('about') === kb.sym(stepUri).toNT())
+
+    // The rows only exist once their container has been fetched and rendered
+    const whenRow = stepUri => new Promise(resolve => {
+      const existing = findRow(stepUri)
+      if (existing) return resolve(existing)
+
+      const timer = setTimeout(() => { observer.disconnect(); resolve(null) }, 10000)
+      const observer = new MutationObserver(() => {
+        const row = findRow(stepUri)
+        if (!row && request === openPathRequest) return
+        clearTimeout(timer)
+        observer.disconnect()
+        resolve(row)
+      })
+      observer.observe(table, { childList: true, subtree: true })
+    })
+
+    ;(async () => {
+      for (const stepUri of steps) {
+        const row = await whenRow(stepUri)
+        if (!row || request !== openPathRequest) return
+        if (!row.firstChild || row.firstChild.nodeName !== 'TABLE') {
+          outlineExpand(row, kb.sym(stepUri))
+        }
+        if (stepUri === steps[steps.length - 1] && typeof row.scrollIntoView === 'function') {
+          row.scrollIntoView({ block: 'nearest' })
+        }
+      }
+    })().catch(err => UI.log.warn('outline: could not open ' + target.uri + ' inside ' + rootUri + ': ' + err))
+  }
+
   this.GotoURIinit = function (uri) {
     const subject = kb.sym(uri)
     this.GotoSubject(subject)
@@ -1646,16 +1704,24 @@ export default function (context) {
 
   @param subject -- RDF term for the thing to be presented
   @param expand  -- flag -- open the subject rather than keep folded closed
-  @param pane    -- optional -- pane to be used for expanded display
+  @param pane    -- optional -- pane to be used for expanded display. When the pane has its own
+                    subject (the profile, friends or storage of a person), that subject is displayed
+                    instead of `subject`, which only stays the page URL; for a storage the container
+                    or resource `subject` points at is opened inside it
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
-  @param host   -- option  -- default is the outline host element used for the view.
-  @param showNavbar -- optional -- when false, suppress automatic navbar reveal
+  @param table   -- option  -- default is an HTML table element in which to put the outline.
+  @param options -- optional -- who asked for the view: `{ source: 'accountMenu' }` for the viewer's
+                    own content, which suppresses the automatic navbar reveal and is remembered in
+                    the history entry. The old form, `false` for the account menu, is still accepted.
+
+  Afterwards, when `solo`, `solid-panes:navigated` is dispatched on the document.
 */
-  this.GotoSubject = function (subject, expand, pane, solo, referrer, host, showNavbar = true) {
-    const outlineHost = getOutlineContainer()
-    if (showNavbar && (!host || host === outlineHost)) {
-      showSolidPanesNavbar()
+  this.GotoSubject = function (subject, expand, pane, solo, referrer, table, options) {
+    const showNavbar = resolveSource(options) !== 'accountMenu'
+    const outlineContainer = getOutlineContainer()
+    if (showNavbar && (!table || table === outlineContainer)) {
+      showSolidPanesNavbar(subject)
     }
 
     host = host || outlineHost // if does not exist create a compatible host in the current shell
@@ -1664,28 +1730,34 @@ export default function (context) {
       UI.utils.emptyNode(host)
     }
 
-    function createSubjectBlock () {
-      const subjectBlock = dom.createElement('div')
-      subjectBlock.classList.add('outline-subject-block')
-      const block = thisOutline.outlineObjectDiv(subject, undefined, subjectBlock)
-      subjectBlock.appendChild(block)
-      host.appendChild(subjectBlock)
-      return subjectBlock
+    // The URL and history always follow `subject`; what is displayed may differ:
+    // a pane with its own subject (profile, friends or storage of a person) is displayed
+    // for that subject, not for the resource the page URL points at.
+    const displayedSubject = pane && pane.subject && pane.subject.uri
+      ? pane.subject
+      : subject
+
+    function GotoSubjectDefault () {
+      const tr = dom.createElement('tr')
+      tr.classList.add('outlineRow1')
+      tr.style.verticalAlign = 'top'
+      table.appendChild(tr)
+      const td = thisOutline.outlineObjectTD(displayedSubject, undefined, tr)
+      tr.appendChild(td)
+      return td
     }
 
     const subjectBlock = createSubjectBlock()
 
-    if (solo) setUrlBarAndTitle(subject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
+    if (solo) setUrlBarAndTitle(displayedSubject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
-      outlineExpand(subjectBlock, subject, {
+      outlineExpand(td, displayedSubject, {
         pane,
-        solo
+        solo,
+        headerOnlyInViewerPod: !showNavbar || !!(pane && pane.subject && pane.subject.uri)
       })
-    } else {
-      if (!solo) {
-        createSubjectBlock()
-      }
+      if (solo && displayedSubject !== subject) openPathWithin(table, displayedSubject, subject)
     }
 
     if (
@@ -1695,16 +1767,19 @@ export default function (context) {
       dom.defaultView.history
     ) {
       const currentState = dom.defaultView.history.state || {}
-      const paneState = pane ? { paneName: pane.name } : {}
-      if (pane && pane.subject && typeof pane.subject.uri === 'string') {
-        paneState.paneUri = pane.subject.uri
-      }
-      const stateObj = { ...currentState, ...paneState }
+      const leavingPage = document.location.href !== subject.uri
+      const stateObj = nextHistoryState(currentState, {
+        pane: pane
+          ? { name: pane.name, subject: pane.subject && typeof pane.subject.uri === 'string' ? pane.subject.uri : undefined }
+          : undefined,
+        leavingPage,
+        viaAccountMenu: !showNavbar
+      })
       try {
         const currentUrl = new URL(document.location.href)
         const targetUrl = new URL(subject.uri, document.location.href)
         if (currentUrl.origin === targetUrl.origin) {
-          if (document.location.href !== subject.uri) {
+          if (leavingPage) {
             dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
           } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
             dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
@@ -1713,6 +1788,8 @@ export default function (context) {
       } catch (e) {
       }
     }
+
+    if (solo) announceNavigation(dom)
 
     return subject
   }

@@ -26,6 +26,7 @@ import {
 } from 'pane-registry'
 import { createContext } from './outline/context'
 import { initMainPage, refreshUI } from './mainPage'
+import { isHandlingBrowserNavigation } from './navigation/browserEvents'
 
 function getOutliner (dom, environment?: RenderEnvironment): OutlineManager {
   if (!dom.outlineManager) {
@@ -69,6 +70,7 @@ export {
   versionInfo,
   initMainPage,
   refreshUI,
+  isHandlingBrowserNavigation,
   list, // from paneRegistry
   paneForIcon, // from paneRegistry
   paneForPredicate, // from paneRegistry
