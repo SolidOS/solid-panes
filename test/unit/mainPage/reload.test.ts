@@ -110,7 +110,7 @@ describe('page reload of the document that holds a WebID', () => {
     loadProfile.mockResolvedValue(webId)
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(viewer)
-    vi.spyOn(authSession.events, 'on').mockReturnValue(authSession.events)
+    vi.spyOn(authSession.events, 'on').mockImplementation(() => {})
     window.history.replaceState({ paneName: 'social', paneUri: webId.value }, '', webId.doc().uri)
 
     await initMainPage(store)
@@ -140,7 +140,7 @@ describe('page reload of the document that holds a WebID', () => {
     loadProfile.mockResolvedValue(sym(`${window.location.origin}/other/profile/card#me`))
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(viewer)
-    vi.spyOn(authSession.events, 'on').mockReturnValue(authSession.events)
+    vi.spyOn(authSession.events, 'on').mockImplementation(() => {})
     window.history.replaceState({}, '', '/other/docs/')
 
     await initMainPage(store)
@@ -160,7 +160,7 @@ describe('page reload of the document that holds a WebID', () => {
     loadProfile.mockResolvedValue(sym(`${window.location.origin}/other/profile/card#me`))
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(viewer)
-    vi.spyOn(authSession.events, 'on').mockReturnValue(authSession.events)
+    vi.spyOn(authSession.events, 'on').mockImplementation(() => {})
     window.history.replaceState({ paneName: 'folder', paneUri: `${window.location.origin}/other/` }, '', url)
 
     await initMainPage(store)
@@ -190,7 +190,7 @@ describe('a link into another pod, made by a package that does not use the contr
     })
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(viewer)
-    vi.spyOn(authSession.events, 'on').mockReturnValue(authSession.events)
+    vi.spyOn(authSession.events, 'on').mockImplementation(() => {})
     getViewerModeMock.mockResolvedValue('visitor')
     window.history.replaceState({}, '', ownerOf('a').uri)
 
@@ -222,7 +222,7 @@ describe('a link into another pod, made by a package that does not use the contr
     })
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
     vi.spyOn(authn, 'checkUser').mockResolvedValue(viewer)
-    vi.spyOn(authSession.events, 'on').mockReturnValue(authSession.events)
+    vi.spyOn(authSession.events, 'on').mockImplementation(() => {})
     getViewerModeMock.mockResolvedValue('visitor')
     window.history.replaceState({}, '', `${window.location.origin}/a/`)
 
