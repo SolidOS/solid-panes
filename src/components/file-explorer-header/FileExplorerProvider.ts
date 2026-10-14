@@ -13,6 +13,7 @@ import '~icons/lucide/share-2'
 
 const PERSON_ICON = personIcon
 const FRIENDS_ICON = friendsIcon
+const PERSON_PANE_NAMES = ['profile', 'social']
 
 function createFileExplorerContextValue (value: {
   store: LiveStore | undefined
@@ -240,9 +241,11 @@ export default class FileExplorerProvider extends WebComponent {
   render () {
     const store = this.context?.session.store as LiveStore
     const subject = store.sym(this.subjectUri as string)
+    // Profile and friends panes present a person, not the resource they are opened on.
+    const showHeader = this.showHeader && !PERSON_PANE_NAMES.includes(this.pane?.name ?? '')
     return html`
       <div class="file-explorer-provider">
-        ${this.showHeader
+        ${showHeader
           ? html`
               <file-explorer-header
                 .paneIcon=${this.getPaneIcon(this.pane, subject, this.context as DataBrowserContext)}

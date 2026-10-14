@@ -5,8 +5,7 @@ import { ns, utils, widgets } from 'solid-ui'
 import { appendProfileLinks } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
 import { FriendshipTriage } from './triage'
-
-export type ViewerMode = 'owner' | 'authenticated' | 'anonymous'
+import type { ViewerMode } from '../types'
 
 export type HeaderControls = {
   canEdit: boolean,
