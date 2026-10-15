@@ -19,6 +19,7 @@ import { nextHistoryState } from '../navigation/state'
 import { announceNavigation } from '../navigation/events'
 import { resolveSource } from '../navigation/options'
 import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
+import { createOutlineDomHelpers } from './outlineDomHelpers'
 import '../components/file-explorer-header'
 import AccessControlModal from 'solid-ui/components/access-control-modal'
 
@@ -1724,7 +1725,7 @@ export default function (context) {
       showSolidPanesNavbar(subject)
     }
 
-    host = host || outlineHost // if does not exist create a compatible host in the current shell
+    const host = table || outlineContainer
     if (solo) {
       host.style.width = '100%'
       UI.utils.emptyNode(host)
@@ -1737,27 +1738,27 @@ export default function (context) {
       ? pane.subject
       : subject
 
-    function GotoSubjectDefault () {
-      const tr = dom.createElement('tr')
-      tr.classList.add('outlineRow1')
-      tr.style.verticalAlign = 'top'
-      table.appendChild(tr)
-      const td = thisOutline.outlineObjectTD(displayedSubject, undefined, tr)
-      tr.appendChild(td)
-      return td
+    function createSubjectBlock () {
+      const subjectBlock = dom.createElement('div')
+      subjectBlock.classList.add('outline-subject-block')
+      const block = thisOutline.outlineObjectDiv(displayedSubject, undefined, subjectBlock)
+      subjectBlock.appendChild(block)
+      host.appendChild(subjectBlock)
+      return subjectBlock
     }
 
-    const subjectBlock = createSubjectBlock()
+    const subjectBlock = solo ? createSubjectBlock() : host
 
     if (solo) setUrlBarAndTitle(displayedSubject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
-      outlineExpand(td, displayedSubject, {
+      outlineExpand(subjectBlock, displayedSubject, {
         pane,
         solo,
         headerOnlyInViewerPod: !showNavbar || !!(pane && pane.subject && pane.subject.uri)
       })
-      if (solo && displayedSubject !== subject) openPathWithin(table, displayedSubject, subject)
+    } else if (!solo) {
+      createSubjectBlock()
     }
 
     if (
