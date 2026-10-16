@@ -25,10 +25,11 @@ import 'solid-ui/components/file-explorer-provider'
 import 'solid-ui/components/file-explorer-header'
 import AccessControlModal from 'solid-ui/components/access-control-modal'
 
+const EXPLORER_PROVIDER_TAG = 'solid-ui-file-explorer-provider'
+
 export default function (context) {
   const dom = context.dom
-  const explorerHeaders = new WeakMap()
-  const explorerHeaderGenerations = new WeakMap()
+  const explorerStates = new WeakMap()
   const explorerProviderListeners = new WeakSet()
 
   this.document = context.dom
@@ -322,9 +323,9 @@ export default function (context) {
     const subjectNode = outlineView.querySelector('[about="' + subjectId + '"]')
     if (!subjectNode) return
 
-    const provider = subjectNode.matches?.('solid-ui-file-explorer-provider')
+    const provider = subjectNode.matches?.(EXPLORER_PROVIDER_TAG)
       ? subjectNode
-      : subjectNode.querySelector('solid-ui-file-explorer-provider')
+      : subjectNode.querySelector(EXPLORER_PROVIDER_TAG)
     if (!provider) return
     if (!pane) {
       UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
@@ -334,21 +335,21 @@ export default function (context) {
     setQueryButtonVisibility(!!pane.requireQueryButton)
     provider.pane = pane
     renderExplorerHeader(provider, subject, pane)
-    renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
+    renderPaneIntoProvider(provider, subject, pane, explorerStates.get(provider)?.options || {})
   }
 
   function renderExplorerHeader (provider, subject, pane) {
-    const headerState = explorerHeaders.get(provider)
+    const state = explorerStates.get(provider)
     const currentHeader = provider.querySelector(':scope > solid-ui-file-explorer-header')
 
-    if (!headerState || !explorerHeaderForPane(headerState.showHeader, pane?.name)) {
+    if (!state || !explorerHeaderForPane(state.showHeader, pane?.name)) {
       currentHeader?.remove()
       return
     }
 
     const header = currentHeader || dom.createElement('solid-ui-file-explorer-header')
     header.paneIcon = getPaneIcon(pane, subject, context)
-    header.menuItems = headerState.menuItems
+    header.menuItems = state.menuItems
     if (!currentHeader) {
       provider.prepend(header)
     }
@@ -357,9 +358,14 @@ export default function (context) {
   async function expandedProviderTR (subject, requiredPane, options, provider) {
     options = options || {}
 
-    provider = provider || dom.createElement('solid-ui-file-explorer-provider')
-    const generation = (explorerHeaderGenerations.get(provider) || 0) + 1
-    explorerHeaderGenerations.set(provider, generation)
+    provider = provider || dom.createElement(EXPLORER_PROVIDER_TAG)
+    const previousState = explorerStates.get(provider)
+    const state = {
+      generation: (previousState?.generation || 0) + 1,
+      menuItems: [],
+      options
+    }
+    explorerStates.set(provider, state)
     provider.classList.add('paneView', 'tdFlex')
     provider.setAttribute('notSelectable', 'true')
     provider.setAttribute('role', 'grid')
@@ -395,7 +401,7 @@ export default function (context) {
     const relevantPanes = options.hideList
       ? []
       : await getRelevantPanes(subject, context)
-    if (explorerHeaderGenerations.get(provider) !== generation) return provider
+    if (explorerStates.get(provider) !== state) return provider
 
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
@@ -408,11 +414,8 @@ export default function (context) {
       // Only worth looking up when the view does not show the page URL's own resource.
       inViewerPod: viewerPodOnly ? await isPageInViewerPod(dom.location.href) : true
     })
-    if (explorerHeaderGenerations.get(provider) !== generation) return provider
-    const headerState = { showHeader, menuItems: [] }
-    explorerHeaders.set(provider, headerState)
-    provider.paneRenderOptions = options
-    provider.soloPane = options.solo
+    if (explorerStates.get(provider) !== state) return provider
+    state.showHeader = showHeader
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
@@ -430,8 +433,8 @@ export default function (context) {
           }
         }))
       })
-      if (explorerHeaderGenerations.get(provider) === generation && explorerHeaders.get(provider) === headerState) {
-        headerState.menuItems = menuItems
+      if (explorerStates.get(provider) === state) {
+        state.menuItems = menuItems
         const header = provider.querySelector(':scope > solid-ui-file-explorer-header')
         if (header) header.menuItems = menuItems
       }
@@ -484,10 +487,10 @@ export default function (context) {
     // if (!requiredPane) requiredPane = panes.defaultPane;
 
     const provider = table
-      ? table.matches?.('solid-ui-file-explorer-provider')
+      ? table.matches?.(EXPLORER_PROVIDER_TAG)
         ? table
         : table.firstElementChild || table
-      : dom.createElement('solid-ui-file-explorer-provider')
+      : dom.createElement(EXPLORER_PROVIDER_TAG)
 
     expandedProviderTR(subject, requiredPane, options, provider).catch(error => {
       UI.log.error('outline: Failed to set up file explorer: ' + UI.utils.stackString(error))
@@ -1140,9 +1143,9 @@ export default function (context) {
         break
       case 37: { // left
         if (this.walk('left')) return
-        const subjectNode = selectedTd.firstElementChild?.matches('solid-ui-file-explorer-provider')
+        const subjectNode = selectedTd.firstElementChild?.matches(EXPLORER_PROVIDER_TAG)
           ? selectedTd.firstElementChild
-          : selectedTd.querySelector('solid-ui-file-explorer-provider')
+          : selectedTd.querySelector(EXPLORER_PROVIDER_TAG)
         outlineCollapse(selectedTd, UI.utils.getAbout(kb, subjectNode))
         break
       }
@@ -1157,7 +1160,7 @@ export default function (context) {
               this.walk('right')
               return
             }
-            if (!selectedTd.firstElementChild?.matches('solid-ui-file-explorer-provider')) {
+            if (!selectedTd.firstElementChild?.matches(EXPLORER_PROVIDER_TAG)) {
               // not expanded
               sf.addCallback('done', setSelectedAfterward)
               sf.addCallback('fail', setSelectedAfterward)
