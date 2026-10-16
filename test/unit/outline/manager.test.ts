@@ -14,6 +14,7 @@ vi.mock('solid-ui', async () => {
   const actual = await vi.importActual<typeof import('solid-ui')>('solid-ui')
   return {
     ...actual,
+    getRelevantPanes: async (_subject, context) => context.session.paneRegistry.list,
     login: {
       ...actual.login,
       filterAvailablePanes: async panes => panes

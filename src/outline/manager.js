@@ -249,28 +249,13 @@ export default function (context) {
     }
   }
 
-  async function getRelevantPanes (subject, context) {
+  async function loadRelevantPanes (subject, context) {
     // make sure container representation is loaded (when server returns index.html)
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
-    const panes = context.session.paneRegistry
-    const relevantPanes = panes.list.filter(
-      pane => pane.label(subject, context) && !pane.global && pane.name !== 'sharing'
-    )
-    if (relevantPanes.length === 0) {
-      // there are no relevant panes, simply return default pane (which ironically is internalPane)
-      return [panes.byName('internal')]
-    }
-    const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
-    if (filteredPanes.length === 0) {
-      // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
-      return [relevantPanes[0]]
-    }
-    const firstRelevantPaneIndex = panes.list.indexOf(relevantPanes[0])
-    const firstFilteredPaneIndex = panes.list.indexOf(filteredPanes[0])
-    // if the first relevant pane is loaded before the panes available wrt role, we still want to offer the most relevant pane
-    return firstRelevantPaneIndex < firstFilteredPaneIndex
-      ? [relevantPanes[0]].concat(filteredPanes)
-      : filteredPanes
+    return UI.getRelevantPanes(subject, context, {
+      excludedPaneNames: ['sharing'],
+      fallbackPaneName: 'internal'
+    })
   }
 
   function getPane (relevantPanes, subject) {
@@ -400,7 +385,7 @@ export default function (context) {
 
     const relevantPanes = options.hideList
       ? []
-      : await getRelevantPanes(subject, context)
+      : await loadRelevantPanes(subject, context)
     if (explorerStates.get(provider) !== state) return provider
 
     provider.relevantPanes = relevantPanes
