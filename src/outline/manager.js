@@ -29,6 +29,7 @@ export default function (context) {
   const dom = context.dom
   const explorerHeaders = new WeakMap()
   const explorerHeaderGenerations = new WeakMap()
+  const explorerProviderListeners = new WeakSet()
 
   this.document = context.dom
   this.context = context
@@ -349,12 +350,6 @@ export default function (context) {
     header.paneIcon = getPaneIcon(pane, subject, context)
     header.menuItems = headerState.menuItems
     if (!currentHeader) {
-      header.addEventListener(UI.FILE_EXPLORER_BACK_EVENT, () => provider.onBack?.())
-      header.addEventListener(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, () => {
-        provider.handleAccessClick().catch(error => {
-          UI.log.error('outline: Failed to open access controls: ' + UI.utils.stackString(error))
-        })
-      })
       provider.prepend(header)
     }
   }
@@ -376,7 +371,26 @@ export default function (context) {
 
     provider.context = context
     provider.subjectUri = subject.uri
-    provider.onBack = () => collapseMouseDownListener({ target: provider })
+    if (!explorerProviderListeners.has(provider)) {
+      provider.addEventListener(UI.FILE_EXPLORER_BACK_EVENT, () => collapseMouseDownListener({ target: provider }))
+      provider.addEventListener(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, event => {
+        solidLogicSingleton.acl.findAccessGrants($rdf.sym(event.detail.subjectUri)).then(accessGrants => {
+          UI.showDialog(AccessControlModal, {
+            props: {
+              subjectUri: event.detail.subjectUri,
+              accessGrants
+            }
+          })
+        }).catch(error => {
+          UI.log.error('outline: Failed to open access controls: ' + UI.utils.stackString(error))
+        })
+      })
+      provider.addEventListener(UI.FILE_EXPLORER_OPEN_PANE_EVENT, event => {
+        const pane = context.session.paneRegistry.byName(event.detail.paneName)
+        openPaneInPlace($rdf.sym(event.detail.subjectUri), pane)
+      })
+      explorerProviderListeners.add(provider)
+    }
 
     const relevantPanes = options.hideList
       ? []
@@ -399,17 +413,6 @@ export default function (context) {
     explorerHeaders.set(provider, headerState)
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
-    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, context.session.paneRegistry.byName(paneName))
-    provider.handleAccessClick = async () => {
-      const accessGrants = await solidLogicSingleton.acl.findAccessGrants(subject)
-
-      UI.showDialog(AccessControlModal, {
-        props: {
-          subjectUri: subject.uri,
-          accessGrants
-        }
-      })
-    }
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
@@ -417,7 +420,16 @@ export default function (context) {
     renderExplorerHeader(provider, subject, provider.pane)
 
     if (showHeader) {
-      const menuItems = await getPaneItems(subject, context, relevantPanes, provider.openPane)
+      const menuItems = await getPaneItems(subject, context, relevantPanes, (paneSubject, paneName) => {
+        provider.dispatchEvent(new CustomEvent(UI.FILE_EXPLORER_OPEN_PANE_EVENT, {
+          bubbles: true,
+          composed: true,
+          detail: {
+            subjectUri: paneSubject.uri,
+            paneName
+          }
+        }))
+      })
       if (explorerHeaderGenerations.get(provider) === generation && explorerHeaders.get(provider) === headerState) {
         headerState.menuItems = menuItems
         const header = provider.querySelector(':scope > solid-ui-file-explorer-header')

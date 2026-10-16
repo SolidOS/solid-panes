@@ -24,9 +24,9 @@ export async function getPaneItems (
   subject: NamedNode,
   context: DataBrowserContext,
   relevantPanes: ExplorerPane[],
-  openPane: ((subject: NamedNode, paneName: string) => void) | undefined
+  dispatchOpenPane: ((subject: NamedNode, paneName: string) => void) | undefined
 ) {
-  if (typeof openPane !== 'function') return []
+  if (typeof dispatchOpenPane !== 'function') return []
 
   const menuItems = await Promise.all(relevantPanes.map(async pane => {
     const label = pane.label(subject, context)
@@ -47,7 +47,7 @@ export async function getPaneItems (
     return {
       label,
       icon,
-      action: () => openPane(subject, pane.name)
+      action: () => dispatchOpenPane(subject, pane.name)
     }
   }))
 
