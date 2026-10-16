@@ -13,18 +13,22 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
-import { deriveExplorerHeader } from '../navigation/chrome'
+import { deriveExplorerHeader, explorerHeaderForPane } from '../navigation/chrome'
 import { isPageInViewerPod } from '../navigation/podContext'
 import { nextHistoryState } from '../navigation/state'
 import { announceNavigation } from '../navigation/events'
 import { resolveSource } from '../navigation/options'
 import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
 import { createOutlineDomHelpers } from './outlineDomHelpers'
-import '../components/file-explorer-header'
+import { getPaneIcon, getPaneItems } from './fileExplorerHelpers'
+import 'solid-ui/components/file-explorer-provider'
+import 'solid-ui/components/file-explorer-header'
 import AccessControlModal from 'solid-ui/components/access-control-modal'
 
 export default function (context) {
   const dom = context.dom
+  const explorerHeaders = new WeakMap()
+  const explorerHeaderGenerations = new WeakMap()
 
   this.document = context.dom
   this.context = context
@@ -317,9 +321,9 @@ export default function (context) {
     const subjectNode = outlineView.querySelector('[about="' + subjectId + '"]')
     if (!subjectNode) return
 
-    const provider = subjectNode.matches?.('file-explorer-provider')
+    const provider = subjectNode.matches?.('solid-ui-file-explorer-provider')
       ? subjectNode
-      : subjectNode.querySelector('file-explorer-provider')
+      : subjectNode.querySelector('solid-ui-file-explorer-provider')
     if (!provider) return
     if (!pane) {
       UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
@@ -327,14 +331,40 @@ export default function (context) {
     }
 
     setQueryButtonVisibility(!!pane.requireQueryButton)
-    provider.openSelectedPane?.(pane)
+    provider.pane = pane
+    renderExplorerHeader(provider, subject, pane)
     renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
+  }
+
+  function renderExplorerHeader (provider, subject, pane) {
+    const headerState = explorerHeaders.get(provider)
+    const currentHeader = provider.querySelector(':scope > solid-ui-file-explorer-header')
+
+    if (!headerState || !explorerHeaderForPane(headerState.showHeader, pane?.name)) {
+      currentHeader?.remove()
+      return
+    }
+
+    const header = currentHeader || dom.createElement('solid-ui-file-explorer-header')
+    header.paneIcon = getPaneIcon(pane, subject, context)
+    header.menuItems = headerState.menuItems
+    if (!currentHeader) {
+      header.addEventListener(UI.FILE_EXPLORER_BACK_EVENT, () => provider.onBack?.())
+      header.addEventListener(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, () => {
+        provider.handleAccessClick().catch(error => {
+          UI.log.error('outline: Failed to open access controls: ' + UI.utils.stackString(error))
+        })
+      })
+      provider.prepend(header)
+    }
   }
 
   async function expandedProviderTR (subject, requiredPane, options, provider) {
     options = options || {}
 
-    provider = provider || dom.createElement('file-explorer-provider')
+    provider = provider || dom.createElement('solid-ui-file-explorer-provider')
+    const generation = (explorerHeaderGenerations.get(provider) || 0) + 1
+    explorerHeaderGenerations.set(provider, generation)
     provider.classList.add('paneView', 'tdFlex')
     provider.setAttribute('notSelectable', 'true')
     provider.setAttribute('role', 'grid')
@@ -351,21 +381,25 @@ export default function (context) {
     const relevantPanes = options.hideList
       ? []
       : await getRelevantPanes(subject, context)
+    if (explorerHeaderGenerations.get(provider) !== generation) return provider
 
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
     const viewerPodOnly = !!options.headerOnlyInViewerPod
-    provider.showHeader = deriveExplorerHeader({
+    const showHeader = deriveExplorerHeader({
       isRootResource,
       isWebId: isWebIdUri(subject),
       viewerPodOnly,
-      // Only worth looking up when the view does not show the page URL's own resource
-      inViewerPod: viewerPodOnly ? await isPageInViewerPod(document.location.href) : true
+      // Only worth looking up when the view does not show the page URL's own resource.
+      inViewerPod: viewerPodOnly ? await isPageInViewerPod(dom.location.href) : true
     })
+    if (explorerHeaderGenerations.get(provider) !== generation) return provider
+    const headerState = { showHeader, menuItems: [] }
+    explorerHeaders.set(provider, headerState)
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
-    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
+    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, context.session.paneRegistry.byName(paneName))
     provider.handleAccessClick = async () => {
       const accessGrants = await solidLogicSingleton.acl.findAccessGrants(subject)
 
@@ -379,6 +413,16 @@ export default function (context) {
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
+    }
+    renderExplorerHeader(provider, subject, provider.pane)
+
+    if (showHeader) {
+      const menuItems = await getPaneItems(subject, context, relevantPanes, provider.openPane)
+      if (explorerHeaderGenerations.get(provider) === generation && explorerHeaders.get(provider) === headerState) {
+        headerState.menuItems = menuItems
+        const header = provider.querySelector(':scope > solid-ui-file-explorer-header')
+        if (header) header.menuItems = menuItems
+      }
     }
     return provider
   }
@@ -427,19 +471,17 @@ export default function (context) {
     subject = kb.canon(subject)
     // if (!requiredPane) requiredPane = panes.defaultPane;
 
-    if (!table) {
-      const provider = dom.createElement('file-explorer-provider')
-      expandedProviderTR(subject, requiredPane, options, provider)
-      return provider
-    } else {
-      const existingProvider = table.matches?.('file-explorer-provider')
+    const provider = table
+      ? table.matches?.('solid-ui-file-explorer-provider')
         ? table
         : table.firstElementChild || table
-      expandedProviderTR(subject, requiredPane, options, existingProvider)
-      UI.log.info('Re-expand: ' + table)
-      // do some other stuff here
-      return table
-    }
+      : dom.createElement('solid-ui-file-explorer-provider')
+
+    expandedProviderTR(subject, requiredPane, options, provider).catch(error => {
+      UI.log.error('outline: Failed to set up file explorer: ' + UI.utils.stackString(error))
+    })
+    if (table) UI.log.info('Re-expand: ' + table)
+    return table || provider
   }) /* propertyTable */
 
   function propertyTR (doc, st, inverse) {
@@ -1086,9 +1128,9 @@ export default function (context) {
         break
       case 37: { // left
         if (this.walk('left')) return
-        const subjectNode = selectedTd.firstElementChild?.matches('file-explorer-provider')
+        const subjectNode = selectedTd.firstElementChild?.matches('solid-ui-file-explorer-provider')
           ? selectedTd.firstElementChild
-          : selectedTd.querySelector('file-explorer-provider')
+          : selectedTd.querySelector('solid-ui-file-explorer-provider')
         outlineCollapse(selectedTd, UI.utils.getAbout(kb, subjectNode))
         break
       }
@@ -1103,7 +1145,7 @@ export default function (context) {
               this.walk('right')
               return
             }
-            if (!selectedTd.firstElementChild?.matches('file-explorer-provider')) {
+            if (!selectedTd.firstElementChild?.matches('solid-ui-file-explorer-provider')) {
               // not expanded
               sf.addCallback('done', setSelectedAfterward)
               sf.addCallback('fail', setSelectedAfterward)

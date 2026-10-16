@@ -1,5 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { authn, store } from 'solid-logic'
+import type { PaneDefinition } from 'pane-registry'
+import type FileExplorerHeader from 'solid-ui/components/file-explorer-header'
 
 const { isInViewerPodMock } = vi.hoisted(() => ({ isInViewerPodMock: vi.fn() }))
 
@@ -301,13 +303,13 @@ describe('manager', () => {
 
       manager.GotoSubject(container, true, pane, true, undefined, table, false)
       const provider = await vi.waitFor(() => {
-        const element = table.querySelector<HTMLElement & { showHeader: boolean, subjectUri: string }>('file-explorer-provider')
+        const element = table.querySelector<HTMLElement & { subjectUri: string }>('solid-ui-file-explorer-provider')
         expect(element).not.toBeNull()
         return element!
       })
 
       expect(provider.subjectUri).toBe(profile.uri)
-      expect(provider.showHeader).toBe(false)
+      expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
       expect(table).toHaveTextContent(`Mock Pane for ${profile.uri}`)
       expect(window.location.href).toBe(container.uri)
     })
@@ -315,9 +317,86 @@ describe('manager', () => {
     describe('file explorer header', () => {
       const container = sym(`${window.location.origin}/other/folder/file.ttl`)
 
+      const findPane = vi.fn()
+
+      function createExplorer (
+        pane: Omit<PaneDefinition, 'icon'> & { icon: string | (() => string | Promise<string>) } = MockPane,
+        options = {},
+        subject = container
+      ) {
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: { list: [pane], byName: findPane }, store } })
+        const outlineView = document.createElement('div')
+        outlineView.id = 'OutlineView'
+        document.body.appendChild(outlineView)
+        const provider = manager.propertyTable(subject, undefined, pane, options)
+        outlineView.appendChild(provider)
+        return provider
+      }
+
       beforeEach(() => {
         isInViewerPodMock.mockReset()
+        findPane.mockReset()
       })
+
+      it.each([
+        `${window.location.origin}/`,
+        `${window.location.origin}/profile/card#me`
+      ])('does not add a resource header for %s', async uri => {
+        const provider = createExplorer(MockPane, {}, sym(uri))
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+        expect(isInViewerPodMock).not.toHaveBeenCalled()
+      })
+
+      it('renders pane and header before menu icons resolve', async () => {
+        let resolveIcon!: (icon: string) => void
+        const icon = new Promise<string>(resolve => { resolveIcon = resolve })
+        const provider = createExplorer({ ...MockPane, icon: () => icon })
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const header = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
+        expect(header).not.toBeNull()
+        expect(header.menuItems).toEqual([])
+
+        resolveIcon(MockPane.icon)
+        await vi.waitFor(() => expect(header.menuItems).toHaveLength(1))
+      })
+
+      it('reports menu failures without removing the rendered pane or header', async () => {
+        const error = new Error('Unable to resolve pane icon')
+        const status = document.createElement('div')
+        status.id = 'status'
+        document.body.appendChild(status)
+        const icon = vi.fn()
+          .mockReturnValueOnce(MockPane.icon)
+          .mockImplementationOnce(() => { throw error })
+        const provider = createExplorer({
+          ...MockPane,
+          icon
+        })
+        await vi.waitFor(() => expect(status).toHaveTextContent('Unable to resolve pane icon'))
+        expect(provider.querySelector('.paneDiv')).not.toBeNull()
+        expect(provider.querySelector('solid-ui-file-explorer-header')).not.toBeNull()
+      })
+
+      it('reuses resource visibility and menu items when switching panes', async () => {
+        isInViewerPodMock.mockResolvedValue(true)
+        const provider = createExplorer(MockPane, { headerOnlyInViewerPod: true })
+        await vi.waitFor(() => {
+          expect(provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')?.menuItems).toHaveLength(1)
+        })
+        const header = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
+        const menuItems = header.menuItems
+        findPane.mockReturnValue({ ...MockPane, name: 'profile' })
+        menuItems[0].action(new Event('click'))
+        expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+
+        findPane.mockReturnValue(MockPane)
+        menuItems[0].action(new Event('click'))
+        const restored = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
+        expect(restored.menuItems).toBe(menuItems)
+        expect(isInViewerPodMock).toHaveBeenCalledTimes(1)
+      })
+
       async function headerShown (showNavbar: boolean, pane: object = MockPane) {
         const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry, store } })
         window.history.replaceState({}, '', container.uri)
@@ -325,11 +404,11 @@ describe('manager', () => {
         document.body.appendChild(table)
         manager.GotoSubject(container, true, pane, true, undefined, table, showNavbar)
         const provider = await vi.waitFor(() => {
-          const element = table.querySelector<HTMLElement & { showHeader: boolean }>('file-explorer-provider')
+          const element = table.querySelector<HTMLElement>('solid-ui-file-explorer-provider')
           expect(element).not.toBeNull()
           return element!
         })
-        return provider.showHeader
+        return provider.querySelector('solid-ui-file-explorer-header') !== null
       }
 
       it('is hidden for account-menu views when the URL is not in the viewer\'s pod', async () => {

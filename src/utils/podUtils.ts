@@ -3,7 +3,15 @@ import { ns } from 'solid-ui'
 import { LiveStore, NamedNode, parse } from 'rdflib'
 import { isWebIdUri } from './webIdUtils'
 import { ACL_LINK } from 'solid-logic'
-import { FileExplorerResourceMetadata } from 'src/components/file-explorer-header/types'
+
+type FileExplorerResourceMetadata = {
+  contentType: string | undefined
+  canEdit: boolean
+  isPublic: boolean
+  aclUri: string | undefined
+  eTag: string | undefined
+  modified: string | undefined
+}
 
 function parseWacAllowHeader (headerValue: string | null | undefined) {
   const permissions = new Map<string, Set<string>>()

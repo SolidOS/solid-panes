@@ -19,13 +19,6 @@
   width: 100%;
 }
 
-.file-explorer-header {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
 .strongHeader {
   font-size: 150%;
   margin: 0 0.6rem 0 0;
@@ -48,6 +41,28 @@
   justify-content: space-between;
   flex-direction: row;
   overflow: hidden;
+}
+
+solid-ui-file-explorer-provider {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+solid-ui-file-explorer-provider.tdFlex {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+solid-ui-file-explorer-provider > solid-ui-file-explorer-header {
+  flex: 0 0 auto;
+  width: 100%;
+}
+
+solid-ui-file-explorer-provider > .paneDiv,
+solid-ui-file-explorer-provider > .exceptionPane {
+  flex: 1 1 auto;
+  width: 100%;
 }
 
 .paneDiv,
