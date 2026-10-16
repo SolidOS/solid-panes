@@ -6,7 +6,7 @@ import * as paneRegistry from 'pane-registry'
 import './manager.css'
 import * as $rdf from 'rdflib'
 import * as UI from 'solid-ui'
-import { store } from 'solid-logic'
+import { solidLogicSingleton, store } from 'solid-logic'
 import { propertyViews } from './propertyViews'
 import { outlineIcons } from './outlineIcons.js' // @@ chec
 import { UserInput } from './userInput.js'
@@ -20,6 +20,7 @@ import { announceNavigation } from '../navigation/events'
 import { resolveSource } from '../navigation/options'
 import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
 import '../components/file-explorer-header'
+import AccessControlModal from 'solid-ui/components/access-control-modal'
 
 export default function (context) {
   const dom = context.dom
@@ -481,8 +482,16 @@ export default function (context) {
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
-    // TODO: for now we do this until we create sharing dialog in solid-panes
-    provider.handleAccessClick = () => openPaneInPlace(subject, paneRegistry.byName('sharing'))
+    provider.handleAccessClick = async () => {
+      const accessGrants = await solidLogicSingleton.acl.findAccessGrants(subject)
+
+      UI.showDialog(AccessControlModal, {
+        props: {
+          subjectUri: subject.uri,
+          accessGrants
+        }
+      })
+    }
 
     if (provider.pane) {
       tr.classList.add('outlinePaneRow')
