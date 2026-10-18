@@ -192,7 +192,7 @@ describe('manager', () => {
 
       manager.GotoSubject(container, false, pane, true, undefined, table, false)
 
-      expect(table.querySelector('td.obj')).toHaveAttribute('about', `<${profile.uri}>`)
+      expect(table.querySelector('.obj')).toHaveAttribute('about', `<${profile.uri}>`)
       expect(window.location.href).toBe(container.uri)
       expect(window.history.state).toMatchObject({ paneName: 'mock', paneUri: profile.uri, viaAccountMenu: true })
     })
@@ -205,33 +205,26 @@ describe('manager', () => {
 
       const navbarTable = document.createElement('table')
       manager.GotoSubject(page, false, { ...MockPane, subject: storage }, true, undefined, navbarTable)
-      expect(navbarTable.querySelector('td.obj')).toHaveAttribute('about', `<${storage.uri}>`)
+      expect(navbarTable.querySelector('.obj')).toHaveAttribute('about', `<${storage.uri}>`)
       expect(window.location.href).toBe(page.uri)
       expect(window.history.state).toMatchObject({ paneName: 'mock', paneUri: storage.uri })
 
       const homeTable = document.createElement('table')
       manager.GotoSubject(page, false, MockPane, true, undefined, homeTable, false)
-      expect(homeTable.querySelector('td.obj')).toHaveAttribute('about', `<${page.uri}>`)
+      expect(homeTable.querySelector('.obj')).toHaveAttribute('about', `<${page.uri}>`)
     })
 
-    describe('opening the URL inside a storage', () => {
+    describe('hosting storage independently of the page URL', () => {
       const root = `${window.location.origin}/other/`
 
-      // A folder pane that lists known children as expandable rows, like the real one
-      function setup (children: Record<string, string[]>) {
+      function setup () {
         const folderPane = {
           name: 'folder',
           icon: '',
           label: () => 'Contents',
-          render: (subject: { uri: string }, context: { getOutliner: (dom: Document) => OutlineManager, dom: Document }) => {
+          render: (subject: { uri: string }) => {
             const div = document.createElement('div')
-            const rows = document.createElement('table')
-            for (const child of children[subject.uri] ?? []) {
-              const tr = document.createElement('tr')
-              tr.appendChild(context.getOutliner(context.dom).outlineObjectTD(sym(child), undefined, undefined, undefined))
-              rows.appendChild(tr)
-            }
-            div.appendChild(rows)
+            div.textContent = `Storage shell for ${subject.uri}`
             return div
           }
         }
@@ -243,53 +236,28 @@ describe('manager', () => {
         return { manager, folderPane }
       }
 
-      async function opened (target: string, children: Record<string, string[]>) {
-        const { manager, folderPane } = setup(children)
+      async function opened (target: string) {
+        const { manager, folderPane } = setup()
         window.history.replaceState({}, '', target)
         const table = document.createElement('table')
         document.body.appendChild(table)
         manager.GotoSubject(sym(target), true, { ...folderPane, subject: sym(root) }, true, undefined, table)
+        await vi.waitFor(() => expect(table).toHaveTextContent(`Storage shell for ${root}`))
         return table
       }
 
-      const isExpanded = (table: HTMLElement, uri: string) =>
-        table.querySelector(`td.obj[about="<${uri}>"]`)?.firstElementChild?.nodeName === 'TABLE'
-
-      const tree = {
-        [root]: [`${root}a/`, `${root}z/`],
-        [`${root}a/`]: [`${root}a/b/`, `${root}a/other.ttl`],
-        [`${root}a/b/`]: [`${root}a/b/file.ttl`]
-      }
-
-      it('expands each level down to a container in the URL, leaving siblings closed', async () => {
-        const table = await opened(`${root}a/b/`, tree)
-
-        await vi.waitFor(() => {
-          expect(isExpanded(table, `${root}a/`)).toBe(true)
-          expect(isExpanded(table, `${root}a/b/`)).toBe(true)
-        })
-        expect(isExpanded(table, `${root}z/`)).toBe(false)
-        expect(table.querySelector(`td.obj[about="<${root}a/other.ttl>"]`)).not.toBeNull()
-        expect(window.location.href).toBe(`${root}a/b/`)
-      })
-
-      it('opens the containers of a resource in the URL', async () => {
-        const table = await opened(`${root}a/b/file.ttl`, tree)
-
-        await vi.waitFor(() => {
-          expect(isExpanded(table, `${root}a/`)).toBe(true)
-          expect(isExpanded(table, `${root}a/b/`)).toBe(true)
-        })
-      })
-
-      it('opens nothing when the URL is the storage itself or outside it', async () => {
-        const atRoot = await opened(root, tree)
-        await new Promise(resolve => setTimeout(resolve, 50))
-        expect(isExpanded(atRoot, `${root}a/`)).toBe(false)
-
-        const outside = await opened(`${window.location.origin}/elsewhere/a/`, tree)
-        await new Promise(resolve => setTimeout(resolve, 50))
-        expect(isExpanded(outside, `${root}a/`)).toBe(false)
+      it.each([
+        `${root}a/b/`,
+        `${root}a/b/file.ttl`,
+        root,
+        `${window.location.origin}/elsewhere/a/`
+      ])('renders the storage subject while preserving page URL %s', async target => {
+        const table = await opened(target)
+        const provider = table.querySelector<HTMLElement & { subjectUri: string }>('solid-ui-file-explorer-provider')
+        expect(provider?.subjectUri).toBe(root)
+        expect(provider?.querySelector(':scope > .paneDiv')).toHaveTextContent(`Storage shell for ${root}`)
+        expect(window.location.href).toBe(target)
+        expect(window.history.state).toMatchObject({ paneName: 'folder', paneUri: root })
       })
     })
 
@@ -396,6 +364,55 @@ describe('manager', () => {
         const restored = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
         expect(restored.menuItems).toBe(menuItems)
         expect(isInViewerPodMock).toHaveBeenCalledTimes(1)
+      })
+
+      it('does not switch the outer pane for an unhandled nested pane-switch event', async () => {
+        const provider = createExplorer()
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const paneElement = provider.querySelector('.paneDiv')!
+        const nested = document.createElement('solid-ui-file-explorer-provider')
+        paneElement.appendChild(nested)
+        nested.dispatchEvent(new CustomEvent('solid-ui-file-explorer-open-pane', {
+          bubbles: true,
+          composed: true,
+          detail: { subjectUri: container.uri, paneName: 'profile' }
+        }))
+
+        expect(findPane).not.toHaveBeenCalled()
+        expect(provider.querySelector(':scope > .paneDiv')).toBe(paneElement)
+      })
+
+      it('switches the originating provider when the same subject appears twice', async () => {
+        const first = createExplorer()
+        const second = createExplorer()
+        await vi.waitFor(() => {
+          expect(first.querySelector('.paneDiv')).not.toBeNull()
+          expect(second.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')?.menuItems).toHaveLength(1)
+        })
+        const firstContent = first.querySelector('.paneDiv')
+        const secondContent = second.querySelector('.paneDiv')
+        findPane.mockReturnValue({ ...MockPane, name: 'other' })
+        second.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!.menuItems[0].action(new Event('click'))
+
+        expect(first.querySelector('.paneDiv')).toBe(firstContent)
+        expect(second.querySelector('.paneDiv')).not.toBe(secondContent)
+        expect(second.pane.name).toBe('other')
+      })
+
+      it('does not collapse the outer explorer for an unhandled nested Back event', async () => {
+        const provider = createExplorer()
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const nested = document.createElement('solid-ui-file-explorer-provider')
+        provider.querySelector('.paneDiv')!.appendChild(nested)
+        const parent = provider.parentNode
+        nested.dispatchEvent(new CustomEvent('solid-ui-file-explorer-back', {
+          bubbles: true,
+          composed: true,
+          detail: { subjectUri: container.uri }
+        }))
+
+        expect(provider.parentNode).toBe(parent)
+        expect(provider.contains(nested)).toBe(true)
       })
 
       async function headerShown (showNavbar: boolean, pane: object = MockPane) {

@@ -291,27 +291,10 @@ export default function (context) {
       pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
     }
 
-    paneDiv.classList.add('paneDiv')
-    const existingPaneDiv = provider.querySelector('.paneDiv')
-    if (existingPaneDiv) {
-      existingPaneDiv.replaceWith(paneDiv)
-    } else {
-      provider.appendChild(paneDiv)
-    }
+    composeExplorer(provider, subject, pane, paneDiv)
   }
 
-  function openPaneInPlace (subject, pane) {
-    const outlineView = dom.getElementById('OutlineView')
-    if (!outlineView) return
-
-    const subjectId = subject.toNT()
-    const subjectNode = outlineView.querySelector('[about="' + subjectId + '"]')
-    if (!subjectNode) return
-
-    const provider = subjectNode.matches?.(EXPLORER_PROVIDER_TAG)
-      ? subjectNode
-      : subjectNode.querySelector(EXPLORER_PROVIDER_TAG)
-    if (!provider) return
+  function openPaneInPlace (provider, subject, pane) {
     if (!pane) {
       UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
       return
@@ -319,25 +302,21 @@ export default function (context) {
 
     setQueryButtonVisibility(!!pane.requireQueryButton)
     provider.pane = pane
-    renderExplorerHeader(provider, subject, pane)
     renderPaneIntoProvider(provider, subject, pane, explorerStates.get(provider)?.options || {})
   }
 
-  function renderExplorerHeader (provider, subject, pane) {
+  function composeExplorer (provider, subject, pane, paneElement) {
     const state = explorerStates.get(provider)
-    const currentHeader = provider.querySelector(':scope > solid-ui-file-explorer-header')
-
-    if (!state || !explorerHeaderForPane(state.showHeader, pane?.name)) {
-      currentHeader?.remove()
-      return
-    }
-
-    const header = currentHeader || dom.createElement('solid-ui-file-explorer-header')
-    header.paneIcon = getPaneIcon(pane, subject, context)
-    header.menuItems = state.menuItems
-    if (!currentHeader) {
-      provider.prepend(header)
-    }
+    UI.composeExplorer(provider, {
+      context,
+      subjectUri: subject.uri,
+      pane,
+      relevantPanes: provider.relevantPanes || [],
+      header: state && explorerHeaderForPane(state.showHeader, pane?.name)
+        ? { paneIcon: getPaneIcon(pane, subject, context), menuItems: state.menuItems }
+        : undefined,
+      paneElement
+    })
   }
 
   async function expandedProviderTR (subject, requiredPane, options, provider) {
@@ -362,9 +341,19 @@ export default function (context) {
 
     provider.context = context
     provider.subjectUri = subject.uri
+    // Preserve legacy solo-pane signal (set via options.solo, see GotoSubject) on the
+    // file-explorer provider element. No current consumer reads FileExplorerProvider.soloPane
+    // (solid-ui/src/components/file-explorer-provider/FileExplorerProvider.ts), but the property
+    // is part of its public API, so keep populating it instead of silently dropping the value.
+    provider.soloPane = options.solo
     if (!explorerProviderListeners.has(provider)) {
-      provider.addEventListener(UI.FILE_EXPLORER_BACK_EVENT, () => collapseMouseDownListener({ target: provider }))
+      provider.addEventListener(UI.FILE_EXPLORER_BACK_EVENT, event => {
+        if (!UI.isExplorerEvent(event, provider)) return
+        event.stopPropagation()
+        collapseMouseDownListener({ target: provider })
+      })
       provider.addEventListener(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, event => {
+        event.stopPropagation()
         solidLogicSingleton.acl.findAccessGrants($rdf.sym(event.detail.subjectUri)).then(accessGrants => {
           UI.showDialog(AccessControlModal, {
             props: {
@@ -377,8 +366,10 @@ export default function (context) {
         })
       })
       provider.addEventListener(UI.FILE_EXPLORER_OPEN_PANE_EVENT, event => {
+        if (!UI.isExplorerEvent(event, provider)) return
+        event.stopPropagation()
         const pane = context.session.paneRegistry.byName(event.detail.paneName)
-        openPaneInPlace($rdf.sym(event.detail.subjectUri), pane)
+        openPaneInPlace(provider, $rdf.sym(event.detail.subjectUri), pane)
       })
       explorerProviderListeners.add(provider)
     }
@@ -404,8 +395,9 @@ export default function (context) {
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
+    } else {
+      composeExplorer(provider, subject, provider.pane)
     }
-    renderExplorerHeader(provider, subject, provider.pane)
 
     if (showHeader) {
       const menuItems = await getPaneItems(subject, context, relevantPanes, (paneSubject, paneName) => {
@@ -420,8 +412,7 @@ export default function (context) {
       })
       if (explorerStates.get(provider) === state) {
         state.menuItems = menuItems
-        const header = provider.querySelector(':scope > solid-ui-file-explorer-header')
-        if (header) header.menuItems = menuItems
+        composeExplorer(provider, subject, provider.pane)
       }
     }
     return provider
@@ -1749,8 +1740,8 @@ export default function (context) {
   @param expand  -- flag -- open the subject rather than keep folded closed
   @param pane    -- optional -- pane to be used for expanded display. When the pane has its own
                     subject (the profile, friends or storage of a person), that subject is displayed
-                    instead of `subject`, which only stays the page URL; for a storage the container
-                    or resource `subject` points at is opened inside it
+                    instead of `subject`, which only stays the page URL. A storage pane owns
+                    resource selection inside its own content target.
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
   @param table   -- option  -- default is an HTML table element in which to put the outline.
