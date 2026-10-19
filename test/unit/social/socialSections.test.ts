@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { waitFor } from '@testing-library/dom'
 import { sym } from 'rdflib'
 import { store } from 'solid-logic'
 import { ns } from 'solid-ui'
@@ -113,5 +115,40 @@ describe('friends list drop surface', () => {
     expect(event.defaultPrevented).toBe(false)
     expect(store.updater.update).not.toHaveBeenCalled()
     expect(store.holds(subject, ns.foaf('knows'), secondFriend)).toBe(false)
+  })
+
+  it('sizes and right-aligns the navigation icon like the remove icon only in all friends', () => {
+    store.add(subject, ns.foaf('knows'), firstFriend, profile)
+    const { section, friendsList } = createList()
+    const style = document.createElement('style')
+    style.textContent = readFileSync('src/social/socialPane.css', 'utf8')
+    document.body.appendChild(style)
+    const link = friendsList.querySelector<HTMLAnchorElement>(`a[href="${firstFriend.value}"]`)!
+    const image = link.querySelector('icon-lucide-square-arrow-out-up-right')!
+    const remove = friendsList.querySelector<HTMLImageElement>('[title="Remove this friend"]')!
+
+    expect(getComputedStyle(image).width).toBe(getComputedStyle(remove).width)
+    expect(getComputedStyle(image).height).toBe(getComputedStyle(remove).height)
+    expect(getComputedStyle(image).margin).toBe(getComputedStyle(remove).margin)
+    expect(getComputedStyle(link).float).toBe(getComputedStyle(remove).float)
+    expect(getComputedStyle(link).clear).toBe('right')
+    expect(link.querySelector('img')).toBeNull()
+    expect(link.getAttribute('aria-label')).toBe('Open friend profile')
+    expect(getComputedStyle(image).color).toBe('var(--color-text-secondary, #4A5565)')
+
+    section.classList.remove('social-pane__all-friends')
+    expect(getComputedStyle(image).margin).not.toBe('0.2em')
+    expect(getComputedStyle(link).float).not.toBe('right')
+  })
+
+  it('uses imported Lucide icons after attachmentList refreshes its rows', async () => {
+    const { friendsList } = createList()
+    drop(friendsList.querySelector('.social-friends-list-surface')!, firstFriend.value)
+
+    await waitFor(() => {
+      const link = friendsList.querySelector(`a[href="${firstFriend.value}"]`)!
+      expect(link.querySelector('icon-lucide-square-arrow-out-up-right')).not.toBeNull()
+      expect(link.querySelector('img')).toBeNull()
+    })
   })
 })

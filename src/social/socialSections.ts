@@ -6,6 +6,7 @@ import { appendProfileLinks } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
 import { FriendshipTriage } from './triage'
 import type { ViewerMode } from '../types'
+import '~icons/lucide/square-arrow-out-up-right'
 
 export type HeaderControls = {
   canEdit: boolean,
@@ -398,6 +399,21 @@ export function createAllFriendsSection (options: {
   const friendsItemsTable = friendsList.querySelector('td table')
   if (friendsItemsTable instanceof HTMLTableElement) {
     friendsItemsTable.classList.add('social-friends-grid')
+
+    const replaceNavigationIcons = () => {
+      for (const image of friendsItemsTable.querySelectorAll('td:nth-child(3) > a > img')) {
+        const icon = dom.createElement('icon-lucide-square-arrow-out-up-right')
+        icon.setAttribute('aria-hidden', 'true')
+        image.parentElement!.setAttribute('aria-label', 'Open friend profile')
+        image.replaceWith(icon)
+      }
+    }
+    replaceNavigationIcons()
+    // attachmentList recreates rows internally after additions and deletions.
+    new MutationObserver(replaceNavigationIcons).observe(friendsItemsTable, {
+      childList: true,
+      subtree: true
+    })
   }
 
   return { section: allFriends, mainTable, friendsList }

@@ -855,6 +855,21 @@
   vertical-align: top;
 }
 
+.social-pane__all-friends .social-friends-grid > tr > td:nth-child(3) > a,
+.social-pane__all-friends .social-friends-grid > tbody > tr > td:nth-child(3) > a {
+  float: right;
+  clear: right;
+  line-height: 0;
+}
+
+.social-pane__all-friends .social-friends-grid icon-lucide-square-arrow-out-up-right {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin: 0.2em;
+  color: var(--color-text-secondary, #4A5565);
+}
+
 .social-pane .social-friends-grid > tr > td:first-child,
 .social-pane .social-friends-grid > tbody > tr > td:first-child {
   padding-right: 1.2rem;

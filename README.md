@@ -112,6 +112,9 @@ friends list, including its empty space or an existing friend card, to add a
 `foaf:knows` link to your profile. The whole list is the drop target; there is no
 separate target icon. Other people's lists and non-editable profiles remain
 read-only. This uses solid-ui's existing attachment-list save and refresh handlers.
+Within this list, navigation icons use the imported Lucide
+`square-arrow-out-up-right` component in neutral gray and match the remove icons'
+size and right alignment.
 
 ## Development
 
