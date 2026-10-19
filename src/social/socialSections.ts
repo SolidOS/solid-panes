@@ -9,8 +9,7 @@ import type { ViewerMode } from '../types'
 
 export type HeaderControls = {
   canEdit: boolean,
-  viewerMode: ViewerMode,
-  showAddFriendAction?: boolean
+  viewerMode: ViewerMode
 }
 
 export type SocialHeaderElement = HTMLElement & {
@@ -64,22 +63,6 @@ export function createHeaderSection (
     if (headerControls.canEdit) {
       // Hidden for now because the social pane header edit control does not match the new design.
       // Revisit later if we decide to restore profile-link editing here.
-    } else if (headerControls.viewerMode === 'authenticated' && headerControls.showAddFriendAction) {
-      headerActions.classList.add('social-pane__header-actions--friend')
-
-      const friendDropButton = dom.createElement('button')
-      friendDropButton.setAttribute('title', 'Drop friend here')
-      friendDropButton.setAttribute('aria-label', 'Drop friend here')
-      const buttonImage = dom.createElement('img')
-      buttonImage.setAttribute('title', 'Drop friend here')
-      buttonImage.setAttribute('alt', 'Drop friend here')
-      friendDropButton.appendChild(buttonImage)
-
-      const dropHint = dom.createElement('span')
-      dropHint.className = 'social-friends-header-hint'
-      dropHint.textContent = 'Drag a WebId on the target to add a friend.'
-      friendDropButton.appendChild(dropHint)
-      headerActions.appendChild(friendDropButton)
     }
 
     // const addToFriendsButton = createAddMeToYourFriendsButton(subject, context)
@@ -396,30 +379,20 @@ export function createAllFriendsSection (options: {
   friendsList.classList.add('social-friends-list')
   friendsList.style.marginTop = '0'
 
-  const friendsListRow = friendsList.querySelector('tr')
-  const friendsListPromptCell = friendsListRow?.children?.[0]
-  const friendsListRightCell = friendsListRow?.children?.[1]
-  const friendsHeaderActions = dom.createElement('div')
-  friendsHeaderActions.classList.add('social-friends-header-actions')
+  const friendsListRow = friendsList.rows[0]
+  const dropCell = friendsListRow.cells[0]
+  const itemsCell = friendsListRow.cells[1]
+  // Keep attachmentList's wired drop cell and move the grid into it, so drops
+  // anywhere in the list use the widget's existing save and refresh handlers.
+  dropCell.replaceChildren(...Array.from(itemsCell.childNodes))
+  dropCell.classList.add('social-friends-list-surface')
+  itemsCell.remove()
 
-  if (friendsListPromptCell instanceof HTMLTableCellElement) {
-    friendsListPromptCell.classList.add('social-friends-header-dropzone-cell')
-    const friendsHeaderDropzone = dom.createElement('table')
-    friendsHeaderDropzone.className = 'social-friends-header-dropzone'
-    friendsHeaderDropzone.setAttribute('role', 'presentation')
-    const friendsHeaderDropzoneBody = friendsHeaderDropzone.appendChild(dom.createElement('tbody'))
-    const friendsHeaderDropzoneRow = friendsHeaderDropzoneBody.appendChild(dom.createElement('tr'))
-    friendsHeaderDropzoneRow.appendChild(friendsListPromptCell)
-    friendsHeaderActions.appendChild(friendsHeaderDropzone)
-  } else if (friendsListPromptCell instanceof HTMLElement) {
-    while (friendsListPromptCell.firstChild) {
-      friendsHeaderActions.appendChild(friendsListPromptCell.firstChild)
-    }
-    friendsListPromptCell.remove()
-  }
-
-  if (friendsListRightCell instanceof HTMLTableCellElement) {
-    friendsListRightCell.colSpan = 2
+  if (editable) {
+    const hint = dom.createElement('p')
+    hint.className = 'social-friends-drop-hint'
+    hint.textContent = 'Drop a WebID anywhere here to add a friend.'
+    dropCell.prepend(hint)
   }
 
   const friendsItemsTable = friendsList.querySelector('td table')

@@ -105,6 +105,14 @@ The navbar is hidden when the loaded URL is the logged-in user's WebID or its
 fragment-free profile document URL. Other URLs in the same pod and other users'
 profiles keep the navbar. Account-menu navigation continues to hide it.
 
+### Friends list
+
+On your own editable profile, drop a friend's WebID anywhere in the social pane's
+friends list, including its empty space or an existing friend card, to add a
+`foaf:knows` link to your profile. The whole list is the drop target; there is no
+separate target icon. Other people's lists and non-editable profiles remain
+read-only. This uses solid-ui's existing attachment-list save and refresh handlers.
+
 ## Development
 
 To get started, make sure you have Node.js installed (for instance through [nvm](https://github.com/nvm-sh/nvm)), then:
