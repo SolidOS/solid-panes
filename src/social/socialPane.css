@@ -786,6 +786,31 @@
   line-height: 1.4;
 }
 
+.social-pane .social-pane__all-friends {
+  position: relative;
+}
+
+.social-pane .social-friends-delete-confirmation:not(:empty) {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: var(--spacing-xs, 0.75rem);
+  pointer-events: none;
+}
+
+.social-pane .social-friends-delete-confirmation > div {
+  width: max-content;
+  max-width: 100%;
+  pointer-events: auto;
+}
+
+.social-pane .social-friends-delete-confirmation > div > div {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 .social-pane .social-friends-grid {
   display: flex;
   flex-wrap: wrap;
@@ -860,14 +885,6 @@
   float: right;
   clear: right;
   line-height: 0;
-}
-
-.social-pane__all-friends .social-friends-grid icon-lucide-square-arrow-out-up-right {
-  display: inline-block;
-  width: 1em;
-  height: 1em;
-  margin: 0.2em;
-  color: var(--color-text-secondary, #4A5565);
 }
 
 .social-pane .social-friends-grid > tr > td:first-child,

@@ -6,7 +6,6 @@ import { appendProfileLinks } from './editProfileDetails'
 import { locationIcon, personInCircleIcon as personInCircleIconSvg } from './icons'
 import { FriendshipTriage } from './triage'
 import type { ViewerMode } from '../types'
-import '~icons/lucide/square-arrow-out-up-right'
 
 export type HeaderControls = {
   canEdit: boolean,
@@ -361,6 +360,9 @@ export function createAllFriendsSection (options: {
   allFriends.setAttribute('role', 'tabpanel')
   allFriends.setAttribute('aria-labelledby', 'social-tab-all-friends')
 
+  const confirmationContainer = allFriends.appendChild(dom.createElement('div'))
+  confirmationContainer.className = 'social-friends-delete-confirmation'
+
   const mainTable = allFriends.appendChild(dom.createElement('table'))
   mainTable.className = 'social-main'
 
@@ -369,6 +371,7 @@ export function createAllFriendsSection (options: {
     modify: !!editable,
     predicate: ns.foaf('knows'),
     noun: 'friend',
+    confirmationContainer,
     // Social pane already owns the async refresh cycle for friend data in
     // socialPane.ts. Leave attachmentList's generic follow-up rerender disabled
     // here or each fetched friend profile will trigger an extra whole-table refresh
@@ -399,21 +402,6 @@ export function createAllFriendsSection (options: {
   const friendsItemsTable = friendsList.querySelector('td table')
   if (friendsItemsTable instanceof HTMLTableElement) {
     friendsItemsTable.classList.add('social-friends-grid')
-
-    const replaceNavigationIcons = () => {
-      for (const image of friendsItemsTable.querySelectorAll('td:nth-child(3) > a > img')) {
-        const icon = dom.createElement('icon-lucide-square-arrow-out-up-right')
-        icon.setAttribute('aria-hidden', 'true')
-        image.parentElement!.setAttribute('aria-label', 'Open friend profile')
-        image.replaceWith(icon)
-      }
-    }
-    replaceNavigationIcons()
-    // attachmentList recreates rows internally after additions and deletions.
-    new MutationObserver(replaceNavigationIcons).observe(friendsItemsTable, {
-      childList: true,
-      subtree: true
-    })
   }
 
   return { section: allFriends, mainTable, friendsList }

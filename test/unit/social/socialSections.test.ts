@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { waitFor } from '@testing-library/dom'
 import { sym } from 'rdflib'
 import { store } from 'solid-logic'
 import { ns } from 'solid-ui'
@@ -43,7 +42,9 @@ function drop (target: Element, text: string, type = 'text/uri-list') {
 
 describe('friends list drop surface', () => {
   beforeEach(() => {
-    vi.spyOn(store.updater, 'update').mockImplementation((_deletions, insertions, callback) => {
+    vi.spyOn(store.updater, 'update').mockImplementation((deletions, insertions, callback) => {
+      const removed = Array.isArray(deletions) ? deletions : [deletions]
+      removed.forEach(statement => store.removeStatement(statement))
       const statements = Array.isArray(insertions) ? insertions : [insertions]
       statements.forEach(statement => store.add(statement))
       callback?.(profile.value, true, '')
@@ -133,22 +134,71 @@ describe('friends list drop surface', () => {
     expect(getComputedStyle(link).float).toBe(getComputedStyle(remove).float)
     expect(getComputedStyle(link).clear).toBe('right')
     expect(link.querySelector('img')).toBeNull()
-    expect(link.getAttribute('aria-label')).toBe('Open friend profile')
+    expect(link.getAttribute('aria-label')).toBe('Open resource')
     expect(getComputedStyle(image).color).toBe('var(--color-text-secondary, #4A5565)')
 
     section.classList.remove('social-pane__all-friends')
-    expect(getComputedStyle(image).margin).not.toBe('0.2em')
+    expect(getComputedStyle(image).margin).toBe('0.2em')
     expect(getComputedStyle(link).float).not.toBe('right')
   })
 
-  it('uses imported Lucide icons after attachmentList refreshes its rows', async () => {
+  it('renders shared Lucide icons immediately after attachmentList refreshes its rows', () => {
     const { friendsList } = createList()
     drop(friendsList.querySelector('.social-friends-list-surface')!, firstFriend.value)
 
-    await waitFor(() => {
-      const link = friendsList.querySelector(`a[href="${firstFriend.value}"]`)!
-      expect(link.querySelector('icon-lucide-square-arrow-out-up-right')).not.toBeNull()
-      expect(link.querySelector('img')).toBeNull()
-    })
+    const link = friendsList.querySelector(`a[href="${firstFriend.value}"]`)!
+    expect(link.querySelector('icon-lucide-square-arrow-out-up-right')).not.toBeNull()
+    expect(link.querySelector('img')).toBeNull()
+  })
+
+  it('shows confirmation outside a single friend card and cancels without deleting', () => {
+    store.add(subject, ns.foaf('knows'), firstFriend, profile)
+    const { section, friendsList } = createList()
+    const pane = document.body.appendChild(document.createElement('div'))
+    pane.className = 'social-pane'
+    pane.appendChild(section)
+    const style = document.createElement('style')
+    style.textContent = readFileSync('src/social/socialPane.css', 'utf8')
+    document.body.appendChild(style)
+    friendsList.querySelector<HTMLImageElement>('[title="Remove this friend"]')!.click()
+
+    const confirmation = section.querySelector<HTMLElement>('[role="dialog"]')!
+    expect(confirmation.parentElement).toBe(section.querySelector('.social-friends-delete-confirmation'))
+    expect(friendsList.contains(confirmation)).toBe(false)
+    expect(confirmation.closest('.social-friends-grid')).toBeNull()
+    const overlay = confirmation.parentElement!
+    expect(getComputedStyle(section).position).toBe('relative')
+    expect(getComputedStyle(overlay).position).toBe('absolute')
+    expect(getComputedStyle(overlay).inset).toBe('0px')
+    expect(getComputedStyle(overlay).placeItems).toBe('center')
+    expect(getComputedStyle(overlay).zIndex).toBe('10')
+    expect(getComputedStyle(confirmation).width).toBe('max-content')
+    expect(getComputedStyle(confirmation).pointerEvents).toBe('auto')
+    const cancel = Array.from(confirmation.querySelectorAll('button'))
+      .find(button => button.textContent === 'Cancel')!
+    expect(document.activeElement).toBe(cancel)
+    cancel.click()
+
+    expect(section.querySelector('[role="dialog"]')).toBeNull()
+    expect(store.updater.update).not.toHaveBeenCalled()
+    expect(store.holds(subject, ns.foaf('knows'), firstFriend, profile)).toBe(true)
+  })
+
+  it('confirms removal of the last friend using the original widget handler', () => {
+    store.add(subject, ns.foaf('knows'), firstFriend, profile)
+    const { section, friendsList } = createList()
+    const remove = friendsList.querySelector<HTMLImageElement>('[title="Remove this friend"]')!
+    remove.click()
+    remove.click()
+    expect(section.querySelectorAll('[role="dialog"]')).toHaveLength(1)
+    const confirmation = section.querySelector('[role="dialog"]')!
+    Array.from(confirmation.querySelectorAll('button'))
+      .find(button => button.textContent === 'Remove this friend')!.click()
+
+    expect(store.updater.update).toHaveBeenCalledTimes(1)
+    expect(store.holds(subject, ns.foaf('knows'), firstFriend, profile)).toBe(false)
+    expect(friendsList.querySelector(`a[href="${firstFriend.value}"]`)).toBeNull()
+    expect(section.querySelector('[role="dialog"]')).toBeNull()
+    expect(friendsList.querySelector('.social-friends-drop-hint')).not.toBeNull()
   })
 })

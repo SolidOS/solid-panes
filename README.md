@@ -112,9 +112,15 @@ friends list, including its empty space or an existing friend card, to add a
 `foaf:knows` link to your profile. The whole list is the drop target; there is no
 separate target icon. Other people's lists and non-editable profiles remain
 read-only. This uses solid-ui's existing attachment-list save and refresh handlers.
-Within this list, navigation icons use the imported Lucide
+Navigation icons are rendered directly by solid-ui using the imported Lucide
 `square-arrow-out-up-right` component in neutral gray and match the remove icons'
 size and right alignment.
+Remove-friend confirmations appear as compact popups centered over the list,
+above its contents and outside the clipped cards, including when there is only
+one friend. They do not change the list's layout. Cancel is focused when the
+confirmation opens.
+The pane passes solid-ui's optional `confirmationContainer` rather than relocating
+the widget's popup after it opens.
 
 ## Development
 
