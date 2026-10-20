@@ -774,15 +774,15 @@
 
 .social-pane .social-friends-list-surface {
   width: 100%;
-  padding: var(--spacing-xs, 0.75rem);
+  padding: 12px;
   height: 6rem;
   vertical-align: top;
 }
 
 .social-pane .social-friends-drop-hint {
-  margin: 0 0 var(--spacing-xs, 0.75rem);
-  color: var(--color-text-secondary, #4A5565);
-  font-size: var(--font-size-sm, 0.875rem);
+  margin: 0 0 12px;
+  color: var(--solid-ui-color-gray-600, #4a5565);
+  font-size: var(--solid-ui-font-size-sm, 0.875rem);
   line-height: 1.4;
 }
 
@@ -796,7 +796,7 @@
   z-index: 10;
   display: grid;
   place-items: center;
-  padding: var(--spacing-xs, 0.75rem);
+  padding: 12px;
   pointer-events: none;
 }
 
