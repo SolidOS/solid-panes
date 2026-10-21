@@ -484,11 +484,12 @@ export default function (context) {
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
     provider.handleAccessClick = async () => {
       try {
-        const accessGrants = await solidLogicSingleton.acl.findAccessGrants(subject)
+        const accessSubject = subject.doc()
+        const accessGrants = await solidLogicSingleton.acl.findAccessGrants(accessSubject)
 
         UI.showDialog(AccessControlModal, {
           props: {
-            subjectUri: subject.uri,
+            subjectUri: accessSubject.uri,
             accessGrants
           }
         })
