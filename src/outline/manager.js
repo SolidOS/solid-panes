@@ -483,14 +483,18 @@ export default function (context) {
     provider.soloPane = options.solo
     provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
     provider.handleAccessClick = async () => {
-      const accessGrants = await solidLogicSingleton.acl.findAccessGrants(subject)
+      try {
+        const accessGrants = await solidLogicSingleton.acl.findAccessGrants(subject)
 
-      UI.showDialog(AccessControlModal, {
-        props: {
-          subjectUri: subject.uri,
-          accessGrants
-        }
-      })
+        UI.showDialog(AccessControlModal, {
+          props: {
+            subjectUri: subject.uri,
+            accessGrants
+          }
+        })
+      } catch (error) {
+        UI.log.error('outline: Failed to open access controls: ' + UI.utils.stackString(error))
+      }
     }
 
     if (provider.pane) {
