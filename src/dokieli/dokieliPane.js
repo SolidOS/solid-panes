@@ -59,27 +59,17 @@ export default {
       '<h1>' + encodedTitle + '</h1></article>'
     )
     // console.log('@@ New HTML for Dok:' + htmlContents)
-    return new Promise(function (resolve) {
-      kb.fetcher
-        .webOperation('PUT', newInstance.uri, {
-          data: htmlContents,
-          contentType: 'text/html'
-        })
-        .then(function () {
-          console.log(
-            'new Dokieli document created at ' + newPaneOptions.newInstance
-          )
-          resolve(newPaneOptions)
-        })
-        .catch(function (err) {
-          console.log(
-            'Error creating dokieli doc at ' +
-              newPaneOptions.newInstance +
-              ': ' +
-              err
-          )
-        })
-    })
+    return kb.fetcher
+      .webOperation('PUT', newInstance.uri, {
+        data: htmlContents,
+        contentType: 'text/html'
+      })
+      .then(function () {
+        console.log(
+          'new Dokieli document created at ' + newPaneOptions.newInstance
+        )
+        return newPaneOptions
+      })
   }
 
   // render: removed - now handled by humanReadablePane with appropriate dokieli icon

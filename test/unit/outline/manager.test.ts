@@ -330,6 +330,45 @@ describe('manager', () => {
         await vi.waitFor(() => expect(header.menuItems).toHaveLength(1))
       })
 
+      it('does not add a resource header for index.ttl#this', async () => {
+        const provider = createExplorer(MockPane, { solo: true }, sym(`${window.location.origin}/addressbook/index.ttl#this`))
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+      })
+
+      it.each([false, true])('resolves a container index only for direct navigation (explicit pane: %s)', async explicit => {
+        const subject = sym(`${window.location.origin}/indexed-container/`)
+        const index = sym(`${subject.uri}index.ttl#this`)
+        const contains = sym('http://www.w3.org/ns/ldp#contains')
+        store.add(subject, contains, index.doc(), subject.doc())
+        const load = vi.spyOn(store.fetcher, 'load').mockResolvedValue([])
+        const resource = {
+          containerHasIndexDocument: vi.fn(() => true),
+          getContainerIndexThing: vi.fn(() => index)
+        }
+        const manager = new OutlineManager({
+          dom: document,
+          session: { store, logic: { resource }, paneRegistry: mockPaneRegistry }
+        })
+        try {
+          const provider = manager.propertyTable(subject, undefined, explicit ? MockPane : undefined, { solo: true })
+          document.body.appendChild(provider)
+          await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+
+          expect(provider.subjectUri).toBe(explicit ? subject.uri : index.uri)
+          expect(provider.querySelector('.paneDiv')).toHaveTextContent(`Mock Pane for ${explicit ? subject.uri : index.uri}`)
+          if (explicit) {
+            expect(resource.getContainerIndexThing).not.toHaveBeenCalled()
+          } else {
+            expect(load).toHaveBeenCalledWith(index.doc())
+            expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+          }
+        } finally {
+          load.mockRestore()
+          store.removeMany(subject, contains, index.doc(), subject.doc())
+        }
+      })
+
       it('reports menu failures without removing the rendered pane or header', async () => {
         const error = new Error('Unable to resolve pane icon')
         const status = document.createElement('div')

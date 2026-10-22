@@ -53,6 +53,17 @@ navigation controller, which always applies the same follow-up effects.
 mashlib. Those callers rely on it to push the history entry and the URL, so it is the one place that
 writes history, and it announces what it did.
 
+Storage is an explicit browser view, not a resource's default pane. Its pane item
+renders the storage root with `solo` and `fullView` disabled, so the storage
+header, sidebar and listing remain visible even if the root has an index document.
+Selecting resources inside Storage replaces only its content area.
+
+Direct resource URLs use `getRelevantPanes` to choose the full-page resource
+view. With no explicitly requested pane, a container containing `index.ttl`
+resolves to `index.ttl#this` before selecting its pane. Indexed subjects have no
+file-explorer header. Ordinary containers retain their contents view, without
+the Storage shell during solo resource navigation.
+
 ## Rules
 
 ### URL and history

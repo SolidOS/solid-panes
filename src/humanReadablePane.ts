@@ -35,12 +35,110 @@ const dokieliCache = new Map<string, DokieliCacheValue>()
 function applyFrameClasses (
   frame: HTMLElement,
   modifier: 'markdown' | 'plain-text' | 'iframe',
-  lines: number
+  lines?: number
 ): void {
   frame.className = ''
   frame.classList.add('human-readable-pane__frame')
   frame.classList.add(`human-readable-pane__frame--${modifier}`)
-  frame.style.setProperty('--human-readable-pane-height', `${lines}em`)
+  if (lines !== undefined) {
+    frame.style.setProperty('--human-readable-pane-height', `${lines}em`)
+  }
+}
+
+// window.name of preview iframes; initMainPage refuses to boot SolidOS inside such a frame.
+export const HUMAN_READABLE_PREVIEW_FRAME_NAME = 'solidos-human-readable-preview'
+
+// Scripts may run but get an opaque origin, so previewed pages cannot reach the SolidOS session.
+const HTML_PREVIEW_SANDBOX = 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals'
+
+const isDokieliHtml = (text: string): boolean =>
+  text.includes('<script src="https://dokie.li/scripts/dokieli.js">') || text.includes('dokieli.css')
+
+function escapeAttribute (value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// srcdoc documents resolve relative URLs against about:srcdoc, so point them back at the resource.
+export function withBaseHref (html: string, baseUri: string): string {
+  if (/<base[\s>]/i.test(html)) return html
+  const base = `<base href="${escapeAttribute(baseUri)}">`
+  const headMatch = html.match(/<head(\s[^>]*)?>/i)
+  if (headMatch && headMatch.index !== undefined) {
+    const insertAt = headMatch.index + headMatch[0].length
+    return html.slice(0, insertAt) + base + html.slice(insertAt)
+  }
+  return base + html
+}
+
+type AuthenticatedFetch = (url: string, init?: RequestInit) => Promise<Response>
+
+async function toPlainRequest (input: unknown, init?: RequestInit): Promise<[string, RequestInit | undefined]> {
+  // Requests built inside the frame belong to another realm, so copy them into plain values.
+  if (input && typeof input === 'object' && 'url' in input && 'method' in input) {
+    const request = input as Request
+    const method = request.method
+    const body = method === 'GET' || method === 'HEAD' ? undefined : await request.arrayBuffer()
+    return [request.url, { method, headers: Array.from(request.headers.entries()), body, ...init }]
+  }
+  return [String(input), init]
+}
+
+/*
+ * Dokieli is an application that runs as the document itself: it takes the document URL from
+ * window.location and saves back with fetch. A private document cannot be loaded into the frame
+ * by URL (navigations carry no Solid credentials), so the authenticated content is written into a
+ * same-origin frame whose URL is then set to the document, and requests to the document's origin
+ * use the SolidOS session. Returns false when the document is on another origin.
+ */
+export function mountDokieliDocument (
+  frame: HTMLIFrameElement,
+  uri: string,
+  html: string,
+  authenticatedFetch: AuthenticatedFetch
+): boolean {
+  const ownerWindow = frame.ownerDocument.defaultView
+  let documentOrigin: string
+  try {
+    documentOrigin = new URL(uri).origin
+  } catch {
+    return false
+  }
+  if (!ownerWindow || documentOrigin !== ownerWindow.location.origin) return false
+
+  frame.removeAttribute('sandbox')
+  frame.removeAttribute('srcdoc')
+
+  const write = () => {
+    const frameWindow = frame.contentWindow as (Window & typeof globalThis) | null
+    const frameDocument = frame.contentDocument
+    if (!frameWindow || !frameDocument) return
+    frameDocument.open()
+    try {
+      frameWindow.history.replaceState(null, '', uri)
+    } catch (error) {
+      console.error('Cannot give the Dokieli frame its document URL; showing a preview instead.', error)
+      frameDocument.close()
+      frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+      frame.srcdoc = withBaseHref(html, uri)
+      return
+    }
+    const nativeFetch = frameWindow.fetch?.bind(frameWindow) ?? ownerWindow.fetch.bind(ownerWindow)
+    frameWindow.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+      const [url, plainInit] = await toPlainRequest(input, init)
+      return new URL(url, uri).origin === documentOrigin
+        ? authenticatedFetch(new URL(url, uri).href, plainInit)
+        : nativeFetch(input, init)
+    }
+    frameDocument.write(html)
+    frameDocument.close()
+  }
+
+  if (frame.isConnected && frame.contentDocument) {
+    write()
+  } else {
+    frame.addEventListener('load', write, { once: true })
+  }
+  return true
 }
 
 const humanReadablePane: HumanReadablePaneDefinition = {
@@ -115,8 +213,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       'text/html',
       'text/markdown',
       'application/xhtml+xml',
-      'image/png',
-      'image/jpeg',
       'application/pdf',
       'video/mp4'
     ]
@@ -250,11 +346,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       })
     }
 
-    const setIframeAttributes = (frame: HTMLIFrameElement, lines: number) => {
-      frame.setAttribute('src', subject.uri)
-      applyFrameClasses(frame, 'iframe', lines)
-    }
-
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
       const frame = myDocument.createElement('div')
@@ -272,36 +363,51 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
     } else {
-      // For other content types, use IFRAME
+      // For other content types, use IFRAME.
+      // The iframe's own request would be anonymous (Solid auth is not cookie based), so the
+      // content is fetched with the authenticated fetcher and handed to the frame directly.
       const frame = myDocument.createElement('iframe')
+      frame.name = HUMAN_READABLE_PREVIEW_FRAME_NAME
+      frame.title = decodeURIComponent(subject.uri.split('/').pop() || subject.uri)
+      applyFrameClasses(frame, 'iframe')
+      const isHtml = ct === 'text/html' || ct === 'application/xhtml+xml'
 
-      // Apply sandbox for HTML/XHTML
-      if (ct === 'text/html' || ct === 'application/xhtml+xml') {
-        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms')
+      const showError = (message: string) => {
+        frame.removeAttribute('src')
+        frame.setAttribute('sandbox', '')
+        frame.srcdoc = `<p style="font-family: sans-serif">${escapeAttribute(message)}</p>`
       }
 
-      // Fetch content to calculate lines dynamically
-      kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const blobText = response.responseText ?? ''
-        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
-        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-
-        // Cache dokieli detection result
-        const isDokieli = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ||
-                         blobText.includes('dokieli.css')
-        dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
-
-        setIframeAttributes(frame, lines)
-      }).catch(error => {
-        console.error('Error fetching content for line calculation:', error)
-        // Fallback to default height
-        setIframeAttributes(frame, 30)
-      })
+      if (isHtml) {
+        kb.fetcher.webOperation('GET', subject.uri).then(response => {
+          const html = response.responseText ?? ''
+          const isDokieli = isDokieliHtml(html)
+          dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+          if (isDokieli && mountDokieliDocument(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init))) {
+            return
+          }
+          frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+          frame.srcdoc = withBaseHref(html, subject.uri)
+        }).catch(error => {
+          console.error('Error fetching HTML content:', error)
+          showError('Error loading content')
+        })
+      } else {
+        kb.fetcher._fetch(subject.uri).then(async response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          frame.src = URL.createObjectURL(await response.blob())
+        }).catch(error => {
+          console.error('Error fetching content:', error)
+          showError('Error loading content')
+        })
+      }
 
       const frameContainer = myDocument.createElement('div')
       frameContainer.classList.add('human-readable-pane__container')
+      frameContainer.classList.add('human-readable-pane__container--iframe')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
+      div.classList.add('human-readable-pane--iframe')
     }
 
     return div

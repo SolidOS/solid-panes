@@ -375,16 +375,27 @@ export default function (context) {
       explorerProviderListeners.add(provider)
     }
 
-    const relevantPanes = options.hideList
+    let relevantPanes = options.hideList
       ? []
       : await loadRelevantPanes(subject, context)
     if (explorerStates.get(provider) !== state) return provider
+
+    // Resolve indexed containers only for a resource URL, never for an explicit Storage view.
+    if (options.solo && !requiredPane && subject.uri.endsWith('/') &&
+      context.session.logic.resource.containerHasIndexDocument(subject)) {
+      subject = context.session.logic.resource.getContainerIndexThing(subject)
+      await kb.fetcher.load(subject.doc())
+      relevantPanes = await loadRelevantPanes(subject, context)
+      if (explorerStates.get(provider) !== state) return provider
+      provider.subjectUri = subject.uri
+      provider.setAttribute('about', subject.toNT())
+    }
 
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
     const viewerPodOnly = !!options.headerOnlyInViewerPod
-    const showHeader = deriveExplorerHeader({
+    const showHeader = !subject.uri.endsWith('/index.ttl#this') && deriveExplorerHeader({
       isRootResource,
       isWebId: isWebIdUri(subject),
       viewerPodOnly,

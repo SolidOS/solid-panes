@@ -51,13 +51,12 @@ export const imagePane: ImagePane = {
 
   label: function (subject: NamedNode, context: DataBrowserContext): string | null {
     const store = context.session.store as ImageStore
-    if (
-      !store.anyStatementMatching(
-        subject,
-        UI.ns.rdf('type'),
-        store.sym('http://purl.org/dc/terms/Image')
-      )
-    ) {
+    const isImageResource = store.anyStatementMatching(
+      subject,
+      UI.ns.rdf('type'),
+      store.sym('http://purl.org/dc/terms/Image')
+    ) || contentTypeMatch(store, subject, ['image/'])
+    if (!isImageResource) {
       // NB: Not dc: namespace!
       return null
     }

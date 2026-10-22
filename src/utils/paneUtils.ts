@@ -38,7 +38,8 @@ export function createPaneItem (
       return labelText
     },
     render: function (_subject, context, options) {
-      return pane.render(subject, context, options)
+      // Storage is an explicit browser view, even though GotoSubject uses solo for top-level navigation.
+      return pane.render(subject, context, paneName === 'folder' ? { ...options, solo: false, fullView: false } : options)
     },
     shouldGetFocus: function () {
       return false
