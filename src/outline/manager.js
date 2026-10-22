@@ -354,10 +354,11 @@ export default function (context) {
       })
       provider.addEventListener(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, event => {
         event.stopPropagation()
-        solidLogicSingleton.acl.findAccessGrants($rdf.sym(event.detail.subjectUri)).then(accessGrants => {
+        const accessSubject = $rdf.sym(event.detail.subjectUri).doc()
+        solidLogicSingleton.acl.findAccessGrants(accessSubject).then(accessGrants => {
           UI.showDialog(AccessControlModal, {
             props: {
-              subjectUri: event.detail.subjectUri,
+              subjectUri: accessSubject.uri,
               accessGrants
             }
           })
@@ -392,6 +393,24 @@ export default function (context) {
     })
     if (explorerStates.get(provider) !== state) return provider
     state.showHeader = showHeader
+    provider.paneRenderOptions = options
+    provider.soloPane = options.solo
+    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
+    provider.handleAccessClick = async () => {
+      try {
+        const accessSubject = subject.doc()
+        const accessGrants = await solidLogicSingleton.acl.findAccessGrants(accessSubject)
+
+        UI.showDialog(AccessControlModal, {
+          props: {
+            subjectUri: accessSubject.uri,
+            accessGrants
+          }
+        })
+      } catch (error) {
+        UI.log.error('outline: Failed to open access controls: ' + UI.utils.stackString(error))
+      }
+    }
 
     if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
