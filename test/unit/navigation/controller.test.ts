@@ -83,7 +83,7 @@ describe('showing a profile, friends or storage', () => {
   it('displays the person\'s pane for the page URL, then selects it in the navbar and refreshes the heading', async () => {
     await controller.show({ kind: 'profile', subject: owner })
 
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(owner))
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(owner), byName)
     expect(GotoSubject).toHaveBeenCalledWith(
       store.sym(window.location.href), true, profilePane, true, undefined, undefined, { source: 'default' }
     )
@@ -169,7 +169,7 @@ describe('restoring a history entry', () => {
 
     await controller.show({ kind: 'restore' })
 
-    expect(getSocialPane).toHaveBeenCalledWith(store.sym(owner))
+    expect(getSocialPane).toHaveBeenCalledWith(store.sym(owner), byName)
     expect(GotoSubject.mock.calls[0][2]).toBe(socialPane)
     expect(selectNavbarPane).toHaveBeenCalledWith('social', owner)
     expect(refreshHeading).toHaveBeenCalledWith(false)
@@ -194,7 +194,7 @@ describe('restoring a history entry', () => {
     await controller.show({ kind: 'restore' })
 
     expect(isWebId).toHaveBeenCalledWith(store.sym(`${window.location.origin}/timea/profile/card`))
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(`${window.location.origin}/timea/profile/card`))
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(`${window.location.origin}/timea/profile/card`), byName)
     expect(GotoSubject.mock.calls[0][2]).toBe(profilePane)
   })
 

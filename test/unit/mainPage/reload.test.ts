@@ -155,7 +155,7 @@ describe('page reload of the document that holds a WebID', () => {
   it.each([
     ['a container', '/other/docs/'],
     ['a resource', '/other/docs/notes.ttl']
-  ])('shows %s with its file explorer header, even after a storage was selected', async (_name, url) => {
+  ])('shows %s with its file explorer header without session.logic, even after a storage was selected', async (_name, url) => {
     const viewer = sym(`${window.location.origin}/profile/card#me`)
     loadProfile.mockResolvedValue(sym(`${window.location.origin}/other/profile/card#me`))
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)

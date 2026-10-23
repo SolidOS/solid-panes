@@ -381,9 +381,19 @@ export default function (context) {
     if (explorerStates.get(provider) !== state) return provider
 
     // Resolve indexed containers only for a resource URL, never for an explicit Storage view.
-    if (options.solo && !requiredPane && subject.uri.endsWith('/') &&
-      context.session.logic.resource.containerHasIndexDocument(subject)) {
-      subject = context.session.logic.resource.getContainerIndexThing(subject)
+    const resourceLogic = context.session.logic?.resource || solidLogicSingleton.resource
+    const indexDocument = subject.uri.endsWith('/')
+      ? $rdf.sym(`${subject.uri}index.ttl`)
+      : null
+    const hasIndexDocument = options.solo && !requiredPane && indexDocument && (
+      (typeof resourceLogic?.containerHasIndexDocument === 'function' &&
+        resourceLogic.containerHasIndexDocument(subject)) ||
+      kb.holds(subject, UI.ns.ldp('contains'), indexDocument, subject.doc())
+    )
+    if (hasIndexDocument) {
+      subject = typeof resourceLogic?.getContainerIndexThing === 'function'
+        ? resourceLogic.getContainerIndexThing(subject)
+        : $rdf.sym(`${indexDocument.uri}#this`)
       await kb.fetcher.load(subject.doc())
       relevantPanes = await loadRelevantPanes(subject, context)
       if (explorerStates.get(provider) !== state) return provider
@@ -406,7 +416,7 @@ export default function (context) {
     state.showHeader = showHeader
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
-    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
+    provider.openPane = (paneSubject, paneName) => openPaneInPlace(provider, paneSubject, paneRegistry.byName(paneName))
     provider.handleAccessClick = async () => {
       try {
         const accessSubject = subject.doc()
@@ -664,7 +674,7 @@ export default function (context) {
         } // end of if (predDups!==1)
 
         if (show < predDups) {
-          // Add the x more <TR> here
+          // Add the "x more" object block here.
           const moreTR = dom.createElement('div')
           const moreTD = moreTR.appendChild(dom.createElement('div'))
           moreTD.setAttribute(
@@ -1006,6 +1016,19 @@ export default function (context) {
         setSelected(newSelTd, true)
         break
       case 'right':
+        {
+          const provider = selectedTd.matches?.(EXPLORER_PROVIDER_TAG)
+            ? selectedTd
+            : selectedTd.querySelector?.(EXPLORER_PROVIDER_TAG)
+          const firstPropertyObject = provider?.querySelector?.('[data-outline-node="object"]')
+          if (provider) {
+            if (firstPropertyObject) {
+              deselectAll()
+              setSelected(firstPropertyObject, true)
+            }
+            return
+          }
+        }
         deselectAll()
         if (
           selectedTd.nextSibling ||
@@ -1015,6 +1038,10 @@ export default function (context) {
         } else {
           const nextRow = selectedTd.parentNode && selectedTd.parentNode.nextSibling
           const newSelected = nextRow ? nextRow.lastChild : null
+          if (!newSelected) {
+            setSelected(selectedTd, true)
+            return
+          }
           setSelected(newSelected, true)
         }
         break
@@ -1027,7 +1054,12 @@ export default function (context) {
           setSelected(selectedTd.previousSibling, true)
           return true // do not shrink signal
         } else {
-          setSelected(selectedTd.parentNode && selectedTd.parentNode.firstChild, true)
+          const enclosingExpansion = findEnclosingExpansion(selectedTd)
+          setSelected(
+            enclosingExpansion?.block ||
+            (selectedTd.parentNode && selectedTd.parentNode.firstChild),
+            true
+          )
         } // supplied by thieOutline.focusTd
         break
       case 'moveTo':
@@ -1149,10 +1181,10 @@ export default function (context) {
         break
       case 37: { // left
         if (this.walk('left')) return
-        const subjectNode = selectedTd.firstElementChild?.matches(EXPLORER_PROVIDER_TAG)
-          ? selectedTd.firstElementChild
-          : selectedTd.querySelector(EXPLORER_PROVIDER_TAG)
-        outlineCollapse(selectedTd, UI.utils.getAbout(kb, subjectNode))
+        const enclosingExpansion = findEnclosingExpansion(selectedTd)
+        if (!enclosingExpansion) break
+        const subject = UI.utils.getAbout(kb, enclosingExpansion.provider)
+        if (subject) outlineCollapse(enclosingExpansion.block, subject)
         break
       }
       case 39: // right
@@ -1251,7 +1283,13 @@ export default function (context) {
   function expandMouseDownListener (e) {
     // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
     const target = thisOutline.targetOf(e)
-    const p = target.parentNode
+    let object
+    let subjectBlock
+    for (let node = target; node && node !== dom; node = node.parentNode) {
+      if (node.matches?.('[data-outline-node="object"]')) object = node
+      if (node.matches?.('.outline-subject-block')) subjectBlock = node
+    }
+    const p = subjectBlock || object || target.parentNode
     const subject = UI.utils.getAbout(kb, target)
     const pane = e.altKey ? paneRegistry.byName('internal') : undefined // set later: was panes.defaultPane
 
@@ -1274,10 +1312,29 @@ export default function (context) {
   function collapseMouseDownListener (e) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     const target = thisOutline.targetOf(e)
-    const subject = UI.utils.getAbout(kb, target)
     const pane = e.altKey ? paneRegistry.byName('internal') : undefined
-    const p = target.closest?.('[data-outline-node="object"]') || target.parentNode?.parentNode || target
-    outlineCollapse(p, subject, pane)
+    const enclosingExpansion = findEnclosingExpansion(target)
+    if (!enclosingExpansion) return
+    const subject = UI.utils.getAbout(kb, enclosingExpansion.provider)
+    if (!subject) return
+    outlineCollapse(enclosingExpansion.block, subject, pane)
+  }
+
+  function findEnclosingExpansion (node) {
+    for (let current = node; current && current !== dom; current = current.parentNode) {
+      if (current.matches?.('[data-outline-node="object"]')) {
+        const provider = current.querySelector?.(EXPLORER_PROVIDER_TAG)
+        if (provider) return { block: current, provider }
+      }
+
+      if (current.matches?.(EXPLORER_PROVIDER_TAG)) {
+        const block = current.closest?.('[data-outline-node="object"]') ||
+          current.closest?.('.outline-subject-block') ||
+          current
+        return { block, provider: current }
+      }
+    }
+    return null
   }
 
   function failedIconMouseDownListener (e) {

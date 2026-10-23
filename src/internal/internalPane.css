@@ -1,11 +1,13 @@
 .internalPaneContent {
   background-color: #ddddff;
-  padding: var(--spacing-xs, 0.5em);
+  padding: var(--spacing-xs, 0.5em) 40px;
+  box-sizing: border-box;
 }
 
 .internalPaneControls {
   width: 100%;
-  margin: var(--spacing-sm, 1em);
+  margin: var(--spacing-sm, 1em) 0;
+  box-sizing: border-box;
 }
 
 .internalPaneDeleteButton {

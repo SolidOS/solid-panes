@@ -6,6 +6,29 @@ import { schedulePane } from '../../src/schedule/schedulePane'
 import { authn } from 'solid-logic'
 
 describe('pane creation promise contracts', () => {
+  it('creates a Dokieli document with one HTML PUT', async () => {
+    const webOperation = vi.fn().mockResolvedValue({})
+    const context = {
+      session: {
+        store: {
+          sym: (uri: string) => $rdf.sym(uri),
+          fetcher: { webOperation }
+        }
+      }
+    }
+
+    const options = await dokieliPane.mintNew(context as any, {
+      newBase: 'https://pod.example/docs/'
+    })
+
+    expect(options.newInstance.uri).toBe('https://pod.example/docs.html')
+    expect(webOperation).toHaveBeenCalledOnce()
+    expect(webOperation).toHaveBeenCalledWith('PUT', 'https://pod.example/docs.html', {
+      data: expect.stringContaining('<script src="https://dokie.li/scripts/dokieli.js"></script>'),
+      contentType: 'text/html'
+    })
+  })
+
   it('rejects when Dokieli cannot write its document', async () => {
     const error = new Error('write failed')
     const context = {

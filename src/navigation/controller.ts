@@ -62,19 +62,19 @@ export function createNavigationController (deps: NavigationDeps): NavigationCon
     // These panes render a subject other than the page URL.
     if (view.subject) {
       const paneSubject = store.sym(view.subject)
-      if (view.kind === 'profile') return getProfilePaneFromURI(paneSubject)
-      if (view.kind === 'friends') return getSocialPaneFromURI(paneSubject)
+      if (view.kind === 'profile') return getProfilePaneFromURI(paneSubject, byName)
+      if (view.kind === 'friends') return getSocialPaneFromURI(paneSubject, byName)
       if (view.kind === 'storage') return getFolderPaneForStorage(paneSubject)
     }
     if (view.pane) return byName(view.pane) ?? undefined
-    return isWebIdUri(subject) ? getProfilePaneFromURI(subject) : undefined
+    return isWebIdUri(subject) ? getProfilePaneFromURI(subject, byName) : undefined
   }
 
   async function paneFor (intent: NavigationIntent, subject: NamedNode, state: NavigationState): Promise<DisplayedPane> {
     switch (intent.kind) {
       case 'restore': return paneForView(subject, state.view)
-      case 'profile': return getProfilePaneFromURI(store.sym(intent.subject))
-      case 'friends': return getSocialPaneFromURI(store.sym(intent.subject))
+      case 'profile': return getProfilePaneFromURI(store.sym(intent.subject), byName)
+      case 'friends': return getSocialPaneFromURI(store.sym(intent.subject), byName)
       case 'storage': return intent.pane
       case 'app': return byName(intent.pane)
     }

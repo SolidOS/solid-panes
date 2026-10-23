@@ -2,7 +2,7 @@ import * as paneRegistry from 'pane-registry'
 import folderIcon from '../icons/folder.svg'
 import personIcon from '../icons/person.svg'
 import friendsIcon from '../icons/friends.svg'
-import { loadProfileFromURI } from './webIdUtils'
+import { isWebIdUri, loadProfileFromURI } from './webIdUtils'
 import { getPodStorages } from './podUtils'
 import { NamedNode, sym } from 'rdflib'
 
@@ -21,6 +21,8 @@ export type PaneItem = {
   subject: NamedNode
   icon: string
 }
+
+type PaneLookup = (name: string) => any
 
 export function createPaneItem (
   pane: any,
@@ -54,25 +56,32 @@ export async function getPaneItemFromURI (
   paneName: string,
   subject?: NamedNode,
   labelText = 'Pane',
-  icon = ''
+  icon = '',
+  byName: PaneLookup = paneRegistry.byName
 ): Promise<PaneItem | null> {
   const windowHref = new URL(window.location.href)
   const finalURL = subject || sym(windowHref.toString())
   const webId = await loadProfileFromURI(finalURL)
   if (!webId || !webId.value) return null
 
-  const pane = paneRegistry.byName(paneName)
+  const pane = byName(paneName)
   if (!pane) return null
 
   return createPaneItem(pane, webId, paneName, labelText, icon)
 }
 
-export async function getProfilePaneFromURI (subject?: NamedNode) {
-  return getPaneItemFromURI('profile', subject, 'Profile', PERSON_ICON)
+export async function getProfilePaneFromURI (subject?: NamedNode, byName: PaneLookup = paneRegistry.byName) {
+  if (subject && isWebIdUri(subject)) {
+    const pane = byName('profile')
+    return pane
+      ? createPaneItem(pane, subject, 'profile', 'Profile', PERSON_ICON)
+      : null
+  }
+  return getPaneItemFromURI('profile', subject, 'Profile', PERSON_ICON, byName)
 }
 
-export async function getSocialPaneFromURI (subject?: NamedNode) {
-  return getPaneItemFromURI('social', subject, 'Social', FRIENDS_ICON)
+export async function getSocialPaneFromURI (subject?: NamedNode, byName: PaneLookup = paneRegistry.byName) {
+  return getPaneItemFromURI('social', subject, 'Social', FRIENDS_ICON, byName)
 }
 
 export async function getFolderPaneForStorage (podUrl: NamedNode, label?: string): Promise<PaneItem | null> {

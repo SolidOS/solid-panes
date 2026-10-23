@@ -52,8 +52,8 @@ export async function getPodStorages (url: NamedNode): Promise<NamedNode[]> {
       console.warn('Unable to load profile document for WebID', url.doc().uri, err)
     }
     const podStorages = store.each(url, ns.space('storage'))
-    const results = await Promise.all(podStorages.map(async pod => await isPodStorage(pod as NamedNode) ? pod as NamedNode : null))
-    return results.filter(pod => pod !== null) as NamedNode[]
+    // A WebID's pim:storage assertion is authoritative; not every server serializes space:Storage on its root container.
+    return podStorages.filter((pod): pod is NamedNode => pod.termType === 'NamedNode')
   }
   try {
     const storage = await findPodStorageFromUrl(url)

@@ -17,6 +17,12 @@
   margin-bottom: var(--spacing-base, 0.5rem);
   min-height: 0;
   overflow: auto;
+  box-sizing: border-box;
+}
+
+/* composeExplorer adds paneDiv to this element after the pane renders. */
+.paneDiv.defaultPane {
+	padding-inline: 40px;
 }
 
 .defaultPane > div {
@@ -63,6 +69,11 @@
 	grid-template-columns: minmax(0, 1fr);
 }
 
+.paneDiv.defaultPane[data-layout='mobile'] {
+	padding-left: 0;
+	padding-right: 0;
+}
+
 .defaultPane[data-layout='mobile'] > div > div.pred,
 .defaultPane[data-layout='mobile'] > div > div.obj {
 	display: block;
@@ -80,6 +91,11 @@
 }
 
 @media (max-width: 700px) {
+	.paneDiv.defaultPane {
+		padding-left: 0;
+		padding-right: 0;
+	}
+
 	.defaultPane > div {
 		grid-template-columns: minmax(0, 1fr);
 	}
