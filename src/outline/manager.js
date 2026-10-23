@@ -13,17 +13,24 @@ import { UserInput } from './userInput.js'
 import * as queryByExample from './queryByExample.js'
 import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
-import { deriveExplorerHeader } from '../navigation/chrome'
+import { deriveExplorerHeader, explorerHeaderForPane } from '../navigation/chrome'
 import { isPageInViewerPod } from '../navigation/podContext'
 import { nextHistoryState } from '../navigation/state'
 import { announceNavigation } from '../navigation/events'
 import { resolveSource } from '../navigation/options'
 import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
-import '../components/file-explorer-header'
+import { createOutlineDomHelpers } from './outlineDomHelpers'
+import { getPaneIcon, getPaneItems } from './fileExplorerHelpers'
+import 'solid-ui/components/file-explorer-provider'
+import 'solid-ui/components/file-explorer-header'
 import AccessControlModal from 'solid-ui/components/access-control-modal'
+
+const EXPLORER_PROVIDER_TAG = 'solid-ui-file-explorer-provider'
 
 export default function (context) {
   const dom = context.dom
+  const explorerStates = new WeakMap()
+  const explorerProviderListeners = new WeakSet()
 
   this.document = context.dom
   this.context = context
@@ -47,11 +54,34 @@ export default function (context) {
   this.UserInput = new UserInput(this)
   this.clipboardAddress = 'tabulator:clipboard' // Weird
   this.UserInput.clipboardInit(this.clipboardAddress)
-  const outlineElement = this.outlineElement
+
+  const {
+    outlineObjectDiv,
+    outlinePredicateDiv,
+    termWidget
+  } = createOutlineDomHelpers({
+    dom,
+    UI,
+    kb: store,
+    outlineIcons,
+    expandMouseDownListener,
+    selectableTDClickListener,
+    setSelected,
+    viewAsBoringDefault,
+    removeNodeIconMouseDownListener
+  })
+
+  this.outlineObjectDiv = outlineObjectDiv
+  this.outlinePredicateDiv = outlinePredicateDiv
+  // old name: outlineObjectTD
+  this.outlineObjectTD = outlineObjectDiv
+  // old name: outlinePredicateTD
+  this.outlinePredicateTD = outlinePredicateDiv
+  this.termWidget = termWidget
 
   this.init = function () {
-    const table = getOutlineContainer()
-    table.outline = this
+    const outlineHost = getOutlineContainer()
+    outlineHost.outline = this
   }
 
   this.getLayoutMode = function () {
@@ -93,7 +123,7 @@ export default function (context) {
 
   // / ////////////////////// Representing data
 
-  //  Represent an object in summary form as a table cell
+  //  Represent an object in summary form as a content block
 
   function appendRemoveIcon (node, subject, removeNode) {
     const image = UI.utils.AJARImage(
@@ -180,129 +210,6 @@ export default function (context) {
     return img
   } // appendAccessIcon
 
-  /** make the td for an object (grammatical object)
-   *  @param obj - an RDF term
-   *  @param view - a VIEW function (rather than a bool asImage)
-   **/
-
-  this.outlineObjectTD = function outlineObjectTD (
-    obj,
-    view,
-    deleteNode,
-    statement
-  ) {
-    const td = dom.createElement('td')
-    td.classList.add('obj')
-    td.setAttribute('notSelectable', 'false')
-    if (!obj) {
-      td.textContent = 'No object available.'
-      return td
-    }
-    const theClass = 'obj'
-
-    // set about and put 'expand' icon
-    if (
-      obj.termType === 'NamedNode' ||
-      obj.termType === 'BlankNode' ||
-      (obj.termType === 'Literal' &&
-        obj.value.slice &&
-        (obj.value.slice(0, 6) === 'ftp://' ||
-          obj.value.slice(0, 8) === 'https://' ||
-          obj.value.slice(0, 7) === 'http://'))
-    ) {
-      td.setAttribute('about', obj.toNT())
-      td.appendChild(
-        UI.utils.AJARImage(
-          UI.icons.originalIconBase + 'tbl-expand-trans.png',
-          'expand',
-          undefined,
-          dom
-        )
-      ).addEventListener('click', expandMouseDownListener)
-    }
-    td.setAttribute('class', theClass) // this is how you find an object
-    if (kb.whether(obj, UI.ns.rdf('type'), UI.ns.link('Request'))) {
-      td.className = 'undetermined'
-    } // @@? why-timbl
-
-    if (!view) {
-      // view should be a function pointer
-      view = viewAsBoringDefault
-    }
-    td.appendChild(view(obj))
-    if (deleteNode) {
-      appendRemoveIcon(td, obj, deleteNode)
-    }
-
-    // set DOM methods
-    td.tabulatorSelect = function () {
-      setSelected(this, true)
-    }
-    td.tabulatorDeselect = function () {
-      setSelected(this, false)
-    }
-
-    td.addEventListener('click', selectableTDClickListener)
-    return td
-  } // outlineObjectTD
-
-  this.outlinePredicateTD = function outlinePredicateTD (
-    predicate,
-    newTr,
-    inverse,
-    internal
-  ) {
-    const predicateTD = dom.createElement('TD')
-    predicateTD.setAttribute('about', predicate.toNT())
-    predicateTD.setAttribute('class', internal ? 'pred internal' : 'pred')
-
-    let lab
-    switch (predicate.termType) {
-      case 'BlankNode': // TBD
-        predicateTD.className = 'undetermined'
-        break
-      case 'NamedNode':
-        lab = UI.utils.predicateLabelForXML(predicate, inverse)
-        break
-      case 'Collection': // some choices of predicate
-        lab = UI.utils.predicateLabelForXML(predicate.elements[0], inverse)
-    }
-    lab = lab ? lab.slice(0, 1).toUpperCase() + lab.slice(1) : '...'
-    // if (kb.statementsMatching(predicate,rdf('type'), UI.ns.link('Request')).length) predicateTD.className='undetermined';
-
-    const labelTD = dom.createElement('TD')
-    labelTD.classList.add('labelTD')
-    labelTD.setAttribute('notSelectable', 'true')
-    labelTD.appendChild(dom.createTextNode(lab))
-    predicateTD.appendChild(labelTD)
-    labelTD.style.width = '100%'
-    predicateTD.appendChild(termWidget.construct(dom)) // termWidget is global???
-    for (const w in outlineIcons.termWidgets) {
-      if (!newTr || !newTr.AJAR_statement) break // case for TBD as predicate
-      // alert(Icon.termWidgets[w]+'   '+Icon.termWidgets[w].filter)
-      if (
-        outlineIcons.termWidgets[w].filter &&
-        outlineIcons.termWidgets[w].filter(
-          newTr.AJAR_statement,
-          'pred',
-          inverse
-        )
-      ) {
-        termWidget.addIcon(predicateTD, outlineIcons.termWidgets[w])
-      }
-    }
-
-    // set DOM methods
-    predicateTD.tabulatorSelect = function () {
-      setSelected(this, true)
-    }
-    predicateTD.tabulatorDeselect = function () {
-      setSelected(this, false)
-    }
-    predicateTD.addEventListener('click', selectableTDClickListener)
-    return predicateTD
-  } // outlinePredicateTD
-
   function getOutlineContainer () {
     return getOrCreateContainer('OutlineView', 'Resource browser')
   }
@@ -320,11 +227,7 @@ export default function (context) {
    * @returns {HTMLElement}
    */
   function getOrCreateContainer (id) {
-    const containerHost =
-      document.getElementById('MainContent') ||
-      document.body
-
-    // OutlineView is a table
+    // OutlineView is a simple block container
     if (id === 'OutlineView') {
       const existingOutline = document.getElementById('OutlineView')
       if (existingOutline) {
@@ -336,7 +239,7 @@ export default function (context) {
       document.body
 
       if (containerHost) {
-        const OutlineView = document.createElement('table')
+        const OutlineView = document.createElement('div')
         OutlineView.id = 'OutlineView'
         OutlineView.classList.add('outline-view')
         OutlineView.setAttribute('aria-label', 'Resource browser')
@@ -346,28 +249,13 @@ export default function (context) {
     }
   }
 
-  async function getRelevantPanes (subject, context) {
+  async function loadRelevantPanes (subject, context) {
     // make sure container representation is loaded (when server returns index.html)
     if (subject.uri.endsWith('/')) { await loadContainerRepresentation(subject) }
-    const panes = context.session.paneRegistry
-    const relevantPanes = panes.list.filter(
-      pane => pane.label(subject, context) && !pane.global && pane.name !== 'sharing'
-    )
-    if (relevantPanes.length === 0) {
-      // there are no relevant panes, simply return default pane (which ironically is internalPane)
-      return [panes.byName('internal')]
-    }
-    const filteredPanes = await UI.login.filterAvailablePanes(relevantPanes)
-    if (filteredPanes.length === 0) {
-      // if no relevant panes are available panes because of user role, we still allow for the most relevant pane to be viewed
-      return [relevantPanes[0]]
-    }
-    const firstRelevantPaneIndex = panes.list.indexOf(relevantPanes[0])
-    const firstFilteredPaneIndex = panes.list.indexOf(filteredPanes[0])
-    // if the first relevant pane is loaded before the panes available wrt role, we still want to offer the most relevant pane
-    return firstRelevantPaneIndex < firstFilteredPaneIndex
-      ? [relevantPanes[0]].concat(filteredPanes)
-      : filteredPanes
+    return UI.getRelevantPanes(subject, context, {
+      excludedPaneNames: ['sharing'],
+      fallbackPaneName: 'internal'
+    })
   }
 
   function getPane (relevantPanes, subject) {
@@ -388,17 +276,6 @@ export default function (context) {
     }
   }
 
-  function findContainingTable (td) {
-    let containingTable
-    for (containingTable = td; containingTable.parentNode; containingTable = containingTable.parentNode) {
-      if (containingTable.nodeName === 'TABLE') break
-    }
-    if (containingTable.nodeName !== 'TABLE') {
-      throw new Error('outline: internal error.')
-    }
-    return containingTable
-  }
-
   function renderPaneIntoProvider (provider, subject, pane, options) {
     if (!provider || !pane) return
 
@@ -414,74 +291,132 @@ export default function (context) {
       pre.appendChild(dom.createTextNode(UI.utils.stackString(e)))
     }
 
-    paneDiv.classList.add('paneDiv')
-    const existingPaneDiv = provider.querySelector('.paneDiv')
-    if (existingPaneDiv) {
-      existingPaneDiv.replaceWith(paneDiv)
-    } else {
-      provider.appendChild(paneDiv)
-    }
+    composeExplorer(provider, subject, pane, paneDiv)
   }
 
-  function openPaneInPlace (subject, pane) {
-    const outlineView = dom.getElementById('OutlineView')
-    if (!outlineView) return
-
-    const subjectId = subject.toNT()
-    const subjectTd = outlineView.querySelector('td.paneView[about="' + subjectId + '"]')
-    if (!subjectTd) return
-
-    const provider = subjectTd.querySelector('file-explorer-provider')
-    if (!provider) return
+  function openPaneInPlace (provider, subject, pane) {
     if (!pane) {
       UI.log.warn('outline: Unable to open pane in place: pane is undefined.')
       return
     }
 
     setQueryButtonVisibility(!!pane.requireQueryButton)
-    provider.openSelectedPane?.(pane)
-    renderPaneIntoProvider(provider, subject, pane, provider.paneRenderOptions)
+    provider.pane = pane
+    renderPaneIntoProvider(provider, subject, pane, explorerStates.get(provider)?.options || {})
   }
 
-  async function expandedProviderTR (subject, requiredPane, options) {
+  function composeExplorer (provider, subject, pane, paneElement) {
+    const state = explorerStates.get(provider)
+    UI.composeExplorer(provider, {
+      context,
+      subjectUri: subject.uri,
+      pane,
+      relevantPanes: provider.relevantPanes || [],
+      header: state && explorerHeaderForPane(state.showHeader, pane?.name)
+        ? { paneIcon: getPaneIcon(pane, subject, context), menuItems: state.menuItems }
+        : undefined,
+      paneElement
+    })
+  }
+
+  async function expandedProviderTR (subject, requiredPane, options, provider) {
     options = options || {}
 
-    // TODO: hide the main storage header
-    // const showHeader = !!requiredPane
-    const tr = dom.createElement('tr')
+    provider = provider || dom.createElement(EXPLORER_PROVIDER_TAG)
+    const previousState = explorerStates.get(provider)
+    const state = {
+      generation: (previousState?.generation || 0) + 1,
+      menuItems: [],
+      options
+    }
+    explorerStates.set(provider, state)
+    provider.classList.add('paneView', 'tdFlex')
+    provider.setAttribute('notSelectable', 'true')
+    provider.setAttribute('role', 'grid')
+    provider.setAttribute('about', subject.toNT())
     if (options.hover) {
       // By default no hide till hover as community deems it confusing
-      tr.classList.add('hoverControl')
+      provider.classList.add('hoverControl')
     }
-    const td = tr.appendChild(dom.createElement('td'))
-    td.classList.add('paneView', 'tdFlex')
-    td.setAttribute('notSelectable', 'true')
-    td.setAttribute('about', subject.toNT())
-    td.setAttribute('colspan', '2')
 
-    const provider = td.appendChild(dom.createElement('file-explorer-provider'))
     provider.context = context
     provider.subjectUri = subject.uri
-    provider.onBack = () => collapseMouseDownListener({ target: provider })
+    // Preserve legacy solo-pane signal (set via options.solo, see GotoSubject) on the
+    // file-explorer provider element. No current consumer reads FileExplorerProvider.soloPane
+    // (solid-ui/src/components/file-explorer-provider/FileExplorerProvider.ts), but the property
+    // is part of its public API, so keep populating it instead of silently dropping the value.
+    provider.soloPane = options.solo
+    if (!explorerProviderListeners.has(provider)) {
+      provider.addEventListener(UI.FILE_EXPLORER_BACK_EVENT, event => {
+        if (!UI.isExplorerEvent(event, provider)) return
+        event.stopPropagation()
+        collapseMouseDownListener({ target: provider })
+      })
+      provider.addEventListener(UI.FILE_EXPLORER_MANAGE_ACCESS_EVENT, event => {
+        event.stopPropagation()
+        const accessSubject = $rdf.sym(event.detail.subjectUri).doc()
+        solidLogicSingleton.acl.findAccessGrants(accessSubject).then(accessGrants => {
+          UI.showDialog(AccessControlModal, {
+            props: {
+              subjectUri: accessSubject.uri,
+              accessGrants
+            }
+          })
+        }).catch(error => {
+          UI.log.error('outline: Failed to open access controls: ' + UI.utils.stackString(error))
+        })
+      })
+      provider.addEventListener(UI.FILE_EXPLORER_OPEN_PANE_EVENT, event => {
+        if (!UI.isExplorerEvent(event, provider)) return
+        event.stopPropagation()
+        const pane = context.session.paneRegistry.byName(event.detail.paneName)
+        openPaneInPlace(provider, $rdf.sym(event.detail.subjectUri), pane)
+      })
+      explorerProviderListeners.add(provider)
+    }
 
-    const relevantPanes = options.hideList
+    let relevantPanes = options.hideList
       ? []
-      : await getRelevantPanes(subject, context)
+      : await loadRelevantPanes(subject, context)
+    if (explorerStates.get(provider) !== state) return provider
+
+    // Resolve indexed containers only for a resource URL, never for an explicit Storage view.
+    const resourceLogic = context.session.logic?.resource || solidLogicSingleton.resource
+    const indexDocument = subject.uri.endsWith('/')
+      ? $rdf.sym(`${subject.uri}index.ttl`)
+      : null
+    const hasIndexDocument = options.solo && !requiredPane && indexDocument && (
+      (typeof resourceLogic?.containerHasIndexDocument === 'function' &&
+        resourceLogic.containerHasIndexDocument(subject)) ||
+      kb.holds(subject, UI.ns.ldp('contains'), indexDocument, subject.doc())
+    )
+    if (hasIndexDocument) {
+      subject = typeof resourceLogic?.getContainerIndexThing === 'function'
+        ? resourceLogic.getContainerIndexThing(subject)
+        : $rdf.sym(`${indexDocument.uri}#this`)
+      await kb.fetcher.load(subject.doc())
+      relevantPanes = await loadRelevantPanes(subject, context)
+      if (explorerStates.get(provider) !== state) return provider
+      provider.subjectUri = subject.uri
+      provider.setAttribute('about', subject.toNT())
+    }
 
     provider.relevantPanes = relevantPanes
     provider.pane = requiredPane || getPane(relevantPanes, subject)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
     const viewerPodOnly = !!options.headerOnlyInViewerPod
-    provider.showHeader = deriveExplorerHeader({
+    const showHeader = !subject.uri.endsWith('/index.ttl#this') && deriveExplorerHeader({
       isRootResource,
       isWebId: isWebIdUri(subject),
       viewerPodOnly,
-      // Only worth looking up when the view does not show the page URL's own resource
-      inViewerPod: viewerPodOnly ? await isPageInViewerPod(document.location.href) : true
+      // Only worth looking up when the view does not show the page URL's own resource.
+      inViewerPod: viewerPodOnly ? await isPageInViewerPod(dom.location.href) : true
     })
+    if (explorerStates.get(provider) !== state) return provider
+    state.showHeader = showHeader
     provider.paneRenderOptions = options
     provider.soloPane = options.solo
-    provider.openPane = (paneSubject, paneName) => openPaneInPlace(paneSubject, paneRegistry.byName(paneName))
+    provider.openPane = (paneSubject, paneName) => openPaneInPlace(provider, paneSubject, paneRegistry.byName(paneName))
     provider.handleAccessClick = async () => {
       try {
         const accessSubject = subject.doc()
@@ -499,10 +434,28 @@ export default function (context) {
     }
 
     if (provider.pane) {
-      tr.classList.add('outlinePaneRow')
       renderPaneIntoProvider(provider, subject, provider.pane, options)
+    } else {
+      composeExplorer(provider, subject, provider.pane)
     }
-    return tr
+
+    if (showHeader) {
+      const menuItems = await getPaneItems(subject, context, relevantPanes, (paneSubject, paneName) => {
+        provider.dispatchEvent(new CustomEvent(UI.FILE_EXPLORER_OPEN_PANE_EVENT, {
+          bubbles: true,
+          composed: true,
+          detail: {
+            subjectUri: paneSubject.uri,
+            paneName
+          }
+        }))
+      })
+      if (explorerStates.get(provider) === state) {
+        state.menuItems = menuItems
+        composeExplorer(provider, subject, provider.pane)
+      }
+    }
+    return provider
   }
 
   // / //////////////////////////////////////////////////////////////////////////
@@ -531,13 +484,12 @@ export default function (context) {
   // Remove a node from the DOM so that Firefox refreshes the screen OK
   // Just deleting it cause whitespace to accumulate.
   function removeAndRefresh (d) {
-    const table = d.parentNode
-    const par = table.parentNode
-    const placeholder = dom.createElement('table')
-    placeholder.classList.add('placeholderTable')
-    par.replaceChild(placeholder, table)
-    table.removeChild(d)
-    par.replaceChild(table, placeholder) // Attempt to
+    const parent = d.parentNode
+    const grandParent = parent.parentNode
+    const placeholder = dom.createElement('div')
+    grandParent.replaceChild(placeholder, parent)
+    parent.removeChild(d)
+    grandParent.replaceChild(parent, placeholder) // Attempt to
   }
 
   const propertyTable = (this.propertyTable = function propertyTable (
@@ -546,34 +498,31 @@ export default function (context) {
     requiredPane,
     options
   ) {
-    UI.log.debug('Property table for: ' + subject)
+    UI.log.debug('Property block for: ' + subject)
     subject = kb.canon(subject)
     // if (!requiredPane) requiredPane = panes.defaultPane;
 
-    if (!table) {
-      // Create a new property table
-      table = dom.createElement('table')
-      table.classList.add('tableFullWidth')
-      expandedProviderTR(subject, requiredPane, options).then(providerTR => {
-        table.appendChild(providerTR)
-      })
+    const provider = table
+      ? table.matches?.(EXPLORER_PROVIDER_TAG)
+        ? table
+        : table.firstElementChild || table
+      : dom.createElement(EXPLORER_PROVIDER_TAG)
 
-      return table
-    } else {
-      // New display of existing table, keeping expanded bits
-      UI.log.info('Re-expand: ' + table)
-      // do some other stuff here
-      return table
-    }
+    expandedProviderTR(subject, requiredPane, options, provider).catch(error => {
+      UI.log.error('outline: Failed to set up file explorer: ' + UI.utils.stackString(error))
+    })
+    if (table) UI.log.info('Re-expand: ' + table)
+    return table || provider
   }) /* propertyTable */
 
   function propertyTR (doc, st, inverse) {
-    const tr = doc.createElement('TR')
+    const tr = doc.createElement('div')
     tr.AJAR_statement = st
     tr.AJAR_inverse = inverse
     // tr.AJAR_variable = null; // @@ ??  was just 'tr.AJAR_variable'
     tr.setAttribute('predTR', 'true')
-    const predicateTD = thisOutline.outlinePredicateTD(st.predicate, tr, inverse)
+    tr.setAttribute('role', 'row')
+    const predicateTD = thisOutline.outlinePredicateDiv(st.predicate, tr, inverse)
     tr.appendChild(predicateTD) // @@ add 'internal' to predicateTD's class for style? mno
     return tr
   }
@@ -581,10 +530,6 @@ export default function (context) {
 
   // / ////////// Property list
   function appendPropertyTRs (parent, plist, inverse, predicateFilter) {
-    // UI.log.info('@appendPropertyTRs, 'this' is %s, dom is %s, '+ // Gives 'can't access dead object'
-    //                   'thisOutline.document is %s', this, dom.location, thisOutline.document.location);
-    // UI.log.info('@appendPropertyTRs, dom is now ' + this.document.location);
-    // UI.log.info('@appendPropertyTRs, dom is now ' + thisOutline.document.location);
     UI.log.debug('Property list length = ' + plist.length)
     if (plist.length === 0) return ''
     let sel, j, k
@@ -650,7 +595,7 @@ export default function (context) {
             sel(plist[k]).lang.indexOf(outline.labeller.LanguagePreference) >= 0
           ) {
             tr.appendChild(
-              thisOutline.outlineObjectTD(
+              thisOutline.outlineObjectDiv(
                 sel(plist[k]),
                 defaultpropview,
                 undefined,
@@ -665,7 +610,7 @@ export default function (context) {
       }
 
       tr.appendChild(
-        thisOutline.outlineObjectTD(sel(s), defaultpropview, undefined, s)
+        thisOutline.outlineObjectDiv(sel(s), defaultpropview, undefined, s)
       )
 
       /* Note: showNobj shows between n to 2n objects.
@@ -700,10 +645,10 @@ export default function (context) {
               displayed++
               s = plist[j + l]
               defaultpropview = views.defaults[s.predicate.uri]
-              const trObj = dom.createElement('tr')
+              const trObj = dom.createElement('div')
               trObj.style.colspan = '1'
               trObj.appendChild(
-                thisOutline.outlineObjectTD(
+                thisOutline.outlineObjectDiv(
                   sel(plist[j + l]),
                   defaultpropview,
                   undefined,
@@ -729,9 +674,13 @@ export default function (context) {
         } // end of if (predDups!==1)
 
         if (show < predDups) {
-          // Add the x more <TR> here
-          const moreTR = dom.createElement('tr')
-          const moreTD = moreTR.appendChild(dom.createElement('td'))
+          // Add the "x more" object block here.
+          const moreTR = dom.createElement('div')
+          const moreTD = moreTR.appendChild(dom.createElement('div'))
+          moreTD.setAttribute(
+            'style',
+            'margin: 0.2em; border: none; padding: 0; vertical-align: top;'
+          )
           moreTD.classList.add('obj')
           moreTD.setAttribute('notSelectable', 'false')
           if (predDups > n) {
@@ -799,52 +748,6 @@ export default function (context) {
   } //  appendPropertyTRs
 
   this.appendPropertyTRs = appendPropertyTRs
-
-  /*   termWidget
-   **
-   */
-  const termWidget = {} // @@@@@@ global
-  globalThis.termWidget = termWidget
-  termWidget.construct = function (dom) {
-    dom = dom || document
-    const td = dom.createElement('TD')
-    td.setAttribute('class', 'iconTD')
-    td.setAttribute('notSelectable', 'true')
-    return td
-  }
-  termWidget.addIcon = function (td, icon, listener) {
-    const iconTD = td.childNodes[1]
-    if (!iconTD) return
-    const img = UI.utils.AJARImage(icon.src, icon.alt, icon.tooltip, dom)
-    iconTD.appendChild(img)
-    if (listener) {
-      img.addEventListener('click', listener)
-    }
-  }
-  termWidget.removeIcon = function (td, icon) {
-    const iconTD = td.childNodes[1]
-    let baseURI
-    if (!iconTD) return
-    for (let x = 0; x < iconTD.childNodes.length; x++) {
-      const elt = iconTD.childNodes[x]
-      const eltSrc = elt.src
-
-      // ignore first '?' and everything after it //Kenny doesn't know what this is for
-      try {
-        baseURI = dom.location.href.split('?')[0]
-      } catch (e) {
-        baseURI = ''
-      }
-      const relativeIconSrc = $rdf.uri.join(icon.src, baseURI)
-      if (eltSrc === relativeIconSrc) {
-        iconTD.removeChild(elt)
-      }
-    }
-  }
-  termWidget.replaceIcon = function (td, oldIcon, newIcon, listener) {
-    termWidget.removeIcon(td, oldIcon)
-    termWidget.addIcon(td, newIcon, listener)
-  }
 
   // / /////////////////////////////////////////////////// VALUE BROWSER VIEW
 
@@ -914,9 +817,16 @@ export default function (context) {
   function setSelectedParent (node, inc) {
     const onIcon = outlineIcons.termWidgets.optOn
     const offIcon = outlineIcons.termWidgets.optOff
+    const isPredicateRow = (element) => {
+      return Boolean(
+        element &&
+        typeof element.getAttribute === 'function' &&
+        (element.getAttribute('predTR') === 'true' || element.getAttribute('data-outline-node') === 'predicate')
+      )
+    }
     for (let n = node; n.parentNode; n = n.parentNode) {
       while (true) {
-        if (n.getAttribute('predTR')) {
+        if (isPredicateRow(n)) {
           let num = n.getAttribute('parentOfSelected')
           if (!num) num = 0
           else num = parseInt(num)
@@ -939,8 +849,8 @@ export default function (context) {
             )
           }
           break
-        } else if (n.previousSibling && n.previousSibling.nodeName === 'TR') {
-          n = n.previousSibling
+        } else if (n.previousElementSibling) {
+          n = n.previousElementSibling
         } else break
       }
     }
@@ -993,10 +903,10 @@ export default function (context) {
     // UI.log.info('selection has ' +selection.map(function(item){return item.textContent;}).join(', '));
     // UI.log.debug('@outline setSelected, intended to '+(newValue?'select ':'deselect ')+node+node.textContent);
     // if (newValue === selected(node)) return; //we might not need this anymore...
-    if (node.nodeName !== 'TD') {
+    if (node.nodeName !== 'TD' && node.nodeName !== 'DIV') {
       UI.log.debug('down' + node.nodeName)
       throw new Error(
-        'Expected TD in setSelected: ' +
+        'Expected TD or DIV in setSelected: ' +
           node.nodeName +
           ' : ' +
           node.textContent
@@ -1062,6 +972,7 @@ export default function (context) {
     selection = []
   }
 
+  /* srcElement is the old IE-era version of event.target. */
   /** Get the target of an event **/
   this.targetOf = function (e) {
     let target
@@ -1105,6 +1016,19 @@ export default function (context) {
         setSelected(newSelTd, true)
         break
       case 'right':
+        {
+          const provider = selectedTd.matches?.(EXPLORER_PROVIDER_TAG)
+            ? selectedTd
+            : selectedTd.querySelector?.(EXPLORER_PROVIDER_TAG)
+          const firstPropertyObject = provider?.querySelector?.('[data-outline-node="object"]')
+          if (provider) {
+            if (firstPropertyObject) {
+              deselectAll()
+              setSelected(firstPropertyObject, true)
+            }
+            return
+          }
+        }
         deselectAll()
         if (
           selectedTd.nextSibling ||
@@ -1112,13 +1036,12 @@ export default function (context) {
         ) {
           setSelected(selectedTd.nextSibling, true)
         } else {
-          const newSelected = dom.evaluate(
-            'table/div/tr/td[2]',
-            selectedTd,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
-          ).singleNodeValue
+          const nextRow = selectedTd.parentNode && selectedTd.parentNode.nextSibling
+          const newSelected = nextRow ? nextRow.lastChild : null
+          if (!newSelected) {
+            setSelected(selectedTd, true)
+            return
+          }
           setSelected(newSelected, true)
         }
         break
@@ -1131,7 +1054,12 @@ export default function (context) {
           setSelected(selectedTd.previousSibling, true)
           return true // do not shrink signal
         } else {
-          setSelected(UI.utils.ancestor(selectedTd.parentNode, 'TD'), true)
+          const enclosingExpansion = findEnclosingExpansion(selectedTd)
+          setSelected(
+            enclosingExpansion?.block ||
+            (selectedTd.parentNode && selectedTd.parentNode.firstChild),
+            true
+          )
         } // supplied by thieOutline.focusTd
         break
       case 'moveTo':
@@ -1253,8 +1181,10 @@ export default function (context) {
         break
       case 37: { // left
         if (this.walk('left')) return
-        const titleTd = UI.utils.ancestor(selectedTd.parentNode, 'TD')
-        outlineCollapse(selectedTd, UI.utils.getAbout(kb, titleTd))
+        const enclosingExpansion = findEnclosingExpansion(selectedTd)
+        if (!enclosingExpansion) break
+        const subject = UI.utils.getAbout(kb, enclosingExpansion.provider)
+        if (subject) outlineCollapse(enclosingExpansion.block, subject)
         break
       }
       case 39: // right
@@ -1268,7 +1198,7 @@ export default function (context) {
               this.walk('right')
               return
             }
-            if (selectedTd.firstChild.tagName !== 'TABLE') {
+            if (!selectedTd.firstElementChild?.matches(EXPLORER_PROVIDER_TAG)) {
               // not expanded
               sf.addCallback('done', setSelectedAfterward)
               sf.addCallback('fail', setSelectedAfterward)
@@ -1353,7 +1283,13 @@ export default function (context) {
   function expandMouseDownListener (e) {
     // For icon (UI.icons.originalIconBase + 'tbl-expand-trans.png')
     const target = thisOutline.targetOf(e)
-    const p = target.parentNode
+    let object
+    let subjectBlock
+    for (let node = target; node && node !== dom; node = node.parentNode) {
+      if (node.matches?.('[data-outline-node="object"]')) object = node
+      if (node.matches?.('.outline-subject-block')) subjectBlock = node
+    }
+    const p = subjectBlock || object || target.parentNode
     const subject = UI.utils.getAbout(kb, target)
     const pane = e.altKey ? paneRegistry.byName('internal') : undefined // set later: was panes.defaultPane
 
@@ -1376,10 +1312,29 @@ export default function (context) {
   function collapseMouseDownListener (e) {
     // for icon UI.icons.originalIconBase + 'tbl-collapse.png'
     const target = thisOutline.targetOf(e)
-    const subject = UI.utils.getAbout(kb, target)
     const pane = e.altKey ? paneRegistry.byName('internal') : undefined
-    const p = target.parentNode.parentNode
-    outlineCollapse(p, subject, pane)
+    const enclosingExpansion = findEnclosingExpansion(target)
+    if (!enclosingExpansion) return
+    const subject = UI.utils.getAbout(kb, enclosingExpansion.provider)
+    if (!subject) return
+    outlineCollapse(enclosingExpansion.block, subject, pane)
+  }
+
+  function findEnclosingExpansion (node) {
+    for (let current = node; current && current !== dom; current = current.parentNode) {
+      if (current.matches?.('[data-outline-node="object"]')) {
+        const provider = current.querySelector?.(EXPLORER_PROVIDER_TAG)
+        if (provider) return { block: current, provider }
+      }
+
+      if (current.matches?.(EXPLORER_PROVIDER_TAG)) {
+        const block = current.closest?.('[data-outline-node="object"]') ||
+          current.closest?.('.outline-subject-block') ||
+          current
+        return { block, provider: current }
+      }
+    }
+    return null
   }
 
   function failedIconMouseDownListener (e) {
@@ -1433,9 +1388,9 @@ export default function (context) {
     // var p = target.parentNode
     let node
     for (
-      node = UI.utils.ancestor(target, 'TD');
+      node = UI.utils.ancestor(target, 'td') || UI.utils.ancestor(target, 'tr') || UI.utils.ancestor(target, 'div');
       node && !(node.getAttribute('notSelectable') === 'false'); // Default now is not selectable
-      node = UI.utils.ancestor(node.parentNode, 'TD')
+      node = UI.utils.ancestor(node.parentNode, 'td') || UI.utils.ancestor(node.parentNode, 'tr') || UI.utils.ancestor(node.parentNode, 'div')
     ) {
       // ...
     }
@@ -1465,7 +1420,7 @@ export default function (context) {
       // go to UserInput
       let st
       if (node.parentNode) st = node.parentNode.AJAR_statement
-      if (!st) return // For example in the title TD of an expanded pane
+      if (!st) return // For example in the title block of an expanded pane
       const target = st.why
       const editable = store.updater.editable(target.uri, kb)
       if (sel && editable) thisOutline.UserInput.Click(e, selection[0]) // was next 2 lines
@@ -1571,27 +1526,13 @@ export default function (context) {
         // first expand
         newTable = propertyTable(subject, undefined, pane, options)
       } else {
-        UI.log.info(' ... p is  ' + p)
-        for (
-          newTable = p.firstChild;
-          newTable.nextSibling;
-          newTable = newTable.nextSibling
-        ) {
-          UI.log.info(' ... checking node ' + newTable)
-          if (newTable.nodeName === 'table') break
-        }
-        newTable = propertyTable(subject, newTable, pane, options)
+        newTable = propertyTable(subject, p, pane, options)
       }
       already = true
-      if (
-        UI.utils.ancestor(p, 'TABLE') &&
-        UI.utils.ancestor(p, 'TABLE').style.backgroundColor === 'white'
-      ) {
-        newTable.style.backgroundColor = '#eee'
-      } else {
-        newTable.style.backgroundColor = 'white'
+      if (newTable !== p) {
+        UI.utils.emptyNode(p).appendChild(newTable)
       }
-      UI.utils.emptyNode(p).appendChild(newTable)
+
       thisOutline.focusTd = p // I don't know why I couldn't use 'this'...because not defined in callbacks
       UI.log.debug('expand: Node for ' + subject + ' expanded')
       // fetch seeAlso when render()
@@ -1675,23 +1616,12 @@ export default function (context) {
     sf.addCallback('done', expand) // @@@@@@@ This can really mess up existing work
     sf.addCallback('fail', expand) // Need to do if there s one a gentle resync of page with store
 
-    const returnConditions = [] // this is quite a general way to do cut and paste programming
-    // I might make a class for this
     if (subject.uri && subject.uri.split(':')[0] === 'rdf') {
       // what is this? -tim
       render()
       return
     }
 
-    for (let i = 0; i < returnConditions.length; i++) {
-      let returnCode
-      if (returnCode === returnConditions[i](subject)) {
-        render()
-        UI.log.debug('outline 1815')
-        if (returnCode[1]) outlineElement.removeChild(outlineElement.lastChild)
-        return
-      }
-    }
     if (
       subject.uri &&
       !immediate &&
@@ -1767,21 +1697,7 @@ export default function (context) {
   } // outlineExpand
 
   function outlineCollapse (p, subject) {
-    let row = UI.utils.ancestor(p, 'TR')
-    row = UI.utils.ancestor(row.parentNode, 'TR') // two levels up
-    let statement
-    if (row) statement = row.AJAR_statement
-    let level // find level (the enclosing TD)
-    for (
-      level = p.parentNode;
-      level.tagName !== 'TD';
-      level = level.parentNode
-    ) {
-      if (typeof level === 'undefined') {
-        alert('Not enclosed in TD!')
-        return
-      }
-    }
+    const statement = p.AJAR_statement || (p.parentNode && p.parentNode.AJAR_statement)
 
     UI.log.debug('Collapsing subject ' + subject)
     let myview
@@ -1791,12 +1707,12 @@ export default function (context) {
     }
     UI.log.debug('view= ' + myview)
     let deleteNode
-    if (level.parentNode.parentNode.id === 'outline') {
-      deleteNode = level.parentNode
+    if (p.parentNode && p.parentNode.id === 'outline') {
+      deleteNode = p
     }
     thisOutline.replaceTD(
-      thisOutline.outlineObjectTD(subject, myview, deleteNode, statement),
-      level
+      thisOutline.outlineObjectDiv(subject, myview, deleteNode, statement),
+      p
     )
   } // outlineCollapse
 
@@ -1820,15 +1736,10 @@ export default function (context) {
 
   function outlineRefocus (p, subject) {
     // Shift-expand or shift-collapse: Maximize
-    let outer = null
-    for (let level = p.parentNode; level; level = level.parentNode) {
-      UI.log.debug('level ' + level.tagName)
-      if (level.tagName === 'TD') outer = level
-    } // find outermost td
-    UI.utils.emptyNode(outer).appendChild(propertyTable(subject))
+    UI.utils.emptyNode(p).appendChild(propertyTable(subject))
     setUrlBarAndTitle(subject)
     // dom.title = UI.utils.label(subject)
-    outer.setAttribute('about', subject.toNT())
+    p.setAttribute('about', subject.toNT())
   } // outlineRefocus
 
   outline.outlineRefocus = outlineRefocus
@@ -1916,8 +1827,8 @@ export default function (context) {
   @param expand  -- flag -- open the subject rather than keep folded closed
   @param pane    -- optional -- pane to be used for expanded display. When the pane has its own
                     subject (the profile, friends or storage of a person), that subject is displayed
-                    instead of `subject`, which only stays the page URL; for a storage the container
-                    or resource `subject` points at is opened inside it
+                    instead of `subject`, which only stays the page URL. A storage pane owns
+                    resource selection inside its own content target.
   @param solo    -- optional -- the window will be cleared out and only the subject displayed
   @param referer -- optional -- where did we hear about this from anyway?
   @param table   -- option  -- default is an HTML table element in which to put the outline.
@@ -1934,10 +1845,10 @@ export default function (context) {
       showSolidPanesNavbar(subject)
     }
 
-    table = table || outlineContainer // if does not exist create a compatible host in the current shell
+    const host = table || outlineContainer
     if (solo) {
-      UI.utils.emptyNode(table)
-      table.style.width = '100%'
+      host.style.width = '100%'
+      UI.utils.emptyNode(host)
     }
 
     // The URL and history always follow `subject`; what is displayed may differ:
@@ -1947,27 +1858,27 @@ export default function (context) {
       ? pane.subject
       : subject
 
-    function GotoSubjectDefault () {
-      const tr = dom.createElement('tr')
-      tr.classList.add('outlineRow1')
-      tr.style.verticalAlign = 'top'
-      table.appendChild(tr)
-      const td = thisOutline.outlineObjectTD(displayedSubject, undefined, tr)
-      tr.appendChild(td)
-      return td
+    function createSubjectBlock () {
+      const subjectBlock = dom.createElement('div')
+      subjectBlock.classList.add('outline-subject-block')
+      const block = thisOutline.outlineObjectDiv(displayedSubject, undefined, subjectBlock)
+      subjectBlock.appendChild(block)
+      host.appendChild(subjectBlock)
+      return subjectBlock
     }
 
-    const td = GotoSubjectDefault()
+    const subjectBlock = solo ? createSubjectBlock() : host
 
     if (solo) setUrlBarAndTitle(displayedSubject) // dom.title = UI.utils.label(subject) // 'Tabulator: '+  No need to advertize
 
     if (expand) {
-      outlineExpand(td, displayedSubject, {
+      outlineExpand(subjectBlock, displayedSubject, {
         pane,
         solo,
         headerOnlyInViewerPod: !showNavbar || !!(pane && pane.subject && pane.subject.uri)
       })
-      if (solo && displayedSubject !== subject) openPathWithin(table, displayedSubject, subject)
+    } else if (!solo) {
+      createSubjectBlock()
     }
 
     if (
@@ -2071,8 +1982,7 @@ export default function (context) {
       }
     } else if (obj.termType === 'Collection') {
       // obj.elements is an array of the elements in the collection
-      rep = dom.createElement('table')
-      rep.classList.add('tableFullWidth')
+      rep = dom.createElement('div')
       rep.setAttribute('about', obj.toNT())
       /* Not sure which looks best -- with or without. I think without
 
@@ -2082,13 +1992,13 @@ export default function (context) {
         */
       for (let i = 0; i < obj.elements.length; i++) {
         const elt = obj.elements[i]
-        const row = rep.appendChild(dom.createElement('tr'))
-        const numcell = row.appendChild(dom.createElement('td'))
+        const row = rep.appendChild(dom.createElement('div'))
+        const numcell = row.appendChild(dom.createElement('div'))
         numcell.classList.add('obj')
         numcell.setAttribute('notSelectable', 'false')
         numcell.setAttribute('about', obj.toNT())
         numcell.innerHTML = i + 1 + ')'
-        row.appendChild(thisOutline.outlineObjectTD(elt))
+        row.appendChild(thisOutline.outlineObjectDiv(elt))
       }
     } else if (obj.termType === 'Graph') {
       rep = paneRegistry

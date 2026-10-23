@@ -94,7 +94,7 @@ describe('main page load', () => {
 
     await initMainPage(store)
 
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href), byName)
     expect(byName).not.toHaveBeenCalled()
     expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
     expect(window.location.pathname).toBe('/other/profile/card')
@@ -108,7 +108,7 @@ describe('main page load', () => {
 
     await initMainPage(store)
 
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href), byName)
     expect(byName).not.toHaveBeenCalled()
     expect(getSocialPane).not.toHaveBeenCalled()
     expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
@@ -199,7 +199,7 @@ describe('browser navigation without a reload', () => {
     expect(intercept).toHaveBeenCalledOnce()
     await intercept.mock.calls[0][0].handler()
 
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href), byName)
     expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
     expect(resolveSource(GotoSubject.mock.calls[0][6])).toBe('default')
     expect(selectNavbarPane).toHaveBeenCalledWith('profile', urlProfilePane.subject.value)
@@ -236,7 +236,7 @@ describe('browser navigation without a reload', () => {
 
     expect(getFolderPane).not.toHaveBeenCalled()
     expect(getSocialPane).not.toHaveBeenCalled()
-    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href))
+    expect(getProfilePane).toHaveBeenCalledWith(store.sym(window.location.href), byName)
     expect(GotoSubject.mock.calls[0][2]).toBe(urlProfilePane)
     expect(resolveSource(GotoSubject.mock.calls[0][6])).toBe('default')
     expect(selectNavbarPane).toHaveBeenCalledWith('profile', urlProfilePane.subject.value)

@@ -1,5 +1,8 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { authn, store } from 'solid-logic'
+import type { PaneDefinition } from 'pane-registry'
+import * as paneRegistry from 'pane-registry'
+import type FileExplorerHeader from 'solid-ui/components/file-explorer-header'
 
 const { isInViewerPodMock } = vi.hoisted(() => ({ isInViewerPodMock: vi.fn() }))
 
@@ -12,12 +15,17 @@ vi.mock('solid-ui', async () => {
   const actual = await vi.importActual<typeof import('solid-ui')>('solid-ui')
   return {
     ...actual,
+    getRelevantPanes: async (_subject, context) => context.session.paneRegistry.list,
     login: {
       ...actual.login,
       filterAvailablePanes: async panes => panes
     }
   }
 })
+
+vi.mock('pane-registry', () => ({
+  byName: vi.fn()
+}))
 
 import OutlineManager from '../../../src/outline/manager'
 import { onNavigated, type NavigatedDetail } from '../../../src/navigation/events'
@@ -189,7 +197,7 @@ describe('manager', () => {
 
       manager.GotoSubject(container, false, pane, true, undefined, table, false)
 
-      expect(table.querySelector('td.obj')).toHaveAttribute('about', `<${profile.uri}>`)
+      expect(table.querySelector('.obj')).toHaveAttribute('about', `<${profile.uri}>`)
       expect(window.location.href).toBe(container.uri)
       expect(window.history.state).toMatchObject({ paneName: 'mock', paneUri: profile.uri, viaAccountMenu: true })
     })
@@ -202,33 +210,26 @@ describe('manager', () => {
 
       const navbarTable = document.createElement('table')
       manager.GotoSubject(page, false, { ...MockPane, subject: storage }, true, undefined, navbarTable)
-      expect(navbarTable.querySelector('td.obj')).toHaveAttribute('about', `<${storage.uri}>`)
+      expect(navbarTable.querySelector('.obj')).toHaveAttribute('about', `<${storage.uri}>`)
       expect(window.location.href).toBe(page.uri)
       expect(window.history.state).toMatchObject({ paneName: 'mock', paneUri: storage.uri })
 
       const homeTable = document.createElement('table')
       manager.GotoSubject(page, false, MockPane, true, undefined, homeTable, false)
-      expect(homeTable.querySelector('td.obj')).toHaveAttribute('about', `<${page.uri}>`)
+      expect(homeTable.querySelector('.obj')).toHaveAttribute('about', `<${page.uri}>`)
     })
 
-    describe('opening the URL inside a storage', () => {
+    describe('hosting storage independently of the page URL', () => {
       const root = `${window.location.origin}/other/`
 
-      // A folder pane that lists known children as expandable rows, like the real one
-      function setup (children: Record<string, string[]>) {
+      function setup () {
         const folderPane = {
           name: 'folder',
           icon: '',
           label: () => 'Contents',
-          render: (subject: { uri: string }, context: { getOutliner: (dom: Document) => OutlineManager, dom: Document }) => {
+          render: (subject: { uri: string }) => {
             const div = document.createElement('div')
-            const rows = document.createElement('table')
-            for (const child of children[subject.uri] ?? []) {
-              const tr = document.createElement('tr')
-              tr.appendChild(context.getOutliner(context.dom).outlineObjectTD(sym(child), undefined, undefined, undefined))
-              rows.appendChild(tr)
-            }
-            div.appendChild(rows)
+            div.textContent = `Storage shell for ${subject.uri}`
             return div
           }
         }
@@ -240,53 +241,28 @@ describe('manager', () => {
         return { manager, folderPane }
       }
 
-      async function opened (target: string, children: Record<string, string[]>) {
-        const { manager, folderPane } = setup(children)
+      async function opened (target: string) {
+        const { manager, folderPane } = setup()
         window.history.replaceState({}, '', target)
         const table = document.createElement('table')
         document.body.appendChild(table)
         manager.GotoSubject(sym(target), true, { ...folderPane, subject: sym(root) }, true, undefined, table)
+        await vi.waitFor(() => expect(table).toHaveTextContent(`Storage shell for ${root}`))
         return table
       }
 
-      const isExpanded = (table: HTMLElement, uri: string) =>
-        table.querySelector(`td.obj[about="<${uri}>"]`)?.firstElementChild?.nodeName === 'TABLE'
-
-      const tree = {
-        [root]: [`${root}a/`, `${root}z/`],
-        [`${root}a/`]: [`${root}a/b/`, `${root}a/other.ttl`],
-        [`${root}a/b/`]: [`${root}a/b/file.ttl`]
-      }
-
-      it('expands each level down to a container in the URL, leaving siblings closed', async () => {
-        const table = await opened(`${root}a/b/`, tree)
-
-        await vi.waitFor(() => {
-          expect(isExpanded(table, `${root}a/`)).toBe(true)
-          expect(isExpanded(table, `${root}a/b/`)).toBe(true)
-        })
-        expect(isExpanded(table, `${root}z/`)).toBe(false)
-        expect(table.querySelector(`td.obj[about="<${root}a/other.ttl>"]`)).not.toBeNull()
-        expect(window.location.href).toBe(`${root}a/b/`)
-      })
-
-      it('opens the containers of a resource in the URL', async () => {
-        const table = await opened(`${root}a/b/file.ttl`, tree)
-
-        await vi.waitFor(() => {
-          expect(isExpanded(table, `${root}a/`)).toBe(true)
-          expect(isExpanded(table, `${root}a/b/`)).toBe(true)
-        })
-      })
-
-      it('opens nothing when the URL is the storage itself or outside it', async () => {
-        const atRoot = await opened(root, tree)
-        await new Promise(resolve => setTimeout(resolve, 50))
-        expect(isExpanded(atRoot, `${root}a/`)).toBe(false)
-
-        const outside = await opened(`${window.location.origin}/elsewhere/a/`, tree)
-        await new Promise(resolve => setTimeout(resolve, 50))
-        expect(isExpanded(outside, `${root}a/`)).toBe(false)
+      it.each([
+        `${root}a/b/`,
+        `${root}a/b/file.ttl`,
+        root,
+        `${window.location.origin}/elsewhere/a/`
+      ])('renders the storage subject while preserving page URL %s', async target => {
+        const table = await opened(target)
+        const provider = table.querySelector<HTMLElement & { subjectUri: string }>('solid-ui-file-explorer-provider')
+        expect(provider?.subjectUri).toBe(root)
+        expect(provider?.querySelector(':scope > .paneDiv')).toHaveTextContent(`Storage shell for ${root}`)
+        expect(window.location.href).toBe(target)
+        expect(window.history.state).toMatchObject({ paneName: 'folder', paneUri: root })
       })
     })
 
@@ -301,13 +277,13 @@ describe('manager', () => {
 
       manager.GotoSubject(container, true, pane, true, undefined, table, false)
       const provider = await vi.waitFor(() => {
-        const element = table.querySelector<HTMLElement & { showHeader: boolean, subjectUri: string }>('file-explorer-provider')
+        const element = table.querySelector<HTMLElement & { subjectUri: string }>('solid-ui-file-explorer-provider')
         expect(element).not.toBeNull()
         return element!
       })
 
       expect(provider.subjectUri).toBe(profile.uri)
-      expect(provider.showHeader).toBe(false)
+      expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
       expect(table).toHaveTextContent(`Mock Pane for ${profile.uri}`)
       expect(window.location.href).toBe(container.uri)
     })
@@ -315,9 +291,235 @@ describe('manager', () => {
     describe('file explorer header', () => {
       const container = sym(`${window.location.origin}/other/folder/file.ttl`)
 
+      const findPane = vi.fn()
+
+      function createExplorer (
+        pane: Omit<PaneDefinition, 'icon'> & { icon: string | (() => string | Promise<string>) } = MockPane,
+        options = {},
+        subject = container
+      ) {
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: { list: [pane], byName: findPane }, store } })
+        const outlineView = document.createElement('div')
+        outlineView.id = 'OutlineView'
+        document.body.appendChild(outlineView)
+        const provider = manager.propertyTable(subject, undefined, pane, options)
+        outlineView.appendChild(provider)
+        return provider
+      }
+
       beforeEach(() => {
         isInViewerPodMock.mockReset()
+        findPane.mockReset()
       })
+
+      it.each([
+        `${window.location.origin}/`,
+        `${window.location.origin}/profile/card#me`
+      ])('does not add a resource header for %s', async uri => {
+        const provider = createExplorer(MockPane, {}, sym(uri))
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+        expect(isInViewerPodMock).not.toHaveBeenCalled()
+      })
+
+      it('renders pane and header before menu icons resolve', async () => {
+        let resolveIcon!: (icon: string) => void
+        const icon = new Promise<string>(resolve => { resolveIcon = resolve })
+        const provider = createExplorer({ ...MockPane, icon: () => icon })
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const header = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
+        expect(header).not.toBeNull()
+        expect(header.menuItems).toEqual([])
+
+        resolveIcon(MockPane.icon)
+        await vi.waitFor(() => expect(header.menuItems).toHaveLength(1))
+      })
+
+      it('does not add a resource header for index.ttl#this', async () => {
+        const provider = createExplorer(MockPane, { solo: true }, sym(`${window.location.origin}/addressbook/index.ttl#this`))
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+      })
+
+      it.each([false, true])('resolves a container index only for direct navigation (explicit pane: %s)', async explicit => {
+        const subject = sym(`${window.location.origin}/indexed-container/`)
+        const index = sym(`${subject.uri}index.ttl#this`)
+        const contains = sym('http://www.w3.org/ns/ldp#contains')
+        store.add(subject, contains, index.doc(), subject.doc())
+        const load = vi.spyOn(store.fetcher, 'load').mockResolvedValue([])
+        const resource = {
+          containerHasIndexDocument: vi.fn(() => true),
+          getContainerIndexThing: vi.fn(() => index)
+        }
+        const manager = new OutlineManager({
+          dom: document,
+          session: { store, logic: { resource }, paneRegistry: mockPaneRegistry }
+        })
+        try {
+          const provider = manager.propertyTable(subject, undefined, explicit ? MockPane : undefined, { solo: true })
+          document.body.appendChild(provider)
+          await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+
+          expect(provider.subjectUri).toBe(explicit ? subject.uri : index.uri)
+          expect(provider.querySelector('.paneDiv')).toHaveTextContent(`Mock Pane for ${explicit ? subject.uri : index.uri}`)
+          if (explicit) {
+            expect(resource.getContainerIndexThing).not.toHaveBeenCalled()
+          } else {
+            expect(load).toHaveBeenCalledWith(index.doc())
+            expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+          }
+        } finally {
+          load.mockRestore()
+          store.removeMany(subject, contains, index.doc(), subject.doc())
+        }
+      })
+
+      it('resolves an indexed container from its listing when the resource service is unavailable', async () => {
+        const subject = sym(`${window.location.origin}/indexed-without-resource/`)
+        const indexDocument = sym(`${subject.uri}index.ttl`)
+        const index = sym(`${indexDocument.uri}#this`)
+        const contains = sym('http://www.w3.org/ns/ldp#contains')
+        store.add(subject, contains, indexDocument, subject.doc())
+        const load = vi.spyOn(store.fetcher, 'load').mockResolvedValue([])
+        const manager = new OutlineManager({
+          dom: document,
+          session: { store, paneRegistry: mockPaneRegistry }
+        })
+        try {
+          const provider = manager.propertyTable(subject, undefined, undefined, { solo: true })
+          document.body.appendChild(provider)
+          await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+
+          expect(provider.subjectUri).toBe(index.uri)
+          expect(provider.querySelector('.paneDiv')).toHaveTextContent(`Mock Pane for ${index.uri}`)
+          expect(load).toHaveBeenCalledWith(index.doc())
+        } finally {
+          load.mockRestore()
+          store.removeMany(subject, contains, indexDocument, subject.doc())
+        }
+      })
+
+      it('reports menu failures without removing the rendered pane or header', async () => {
+        const error = new Error('Unable to resolve pane icon')
+        const status = document.createElement('div')
+        status.id = 'status'
+        document.body.appendChild(status)
+        const icon = vi.fn()
+          .mockReturnValueOnce(MockPane.icon)
+          .mockImplementationOnce(() => { throw error })
+        const provider = createExplorer({
+          ...MockPane,
+          icon
+        })
+        await vi.waitFor(() => expect(status).toHaveTextContent('Unable to resolve pane icon'))
+        expect(provider.querySelector('.paneDiv')).not.toBeNull()
+        expect(provider.querySelector('solid-ui-file-explorer-header')).not.toBeNull()
+      })
+
+      it('reuses resource visibility and menu items when switching panes', async () => {
+        isInViewerPodMock.mockResolvedValue(true)
+        const provider = createExplorer(MockPane, { headerOnlyInViewerPod: true })
+        await vi.waitFor(() => {
+          expect(provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')?.menuItems).toHaveLength(1)
+        })
+        const header = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
+        const menuItems = header.menuItems
+        findPane.mockReturnValue({ ...MockPane, name: 'profile' })
+        menuItems[0].action(new Event('click'))
+        expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
+
+        findPane.mockReturnValue(MockPane)
+        menuItems[0].action(new Event('click'))
+        const restored = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
+        expect(restored.menuItems).toBe(menuItems)
+        expect(isInViewerPodMock).toHaveBeenCalledTimes(1)
+      })
+
+      it('does not switch the outer pane for an unhandled nested pane-switch event', async () => {
+        const provider = createExplorer()
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const paneElement = provider.querySelector('.paneDiv')!
+        const nested = document.createElement('solid-ui-file-explorer-provider')
+        paneElement.appendChild(nested)
+        nested.dispatchEvent(new CustomEvent('solid-ui-file-explorer-open-pane', {
+          bubbles: true,
+          composed: true,
+          detail: { subjectUri: container.uri, paneName: 'profile' }
+        }))
+
+        expect(findPane).not.toHaveBeenCalled()
+        expect(provider.querySelector(':scope > .paneDiv')).toBe(paneElement)
+      })
+
+      it('switches the originating provider when the same subject appears twice', async () => {
+        const first = createExplorer()
+        const second = createExplorer()
+        await vi.waitFor(() => {
+          expect(first.querySelector('.paneDiv')).not.toBeNull()
+          expect(second.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')?.menuItems).toHaveLength(1)
+        })
+        const firstContent = first.querySelector('.paneDiv')
+        const secondContent = second.querySelector('.paneDiv')
+        findPane.mockReturnValue({ ...MockPane, name: 'other' })
+        second.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!.menuItems[0].action(new Event('click'))
+
+        expect(first.querySelector('.paneDiv')).toBe(firstContent)
+        expect(second.querySelector('.paneDiv')).not.toBe(secondContent)
+        expect(second.pane.name).toBe('other')
+      })
+
+      it('uses the owning provider when opening a pane through the callback', async () => {
+        const provider = createExplorer()
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const replacement = { ...MockPane, name: 'replacement' }
+        vi.mocked(paneRegistry.byName).mockReturnValue(replacement as never)
+        try {
+          provider.openPane(container, 'replacement')
+          expect(provider.pane.name).toBe('replacement')
+          expect(provider.querySelector('.paneDiv')).toHaveTextContent(`Mock Pane for ${container.uri}`)
+        } finally {
+          vi.mocked(paneRegistry.byName).mockReset()
+        }
+      })
+
+      it('does not collapse the outer explorer for an unhandled nested Back event', async () => {
+        const provider = createExplorer()
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const nested = document.createElement('solid-ui-file-explorer-provider')
+        provider.querySelector('.paneDiv')!.appendChild(nested)
+        const parent = provider.parentNode
+        nested.dispatchEvent(new CustomEvent('solid-ui-file-explorer-back', {
+          bubbles: true,
+          composed: true,
+          detail: { subjectUri: container.uri }
+        }))
+
+        expect(provider.parentNode).toBe(parent)
+        expect(provider.contains(nested)).toBe(true)
+      })
+
+      it('preserves the browser host when collapsing a solo explorer', async () => {
+        const provider = createExplorer()
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const outlineView = document.createElement('div')
+        outlineView.id = 'outline'
+        const subjectBlock = document.createElement('div')
+        subjectBlock.className = 'outline-subject-block'
+        const sibling = document.createElement('div')
+        subjectBlock.appendChild(provider)
+        outlineView.append(subjectBlock, sibling)
+        document.body.appendChild(outlineView)
+
+        provider.dispatchEvent(new CustomEvent('solid-ui-file-explorer-back', {
+          bubbles: true,
+          composed: true,
+          detail: { subjectUri: container.uri }
+        }))
+
+        expect(outlineView.parentNode).toBe(document.body)
+        expect(outlineView.contains(sibling)).toBe(true)
+      })
+
       async function headerShown (showNavbar: boolean, pane: object = MockPane) {
         const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry, store } })
         window.history.replaceState({}, '', container.uri)
@@ -325,11 +527,11 @@ describe('manager', () => {
         document.body.appendChild(table)
         manager.GotoSubject(container, true, pane, true, undefined, table, showNavbar)
         const provider = await vi.waitFor(() => {
-          const element = table.querySelector<HTMLElement & { showHeader: boolean }>('file-explorer-provider')
+          const element = table.querySelector<HTMLElement>('solid-ui-file-explorer-provider')
           expect(element).not.toBeNull()
           return element!
         })
-        return provider.showHeader
+        return provider.querySelector('solid-ui-file-explorer-header') !== null
       }
 
       it('is hidden for account-menu views when the URL is not in the viewer\'s pod', async () => {
@@ -415,11 +617,11 @@ describe('manager', () => {
         const row = document.createElement('tr')
         table.appendChild(row)
         const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
-        result = manager.outlineObjectTD(sym('https://namednode.example/'), null, null, null)
+        result = manager.outlineObjectDiv(sym('https://namednode.example/'), null, null, null)
         row.appendChild(result)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('about attribute refers to node', () => {
         expect(result).toHaveAttribute('about', '<https://namednode.example/>')
@@ -463,6 +665,96 @@ describe('manager', () => {
           const error = await findByText(result.parentNode, /Mock Pane/)
           expect(error).toHaveTextContent('Mock Pane for https://namednode.example/')
         })
+
+        it('selects the first property object inside an expanded provider', () => {
+          const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+          const outer = manager.outlineObjectDiv(sym('https://outer.example/'), null, null, null)
+          const provider = document.createElement('solid-ui-file-explorer-provider')
+          const propertyObject = manager.outlineObjectDiv(sym('https://property.example/'), null, null, null)
+          provider.appendChild(propertyObject)
+          outer.appendChild(provider)
+          document.body.appendChild(outer)
+
+          manager.walk('moveTo', outer)
+          manager.walk('right')
+
+          expect(manager.getSelection()).toEqual([propertyObject])
+          expect(propertyObject).toHaveClass('selected')
+          expect(outer).not.toHaveClass('selected')
+        })
+
+        it('restores the current selection when an expanded provider has no property rows', () => {
+          const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+          const outer = manager.outlineObjectDiv(sym('https://outer.example/'), null, null, null)
+          outer.appendChild(document.createElement('solid-ui-file-explorer-provider'))
+          document.body.appendChild(outer)
+
+          manager.walk('moveTo', outer)
+          expect(() => manager.walk('right')).not.toThrow()
+
+          expect(manager.getSelection()).toEqual([outer])
+          expect(outer).toHaveClass('selected')
+        })
+
+        it('keeps the final statement selected when there is no next row', () => {
+          const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+          const outer = manager.outlineObjectDiv(sym('https://final.example/'), null, null, null)
+          document.body.appendChild(outer)
+
+          manager.walk('moveTo', outer)
+          expect(() => manager.walk('right')).not.toThrow()
+
+          expect(manager.getSelection()).toEqual([outer])
+        })
+
+        it('walks left to the enclosing expanded object', () => {
+          const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+          const outer = manager.outlineObjectDiv(sym('https://outer.example/'), null, null, null)
+          const provider = document.createElement('solid-ui-file-explorer-provider')
+          provider.setAttribute('about', '<https://outer.example/>')
+          const propertyObject = manager.outlineObjectDiv(sym('https://property.example/'), null, null, null)
+          provider.appendChild(propertyObject)
+          outer.appendChild(provider)
+          document.body.appendChild(outer)
+
+          manager.walk('moveTo', propertyObject)
+          manager.walk('left')
+
+          expect(manager.getSelection()).toEqual([outer])
+        })
+
+        it('does not collapse an unexpanded object without an enclosing provider', () => {
+          const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+          const object = manager.outlineObjectDiv(sym('https://property.example/'), null, null, null)
+          document.body.appendChild(object)
+          manager.walk('moveTo', object)
+          const replace = vi.spyOn(manager, 'replaceTD')
+
+          manager.OutlinerKeypressPanel({ keyCode: 37, target: object })
+
+          expect(replace).not.toHaveBeenCalled()
+          expect(object).toHaveTextContent('property.example')
+        })
+
+        it('refocuses the outer subject wrapper for shift-click expansion', async () => {
+          const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+          const subject = sym('https://shift-click.example/resource')
+          const subjectBlock = document.createElement('div')
+          subjectBlock.className = 'outline-subject-block'
+          const object = manager.outlineObjectDiv(subject, null, null, null)
+          subjectBlock.appendChild(object)
+          document.body.appendChild(subjectBlock)
+
+          object.firstChild.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: true }))
+
+          await vi.waitFor(() => expect(subjectBlock.querySelector('.paneDiv')).not.toBeNull())
+          expect(subjectBlock).toHaveAttribute('about', subject.toNT())
+          expect(subjectBlock.querySelector('[data-outline-node="object"]')).toBeNull()
+          expect(subjectBlock.querySelector('solid-ui-file-explorer-provider')).toHaveAttribute(
+            'about',
+            subject.toNT()
+          )
+        })
       })
     })
 
@@ -470,10 +762,10 @@ describe('manager', () => {
       let result
       beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
-        result = manager.outlineObjectTD(sym('tel:+1-201-555-0123'), null, null, null)
+        result = manager.outlineObjectDiv(sym('tel:+1-201-555-0123'), null, null, null)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('about attribute refers to tel uri', () => {
         expect(result).toHaveAttribute('about', '<tel:+1-201-555-0123>')
@@ -517,10 +809,10 @@ describe('manager', () => {
       let result
       beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
-        result = manager.outlineObjectTD(lit('some text'), null, null, null)
+        result = manager.outlineObjectDiv(lit('some text'), null, null, null)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('has no about attribute', () => {
         expect(result).not.toHaveAttribute('about')
@@ -547,10 +839,10 @@ describe('manager', () => {
       let result
       beforeAll(() => {
         const manager = new OutlineManager({ dom: document })
-        result = manager.outlineObjectTD(blankNode('blank-node'), null, null, null)
+        result = manager.outlineObjectDiv(blankNode('blank-node'), null, null, null)
       })
-      it('is a html td element', () => {
-        expect(result.nodeName).toBe('TD')
+      it('is a html div element', () => {
+        expect(result.nodeName).toBe('DIV')
       })
       it('has about attribute', () => {
         expect(result).toHaveAttribute('about', '_:blank-node')
@@ -564,8 +856,16 @@ describe('manager', () => {
       it('uses object cell class for layout styling', () => {
         expect(result).toHaveClass('obj')
       })
-      it('shows 3 dots', () => {
-        expect(result).toHaveTextContent('...')
+    })
+
+    describe('outlineObjectTD compatibility alias', () => {
+      it('returns the same div-based object block', () => {
+        const manager = new OutlineManager({ dom: document })
+        const result = manager.outlineObjectTD(sym('https://alias.example/'), null, null, null)
+
+        expect(result.nodeName).toBe('DIV')
+        expect(result).toHaveAttribute('about', '<https://alias.example/>')
+        expect(result).toHaveClass('obj')
       })
     })
   })

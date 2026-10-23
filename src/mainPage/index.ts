@@ -12,6 +12,7 @@ import { navigationFor } from './navigation'
 import { initializeProfileHeading, placeProfileHeading } from './profileHeading'
 import { registerBrowserNavigation } from '../navigation/browserEvents'
 import { clearPaneState } from '../navigation/state'
+import { HUMAN_READABLE_PREVIEW_FRAME_NAME } from '../humanReadablePane'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
@@ -40,6 +41,12 @@ export async function initMainPage (
   uri?: string | NamedNode | null,
   environment?: RenderEnvironment
 ) {
+  // A page inside a preview frame navigated to a resource the server answered with the
+  // data browser (e.g. a 401); never nest a second SolidOS inside the pane.
+  if (window.name === HUMAN_READABLE_PREVIEW_FRAME_NAME && window.self !== window.top) {
+    document.body.textContent = 'This resource cannot be previewed here. Open it in a new tab instead.'
+    return
+  }
   ensureMainContent()
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri

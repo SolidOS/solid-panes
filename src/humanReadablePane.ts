@@ -35,12 +35,447 @@ const dokieliCache = new Map<string, DokieliCacheValue>()
 function applyFrameClasses (
   frame: HTMLElement,
   modifier: 'markdown' | 'plain-text' | 'iframe',
-  lines: number
+  lines?: number
 ): void {
   frame.className = ''
   frame.classList.add('human-readable-pane__frame')
   frame.classList.add(`human-readable-pane__frame--${modifier}`)
-  frame.style.setProperty('--human-readable-pane-height', `${lines}em`)
+  if (lines !== undefined) {
+    frame.style.setProperty('--human-readable-pane-height', `${lines}em`)
+  }
+}
+
+// window.name of preview iframes; initMainPage refuses to boot SolidOS inside such a frame.
+export const HUMAN_READABLE_PREVIEW_FRAME_NAME = 'solidos-human-readable-preview'
+
+// Scripts may run but get an opaque origin, so previewed pages cannot reach the SolidOS session.
+const HTML_PREVIEW_SANDBOX = 'allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals'
+
+const isDokieliHtml = (text: string): boolean =>
+  text.includes('<script src="https://dokie.li/scripts/dokieli.js">') || text.includes('dokieli.css')
+
+function escapeAttribute (value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+// srcdoc documents resolve relative URLs against about:srcdoc, so point them back at the resource.
+export function withBaseHref (html: string, baseUri: string): string {
+  const existingBase = html.match(/<base(\s[^>]*)?>/i)
+  if (existingBase && existingBase.index !== undefined) {
+    const href = existingBase[0].match(/\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i)
+    const existingHref = href?.[1] ?? href?.[2] ?? href?.[3]
+    if (!href || existingHref === undefined) return html
+    if (/^[a-z][a-z\d+.-]*:/i.test(existingHref) || existingHref.startsWith('//')) return html
+    let resolvedHref: string
+    try {
+      resolvedHref = new URL(existingHref, baseUri).href
+    } catch {
+      return html
+    }
+    const resolvedBase = existingBase[0].replace(href[0], `href="${escapeAttribute(resolvedHref)}"`)
+    return html.slice(0, existingBase.index) + resolvedBase + html.slice(existingBase.index + existingBase[0].length)
+  }
+  const base = `<base href="${escapeAttribute(baseUri)}">`
+  const headMatch = html.match(/<head(\s[^>]*)?>/i)
+  if (headMatch && headMatch.index !== undefined) {
+    const insertAt = headMatch.index + headMatch[0].length
+    return html.slice(0, insertAt) + base + html.slice(insertAt)
+  }
+  return base + html
+}
+
+function resourceFilename (uri: string): string {
+  const encodedFilename = uri.split('/').pop() || uri
+  try {
+    return decodeURIComponent(encodedFilename)
+  } catch {
+    return encodedFilename
+  }
+}
+
+function documentTitle (html: string, uri: string): string {
+  const fallback = resourceFilename(uri)
+  try {
+    const title = new DOMParser().parseFromString(html, 'text/html').querySelector('title')?.textContent?.trim()
+    return title || fallback
+  } catch {
+    return fallback
+  }
+}
+
+type PreviewRequest = {
+  type: 'solidos-preview-request'
+  nonce: string
+  id: string
+  url: string
+  method: string
+  headers?: Record<string, string>
+  body?: string
+}
+
+type PreviewResponse = {
+  type: 'solidos-preview-response'
+  nonce: string
+  id: string
+  ok: boolean
+  status: number
+  headers: Array<[string, string]>
+  body: string
+  error?: string
+}
+
+const PREVIEW_REQUEST_TYPE = 'solidos-preview-request'
+const PREVIEW_RESPONSE_TYPE = 'solidos-preview-response'
+const PREVIEW_METHODS = new Set(['GET', 'PUT', 'PATCH', 'DELETE'])
+
+function isSrcdocUrl (url: string): boolean {
+  return url === 'about:srcdoc' || /^file:\/\/srcdoc\/?(?:[?#].*)?$/i.test(url)
+}
+
+export function previewRequestUrl (url: string, documentUri: string): string {
+  const resolvedUrl = new URL(url, documentUri).href
+  return isSrcdocUrl(resolvedUrl) ? documentUri : resolvedUrl
+}
+
+function createPreviewBridge (html: string, uri: string, nonce: string): string {
+  const bridge = `<script>
+(() => {
+  const documentUri = ${JSON.stringify(uri)}
+  const nonce = ${JSON.stringify(nonce)}
+  const pending = new Map()
+  let requestId = 0
+  try {
+    history.replaceState(null, '', documentUri)
+  } catch {
+    // Sandboxed documents may reject cross-origin history URLs.
+  }
+  // Opaque sandbox origins cannot use IndexedDB. Dokieli uses it for local
+  // preferences and history, so provide an in-memory implementation without
+  // granting the preview a persistent storage capability.
+  try {
+    window.indexedDB.open('__solidos_probe__')
+  } catch {
+    const databases = new Map()
+    const request = (result) => ({ result, error: null, onsuccess: null, onerror: null, onupgradeneeded: null })
+    const isolatedIndexedDB = {
+      open (name) {
+        const stores = databases.get(name) || new Map()
+        databases.set(name, stores)
+        const database = {
+          objectStoreNames: { contains: storeName => stores.has(storeName) },
+          createObjectStore (storeName) {
+            if (!stores.has(storeName)) stores.set(storeName, new Map())
+            return database.transaction(storeName, 'readwrite').objectStore(storeName)
+          },
+          transaction (storeName, mode = 'readonly') {
+            const store = stores.get(storeName) || new Map()
+            stores.set(storeName, store)
+            let pending = 0
+            let completed = false
+            const transaction = {
+              oncomplete: null,
+              onerror: null,
+              onabort: null,
+              objectStore: () => {
+                const run = (result, change) => {
+                  const operation = request(result)
+                  pending++
+                  queueMicrotask(() => {
+                    try {
+                      change?.()
+                      operation.onsuccess?.({ target: operation })
+                    } catch (error) {
+                      operation.error = error
+                      operation.onerror?.({ target: operation })
+                    } finally {
+                      pending--
+                      if (!pending && !completed) {
+                        completed = true
+                        transaction.oncomplete?.({ target: transaction })
+                      }
+                    }
+                  })
+                  return operation
+                }
+                return {
+                get: key => run(store.get(key)),
+                getAll: () => run(Array.from(store.values())),
+                getAllKeys: () => run(Array.from(store.keys())),
+                count: () => run(store.size),
+                openKeyCursor () {
+                  const keys = Array.from(store.keys())
+                  const operation = request(null)
+                  pending++
+                  let index = 0
+                  const emit = () => {
+                    operation.result = index < keys.length
+                      ? { key: keys[index], continue: () => { index++; queueMicrotask(emit) } }
+                      : null
+                    operation.onsuccess?.({ target: operation })
+                    if (!operation.result) {
+                      pending--
+                      if (!pending && !completed) {
+                        completed = true
+                        transaction.oncomplete?.({ target: transaction })
+                      }
+                    }
+                  }
+                  queueMicrotask(emit)
+                  return operation
+                },
+                put: (value, key) => run(undefined, () => store.set(key, value)),
+                add: (value, key) => run(undefined, () => store.set(key, value)),
+                delete: key => run(undefined, () => store.delete(key)),
+                clear: () => run(undefined, () => store.clear())
+                }
+              }
+            }
+            return transaction
+          },
+          close () {}
+        }
+        const operation = request(database)
+        queueMicrotask(() => {
+          operation.onupgradeneeded?.({ target: operation })
+          operation.onsuccess?.({ target: operation })
+        })
+        return operation
+      },
+      deleteDatabase (name) {
+        databases.delete(name)
+        const operation = request(undefined)
+        queueMicrotask(() => operation.onsuccess?.({ target: operation }))
+        return operation
+      }
+    }
+    Object.defineProperty(window, 'indexedDB', { configurable: true, value: isolatedIndexedDB })
+  }
+  const nativeFetch = window.fetch.bind(window)
+
+  function isSrcdocUrl (url) {
+    return url === 'about:srcdoc' || /^file:\\/\\/srcdoc\\/?(?:[?#].*)?$/i.test(url)
+  }
+
+  function documentRequestUrl (url) {
+    const resolvedUrl = new URL(url, documentUri).href
+    // srcdoc keeps this URL even when history.replaceState is unavailable in
+    // an opaque sandbox. Dokieli saves via document.location.href.
+    return isSrcdocUrl(resolvedUrl) ? documentUri : resolvedUrl
+  }
+
+  function requestParent (url, init) {
+    const id = String(++requestId)
+    return new Promise((resolve, reject) => {
+      pending.set(id, { resolve, reject })
+      window.parent.postMessage({
+        type: ${JSON.stringify(PREVIEW_REQUEST_TYPE)},
+        nonce,
+        id,
+        url,
+        method: init.method,
+        headers: init.headers,
+        body: init.body
+      }, '*')
+    })
+  }
+
+  window.addEventListener('message', event => {
+    const message = event.data
+    if (!message || message.type !== ${JSON.stringify(PREVIEW_RESPONSE_TYPE)} || message.nonce !== nonce) return
+    const entry = pending.get(message.id)
+    if (!entry) return
+    pending.delete(message.id)
+    if (!message.ok) {
+      entry.reject(new Error(message.error || 'Preview request failed'))
+      return
+    }
+    const responseBody = [204, 205, 304].includes(message.status) ? null : message.body
+    entry.resolve(new Response(responseBody, {
+      status: message.status,
+      headers: message.headers
+    }))
+  })
+
+  window.fetch = async (input, init = {}) => {
+    const request = input instanceof Request ? input : null
+    const url = documentRequestUrl(request ? request.url : input)
+    const method = (init.method || (request && request.method) || 'GET').toUpperCase()
+    if (url !== documentUri || !${JSON.stringify(Array.from(PREVIEW_METHODS))}.includes(method)) {
+      return nativeFetch(input, init)
+    }
+    const headers = new Headers(request ? request.headers : undefined)
+    for (const [key, value] of new Headers(init.headers || {}).entries()) headers.set(key, value)
+    const body = method === 'GET' || method === 'HEAD'
+      ? undefined
+      : (init.body || (request ? await request.clone().text() : undefined))
+    return requestParent(url, {
+      method,
+      headers: Object.fromEntries(headers.entries()),
+      body
+    })
+  }
+
+  const NativeXMLHttpRequest = window.XMLHttpRequest
+  window.XMLHttpRequest = class PreviewXMLHttpRequest {
+    constructor () {
+      this._native = new NativeXMLHttpRequest()
+      this._headers = {}
+      this._listeners = {}
+      this._intercepted = false
+      this.readyState = 0
+      this.status = 0
+      this.statusText = ''
+      this.response = null
+      this.responseText = ''
+    }
+
+    addEventListener (type, listener) {
+      this._listeners[type] = this._listeners[type] || []
+      this._listeners[type].push(listener)
+    }
+
+    _emit (type) {
+      const event = { target: this, currentTarget: this, type }
+      if (typeof this['on' + type] === 'function') this['on' + type](event)
+      for (const listener of this._listeners[type] || []) listener.call(this, event)
+    }
+
+    open (method, url, async = true, user, password) {
+      const resolvedUrl = documentRequestUrl(url)
+      this._method = String(method || 'GET').toUpperCase()
+      this._url = resolvedUrl
+      this._intercepted = resolvedUrl === documentUri &&
+        ${JSON.stringify(Array.from(PREVIEW_METHODS))}.includes(this._method)
+      if (!this._intercepted) {
+        this._native.open(method, url, async, user, password)
+        for (const type of ['abort', 'error', 'load', 'loadend', 'progress', 'readystatechange', 'timeout']) {
+          this._native.addEventListener(type, event => this._emitNative(type, event))
+        }
+      }
+      this.readyState = 1
+      this._emit('readystatechange')
+    }
+
+    _emitNative (type, event) {
+      this.readyState = this._native.readyState
+      this.status = this._native.status
+      this.statusText = this._native.statusText
+      this.response = this._native.response
+      this.responseText = this._native.responseText
+      this._emit(type)
+    }
+
+    setRequestHeader (name, value) {
+      if (this._intercepted) this._headers[name] = value
+      else this._native.setRequestHeader(name, value)
+    }
+
+    send (body) {
+      if (!this._intercepted) {
+        this._native.send(body)
+        return
+      }
+      requestParent(this._url, {
+        method: this._method,
+        headers: this._headers,
+        body: this._method === 'GET' || this._method === 'HEAD' ? undefined : body
+      }).then(async response => {
+        this.status = response.status
+        this.statusText = response.statusText
+        this._responseHeaders = response.headers
+        this.responseText = await response.text()
+        this.response = this.responseText
+        this.readyState = 4
+        this._emit('readystatechange')
+        this._emit(response.ok ? 'load' : 'error')
+        this._emit('loadend')
+      }).catch(() => {
+        this.readyState = 4
+        this._emit('readystatechange')
+        this._emit('error')
+        this._emit('loadend')
+      })
+    }
+
+    abort () {
+      if (!this._intercepted) this._native.abort()
+      this._emit('abort')
+    }
+
+    getResponseHeader (name) {
+      return this._responseHeaders?.get(name) || null
+    }
+
+    getAllResponseHeaders () {
+      return this._responseHeaders
+        ? Array.from(this._responseHeaders.entries()).map(([key, value]) => key + ': ' + value).join('\\r\\n')
+        : ''
+    }
+  }
+})()
+</script>`
+  return withBaseHref(html, uri).replace(/<head(\s[^>]*)?>/i, match => `${match}${bridge}`)
+}
+
+function mountDokieliBridge (
+  frame: HTMLIFrameElement,
+  uri: string,
+  html: string,
+  authenticatedFetch: (url: string, init?: RequestInit) => Promise<Response>
+): void {
+  const ownerWindow = frame.ownerDocument.defaultView
+  if (!ownerWindow) return
+
+  const randomValues = new Uint32Array(4)
+  ownerWindow.crypto.getRandomValues(randomValues)
+  const nonce = Array.from(randomValues, value => value.toString(16)).join('-')
+  const expectedUri = new URL(uri).href
+  const listener = (event: MessageEvent<PreviewRequest>) => {
+    const request = event.data
+    if (
+      event.source !== frame.contentWindow ||
+      !request ||
+      request.type !== PREVIEW_REQUEST_TYPE ||
+      request.nonce !== nonce ||
+      previewRequestUrl(request.url, expectedUri) !== expectedUri ||
+      !PREVIEW_METHODS.has(request.method)
+    ) return
+
+    const respond = (response: PreviewResponse) => {
+      frame.contentWindow?.postMessage(response, '*')
+    }
+
+    authenticatedFetch(expectedUri, {
+      method: request.method,
+      headers: request.headers,
+      body: request.method === 'GET' ? undefined : request.body
+    }).then(async response => {
+      respond({
+        type: PREVIEW_RESPONSE_TYPE,
+        nonce,
+        id: request.id,
+        ok: response.ok,
+        status: response.status,
+        headers: Array.from(response.headers.entries()),
+        body: await response.text()
+      })
+    }).catch(error => {
+      respond({
+        type: PREVIEW_RESPONSE_TYPE,
+        nonce,
+        id: request.id,
+        ok: false,
+        status: 0,
+        headers: [],
+        body: '',
+        error: error instanceof Error ? error.message : String(error)
+      })
+    })
+  }
+
+  ownerWindow.addEventListener('message', listener)
+  frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+  frame.srcdoc = createPreviewBridge(html, expectedUri, nonce)
 }
 
 const humanReadablePane: HumanReadablePaneDefinition = {
@@ -115,8 +550,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       'text/html',
       'text/markdown',
       'application/xhtml+xml',
-      'image/png',
-      'image/jpeg',
       'application/pdf',
       'video/mp4'
     ]
@@ -250,11 +683,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       })
     }
 
-    const setIframeAttributes = (frame: HTMLIFrameElement, lines: number) => {
-      frame.setAttribute('src', subject.uri)
-      applyFrameClasses(frame, 'iframe', lines)
-    }
-
     if (isMarkdown) {
       // For markdown, use a DIV element and render the content
       const frame = myDocument.createElement('div')
@@ -272,36 +700,97 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
     } else {
-      // For other content types, use IFRAME
+      // For other content types, use IFRAME.
+      // The iframe's own request would be anonymous (Solid auth is not cookie based), so the
+      // content is fetched with the authenticated fetcher and handed to the frame directly.
       const frame = myDocument.createElement('iframe')
+      frame.name = HUMAN_READABLE_PREVIEW_FRAME_NAME
+      frame.title = resourceFilename(subject.uri)
+      applyFrameClasses(frame, 'iframe')
+      const isHtml = ct === 'text/html' || ct === 'application/xhtml+xml'
+      let previewUrl: string | null = null
+      let disposed = false
+      let wasConnected = false
+      const mutationObserver = typeof MutationObserver === 'undefined'
+        ? null
+        : new MutationObserver(records => {
+          const wasAdded = records.some(record =>
+            Array.from(record.addedNodes).some(node =>
+              node === div || (node.nodeType === Node.ELEMENT_NODE && (node as Element).contains(div))
+            )
+          )
+          if (div.isConnected) {
+            wasConnected = true
+          } else if (wasConnected || wasAdded) {
+            disposed = true
+            if (previewUrl) {
+              URL.revokeObjectURL(previewUrl)
+              previewUrl = null
+            }
+            mutationObserver?.disconnect()
+          }
+        })
+      mutationObserver?.observe(myDocument, { childList: true, subtree: true })
 
-      // Apply sandbox for HTML/XHTML
-      if (ct === 'text/html' || ct === 'application/xhtml+xml') {
-        frame.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms')
+      const showError = (message: string) => {
+        frame.removeAttribute('src')
+        frame.setAttribute('sandbox', '')
+        frame.srcdoc = `<p style="font-family: sans-serif">${escapeAttribute(message)}</p>`
       }
 
-      // Fetch content to calculate lines dynamically
-      kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const blobText = response.responseText ?? ''
-        const newLines = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ? -10 : 5
-        const lines = Math.min(30, blobText.split(/\n/).length + newLines)
-
-        // Cache dokieli detection result
-        const isDokieli = blobText.includes('<script src="https://dokie.li/scripts/dokieli.js">') ||
-                         blobText.includes('dokieli.css')
-        dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
-
-        setIframeAttributes(frame, lines)
-      }).catch(error => {
-        console.error('Error fetching content for line calculation:', error)
-        // Fallback to default height
-        setIframeAttributes(frame, 30)
-      })
+      if (isHtml) {
+        kb.fetcher.webOperation('GET', subject.uri).then(response => {
+          const html = response.responseText ?? ''
+          frame.title = documentTitle(html, subject.uri)
+          const isDokieli = isDokieliHtml(html)
+          dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+          if (isDokieli) {
+            mountDokieliBridge(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init))
+          } else {
+            frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+            frame.srcdoc = withBaseHref(html, subject.uri)
+          }
+        }).catch(error => {
+          console.error('Error fetching HTML content:', error)
+          showError('Error loading content')
+        })
+      } else {
+        kb.fetcher._fetch(subject.uri).then(async response => {
+          if (!response.ok) throw new Error(`HTTP ${response.status}`)
+          const responseContentType = response.headers.get('content-type')?.split(';', 1)[0].trim().toLowerCase()
+          if (responseContentType === 'text/html' || responseContentType === 'application/xhtml+xml') {
+            const html = await response.text()
+            frame.title = documentTitle(html, subject.uri)
+            const isDokieli = isDokieliHtml(html)
+            dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
+            if (isDokieli) {
+              mountDokieliBridge(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init))
+            } else {
+              frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+              frame.srcdoc = withBaseHref(html, subject.uri)
+            }
+            return
+          }
+          frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+          const objectUrl = URL.createObjectURL(await response.blob())
+          if (disposed) {
+            URL.revokeObjectURL(objectUrl)
+            return
+          }
+          previewUrl = objectUrl
+          frame.src = objectUrl
+        }).catch(error => {
+          console.error('Error fetching content:', error)
+          showError('Error loading content')
+        })
+      }
 
       const frameContainer = myDocument.createElement('div')
       frameContainer.classList.add('human-readable-pane__container')
+      frameContainer.classList.add('human-readable-pane__container--iframe')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
+      div.classList.add('human-readable-pane--iframe')
     }
 
     return div

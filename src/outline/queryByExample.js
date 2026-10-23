@@ -14,11 +14,18 @@ const optionalSubqueriesIndex = []
 
 function predParentOf (node) {
   let n = node
+  const isPredicateRow = (element) => {
+    return Boolean(
+      element &&
+      typeof element.getAttribute === 'function' &&
+      (element.getAttribute('predTR') === 'true' || element.getAttribute('data-outline-node') === 'predicate')
+    )
+  }
   while (true) {
-    if (n.getAttribute('predTR')) {
+    if (isPredicateRow(n)) {
       return n
-    } else if (n.previousSibling && n.previousSibling.nodeName === 'TR') {
-      n = n.previousSibling
+    } else if (n.previousElementSibling) {
+      n = n.previousElementSibling
     } else {
       console.log('Could not find predParent')
       return node

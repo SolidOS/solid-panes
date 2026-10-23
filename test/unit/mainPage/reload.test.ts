@@ -115,7 +115,7 @@ describe('page reload of the document that holds a WebID', () => {
 
     await initMainPage(store)
     const provider = await vi.waitFor(() => {
-      const element = document.querySelector<HTMLElement & { showHeader: boolean, subjectUri: string, pane?: { name: string } }>('file-explorer-provider')
+      const element = document.querySelector<HTMLElement & { subjectUri: string, pane?: { name: string } }>('solid-ui-file-explorer-provider')
       expect(element).not.toBeNull()
       return element!
     })
@@ -129,7 +129,7 @@ describe('page reload of the document that holds a WebID', () => {
     expect(navbar).not.toHaveClass('navbar--hidden')
     expect(window.location.href).toBe(webId.doc().uri)
     expect(provider.subjectUri).toBe(webId.doc().uri)
-    expect(provider.showHeader).toBe(true)
+    expect(provider.querySelector('solid-ui-file-explorer-header')).not.toBeNull()
     expect(provider.pane?.name).not.toBe('profile')
     expect(window.history.state?.paneName).toBeUndefined()
     expect(navbar.navbarItems.filter(item => item.selected)).toEqual([])
@@ -155,7 +155,7 @@ describe('page reload of the document that holds a WebID', () => {
   it.each([
     ['a container', '/other/docs/'],
     ['a resource', '/other/docs/notes.ttl']
-  ])('shows %s with its file explorer header, even after a storage was selected', async (_name, url) => {
+  ])('shows %s with its file explorer header without session.logic, even after a storage was selected', async (_name, url) => {
     const viewer = sym(`${window.location.origin}/profile/card#me`)
     loadProfile.mockResolvedValue(sym(`${window.location.origin}/other/profile/card#me`))
     vi.spyOn(authn, 'currentUser').mockReturnValue(viewer)
@@ -165,13 +165,13 @@ describe('page reload of the document that holds a WebID', () => {
 
     await initMainPage(store)
     const provider = await vi.waitFor(() => {
-      const element = document.querySelector<HTMLElement & { showHeader: boolean, subjectUri: string }>('file-explorer-provider')
+      const element = document.querySelector<HTMLElement & { subjectUri: string }>('solid-ui-file-explorer-provider')
       expect(element).not.toBeNull()
       return element!
     })
 
     expect(provider.subjectUri).toBe(`${window.location.origin}${url}`)
-    expect(provider.showHeader).toBe(true)
+    expect(provider.querySelector('solid-ui-file-explorer-header')).not.toBeNull()
     expect(window.history.state?.paneName).toBeUndefined()
     expect(window.location.pathname).toBe(url)
   })

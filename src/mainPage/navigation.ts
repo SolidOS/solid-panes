@@ -11,10 +11,14 @@ const controllers = new WeakMap<OutlineManager, NavigationController>()
 export function navigationFor (outliner: OutlineManager, store: LiveStore): NavigationController {
   let controller = controllers.get(outliner)
   if (!controller) {
+    const registry = (outliner as any).context?.session?.paneRegistry
+    const byName = typeof registry?.byName === 'function'
+      ? registry.byName.bind(registry)
+      : paneRegistry.byName
     controller = createNavigationController({
       store,
       outliner,
-      byName: paneRegistry.byName,
+      byName,
       effects: { selectNavbarPane, refreshHeading: refreshProfileHeading }
     })
     controllers.set(outliner, controller)
