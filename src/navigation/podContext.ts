@@ -81,8 +81,9 @@ function ownerOf (pageUrl: string): Promise<string | undefined> {
   }, undefined)
 }
 
-function storagesOf (pageUrl: string): Promise<PaneItem[]> {
-  return remember(storages, podKey(pageUrl), 'storages of the pod', () => getFolderPanesFromURI(sym(pageUrl)), [])
+function storagesOf (pageUrl: string, owner?: string): Promise<PaneItem[]> {
+  const storageSubject = owner ? sym(owner) : sym(pageUrl)
+  return remember(storages, podKey(pageUrl), 'storages of the pod', () => getFolderPanesFromURI(storageSubject), [])
 }
 
 function storagesOfViewer (viewer: string | undefined): Promise<string[]> {
@@ -95,9 +96,10 @@ function storagesOfViewer (viewer: string | undefined): Promise<string[]> {
 /** The context for the pod a URL is in; the page's own URL by default. */
 export async function getPodContext (pageUrl: string = window.location.href): Promise<PodContext> {
   const viewer = authn.currentUser()?.value
-  const [owner, storagePanes, ownStorages] = await Promise.all([
-    ownerOf(pageUrl), storagesOf(pageUrl), storagesOfViewer(viewer)
+  const [owner, ownStorages] = await Promise.all([
+    ownerOf(pageUrl), storagesOfViewer(viewer)
   ])
+  const storagePanes = await storagesOf(pageUrl, owner)
   return { viewer, owner, storagePanes, viewerStorages: ownStorages }
 }
 

@@ -221,7 +221,7 @@ export default class ProfileHeading extends WebComponent {
           </header>
         </div>
 
-        ${(this.editContext || showFriend) && !this.compact
+        ${(this.editContext && !this.compact) || showFriend
           ? html`
             <div class="profile__actions profile__heading-edit-action">
               ${showFriend
@@ -246,7 +246,7 @@ export default class ProfileHeading extends WebComponent {
                 </div>
               `
                 : nothing}
-              ${this.editContext
+              ${this.editContext && !this.compact
                 ? html`
               <solid-ui-button
                 variant="tertiary"

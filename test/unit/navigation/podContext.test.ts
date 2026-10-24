@@ -52,6 +52,7 @@ describe('getPodContext', () => {
       viewerStorages: ['https://pod.example/other/']
     })
     expect(context.storagePanes.map(pane => pane.subject.value)).toEqual(['https://pod.example/timea/'])
+    expect(getFolderPanes).toHaveBeenCalledWith(owner)
   })
 
   it('looks up the storages of a pod and of the viewer once, however many of its pages are asked about', async () => {

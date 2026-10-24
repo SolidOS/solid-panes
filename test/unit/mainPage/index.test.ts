@@ -304,7 +304,7 @@ describe('browser navigation without a reload', () => {
     const [subject, , pane, , , , options] = GotoSubject.mock.calls[0]
     expect(subject.value).toBe(pageUrl)
     expect(pane).toBe(storagePane)
-    expect(options).toEqual({ source: 'accountMenu' })
+    expect(options).toEqual({ source: 'accountMenu', folderView: 'explorer' })
     expect(window.location.href).toBe(pageUrl)
     expect(window.history.state).toMatchObject({ paneName: 'folder', paneUri: storage, viaAccountMenu: true })
     expect(navbar).toHaveClass('navbar--hidden')

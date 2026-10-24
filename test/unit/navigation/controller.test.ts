@@ -34,6 +34,7 @@ let GotoSubject: Mock<(...args: any[]) => void>
 let selectNavbarPane: Mock<NavigationEffects['selectNavbarPane']>
 let refreshHeading: Mock<NavigationEffects['refreshHeading']>
 let byName: Mock<NavigationDeps['byName']>
+let podContextOf: Mock<NonNullable<NavigationDeps['podContextOf']>>
 let controller: NavigationController
 let navbar: HTMLElement
 
@@ -54,11 +55,13 @@ beforeEach(() => {
   selectNavbarPane = vi.fn(() => { calls.push('select') })
   refreshHeading = vi.fn(async () => { calls.push('heading') })
   byName = vi.fn((name: string) => (name === 'home' ? homePane as never : null))
+  podContextOf = vi.fn(async () => ({ owner, storagePanes: [], viewerStorages: [] }))
   controller = createNavigationController({
     store,
     outliner: { GotoSubject } as unknown as OutlineManager,
     byName,
-    effects: { selectNavbarPane, refreshHeading }
+    effects: { selectNavbarPane, refreshHeading },
+    podContextOf
   })
   navbar = document.createElement('solid-panes-navbar')
   document.body.appendChild(navbar)
@@ -266,5 +269,94 @@ describe('when intents overlap', () => {
     await controller.show({ kind: 'friends', subject: owner })
 
     expect(GotoSubject).toHaveBeenCalledTimes(2)
+  })
+})
+
+describe('how a storage is presented', () => {
+  const folderViewOfCall = (index = 0) => GotoSubject.mock.calls[index][6]?.folderView
+  const storageItem = (uri: string) => ({ name: 'folder', paneName: 'folder', subject: store.sym(uri) })
+
+  it('shows someone else\'s storage from the navbar with only the sidebar and content', async () => {
+    await controller.show({ kind: 'storage', pane: storagePane as never })
+
+    expect(podContextOf).toHaveBeenCalledWith('https://pod.example/timea/')
+    expect(GotoSubject.mock.calls[0][6]).toEqual({ source: 'default', folderView: 'storage' })
+  })
+
+  it('shows a storage from the account menu with the storage header, without looking up its pod', async () => {
+    await controller.show({ kind: 'storage', pane: storagePane as never, source: 'accountMenu' })
+
+    expect(podContextOf).not.toHaveBeenCalled()
+    expect(folderViewOfCall()).toBe('explorer')
+  })
+
+  it('shows someone else\'s pod root as their storage, selected in the navbar', async () => {
+    const root = `${window.location.origin}/timea/`
+    const rootPane = storageItem(root)
+    getFolderPane.mockResolvedValue(rootPane)
+    podContextOf.mockResolvedValue({ owner, storagePanes: [rootPane as never], viewerStorages: [] })
+    window.history.replaceState({}, '', '/timea/')
+
+    await controller.show({ kind: 'restore' })
+
+    expect(getFolderPane).toHaveBeenCalledWith(store.sym(root))
+    expect(GotoSubject.mock.calls[0][2]).toBe(rootPane)
+    expect(folderViewOfCall()).toBe('storage')
+    expect(selectNavbarPane).toHaveBeenCalledWith('folder', root)
+  })
+
+  it('shows the viewer\'s own pod root with the storage header', async () => {
+    const root = `${window.location.origin}/timea/`
+    const rootPane = storageItem(root)
+    getFolderPane.mockResolvedValue(rootPane)
+    podContextOf.mockResolvedValue({ owner, viewer: owner, storagePanes: [rootPane as never], viewerStorages: [root] })
+    window.history.replaceState({}, '', '/timea/')
+
+    await controller.show({ kind: 'restore' })
+
+    expect(folderViewOfCall()).toBe('explorer')
+  })
+
+  it('recognizes the viewer\'s exact storage URL when it is not listed as a storage pane', async () => {
+    const root = `${window.location.origin}/timea/`
+    const rootPane = storageItem(root)
+    getFolderPane.mockResolvedValue(rootPane)
+    podContextOf.mockResolvedValue({ owner, viewer: owner, storagePanes: [], viewerStorages: [root] })
+    window.history.replaceState({}, '', '/timea/')
+
+    await controller.show({ kind: 'restore' })
+
+    expect(folderViewOfCall()).toBe('explorer')
+  })
+
+  it('does not treat a subcontainer of the viewer\'s storage as the storage itself', async () => {
+    const root = `${window.location.origin}/timea/`
+    const subcontainer = `${root}documents/`
+    getFolderPane.mockResolvedValue(storageItem(subcontainer))
+    podContextOf.mockResolvedValue({ owner, viewer: owner, storagePanes: [], viewerStorages: [root] })
+    window.history.replaceState({}, '', '/timea/documents/')
+
+    await controller.show({ kind: 'restore' })
+
+    expect(folderViewOfCall()).toBeUndefined()
+  })
+
+  it('shows the server root, which nobody owns, with the storage header', async () => {
+    const root = `${window.location.origin}/`
+    getFolderPane.mockResolvedValue(storageItem(root))
+    podContextOf.mockResolvedValue({ storagePanes: [], viewerStorages: [] })
+    window.history.replaceState({}, '', '/')
+
+    await controller.show({ kind: 'restore' })
+
+    expect(getFolderPane).toHaveBeenCalledWith(store.sym(root))
+    expect(folderViewOfCall()).toBe('explorer')
+  })
+
+  it('leaves a container that is not a storage to its own default view', async () => {
+    await controller.show({ kind: 'restore' })
+
+    expect(getFolderPane).not.toHaveBeenCalled()
+    expect(GotoSubject.mock.calls[0][6]).toEqual({ source: 'default' })
   })
 })

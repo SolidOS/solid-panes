@@ -234,6 +234,20 @@ describe('profile heading friends', () => {
     expect(heading.friendState).toBe('available')
   })
 
+  it('keeps the friend action but hides Edit in the compact heading', async () => {
+    const heading = await createHeading()
+    heading.editContext = {
+      subject,
+      profileData: { name: 'Friend Test', entryNode: subject },
+      viewerMode: 'owner',
+      onSaved: vi.fn()
+    }
+    heading.compact = true
+    await heading.updateComplete
+    expect(button(heading)).not.toBeNull()
+    expect(heading.shadowRoot?.querySelector('.desktop-edit-button')).toBeNull()
+  })
+
   it('places friends before Edit when both actions are provided', async () => {
     const heading = await createHeading()
     heading.editContext = {
@@ -251,7 +265,8 @@ describe('profile heading friends', () => {
     ['profile', viewer, subject, true],
     ['profile', viewer, viewer, false],
     ['profile', null, subject, false],
-    ['social', viewer, subject, false],
+    ['social', viewer, subject, true],
+    ['social', viewer, viewer, false],
     ['profile', viewer, sym('https://new-friend.example/#me'), true]
   ])('gates the action for pane %s, viewer %s, subject %s', async (paneName, me, viewed, visible) => {
     vi.mocked(authn.currentUser).mockReturnValue(me)

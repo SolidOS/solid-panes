@@ -13,8 +13,10 @@ import type { OutlineManager } from '../outline/manager'
 import { getFolderPaneForStorage, getProfilePaneFromURI, getSocialPaneFromURI, type PaneItem } from '../utils/paneUtils'
 import { setNavbarHidden } from './navbarVisibility'
 import { readNavigationState, type NavigationState, type NavigationView } from './state'
-import type { NavigationSource } from './options'
+import type { FolderView, NavigationSource } from './options'
 import { isWebIdUri } from '../utils/webIdUtils'
+import { deriveStorageView } from './chrome'
+import { getPodContext, isInViewerPod, type PodContext } from './podContext'
 
 export type NavigationIntent =
   /** Display what the current history entry says was displayed, for the page's own URL. */
@@ -42,6 +44,8 @@ export interface NavigationDeps {
   outliner: OutlineManager
   byName: (name: string) => PaneDefinition | null | undefined
   effects: NavigationEffects
+  /** Whose pod a URL is in; `getPodContext` unless a test supplies its own. */
+  podContextOf?: (url: string) => Promise<PodContext>
 }
 
 export interface NavigationController {
@@ -55,8 +59,27 @@ export interface NavigationController {
 type DisplayedPane = PaneItem | PaneDefinition | null | undefined
 
 export function createNavigationController (deps: NavigationDeps): NavigationController {
-  const { store, outliner, byName, effects } = deps
+  const { store, outliner, byName, effects, podContextOf = getPodContext } = deps
   let latest = 0
+
+  /** The storage pane for a page that is a storage of its pod, or the server root. */
+  async function storageAt (subject: NamedNode): Promise<PaneItem | null | undefined> {
+    if (!subject.uri.endsWith('/')) return undefined
+    const isServerRoot = subject.site().uri === subject.uri
+    const { storagePanes, viewerStorages } = await podContextOf(subject.uri)
+    const isStorage = storagePanes.some(pane => pane.subject.uri === subject.uri) ||
+      viewerStorages.includes(subject.uri)
+    return isServerRoot || isStorage ? getFolderPaneForStorage(subject) : undefined
+  }
+
+  async function folderViewFor (storage: string, viaAccountMenu: boolean): Promise<FolderView> {
+    const context = viaAccountMenu ? undefined : await podContextOf(storage)
+    return deriveStorageView({
+      viaAccountMenu,
+      inViewerPod: !!context && isInViewerPod(context, storage),
+      hasOwner: !!context?.owner
+    })
+  }
 
   async function paneForView (subject: NamedNode, view: NavigationView): Promise<DisplayedPane> {
     // These panes render a subject other than the page URL.
@@ -67,7 +90,8 @@ export function createNavigationController (deps: NavigationDeps): NavigationCon
       if (view.kind === 'storage') return getFolderPaneForStorage(paneSubject)
     }
     if (view.pane) return byName(view.pane) ?? undefined
-    return isWebIdUri(subject) ? getProfilePaneFromURI(subject, byName) : undefined
+    // With nothing recorded, the URL decides: a WebID shows its profile, a storage its storage view
+    return isWebIdUri(subject) ? getProfilePaneFromURI(subject, byName) : storageAt(subject)
   }
 
   async function paneFor (intent: NavigationIntent, subject: NamedNode, state: NavigationState): Promise<DisplayedPane> {
@@ -101,7 +125,11 @@ export function createNavigationController (deps: NavigationDeps): NavigationCon
         return
       }
 
-      outliner.GotoSubject(subject, true, pane ?? undefined, true, undefined, undefined, { source })
+      const storage = pane && pane.name === 'folder' ? (pane as PaneItem).subject?.uri : undefined
+      const folderView = storage ? await folderViewFor(storage, source === 'accountMenu') : undefined
+      if (request !== latest) return
+
+      outliner.GotoSubject(subject, true, pane ?? undefined, true, undefined, undefined, folderView ? { source, folderView } : { source })
 
       if (source !== 'accountMenu') {
         const { view } = readNavigationState()

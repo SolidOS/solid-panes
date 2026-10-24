@@ -241,6 +241,10 @@
   align-self: center;
 }
 
+:host([compact]) .profile__heading-edit-action {
+  align-self: center;
+}
+
 :host([compact]) .name {
   white-space: normal;
   overflow-wrap: anywhere;

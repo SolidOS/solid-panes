@@ -9,12 +9,18 @@
  */
 
 import { type NavigationView } from './state'
+import type { FolderView } from './options'
 
 /** Registry names of the panes that present a person rather than a resource. */
 export const PERSON_PANES = ['profile', 'social']
 
 export function isPersonPane (paneName?: string): boolean {
   return paneName !== undefined && PERSON_PANES.includes(paneName)
+}
+
+/** Whether the heading over this pane offers to add its person as a friend: on the Profile and Friends tabs. */
+export function offersFriendAction (paneName?: string): boolean {
+  return isPersonPane(paneName)
 }
 
 /** The parts of a navbar item that the rules look at. */
@@ -121,6 +127,24 @@ export function isNavbarHidden (input: { viaAccountMenu: boolean, ownProfile: bo
   return input.viaAccountMenu || input.ownProfile || input.inViewerPod
 }
 
+// Storage
+
+export interface StorageViewInput {
+  viaAccountMenu: boolean
+  /** The storage is one of the viewer's own. */
+  inViewerPod: boolean
+  /** The storage belongs to a person whose profile was found; the server root has none. */
+  hasOwner: boolean
+}
+
+/**
+ * The viewer's own storage, and the server root, come with the folder pane's storage header.
+ * Someone else's storage sits under the navbar of their pod, which already says whose it is.
+ */
+export function deriveStorageView (input: StorageViewInput): Extract<FolderView, 'explorer' | 'storage'> {
+  return input.viaAccountMenu || input.inViewerPod || !input.hasOwner ? 'explorer' : 'storage'
+}
+
 // File explorer header
 
 export interface ExplorerHeaderInput {
@@ -140,7 +164,11 @@ export function deriveExplorerHeader (input: ExplorerHeaderInput): boolean {
   return !input.viewerPodOnly || input.inViewerPod
 }
 
-/** The header is never shown over a person's profile or friends, whatever the resource. */
-export function explorerHeaderForPane (resourceHeader: boolean, paneName?: string): boolean {
+/**
+ * The header is never shown over a person's profile or friends, whatever the resource,
+ * nor over a storage view, which has its own header or the navbar.
+ */
+export function explorerHeaderForPane (resourceHeader: boolean, paneName?: string, folderView?: FolderView): boolean {
+  if (paneName === 'folder' && (folderView === 'explorer' || folderView === 'storage')) return false
   return resourceHeader && !isPersonPane(paneName)
 }

@@ -3,10 +3,12 @@ import {
   deriveExplorerHeader,
   deriveHeading,
   deriveNavbarSelection,
+  deriveStorageView,
   explorerHeaderForPane,
   isNavbarHidden,
   isNavbarItemSelected,
   isPersonPane,
+  offersFriendAction,
   pickNavbarItem,
   type HeadingInput
 } from '../../../src/navigation/chrome'
@@ -35,6 +37,14 @@ describe('isPersonPane', () => {
   it.each([['profile', true], ['social', true], ['folder', false], ['home', false], [undefined, false]])(
     '%s -> %s', (pane, expected) => {
       expect(isPersonPane(pane)).toBe(expected)
+    }
+  )
+})
+
+describe('offersFriendAction', () => {
+  it.each([['profile', true], ['social', true], ['folder', false], [undefined, false]])(
+    'the heading over %s offers the friend action: %s', (pane, expected) => {
+      expect(offersFriendAction(pane)).toBe(expected)
     }
   )
 })
@@ -204,5 +214,31 @@ describe('file explorer header', () => {
     expect(explorerHeaderForPane(true, 'folder')).toBe(true)
     expect(explorerHeaderForPane(true, undefined)).toBe(true)
     expect(explorerHeaderForPane(false, 'folder')).toBe(false)
+  })
+
+  it('is never shown over a storage view, which has its own header or the navbar', () => {
+    expect(explorerHeaderForPane(true, 'folder', 'explorer')).toBe(false)
+    expect(explorerHeaderForPane(true, 'folder', 'storage')).toBe(false)
+    expect(explorerHeaderForPane(true, 'folder', 'container')).toBe(true)
+    // A pane opened in place of the folder keeps its resource header
+    expect(explorerHeaderForPane(true, 'source', 'explorer')).toBe(true)
+  })
+})
+
+describe('storage view', () => {
+  it('shows the viewer\'s own storage with the storage header', () => {
+    expect(deriveStorageView({ viaAccountMenu: false, inViewerPod: true, hasOwner: true })).toBe('explorer')
+  })
+
+  it('shows the storage header for the account menu, whatever the page', () => {
+    expect(deriveStorageView({ viaAccountMenu: true, inViewerPod: false, hasOwner: true })).toBe('explorer')
+  })
+
+  it('shows the server root, which nobody owns, with the storage header', () => {
+    expect(deriveStorageView({ viaAccountMenu: false, inViewerPod: false, hasOwner: false })).toBe('explorer')
+  })
+
+  it('shows someone else\'s storage with only the sidebar and content, under their navbar', () => {
+    expect(deriveStorageView({ viaAccountMenu: false, inViewerPod: false, hasOwner: true })).toBe('storage')
   })
 })

@@ -7,7 +7,7 @@ import type { ViewerMode } from '../types'
 import { loadProfileFromURI } from '../utils/webIdUtils'
 import '../components/profile-heading'
 import './profileHeading.css'
-import { deriveHeading } from '../navigation/chrome'
+import { deriveHeading, offersFriendAction } from '../navigation/chrome'
 import { getPodContext } from '../navigation/podContext'
 import { onNavigated } from '../navigation/events'
 import { readNavigationState } from '../navigation/state'
@@ -212,7 +212,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     }
   heading.profileData = profileData
   const viewer = authn.currentUser()
-  heading.friendSubject = isProfilePane && viewer && !viewer.sameTerm(subject)
+  heading.friendSubject = offersFriendAction(decision.paneName) && viewer && !viewer.sameTerm(subject)
     ? subject
     : undefined
   heading.editContext = canEdit
@@ -243,7 +243,7 @@ export function placeProfileHeading (): void {
   ensureMountPoint()
 }
 
-export function initializeProfileHeading (): void {
+export function initializeProfileHeading (): Promise<void> {
   ensureMountPoint()
 
   if (!profileSavedListenerRegistered) {
@@ -296,4 +296,5 @@ export function initializeProfileHeading (): void {
   readiness.then(() => refreshProfileHeading(true)).catch((error: unknown) => {
     console.error('Failed to refresh profile heading.', error)
   })
+  return readiness
 }
