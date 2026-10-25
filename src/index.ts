@@ -78,6 +78,11 @@ export {
   byName // from paneRegistry
 }
 
+export {
+  initializeProfileHeading,
+  refreshProfileHeading
+} from './mainPage/profileHeading'
+
 // export for simpler access by non-node scripts
 if (typeof window !== 'undefined') {
   ;(<any>window).panes = {

@@ -202,6 +202,36 @@ describe('manager', () => {
       expect(window.history.state).toMatchObject({ paneName: 'mock', paneUri: profile.uri, viaAccountMenu: true })
     })
 
+    it('updates navigation state while preserving the current URL', () => {
+      const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
+      const shellUrl = `${window.location.origin}/browse.html?uri=${encodeURIComponent(`${window.location.origin}/other/`)}`
+      const subject = sym(`${window.location.origin}/other/`)
+      const pane = { ...MockPane, subject }
+      window.history.replaceState({ existing: true }, '', shellUrl)
+
+      const seen: NavigatedDetail[] = []
+      const stop = onNavigated(detail => seen.push(detail))
+      manager.GotoSubject(subject, false, pane, true, undefined, undefined, {
+        folderView: 'explorer',
+        preserveUrl: true
+      })
+      stop()
+
+      expect(window.location.href).toBe(shellUrl)
+      expect(window.history.state).toMatchObject({
+        existing: true,
+        paneName: 'mock',
+        paneUri: subject.uri
+      })
+      expect(seen.at(-1)).toMatchObject({
+        url: shellUrl,
+        state: {
+          view: { kind: 'pane', pane: 'mock', subject: subject.uri },
+          viaAccountMenu: false
+        }
+      })
+    })
+
     it('displays a navbar pane\'s own subject, and the page subject for panes without one', () => {
       const manager = new OutlineManager({ dom: document, session: { paneRegistry: mockPaneRegistry } })
       const page = sym(`${window.location.origin}/other/container/sub/`)

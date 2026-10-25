@@ -52,6 +52,12 @@ Volunteers are always welcome!
 
 ### Profile heading
 
+Page shells can call `initializeProfileHeading(getPageUrl)` with a function
+returning the currently browsed resource URL. Without an argument, the heading
+uses `window.location.href`. The function is evaluated on each refresh, including
+authentication changes, so shell-specific URL/query parsing stays in the shell.
+Call `refreshProfileHeading(true)` after changing the shell's target.
+
 The `solid-panes-profile-heading` component accepts presentation data through
 `profileData`. Its boolean `compact` property (also available as an attribute)
 halves the responsive avatar size and shows only the photo, name, and job title.

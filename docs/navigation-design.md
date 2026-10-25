@@ -53,6 +53,12 @@ navigation controller, which always applies the same follow-up effects.
 mashlib. Those callers rely on it to push the history entry and the URL, so it is the one place that
 writes history, and it announces what it did.
 
+Standalone shells such as `browse.html` can pass `preserveUrl: true` in the seventh argument when
+they display a subject while keeping their own document URL (the subject is carried in the shell's
+query parameters). The current history entry is still replaced with the displayed pane and
+account-menu metadata, and navigation is announced from that updated state. This is intentionally
+opt-in; ordinary `GotoSubject` callers continue to make the displayed subject the page URL.
+
 Storage is an explicit browser view, not a resource's default pane. Its pane item
 renders the storage root with `solo` and `fullView` disabled, so the storage
 header, sidebar and listing remain visible even if the root has an index document.

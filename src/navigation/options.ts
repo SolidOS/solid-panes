@@ -17,6 +17,8 @@ export type FolderView = 'explorer' | 'storage' | 'container'
 export interface GotoSubjectOptions {
   source?: NavigationSource
   folderView?: FolderView
+  /** Keep the caller's document URL while displaying a different subject. */
+  preserveUrl?: boolean
 }
 
 /** The folder view a `GotoSubject` caller asked for, if any. */
