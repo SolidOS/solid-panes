@@ -23,6 +23,7 @@ let authReady: Promise<void> | undefined
 let displayedPaneKey = ''
 let displayedSubjectUri = ''
 let loadingPaneKey = ''
+let headingPageUrl = () => window.location.href
 const hideAnimations = new WeakMap<HTMLElement, Animation>()
 const showAnimations = new WeakMap<HTMLElement, Animation>()
 
@@ -150,7 +151,8 @@ function ensureMountPoint (): HTMLElement | null {
 export async function refreshProfileHeading (force = false): Promise<void> {
   await authReady
 
-  const pod = await getPodContext(window.location.href)
+  const pageUrl = headingPageUrl()
+  const pod = await getPodContext(pageUrl)
   const mount = ensureMountPoint()
   if (!mount) return
 
@@ -165,7 +167,7 @@ export async function refreshProfileHeading (force = false): Promise<void> {
     view,
     viaAccountMenu,
     viewer: authn.currentUser()?.value,
-    pageUrl: window.location.href,
+    pageUrl,
     owner: pod.owner,
     storageUris: pod.storagePanes.map(pane => pane.subject.value)
   })
@@ -243,7 +245,9 @@ export function placeProfileHeading (): void {
   ensureMountPoint()
 }
 
-export function initializeProfileHeading (): Promise<void> {
+/** Shells browsing another resource can supply its current URL instead of the page URL. */
+export function initializeProfileHeading (getPageUrl = () => window.location.href): Promise<void> {
+  headingPageUrl = getPageUrl
   ensureMountPoint()
 
   if (!profileSavedListenerRegistered) {

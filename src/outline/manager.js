@@ -1941,12 +1941,8 @@ export default function (context) {
       createSubjectBlock()
     }
 
-    if (
-      solo &&
-      dom &&
-      dom.defaultView &&
-      dom.defaultView.history
-    ) {
+    if (solo && dom && dom.defaultView && dom.defaultView.history) {
+      const preserveUrl = options && typeof options === 'object' && options.preserveUrl === true
       const currentState = dom.defaultView.history.state || {}
       const leavingPage = document.location.href !== subject.uri
       const stateObj = nextHistoryState(currentState, {
@@ -1957,9 +1953,11 @@ export default function (context) {
         viaAccountMenu: !showNavbar
       })
       try {
-        const currentUrl = new URL(document.location.href)
-        const targetUrl = new URL(subject.uri, document.location.href)
-        if (currentUrl.origin === targetUrl.origin) {
+        const currentUrl = new URL(dom.location.href)
+        const targetUrl = new URL(subject.uri, dom.location.href)
+        if (preserveUrl) {
+          dom.defaultView.history.replaceState(stateObj, '')
+        } else if (currentUrl.origin === targetUrl.origin) {
           if (leavingPage) {
             dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
           } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {

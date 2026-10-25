@@ -4,16 +4,20 @@ import { lit, sym } from 'rdflib'
 import { ns } from 'solid-ui'
 import type { ProfileHeadingEditContext } from '../../../src/components/profile-heading/ProfileHeading'
 
-const { getViewerModeMock, createHeadingEditDialogMock, pod } = vi.hoisted(() => ({
+const { getViewerModeMock, createHeadingEditDialogMock, getPodContextMock, pod } = vi.hoisted(() => ({
   getViewerModeMock: vi.fn(),
   createHeadingEditDialogMock: vi.fn(),
+  getPodContextMock: vi.fn(),
   // What the page knows about the pod it is in
   pod: { current: { owner: undefined as string | undefined, storagePanes: [] as Array<{ subject: { value: string } }>, viewerStorages: [] as string[] } }
 }))
 
 vi.mock('../../../src/navigation/podContext', async (importOriginal) => ({
   ...await importOriginal<typeof import('../../../src/navigation/podContext')>(),
-  getPodContext: async () => pod.current
+  getPodContext: async (url: string) => {
+    getPodContextMock(url)
+    return pod.current
+  }
 }))
 
 vi.mock('../../../src/components/profile-heading/editor/sections/heading/HeadingEditDialog', () => ({
@@ -218,6 +222,21 @@ describe('page-level profile heading', () => {
     })
 
     checkUser.mockRestore()
+  })
+
+  it('uses the shell resource URL on each refresh and defaults back to the page URL', async () => {
+    let resourceUrl = 'https://heading-shell.example/profile/card#me'
+    await initializeProfileHeading(() => resourceUrl)
+    await refreshProfileHeading()
+    expect(getPodContextMock).toHaveBeenLastCalledWith(resourceUrl)
+
+    resourceUrl = 'https://heading-shell.example/public/'
+    await refreshProfileHeading(true)
+    expect(getPodContextMock).toHaveBeenLastCalledWith(resourceUrl)
+
+    await initializeProfileHeading()
+    await refreshProfileHeading()
+    expect(getPodContextMock).toHaveBeenLastCalledWith(window.location.href)
   })
 
   it('hides extra information and editing in compact mode, then restores the full heading', async () => {
