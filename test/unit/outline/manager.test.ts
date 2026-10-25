@@ -16,6 +16,7 @@ vi.mock('solid-ui', async () => {
   return {
     ...actual,
     getRelevantPanes: async (_subject, context) => context.session.paneRegistry.list,
+    getPreferredPane: (subject, _context, panes) => panes.find(pane => pane.shouldGetFocus?.(subject)) || panes[0],
     login: {
       ...actual.login,
       filterAvailablePanes: async panes => panes

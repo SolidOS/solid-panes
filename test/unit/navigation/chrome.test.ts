@@ -223,6 +223,11 @@ describe('file explorer header', () => {
     // A pane opened in place of the folder keeps its resource header
     expect(explorerHeaderForPane(true, 'source', 'explorer')).toBe(true)
   })
+
+  it('retains the header for slideshow in solo and regular views', () => {
+    expect(explorerHeaderForPane(true, 'slideshow', undefined, true)).toBe(true)
+    expect(explorerHeaderForPane(true, 'slideshow')).toBe(true)
+  })
 })
 
 describe('storage view', () => {
