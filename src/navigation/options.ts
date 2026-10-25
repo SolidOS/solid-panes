@@ -6,8 +6,22 @@
  */
 export type NavigationSource = 'default' | 'accountMenu'
 
+/**
+ * How the folder pane presents a container, when the caller decides it:
+ * - `explorer`: storage header, sidebar and content
+ * - `storage`: sidebar and content, under the navbar of someone else's pod
+ * - `container`: the container alone
+ */
+export type FolderView = 'explorer' | 'storage' | 'container'
+
 export interface GotoSubjectOptions {
   source?: NavigationSource
+  folderView?: FolderView
+}
+
+/** The folder view a `GotoSubject` caller asked for, if any. */
+export function resolveFolderView (argument?: boolean | GotoSubjectOptions | null): FolderView | undefined {
+  return typeof argument === 'object' && argument !== null ? argument.folderView : undefined
 }
 
 /**

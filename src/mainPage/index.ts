@@ -4,6 +4,7 @@
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
+import { authSession } from 'solid-logic'
 import type { RenderEnvironment } from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
@@ -12,6 +13,7 @@ import { navigationFor } from './navigation'
 import { initializeProfileHeading, placeProfileHeading } from './profileHeading'
 import { registerBrowserNavigation } from '../navigation/browserEvents'
 import { clearPaneState } from '../navigation/state'
+import { resetPodContexts } from '../navigation/podContext'
 import { HUMAN_READABLE_PREVIEW_FRAME_NAME } from '../humanReadablePane'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
@@ -55,11 +57,22 @@ export async function initMainPage (
   // This is also what Enter on the current URL ends in where the Navigation API is missing (see
   // NAVIGATION API FALLBACK in navigation/browserEvents.ts): the browser reloads the page.
   clearPaneState()
-  initializeProfileHeading()
+  await initializeProfileHeading()
   const outliner = getOutliner(document, environment)
   ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   const navigation = navigationFor(outliner, store)
   registerBrowserNavigation(navigation)
+  const refreshNavigationAfterAuth = () => {
+    resetPodContexts()
+    navigation.show({ kind: 'restore', forceHeading: true }).catch((error: unknown) => {
+      console.error('Failed to refresh navigation after an authentication change.', error)
+    })
+  }
+  authSession.events.on('login', refreshNavigationAfterAuth)
+  authSession.events.on('sessionRestore', refreshNavigationAfterAuth)
+  authSession.events.on('logout', refreshNavigationAfterAuth)
+  authSession.events.on('sessionChange', refreshNavigationAfterAuth)
+  authSession.events.on('identityReplaced', refreshNavigationAfterAuth)
   await navigation.show({ kind: 'restore', subject: subject.uri })
 
   const header = await createHeader(navigation)

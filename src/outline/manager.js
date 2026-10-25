@@ -17,12 +17,13 @@ import { deriveExplorerHeader, explorerHeaderForPane } from '../navigation/chrom
 import { isPageInViewerPod } from '../navigation/podContext'
 import { nextHistoryState } from '../navigation/state'
 import { announceNavigation } from '../navigation/events'
-import { resolveSource } from '../navigation/options'
+import { resolveFolderView, resolveSource } from '../navigation/options'
 import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
 import { createOutlineDomHelpers } from './outlineDomHelpers'
 import { getPaneIcon, getPaneItems } from './fileExplorerHelpers'
 import 'solid-ui/components/file-explorer-provider'
 import 'solid-ui/components/file-explorer-header'
+import 'solid-ui/components/error-state'
 import AccessControlModal from 'solid-ui/components/access-control-modal'
 
 const EXPLORER_PROVIDER_TAG = 'solid-ui-file-explorer-provider'
@@ -312,7 +313,7 @@ export default function (context) {
       subjectUri: subject.uri,
       pane,
       relevantPanes: provider.relevantPanes || [],
-      header: state && explorerHeaderForPane(state.showHeader, pane?.name)
+      header: state && explorerHeaderForPane(state.showHeader, pane?.name, state.options.folderView)
         ? { paneIcon: getPaneIcon(pane, subject, context), menuItems: state.menuItems }
         : undefined,
       paneElement
@@ -380,12 +381,12 @@ export default function (context) {
       : await loadRelevantPanes(subject, context)
     if (explorerStates.get(provider) !== state) return provider
 
-    // Resolve indexed containers only for a resource URL, never for an explicit Storage view.
+    // Resolve indexed containers only for a resource URL, never for an explicit storage or folder view.
     const resourceLogic = context.session.logic?.resource || solidLogicSingleton.resource
     const indexDocument = subject.uri.endsWith('/')
       ? $rdf.sym(`${subject.uri}index.ttl`)
       : null
-    const hasIndexDocument = options.solo && !requiredPane && indexDocument && (
+    const hasIndexDocument = options.solo && !requiredPane && !options.folderView && indexDocument && (
       (typeof resourceLogic?.containerHasIndexDocument === 'function' &&
         resourceLogic.containerHasIndexDocument(subject)) ||
       kb.holds(subject, UI.ns.ldp('contains'), indexDocument, subject.doc())
@@ -1515,8 +1516,16 @@ export default function (context) {
 
     let subject = kb.canon(subject1)
     // var requTerm = subject.uri ? kb.sym($rdf.uri.docpart(subject.uri)) : subject
+    // A solo view the viewer may not read shows only its access error, never a fallback view.
+    let soloAccessDenied = false
 
     function render () {
+      if (soloAccessDenied) {
+        // A denial seen before the session was ready is lifted once the document loads.
+        if (sf.getState(subject.doc().uri) !== 'fetched') return false
+        soloAccessDenied = false
+        already = false
+      }
       subject = kb.canon(subject)
       if (!p || !p.parentNode || !p.parentNode.parentNode) return false
 
@@ -1610,6 +1619,12 @@ export default function (context) {
     if (options.solo) {
       setUrlBarAndTitle(subject)
     }
+    // Global panes render their own application view and do not depend on the page URL.
+    // Do not let an inaccessible URL replace a dashboard or other global pane with an error.
+    if (pane?.global) {
+      render()
+      return
+    }
     UI.log.debug('outlineExpand: dereferencing ' + subject)
     const status = dom.createElement('span')
     p.appendChild(status)
@@ -1650,12 +1665,49 @@ export default function (context) {
         if (detailText.includes('status: 401') || detailText.includes('status 401')) return 401
         return null
       }
+      const soloAccessMessage = function () {
+        const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
+        const loggedIn = !!solidLogicSingleton.authn.currentUser()
+        if (isRootResource) {
+          return loggedIn
+            ? 'You are logged in, but this root resource is not publicly readable. Select a storage location from the account menu to continue.'
+            : 'This root resource is not publicly readable. Try logging in or opening a profile document.'
+        }
+        return loggedIn
+          ? 'You are logged in, but your account does not have permission to view this resource.'
+          : 'This resource is not publicly readable. Log in to view it.'
+      }
+      const showSoloAccessError = function () {
+        soloAccessDenied = true
+        const errorState = dom.createElement('solid-ui-error-state')
+        errorState.setAttribute('title', 'Access denied')
+        errorState.setAttribute('message', soloAccessMessage())
+        if (docUri) errorState.setAttribute('data-outline-error-for', docUri)
+        UI.utils.emptyNode(p).appendChild(errorState)
+        sf.addCallback('done', function soloAccessRecovered (uri) {
+          if (!soloAccessDenied || !p.isConnected) return false
+          if (uri !== docUri) return true
+          render()
+          return false
+        })
+        if (sf.getState(docUri) === 'fetched') render()
+      }
       const appendOutlineError = function (detail, errObj) {
         if (p.querySelector && docUri) {
           const existing = p.querySelector('[data-outline-error-for="' + docUri + '"]')
           if (existing) return
         }
         const statusCode = authErrorStatus(detail, errObj)
+        if (statusCode && options.solo) {
+          // The denial may answer a request made before the session was restored.
+          if (!retriedAuthenticated && solidLogicSingleton.authn.currentUser()) {
+            retriedAuthenticated = true
+            loadSubjectDocument(true)
+            return
+          }
+          showSoloAccessError()
+          return
+        }
         const friendlyDetail = statusCode
           ? outlineAuthMessage(statusCode)
           : detail
@@ -1669,28 +1721,34 @@ export default function (context) {
         p.appendChild(message)
       }
       // Wait till at least the main URI is loaded before expanding:
-      let errorReported = false
-      const fetchPromise = sf.nowOrWhenFetched(subject.doc(), undefined, function (ok, body) {
-        if (ok) {
-          sf.lookUpThing(subject)
-          render() // inital open, or else full if re-open
-          if (options.solo) {
-            // Update window title with new information
-            // dom.title = UI.utils.label(subject)
-            setUrlBarAndTitle(subject)
+      let retriedAuthenticated = false
+      const loadSubjectDocument = function (force) {
+        let errorReported = false
+        const fetchPromise = sf.nowOrWhenFetched(subject.doc(), force ? { force: true } : {}, function (ok, body) {
+          if (ok) {
+            sf.lookUpThing(subject)
+            render() // inital open, or else full if re-open
+            if (options.solo) {
+              // Update window title with new information
+              // dom.title = UI.utils.label(subject)
+              setUrlBarAndTitle(subject)
+            }
+          } else {
+            errorReported = true
+            appendOutlineError(body, undefined)
           }
-        } else {
-          errorReported = true
-          appendOutlineError(body, undefined)
-        }
-      })
-      if (fetchPromise && typeof fetchPromise.catch === 'function') {
-        fetchPromise.catch(function (err) {
-          if (errorReported) return
-          errorReported = true
-          appendOutlineError(err, err)
         })
+        if (fetchPromise && typeof fetchPromise.catch === 'function') {
+          fetchPromise.catch(function (err) {
+            if (errorReported) return
+            errorReported = true
+            appendOutlineError(err, err)
+          })
+        }
       }
+      // A solo view retries a document an earlier, possibly unauthenticated, request was denied.
+      const previousStatus = sf.requested[docUri]
+      loadSubjectDocument(!!options.solo && (previousStatus === 401 || previousStatus === 403))
     } else {
       render()
     }
@@ -1835,6 +1893,7 @@ export default function (context) {
   @param options -- optional -- who asked for the view: `{ source: 'accountMenu' }` for the viewer's
                     own content, which suppresses the automatic navbar reveal and is remembered in
                     the history entry. The old form, `false` for the account menu, is still accepted.
+                    `folderView` ('explorer', 'storage' or 'container') says how a folder is presented.
 
   Afterwards, when `solo`, `solid-panes:navigated` is dispatched on the document.
 */
@@ -1875,6 +1934,7 @@ export default function (context) {
       outlineExpand(subjectBlock, displayedSubject, {
         pane,
         solo,
+        folderView: resolveFolderView(options),
         headerOnlyInViewerPod: !showNavbar || !!(pane && pane.subject && pane.subject.uri)
       })
     } else if (!solo) {
