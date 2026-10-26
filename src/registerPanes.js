@@ -90,10 +90,10 @@ export function registerPanes (register) {
   register(audioPane) // Audio clip player
 
   register(dokieliPane) // Should be above dataContentPane
+  register(slideshowPane) // Image containers should open in their specialized view
   register(folderPane) // Should be above dataContentPane
   register(classInstancePane) // Should be above dataContentPane
   // register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
-  register(slideshowPane)
 
   register(socialPane)
 

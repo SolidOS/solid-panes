@@ -259,14 +259,6 @@ export default function (context) {
     })
   }
 
-  function getPane (relevantPanes, subject) {
-    return (
-      relevantPanes.find(
-        pane => pane.shouldGetFocus && pane.shouldGetFocus(subject)
-      ) || relevantPanes[0]
-    )
-  }
-
   function setQueryButtonVisibility (shouldShow) {
     const queryButton = dom.getElementById('queryButton')
     if (!queryButton) return
@@ -313,7 +305,7 @@ export default function (context) {
       subjectUri: subject.uri,
       pane,
       relevantPanes: provider.relevantPanes || [],
-      header: state && explorerHeaderForPane(state.showHeader, pane?.name, state.options.folderView)
+      header: state && explorerHeaderForPane(state.showHeader, pane?.name, state.options.folderView, state.options.solo)
         ? { paneIcon: getPaneIcon(pane, subject, context), menuItems: state.menuItems }
         : undefined,
       paneElement
@@ -403,7 +395,7 @@ export default function (context) {
     }
 
     provider.relevantPanes = relevantPanes
-    provider.pane = requiredPane || getPane(relevantPanes, subject)
+    provider.pane = requiredPane || UI.getPreferredPane(subject, context, relevantPanes)
     const isRootResource = !!(subject && subject.uri && subject.site && subject.site().uri === subject.uri)
     const viewerPodOnly = !!options.headerOnlyInViewerPod
     const showHeader = !subject.uri.endsWith('/index.ttl#this') && deriveExplorerHeader({

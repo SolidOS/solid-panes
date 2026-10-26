@@ -2,9 +2,11 @@
  **
  */
 import * as UI from 'solid-ui'
+import { solidLogicSingleton } from 'solid-logic'
 
 import makeBSS from '@solid/better-simple-slideshow'
 const ns = UI.ns
+let slideshowId = 0
 
 export const slideshowPane = {
   icon: UI.icons.iconBase + 'noun_138712.svg',
@@ -16,13 +18,11 @@ export const slideshowPane = {
   // Does the subject deserve an slideshow pane?
   label: function (subject, context) {
     const store = context.session.store
-    const ns = UI.ns
-    const t = store.findTypeURIs(subject)
-    if (t[ns.ldp('Container').uri] || t[ns.ldp('BasicContainer').uri]) {
+    if (solidLogicSingleton.resource.isContainer(subject)) {
       const contents = store.each(subject, ns.ldp('contains'))
       let count = 0
       contents.forEach(function (file) {
-        if (UI.widgets.isImage(file)) count++
+        if (solidLogicSingleton.resource.isImage(file)) count++
       })
       return count > 0 ? 'Slideshow' : null
     }
@@ -40,18 +40,21 @@ export const slideshowPane = {
     const store = context.session.store
     const ns = UI.ns
     const div = dom.createElement('div')
+    const id = `slideshow-${++slideshowId}`
+    div.id = id
     div.setAttribute('class', 'bss-slides')
 
-    const t = store.findTypeURIs(subject)
     let predicate
-    if (t[ns.ldp('BasicContainer').uri] || t[ns.ldp('Container').uri]) {
+    if (solidLogicSingleton.resource.isContainer(subject)) {
       predicate = ns.ldp('contains')
     }
-    const images = store.each(subject, predicate) // @@ random order?
+    const images = [...new Map(
+      store.each(subject, predicate).map(image => [image.uri, image])
+    ).values()]
     // @@ Ideally: sort by embedded time of image
-    images.sort() // Sort for now by URI
+    images.sort((left, right) => left.uri.localeCompare(right.uri))
     for (let i = 0; i < images.length; i++) {
-      if (!UI.widgets.isImage(images[i])) continue
+      if (!solidLogicSingleton.resource.isImage(images[i])) continue
       const figure = div.appendChild(dom.createElement('figure'))
       const img = figure.appendChild(dom.createElement('img'))
 
@@ -69,9 +72,9 @@ export const slideshowPane = {
     }
     const options = { dom }
 
-    setTimeout(function () {
-      makeBSS('.bss-slides', options)
-    }, 1000) // Must run after the code which called this
+    dom.defaultView.requestAnimationFrame(function () {
+      makeBSS(`#${id}`, options)
+    })
 
     return div
   }
