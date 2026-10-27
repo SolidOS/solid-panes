@@ -8,6 +8,13 @@ import makeBSS from '@solid/better-simple-slideshow'
 const ns = UI.ns
 let slideshowId = 0
 
+function getImageContents (subject, store) {
+  if (!solidLogicSingleton.resource.isContainer(subject)) return []
+
+  const contents = store.each(subject, ns.ldp('contains'))
+  return contents.filter(file => solidLogicSingleton.resource.isImage(file))
+}
+
 export const slideshowPane = {
   icon: UI.icons.iconBase + 'noun_138712.svg',
 
@@ -20,11 +27,8 @@ export const slideshowPane = {
     const store = context.session.store
     if (solidLogicSingleton.resource.isContainer(subject)) {
       const contents = store.each(subject, ns.ldp('contains'))
-      let count = 0
-      contents.forEach(function (file) {
-        if (solidLogicSingleton.resource.isImage(file)) count++
-      })
-      return count > 0 ? 'Slideshow' : null
+      const images = getImageContents(subject, store)
+      return contents.length > 1 && images.length === contents.length ? 'Slideshow' : null
     }
     return null
   },
@@ -38,23 +42,17 @@ export const slideshowPane = {
     UI.widgets.addStyleSheet(dom, styleSheet)
 
     const store = context.session.store
-    const ns = UI.ns
     const div = dom.createElement('div')
     const id = `slideshow-${++slideshowId}`
     div.id = id
     div.setAttribute('class', 'bss-slides')
 
-    let predicate
-    if (solidLogicSingleton.resource.isContainer(subject)) {
-      predicate = ns.ldp('contains')
-    }
     const images = [...new Map(
-      store.each(subject, predicate).map(image => [image.uri, image])
+      getImageContents(subject, store).map(image => [image.uri, image])
     ).values()]
     // @@ Ideally: sort by embedded time of image
     images.sort((left, right) => left.uri.localeCompare(right.uri))
     for (let i = 0; i < images.length; i++) {
-      if (!solidLogicSingleton.resource.isImage(images[i])) continue
       const figure = div.appendChild(dom.createElement('figure'))
       const img = figure.appendChild(dom.createElement('img'))
 
