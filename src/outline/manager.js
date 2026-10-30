@@ -31,6 +31,7 @@ const EXPLORER_PROVIDER_TAG = 'solid-ui-file-explorer-provider'
 export default function (context) {
   const dom = context.dom
   const explorerStates = new WeakMap()
+  const renderedPanes = new WeakMap()
   const explorerProviderListeners = new WeakSet()
 
   this.document = context.dom
@@ -285,6 +286,7 @@ export default function (context) {
     }
 
     composeExplorer(provider, subject, pane, paneDiv)
+    renderedPanes.set(provider, { pane, subjectUri: subject.uri })
   }
 
   function openPaneInPlace (provider, subject, pane) {
@@ -296,6 +298,38 @@ export default function (context) {
     setQueryButtonVisibility(!!pane.requireQueryButton)
     provider.pane = pane
     renderPaneIntoProvider(provider, subject, pane, explorerStates.get(provider)?.options || {})
+  }
+
+  this.refreshActiveExplorerPanes = function () {
+    const providers = Array.from(dom.querySelectorAll(EXPLORER_PROVIDER_TAG))
+    for (const provider of providers) {
+      const subjectUri = provider.subjectUri
+      const pane = provider.pane
+      if (!subjectUri || !pane) continue
+
+      const currentPane = provider.querySelector(':scope > .paneDiv')
+      if (!currentPane) continue
+      // Re-rendering the folder shell recreates its view and loses the resource
+      // selected inside it. Nested providers can refresh their active resource
+      // pane without replacing the shell.
+      if (currentPane.querySelector(':scope > folder-pane-view')) continue
+
+      let paneElement
+      try {
+        paneElement = pane.render(
+          $rdf.sym(subjectUri),
+          context,
+          provider.paneRenderOptions || explorerStates.get(provider)?.options || {}
+        )
+      } catch (error) {
+        UI.log.error('outline: Failed to refresh pane layout: ' + UI.utils.stackString(error))
+        continue
+      }
+
+      paneElement.classList.add('paneDiv')
+      currentPane.replaceWith(paneElement)
+      renderedPanes.set(provider, { pane, subjectUri })
+    }
   }
 
   function composeExplorer (provider, subject, pane, paneElement) {
@@ -426,7 +460,17 @@ export default function (context) {
       }
     }
 
-    if (provider.pane) {
+    const renderedPane = renderedPanes.get(provider)
+    const paneAlreadyRendered = provider.pane?.managesUpdates === true &&
+      renderedPane?.pane === provider.pane &&
+      renderedPane.subjectUri === subject.uri &&
+      !options.refresh &&
+      !!provider.querySelector(':scope > .paneDiv')
+    if (paneAlreadyRendered) {
+      // Only panes that update their own DOM can safely reuse a render. Other
+      // panes may read changing store data (including defaultPane).
+      composeExplorer(provider, subject, provider.pane)
+    } else if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
     } else {
       composeExplorer(provider, subject, provider.pane)

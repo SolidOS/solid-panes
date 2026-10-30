@@ -313,6 +313,19 @@ describe('browser navigation without a reload', () => {
     expect(GotoSubject).toHaveBeenCalledOnce()
   })
 
+  it('refreshes when the viewport changes within the same layout', async () => {
+    const GotoSubject = await setupLoaded()
+    const outliner = getOutliner()
+    outliner.context = {
+      session: { store },
+      environment: { ...environment, viewport: { width: 1279, height: 800 } }
+    }
+
+    await refreshUI(outliner)
+
+    expect(GotoSubject).toHaveBeenCalledOnce()
+  })
+
   it('falls back to popstate when the Navigation API is unavailable', async () => {
     Reflect.deleteProperty(window, 'navigation')
     vi.resetModules()
