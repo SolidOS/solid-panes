@@ -36,6 +36,7 @@ import { findByText, getByText } from '@testing-library/dom'
 const MockPane = {
   name: 'mock',
   icon: 'data:image/svg+xml,<svg></svg>',
+  managesUpdates: true,
   label: () => 'Mock Pane',
   render: (subject: NamedNode) => {
     const div = document.createElement('div')
@@ -364,6 +365,46 @@ describe('manager', () => {
 
         resolveIcon(MockPane.icon)
         await vi.waitFor(() => expect(header.menuItems).toHaveLength(1))
+      })
+
+      it('does not render the same pane again when a related fetch repaints the provider', async () => {
+        const render = vi.fn(MockPane.render)
+        const pane = { ...MockPane, render }
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: { list: [pane], byName: findPane }, store } })
+        const provider = manager.propertyTable(container, undefined, pane, {})
+        document.body.appendChild(provider)
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const paneElement = provider.querySelector('.paneDiv')
+        const menuItems = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!.menuItems
+
+        manager.propertyTable(container, provider, pane, {})
+        await vi.waitFor(() => {
+          const header = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')
+          expect(header?.menuItems).not.toBe(menuItems)
+        })
+
+        expect(render).toHaveBeenCalledTimes(1)
+        expect(provider.querySelector('.paneDiv')).toBe(paneElement)
+
+        manager.propertyTable(container, provider, pane, { refresh: true })
+
+        await vi.waitFor(() => expect(render).toHaveBeenCalledTimes(2))
+        expect(provider.querySelector('.paneDiv')).not.toBe(paneElement)
+      })
+
+      it('rerenders panes that do not manage their own updates', async () => {
+        const render = vi.fn(MockPane.render)
+        const pane = { ...MockPane, managesUpdates: false, render }
+        const manager = new OutlineManager({ dom: document, session: { paneRegistry: { list: [pane], byName: findPane }, store } })
+        const provider = manager.propertyTable(container, undefined, pane, {})
+        document.body.appendChild(provider)
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+        const paneElement = provider.querySelector('.paneDiv')
+
+        manager.propertyTable(container, provider, pane, {})
+
+        await vi.waitFor(() => expect(render).toHaveBeenCalledTimes(2))
+        expect(provider.querySelector('.paneDiv')).not.toBe(paneElement)
       })
 
       it('does not add a resource header for index.ttl#this', async () => {

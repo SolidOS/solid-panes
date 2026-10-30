@@ -31,6 +31,7 @@ const EXPLORER_PROVIDER_TAG = 'solid-ui-file-explorer-provider'
 export default function (context) {
   const dom = context.dom
   const explorerStates = new WeakMap()
+  const renderedPanes = new WeakMap()
   const explorerProviderListeners = new WeakSet()
 
   this.document = context.dom
@@ -285,6 +286,7 @@ export default function (context) {
     }
 
     composeExplorer(provider, subject, pane, paneDiv)
+    renderedPanes.set(provider, { pane, subjectUri: subject.uri })
   }
 
   function openPaneInPlace (provider, subject, pane) {
@@ -426,7 +428,17 @@ export default function (context) {
       }
     }
 
-    if (provider.pane) {
+    const renderedPane = renderedPanes.get(provider)
+    const paneAlreadyRendered = provider.pane?.managesUpdates === true &&
+      renderedPane?.pane === provider.pane &&
+      renderedPane.subjectUri === subject.uri &&
+      !options.refresh &&
+      !!provider.querySelector(':scope > .paneDiv')
+    if (paneAlreadyRendered) {
+      // Only panes that update their own DOM can safely reuse a render. Other
+      // panes may read changing store data (including defaultPane).
+      composeExplorer(provider, subject, provider.pane)
+    } else if (provider.pane) {
       renderPaneIntoProvider(provider, subject, provider.pane, options)
     } else {
       composeExplorer(provider, subject, provider.pane)
