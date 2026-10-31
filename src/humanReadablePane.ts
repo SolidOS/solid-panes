@@ -5,11 +5,20 @@
  */
 import { icons, ns } from 'solid-ui'
 import { Util } from 'rdflib'
+import { authn } from 'solid-logic'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode } from 'rdflib'
 import './humanReadablePane.css'
+
+function viewerWebId (): string | null {
+  try {
+    return authn.currentUser()?.value ?? null
+  } catch {
+    return null
+  }
+}
 
 // Helper function to check if a URI has a markdown file extension
 type DokieliCacheValue = 'dokieli' | 'html'
@@ -29,6 +38,12 @@ const isMarkdownFile = (uri?: string | null): boolean => {
   return /\.(md|markdown|mdown|mkd|mkdn)$/i.test(path)
 }
 
+const isJsonFile = (uri?: string | null): boolean => {
+  if (!uri) return false
+  const path = uri.split('?')[0].split('#')[0]
+  return /\.json$/i.test(path)
+}
+
 // Cache for dokieli detection results (keyed by subject URI)
 const dokieliCache = new Map<string, DokieliCacheValue>()
 
@@ -41,7 +56,7 @@ function applyFrameClasses (
   frame.classList.add('human-readable-pane__frame')
   frame.classList.add(`human-readable-pane__frame--${modifier}`)
   if (lines !== undefined) {
-    frame.style.setProperty('--human-readable-pane-height', `${lines}em`)
+    frame.style.setProperty('--human-readable-pane-height', `${lines * 16}px`)
   }
 }
 
@@ -82,6 +97,43 @@ export function withBaseHref (html: string, baseUri: string): string {
     return html.slice(0, insertAt) + base + html.slice(insertAt)
   }
   return base + html
+}
+
+function withPreviewResizeScript (html: string): string {
+  const script = `<script>
+(() => {
+  const style = document.createElement('style')
+  style.textContent = 'html, body { height: auto !important; min-height: 0 !important; max-height: none !important; overflow: visible !important; }'
+  document.head?.appendChild(style)
+  const reportHeight = () => {
+    const elements = Array.from(document.querySelectorAll('*'))
+    const height = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+      ...elements.map(element => Math.max(
+        element.scrollHeight,
+        Math.ceil(element.getBoundingClientRect().bottom + window.scrollY)
+      ))
+    )
+    window.parent.postMessage({ type: 'solidos-preview-size', height }, '*')
+  }
+  window.addEventListener('load', reportHeight)
+  new ResizeObserver(reportHeight).observe(document.documentElement)
+  document.addEventListener('DOMContentLoaded', () => {
+    if (document.body) new ResizeObserver(reportHeight).observe(document.body)
+    new MutationObserver(reportHeight).observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true,
+      attributes: true
+    })
+    reportHeight()
+  })
+  window.setInterval(reportHeight, 500)
+  reportHeight()
+})()
+</script>`
+  const withScript = html.replace(/<\/body\s*>/i, `${script}$&`)
+  return withScript === html ? `${html}${script}` : withScript
 }
 
 function resourceFilename (uri: string): string {
@@ -126,7 +178,8 @@ type PreviewResponse = {
 
 const PREVIEW_REQUEST_TYPE = 'solidos-preview-request'
 const PREVIEW_RESPONSE_TYPE = 'solidos-preview-response'
-const PREVIEW_METHODS = new Set(['GET', 'PUT', 'PATCH', 'DELETE'])
+const PREVIEW_READ_METHODS = new Set(['GET', 'HEAD'])
+const PREVIEW_WRITE_METHODS = new Set(['PUT', 'PATCH', 'DELETE'])
 
 function isSrcdocUrl (url: string): boolean {
   return url === 'about:srcdoc' || /^file:\/\/srcdoc\/?(?:[?#].*)?$/i.test(url)
@@ -137,11 +190,36 @@ export function previewRequestUrl (url: string, documentUri: string): string {
   return isSrcdocUrl(resolvedUrl) ? documentUri : resolvedUrl
 }
 
-function createPreviewBridge (html: string, uri: string, nonce: string): string {
+export function isAllowedPreviewRequest (url: string, method: string, documentUri: string): boolean {
+  let resolvedUrl: URL
+  let expectedUrl: URL
+  try {
+    resolvedUrl = new URL(previewRequestUrl(url, documentUri))
+    expectedUrl = new URL(documentUri)
+  } catch {
+    return false
+  }
+
+  if (resolvedUrl.origin !== expectedUrl.origin) {
+    return false
+  }
+
+  const normalizedMethod = method.toUpperCase()
+  const isPreviewDocument = resolvedUrl.href === expectedUrl.href
+  const isApprovedProfileResource = resolvedUrl.pathname === '/profile/card'
+  return (
+    PREVIEW_READ_METHODS.has(normalizedMethod) &&
+    (isPreviewDocument || isApprovedProfileResource)
+  ) || (isPreviewDocument && PREVIEW_WRITE_METHODS.has(normalizedMethod))
+}
+
+function createPreviewBridge (html: string, uri: string, nonce: string, webId: string | null = null): string {
   const bridge = `<script>
 (() => {
   const documentUri = ${JSON.stringify(uri)}
+  const documentOrigin = new URL(documentUri).origin
   const nonce = ${JSON.stringify(nonce)}
+  const viewerWebId = ${JSON.stringify(webId)}
   const pending = new Map()
   let requestId = 0
   try {
@@ -197,19 +275,19 @@ function createPreviewBridge (html: string, uri: string, nonce: string): string 
                   })
                   return operation
                 }
-                return {
-                get: key => run(store.get(key)),
-                getAll: () => run(Array.from(store.values())),
-                getAllKeys: () => run(Array.from(store.keys())),
-                count: () => run(store.size),
-                openKeyCursor () {
+                const openCursor = (withValue) => {
                   const keys = Array.from(store.keys())
                   const operation = request(null)
                   pending++
                   let index = 0
                   const emit = () => {
                     operation.result = index < keys.length
-                      ? { key: keys[index], continue: () => { index++; queueMicrotask(emit) } }
+                      ? {
+                          key: keys[index],
+                          primaryKey: keys[index],
+                          value: withValue ? store.get(keys[index]) : undefined,
+                          continue: () => { index++; queueMicrotask(emit) }
+                        }
                       : null
                     operation.onsuccess?.({ target: operation })
                     if (!operation.result) {
@@ -222,7 +300,15 @@ function createPreviewBridge (html: string, uri: string, nonce: string): string 
                   }
                   queueMicrotask(emit)
                   return operation
-                },
+                }
+                return {
+                transaction,
+                get: key => run(store.get(key)),
+                getAll: () => run(Array.from(store.values())),
+                getAllKeys: () => run(Array.from(store.keys())),
+                count: () => run(store.size),
+                openCursor: () => openCursor(true),
+                openKeyCursor: () => openCursor(false),
                 put: (value, key) => run(undefined, () => store.set(key, value)),
                 add: (value, key) => run(undefined, () => store.set(key, value)),
                 delete: key => run(undefined, () => store.delete(key)),
@@ -296,11 +382,38 @@ function createPreviewBridge (html: string, uri: string, nonce: string): string 
     }))
   })
 
+  const reportHeight = () => {
+    const elements = Array.from(document.querySelectorAll('*'))
+    const height = Math.max(
+      document.documentElement.scrollHeight,
+      document.body ? document.body.scrollHeight : 0,
+      ...elements.map(element => Math.max(
+        element.scrollHeight,
+        Math.ceil(element.getBoundingClientRect().bottom + window.scrollY)
+      ))
+    )
+    window.parent.postMessage({ type: 'solidos-preview-size', height }, '*')
+  }
+  window.addEventListener('load', reportHeight)
+  new ResizeObserver(reportHeight).observe(document.documentElement)
+  if (document.body) new ResizeObserver(reportHeight).observe(document.body)
+  new MutationObserver(reportHeight).observe(document.body || document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true
+  })
+  window.setInterval(reportHeight, 500)
+  reportHeight()
+
   window.fetch = async (input, init = {}) => {
     const request = input instanceof Request ? input : null
     const url = documentRequestUrl(request ? request.url : input)
     const method = (init.method || (request && request.method) || 'GET').toUpperCase()
-    if (url !== documentUri || !${JSON.stringify(Array.from(PREVIEW_METHODS))}.includes(method)) {
+    const sameOrigin = new URL(url).origin === documentOrigin
+    const allowed = sameOrigin &&
+      (${JSON.stringify(Array.from(PREVIEW_READ_METHODS))}.includes(method) ||
+        (url === documentUri && ${JSON.stringify(Array.from(PREVIEW_WRITE_METHODS))}.includes(method)))
+    if (!allowed) {
       return nativeFetch(input, init)
     }
     const headers = new Headers(request ? request.headers : undefined)
@@ -344,8 +457,10 @@ function createPreviewBridge (html: string, uri: string, nonce: string): string 
       const resolvedUrl = documentRequestUrl(url)
       this._method = String(method || 'GET').toUpperCase()
       this._url = resolvedUrl
-      this._intercepted = resolvedUrl === documentUri &&
-        ${JSON.stringify(Array.from(PREVIEW_METHODS))}.includes(this._method)
+      const sameOrigin = new URL(resolvedUrl).origin === documentOrigin
+      this._intercepted = sameOrigin &&
+        (${JSON.stringify(Array.from(PREVIEW_READ_METHODS))}.includes(this._method) ||
+          (resolvedUrl === documentUri && ${JSON.stringify(Array.from(PREVIEW_WRITE_METHODS))}.includes(this._method)))
       if (!this._intercepted) {
         this._native.open(method, url, async, user, password)
         for (const type of ['abort', 'error', 'load', 'loadend', 'progress', 'readystatechange', 'timeout']) {
@@ -412,6 +527,47 @@ function createPreviewBridge (html: string, uri: string, nonce: string): string 
         : ''
     }
   }
+
+  // Dokieli's own OIDC session cannot be restored in an opaque-origin
+  // sandbox, so it would always show "Sign in". Give it the SolidOS viewer
+  // through the same session shape Dokieli uses for its WebExtension mode;
+  // requests still go through the restricted bridge above.
+  const bridgedSession = viewerWebId
+    ? {
+        isActive: true,
+        webId: viewerWebId,
+        authFetch: (input, init) => window.fetch(input, init),
+        handleRedirectFromLogin: async () => {},
+        restore: async () => {},
+        login: async () => {},
+        logout: async () => {
+          bridgedSession.isActive = false
+          bridgedSession.webId = undefined
+        }
+      }
+    : null
+  let dokieliHooksInstalled = false
+  const installDokieliHooks = () => {
+    const config = window.DO && window.DO.C
+    if (!config || dokieliHooksInstalled) return
+    dokieliHooksInstalled = true
+    if (bridgedSession) config.Session = bridgedSession
+    // Dokieli skips requests for file: URLs, which is how srcdoc reports
+    // its location, so keep its document URL pointing at the resource.
+    let documentUrl = config.DocumentURL
+    Object.defineProperty(config, 'DocumentURL', {
+      configurable: true,
+      enumerable: true,
+      get: () => documentUrl,
+      set: value => {
+        documentUrl = typeof value === 'string' && isSrcdocUrl(value) ? documentUri : value
+      }
+    })
+    config.DocumentURL = documentUrl
+  }
+  // Registered before dokieli.js runs, so this precedes Dokieli's init.
+  document.addEventListener('DOMContentLoaded', installDokieliHooks)
+  window.addEventListener('load', installDokieliHooks)
 })()
 </script>`
   return withBaseHref(html, uri).replace(/<head(\s[^>]*)?>/i, match => `${match}${bridge}`)
@@ -421,7 +577,8 @@ function mountDokieliBridge (
   frame: HTMLIFrameElement,
   uri: string,
   html: string,
-  authenticatedFetch: (url: string, init?: RequestInit) => Promise<Response>
+  authenticatedFetch: (url: string, init?: RequestInit) => Promise<Response>,
+  webId: string | null = null
 ): void {
   const ownerWindow = frame.ownerDocument.defaultView
   if (!ownerWindow) return
@@ -437,18 +594,18 @@ function mountDokieliBridge (
       !request ||
       request.type !== PREVIEW_REQUEST_TYPE ||
       request.nonce !== nonce ||
-      previewRequestUrl(request.url, expectedUri) !== expectedUri ||
-      !PREVIEW_METHODS.has(request.method)
+      !isAllowedPreviewRequest(request.url, request.method, expectedUri)
     ) return
+    const requestUrl = previewRequestUrl(request.url, expectedUri)
 
     const respond = (response: PreviewResponse) => {
       frame.contentWindow?.postMessage(response, '*')
     }
 
-    authenticatedFetch(expectedUri, {
+    authenticatedFetch(requestUrl, {
       method: request.method,
       headers: request.headers,
-      body: request.method === 'GET' ? undefined : request.body
+      body: PREVIEW_READ_METHODS.has(request.method) ? undefined : request.body
     }).then(async response => {
       respond({
         type: PREVIEW_RESPONSE_TYPE,
@@ -475,7 +632,26 @@ function mountDokieliBridge (
 
   ownerWindow.addEventListener('message', listener)
   frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
-  frame.srcdoc = createPreviewBridge(html, expectedUri, nonce)
+  frame.srcdoc = createPreviewBridge(html, expectedUri, nonce, webId)
+}
+
+function installPreviewAutoSize (
+  frame: HTMLIFrameElement,
+  ownerWindow: Window
+): () => void {
+  const onMessage = (event: MessageEvent<{ type?: string, height?: number }>) => {
+    const message = event.data
+    if (
+      event.source !== frame.contentWindow ||
+      message?.type !== 'solidos-preview-size' ||
+      typeof message.height !== 'number' ||
+      !Number.isFinite(message.height)
+    ) return
+    frame.style.height = `${Math.max(1, Math.ceil(message.height))}px`
+    frame.style.flexShrink = '0'
+  }
+  ownerWindow.addEventListener('message', onMessage)
+  return () => ownerWindow.removeEventListener('message', onMessage)
 }
 
 const humanReadablePane: HumanReadablePaneDefinition = {
@@ -549,6 +725,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       'text/plain',
       'text/html',
       'text/markdown',
+      'application/json',
       'application/xhtml+xml',
       'application/pdf',
       'video/mp4'
@@ -643,7 +820,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
 
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
-    const isPlainText = ct === 'text/plain'
+    const isPlainText = ct === 'text/plain' || ct === 'application/json' || (!ct && isJsonFile(subject.uri))
 
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
@@ -707,6 +884,10 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       frame.name = HUMAN_READABLE_PREVIEW_FRAME_NAME
       frame.title = resourceFilename(subject.uri)
       applyFrameClasses(frame, 'iframe')
+      const ownerWindow = myDocument.defaultView
+      const removePreviewAutoSize = ownerWindow
+        ? installPreviewAutoSize(frame, ownerWindow)
+        : () => {}
       const isHtml = ct === 'text/html' || ct === 'application/xhtml+xml'
       let previewUrl: string | null = null
       let disposed = false
@@ -727,6 +908,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
               URL.revokeObjectURL(previewUrl)
               previewUrl = null
             }
+            removePreviewAutoSize()
             mutationObserver?.disconnect()
           }
         })
@@ -745,10 +927,10 @@ const humanReadablePane: HumanReadablePaneDefinition = {
           const isDokieli = isDokieliHtml(html)
           dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
           if (isDokieli) {
-            mountDokieliBridge(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init))
+            mountDokieliBridge(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init), viewerWebId())
           } else {
             frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
-            frame.srcdoc = withBaseHref(html, subject.uri)
+            frame.srcdoc = withPreviewResizeScript(withBaseHref(html, subject.uri))
           }
         }).catch(error => {
           console.error('Error fetching HTML content:', error)
@@ -764,14 +946,16 @@ const humanReadablePane: HumanReadablePaneDefinition = {
             const isDokieli = isDokieliHtml(html)
             dokieliCache.set(subject.uri, isDokieli ? 'dokieli' : 'html')
             if (isDokieli) {
-              mountDokieliBridge(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init))
+              mountDokieliBridge(frame, subject.uri, html, (url, init) => kb.fetcher._fetch(url, init), viewerWebId())
             } else {
               frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
-              frame.srcdoc = withBaseHref(html, subject.uri)
+              frame.srcdoc = withPreviewResizeScript(withBaseHref(html, subject.uri))
             }
             return
           }
-          frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+          if (responseContentType !== 'application/pdf') {
+            frame.setAttribute('sandbox', HTML_PREVIEW_SANDBOX)
+          }
           const objectUrl = URL.createObjectURL(await response.blob())
           if (disposed) {
             URL.revokeObjectURL(objectUrl)
