@@ -74,7 +74,7 @@
     "rdflib": "2.4.1",
     "solid-logic": "6.0.1-5",
     "solid-namespace": "^0.5.4",
-    "solid-ui": "5.0.2-4",
+    "solid-ui": "5.0.2-5",
     "source-pane": "4.0.1-0"
   },
   "overrides": {
