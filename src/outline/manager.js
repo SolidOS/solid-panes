@@ -300,6 +300,38 @@ export default function (context) {
     renderPaneIntoProvider(provider, subject, pane, explorerStates.get(provider)?.options || {})
   }
 
+  this.refreshActiveExplorerPanes = function () {
+    const providers = Array.from(dom.querySelectorAll(EXPLORER_PROVIDER_TAG))
+    for (const provider of providers) {
+      const subjectUri = provider.subjectUri
+      const pane = provider.pane
+      if (!subjectUri || !pane) continue
+
+      const currentPane = provider.querySelector(':scope > .paneDiv')
+      if (!currentPane) continue
+      // Re-rendering the folder shell recreates its view and loses the resource
+      // selected inside it. Nested providers can refresh their active resource
+      // pane without replacing the shell.
+      if (currentPane.querySelector(':scope > folder-pane-view')) continue
+
+      let paneElement
+      try {
+        paneElement = pane.render(
+          $rdf.sym(subjectUri),
+          context,
+          provider.paneRenderOptions || explorerStates.get(provider)?.options || {}
+        )
+      } catch (error) {
+        UI.log.error('outline: Failed to refresh pane layout: ' + UI.utils.stackString(error))
+        continue
+      }
+
+      paneElement.classList.add('paneDiv')
+      currentPane.replaceWith(paneElement)
+      renderedPanes.set(provider, { pane, subjectUri })
+    }
+  }
+
   function composeExplorer (provider, subject, pane, paneElement) {
     const state = explorerStates.get(provider)
     UI.composeExplorer(provider, {
