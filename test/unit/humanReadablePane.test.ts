@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
+import { sym } from 'rdflib'
+import { authn } from 'solid-logic'
 import humanReadablePane, {
   HUMAN_READABLE_PREVIEW_FRAME_NAME,
+  isAllowedPreviewRequest,
   previewRequestUrl,
   withBaseHref
 } from '../../src/humanReadablePane'
@@ -59,7 +62,35 @@ describe('previewRequestUrl', () => {
   })
 })
 
+describe('isAllowedPreviewRequest', () => {
+  it('allows authenticated same-origin reads for related profile resources', () => {
+    expect(isAllowedPreviewRequest('https://pod.example/profile/card', 'GET', uri)).toBe(true)
+    expect(isAllowedPreviewRequest('https://pod.example/profile/card', 'HEAD', uri)).toBe(true)
+  })
+
+  it('allows writes only to the previewed document', () => {
+    expect(isAllowedPreviewRequest(uri, 'PUT', uri)).toBe(true)
+    expect(isAllowedPreviewRequest('https://pod.example/profile/card', 'PUT', uri)).toBe(false)
+  })
+
+  it('blocks cross-origin reads', () => {
+    expect(isAllowedPreviewRequest('https://other.example/profile/card', 'GET', uri)).toBe(false)
+    expect(isAllowedPreviewRequest('https://pod.example/private/data', 'GET', uri)).toBe(false)
+    expect(isAllowedPreviewRequest('https://pod.example/profile/settings', 'GET', uri)).toBe(false)
+  })
+})
+
 describe('human readable pane iframe rendering', () => {
+  it('renders JSON as readable text', async () => {
+    const webOperation = vi.fn().mockResolvedValue({ responseText: '{\n  "enabled": true\n}' })
+    const pane = renderWith('application/json', { webOperation })
+    await flush()
+
+    expect(pane.querySelector('pre')?.textContent).toBe('{\n  "enabled": true\n}')
+    expect(pane.querySelector('iframe')).toBeNull()
+    expect(webOperation).toHaveBeenCalledWith('GET', uri)
+  })
+
   it('renders HTML from the authenticated fetch instead of letting the iframe request it', async () => {
     const webOperation = vi.fn().mockResolvedValue({ responseText: '<html><head></head><body>Hello</body></html>' })
     const pane = renderWith('text/html', { webOperation })
@@ -76,6 +107,15 @@ describe('human readable pane iframe rendering', () => {
     expect(pane.querySelector('a')).toBeNull()
   })
 
+  it('appends the resize script to HTML fragments without a closing body tag', async () => {
+    const pane = renderWith('text/html', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: '<main>Fragment</main>' })
+    })
+    await flush()
+
+    expect(pane.querySelector('iframe')?.srcdoc).toContain('solidos-preview-size')
+  })
+
   it('labels an HTML iframe from its fetched title and falls back to its URI filename', async () => {
     const titled = renderWith('text/html', {
       webOperation: vi.fn().mockResolvedValue({ responseText: '<html><head><title>  A useful title  </title></head></html>' })
@@ -90,7 +130,7 @@ describe('human readable pane iframe rendering', () => {
     expect(untitled.querySelector('iframe')?.title).toBe('page.html')
   })
 
-  it('keeps Dokieli documents isolated and mediates exact-document requests', async () => {
+  it('keeps Dokieli documents isolated and mediates same-origin reads plus exact-document writes', async () => {
     const dokieliUri = `${window.location.origin}/docs/dok.html`
     const html = '<html><head><script src="https://dokie.li/scripts/dokieli.js"></script></head><body><h1>Dok</h1></body></html>'
     const authenticatedFetch = vi.fn().mockResolvedValue(new Response('ok'))
@@ -116,6 +156,7 @@ describe('human readable pane iframe rendering', () => {
       expect(frame.srcdoc).toContain('const responseBody = [204, 205, 304].includes(message.status) ? null : message.body')
       expect(frame.srcdoc).toContain('getAllKeys')
       expect(frame.srcdoc).toContain('transaction.oncomplete')
+      expect(frame.srcdoc).toContain('openCursor: () => openCursor(true)')
 
       window.dispatchEvent(new MessageEvent('message', {
         source: frame.contentWindow,
@@ -133,6 +174,23 @@ describe('human readable pane iframe rendering', () => {
         method: 'PUT',
         headers: undefined,
         body: 'x'
+      })
+      authenticatedFetch.mockClear()
+      window.dispatchEvent(new MessageEvent('message', {
+        source: frame.contentWindow,
+        data: {
+          type: 'solidos-preview-request',
+          nonce: frame.srcdoc.match(/const nonce = "([^"]+)"/)?.[1],
+          id: 'profile-read',
+          url: `${window.location.origin}/profile/card`,
+          method: 'GET'
+        }
+      }))
+      await flush()
+      expect(authenticatedFetch).toHaveBeenCalledWith(`${window.location.origin}/profile/card`, {
+        method: 'GET',
+        headers: undefined,
+        body: undefined
       })
       authenticatedFetch.mockClear()
       window.dispatchEvent(new MessageEvent('message', {
@@ -179,7 +237,7 @@ describe('human readable pane iframe rendering', () => {
           type: 'solidos-preview-request',
           nonce: frame.srcdoc.match(/const nonce = "([^"]+)"/)?.[1],
           id: 'other',
-          url: `${window.location.origin}/private/other-user.ttl`,
+          url: 'https://other.example/private/other-user.ttl',
           method: 'GET'
         }
       }))
@@ -215,18 +273,31 @@ describe('human readable pane iframe rendering', () => {
     expect(frame.srcdoc).toContain('compromised')
   })
 
-  it('sandboxes blob previews even when the actual response is non-HTML', async () => {
+  it('does not sandbox PDF blob previews so the browser viewer can render them', async () => {
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/resource')
-    const response = new Response('image data', {
-      headers: { 'content-type': 'image/png' }
+    const response = new Response('pdf data', {
+      headers: { 'content-type': 'application/pdf' }
     })
     const pane = renderWith('application/octet-stream', { _fetch: vi.fn().mockResolvedValue(response) })
     await flush()
 
     const frame = pane.querySelector('iframe')!
-    expect(frame.getAttribute('sandbox')).toBe('allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals')
+    expect(frame.getAttribute('sandbox')).toBeNull()
     expect(frame.src).toBe('blob:https://pod.example/resource')
     expect(createObjectURL).toHaveBeenCalled()
+    createObjectURL.mockRestore()
+  })
+
+  it('keeps non-PDF blob previews sandboxed', async () => {
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/resource')
+    const response = new Response('<svg xmlns="http://www.w3.org/2000/svg"><script>window.compromised = true</script></svg>', {
+      headers: { 'content-type': 'image/svg+xml' }
+    })
+    const pane = renderWith('image/svg+xml', { _fetch: vi.fn().mockResolvedValue(response) })
+    await flush()
+
+    expect(pane.querySelector('iframe')?.getAttribute('sandbox'))
+      .toBe('allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals')
     createObjectURL.mockRestore()
   })
 
@@ -275,5 +346,36 @@ describe('human readable pane iframe rendering', () => {
     const pane = humanReadablePane.render(subject as any, { dom: document, session: { store } } as any)
 
     expect(pane.querySelector('iframe')?.title).toBe('file%FF.pdf')
+  })
+
+  it('gives Dokieli the signed-in viewer as a bridged session', async () => {
+    const webId = 'https://pod.example/profile/card#me'
+    const spy = vi.spyOn(authn, 'currentUser').mockReturnValue(sym(webId) as any)
+    const dokieliUri = `${window.location.origin}/docs/dok-session.html`
+    const html = '<html><head><script src="https://dokie.li/scripts/dokieli.js"></script></head><body></body></html>'
+    const subject = { uri: dokieliUri, doc: () => subject }
+    const store = {
+      fetcher: {
+        getHeader: vi.fn().mockReturnValue(['text/html']),
+        webOperation: vi.fn().mockResolvedValue({ responseText: html }),
+        _fetch: vi.fn()
+      }
+    }
+    try {
+      const pane = humanReadablePane.render(subject as any, { dom: document, session: { store } } as any)
+      await flush()
+      const srcdoc = pane.querySelector('iframe')!.srcdoc
+      expect(srcdoc).toContain(`const viewerWebId = ${JSON.stringify(webId)}`)
+      expect(srcdoc).toContain('if (bridgedSession) config.Session = bridgedSession')
+      expect(srcdoc).toContain('Object.defineProperty(config, \'DocumentURL\'')
+      expect(srcdoc.indexOf('bridgedSession')).toBeLessThan(srcdoc.indexOf('dokieli.js'))
+
+      spy.mockReturnValue(null)
+      const loggedOut = humanReadablePane.render(subject as any, { dom: document, session: { store } } as any)
+      await flush()
+      expect(loggedOut.querySelector('iframe')!.srcdoc).toContain('const viewerWebId = null')
+    } finally {
+      spy.mockRestore()
+    }
   })
 })
