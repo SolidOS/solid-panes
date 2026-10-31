@@ -19,10 +19,17 @@ import { HUMAN_READABLE_PREVIEW_FRAME_NAME } from '../humanReadablePane'
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
 const LAST_RENDER_ENV_KEY = '__lastRenderEnvSignature'
+let activeExplorerRefreshPending = false
 
 function renderEnvSignature (env?: RenderEnvironment): string {
   if (!env) return ''
-  return [env.layout, env.theme, env.inputMode].join('|')
+  return [
+    env.layout,
+    env.theme,
+    env.inputMode,
+    env.viewport?.width,
+    env.viewport?.height
+  ].join('|')
 }
 
 function ensureMainContent () {
@@ -95,7 +102,15 @@ export async function refreshUI (outliner: OutlineManager) {
   // history entry discards its internal resource/pane selection on resize.
   const themeUnchanged = currentSignature.split('|')[1] === previousSignature.split('|')[1]
   if (envChanged && themeUnchanged && document.querySelector('#MainContent folder-pane-view')) {
-    ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
+    if (activeExplorerRefreshPending) return
+    activeExplorerRefreshPending = true
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    try {
+      ;(outliner as OutlineManager & { refreshActiveExplorerPanes?: () => void }).refreshActiveExplorerPanes?.()
+      ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
+    } finally {
+      activeExplorerRefreshPending = false
+    }
     return
   }
 

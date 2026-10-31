@@ -407,6 +407,63 @@ describe('manager', () => {
         expect(provider.querySelector('.paneDiv')).not.toBe(paneElement)
       })
 
+      it('re-renders the selected pane when the layout changes without replacing its explorer', async () => {
+        const subject = sym(`${window.location.origin}/layout-dependent.ttl`)
+        const pane = {
+          ...MockPane,
+          render: (_subject: NamedNode, context: { environment?: { layout?: string } }) => {
+            const element = document.createElement('div')
+            element.className = 'layout-dependent-pane'
+            element.dataset.layout = context.environment?.layout ?? 'desktop'
+            return element
+          }
+        }
+        const context = {
+          dom: document,
+          session: { paneRegistry: { list: [pane], byName: findPane }, store },
+          environment: { layout: 'desktop' }
+        }
+        const manager = new OutlineManager(context)
+        const outlineView = document.createElement('div')
+        outlineView.id = 'OutlineView'
+        document.body.appendChild(outlineView)
+        const provider = manager.propertyTable(subject, undefined, pane, {})
+        outlineView.appendChild(provider)
+
+        await vi.waitFor(() => expect(provider.querySelector('.layout-dependent-pane')).not.toBeNull())
+        expect(provider.querySelector<HTMLElement>('.layout-dependent-pane')?.dataset.layout).toBe('desktop')
+
+        context.environment.layout = 'mobile'
+        manager.refreshActiveExplorerPanes()
+
+        await vi.waitFor(() => expect(provider.querySelector<HTMLElement>('.layout-dependent-pane')?.dataset.layout).toBe('mobile'))
+        expect(provider.subjectUri).toBe(subject.uri)
+        expect(provider.pane).toBe(pane)
+      })
+
+      it('does not re-render the folder shell while refreshing a nested resource pane', async () => {
+        const folderPane = { ...MockPane, name: 'folder', render: vi.fn(MockPane.render) }
+        const subject = sym(`${window.location.origin}/storage/`)
+        const manager = new OutlineManager({
+          dom: document,
+          session: { paneRegistry: { list: [folderPane], byName: findPane }, store },
+          environment: { layout: 'desktop' }
+        })
+        const provider = manager.propertyTable(subject, undefined, folderPane, {})
+        document.body.appendChild(provider)
+        await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
+
+        const folderShell = document.createElement('folder-pane-view')
+        provider.querySelector('.paneDiv')?.appendChild(folderShell)
+        folderPane.render.mockClear()
+
+        manager.context.environment.layout = 'mobile'
+        manager.refreshActiveExplorerPanes()
+
+        expect(folderPane.render).not.toHaveBeenCalled()
+        expect(provider.querySelector('folder-pane-view')).toBe(folderShell)
+      })
+
       it('does not add a resource header for index.ttl#this', async () => {
         const provider = createExplorer(MockPane, { solo: true }, sym(`${window.location.origin}/addressbook/index.ttl#this`))
         await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
