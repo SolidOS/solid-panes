@@ -313,6 +313,27 @@ describe('browser navigation without a reload', () => {
     expect(GotoSubject).toHaveBeenCalledOnce()
   })
 
+  it('preserves a folder explorer and its selected pane across layout changes', async () => {
+    const GotoSubject = await setupLoaded()
+    const outliner = getOutliner()
+    outliner.context = { session: { store }, environment }
+    await refreshUI(outliner)
+    GotoSubject.mockClear()
+    const folderView = document.createElement('folder-pane-view')
+    const image = document.createElement('img')
+    folderView.appendChild(image)
+    document.getElementById('MainContent')!.appendChild(folderView)
+
+    for (const layout of ['mobile', 'desktop'] as const) {
+      outliner.context = { session: { store }, environment: { ...environment, layout } }
+      await refreshUI(outliner)
+
+      expect(GotoSubject).not.toHaveBeenCalled()
+      expect(document.querySelector('#MainContent folder-pane-view')).toBe(folderView)
+      expect(folderView.firstElementChild).toBe(image)
+    }
+  })
+
   it('falls back to popstate when the Navigation API is unavailable', async () => {
     Reflect.deleteProperty(window, 'navigation')
     vi.resetModules()

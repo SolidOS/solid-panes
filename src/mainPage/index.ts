@@ -91,6 +91,14 @@ export async function refreshUI (outliner: OutlineManager) {
   const previousSignature = (outliner as any)?.[LAST_RENDER_ENV_KEY] ?? ''
   const envChanged = currentSignature !== previousSignature
 
+  // Folder explorers adapt through CSS. Recreating one from the page's
+  // history entry discards its internal resource/pane selection on resize.
+  const themeUnchanged = currentSignature.split('|')[1] === previousSignature.split('|')[1]
+  if (envChanged && themeUnchanged && document.querySelector('#MainContent folder-pane-view')) {
+    ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
+    return
+  }
+
   if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
     // Re-render what the current history entry displays without changing the
     // URL or losing that it came from the account menu.
