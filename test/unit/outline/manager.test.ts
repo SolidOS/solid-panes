@@ -28,7 +28,7 @@ vi.mock('pane-registry', () => ({
   byName: vi.fn()
 }))
 
-import OutlineManager from '../../../src/outline/manager'
+import OutlineManager, { dismissErrorStateOnClose } from '../../../src/outline/manager'
 import { onNavigated, type NavigatedDetail } from '../../../src/navigation/events'
 import { lit, NamedNode, sym, blankNode } from 'rdflib'
 import { findByText, getByText } from '@testing-library/dom'
@@ -352,6 +352,16 @@ describe('manager', () => {
         await vi.waitFor(() => expect(provider.querySelector('.paneDiv')).not.toBeNull())
         expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
         expect(isInViewerPodMock).not.toHaveBeenCalled()
+      })
+
+      it('removes the solo access-denied message when it is closed', () => {
+        const errorState = document.createElement('solid-ui-error-state')
+        document.body.appendChild(errorState)
+        dismissErrorStateOnClose(errorState)
+
+        errorState.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }))
+
+        expect(document.body.contains(errorState)).toBe(false)
       })
 
       it('renders pane and header before menu icons resolve', async () => {
