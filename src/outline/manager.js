@@ -28,6 +28,10 @@ import AccessControlModal from 'solid-ui/components/access-control-modal'
 
 const EXPLORER_PROVIDER_TAG = 'solid-ui-file-explorer-provider'
 
+export function dismissErrorStateOnClose (errorState) {
+  errorState.addEventListener('close', () => errorState.remove())
+}
+
 export default function (context) {
   const dom = context.dom
   const explorerStates = new WeakMap()
@@ -1719,6 +1723,7 @@ export default function (context) {
         errorState.setAttribute('title', 'Access denied')
         errorState.setAttribute('message', soloAccessMessage())
         if (docUri) errorState.setAttribute('data-outline-error-for', docUri)
+        dismissErrorStateOnClose(errorState)
         UI.utils.emptyNode(p).appendChild(errorState)
         sf.addCallback('done', function soloAccessRecovered (uri) {
           if (!soloAccessDenied || !p.isConnected) return false
