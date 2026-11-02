@@ -68,9 +68,26 @@ describe('isAllowedPreviewRequest', () => {
     expect(isAllowedPreviewRequest('https://pod.example/profile/card', 'HEAD', uri)).toBe(true)
   })
 
+  it('allows the viewer profile document on path-based pods', () => {
+    const pathPodDocument = 'http://localhost:3100/alice/notes/doc.html'
+    const webId = 'http://localhost:3100/alice/profile/card#me'
+    expect(isAllowedPreviewRequest('http://localhost:3100/alice/profile/card', 'GET', pathPodDocument, webId)).toBe(true)
+    expect(isAllowedPreviewRequest('http://localhost:3100/alice/profile/card#me', 'GET', pathPodDocument, webId)).toBe(true)
+    expect(isAllowedPreviewRequest('http://localhost:3100/alice/profile/card', 'GET', pathPodDocument)).toBe(false)
+    expect(isAllowedPreviewRequest('http://localhost:3100/bob/profile/card', 'GET', pathPodDocument, webId)).toBe(false)
+    expect(isAllowedPreviewRequest('http://localhost:3100/alice/settings/prefs.ttl', 'GET', pathPodDocument, webId)).toBe(false)
+    expect(isAllowedPreviewRequest('http://localhost:3100/alice/profile/card', 'PUT', pathPodDocument, webId)).toBe(false)
+  })
+
   it('allows writes only to the previewed document', () => {
     expect(isAllowedPreviewRequest(uri, 'PUT', uri)).toBe(true)
     expect(isAllowedPreviewRequest('https://pod.example/profile/card', 'PUT', uri)).toBe(false)
+  })
+
+  it('allows reads of the previewed document with a fragment', () => {
+    expect(isAllowedPreviewRequest(`${uri}#saved`, 'GET', uri)).toBe(true)
+    expect(isAllowedPreviewRequest(`${uri}#saved`, 'HEAD', uri)).toBe(true)
+    expect(isAllowedPreviewRequest(`${uri}#saved`, 'PUT', uri)).toBe(false)
   })
 
   it('blocks cross-origin reads', () => {
@@ -132,7 +149,7 @@ describe('human readable pane iframe rendering', () => {
 
   it('keeps Dokieli documents isolated and mediates same-origin reads plus exact-document writes', async () => {
     const dokieliUri = `${window.location.origin}/docs/dok.html`
-    const html = '<html><head><script src="https://dokie.li/scripts/dokieli.js"></script></head><body><h1>Dok</h1></body></html>'
+    const html = '<html><head><script>(() =&gt; { const pending = new Map(); window.parent.postMessage({type: "solidos-preview-request"}); window.postMessage({type: "solidos-preview-response"}); window.__stalePreviewBridge = true; })()</script><script src="https://dokie.li/scripts/dokieli.js"></script></head><body><h1>Dok</h1></body></html>'
     const authenticatedFetch = vi.fn().mockResolvedValue(new Response('ok'))
     const subject = { uri: dokieliUri, doc: () => subject }
     const store = {
@@ -150,6 +167,8 @@ describe('human readable pane iframe rendering', () => {
       expect(frame.getAttribute('sandbox')).toBe('allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals')
       expect(frame.srcdoc).toContain('solidos-preview-request')
       expect(frame.srcdoc).toContain('dokieli.js')
+      expect(frame.srcdoc.match(/<script data-solidos-preview-bridge="true">/g)).toHaveLength(1)
+      expect(frame.srcdoc).not.toContain('__stalePreviewBridge')
       expect(frame.srcdoc).toContain('file:\\/\\/srcdoc')
       expect(frame.srcdoc).toContain('const url = documentRequestUrl(request ? request.url : input)')
       expect(frame.srcdoc).toContain('const resolvedUrl = documentRequestUrl(url)')
@@ -157,6 +176,8 @@ describe('human readable pane iframe rendering', () => {
       expect(frame.srcdoc).toContain('getAllKeys')
       expect(frame.srcdoc).toContain('transaction.oncomplete')
       expect(frame.srcdoc).toContain('openCursor: () => openCursor(true)')
+      expect(frame.srcdoc).toContain('createMemoryStorage')
+      expect(frame.srcdoc).toMatch(/storageName of \['localStorage', 'sessionStorage'\]/)
 
       window.dispatchEvent(new MessageEvent('message', {
         source: frame.contentWindow,
@@ -175,6 +196,23 @@ describe('human readable pane iframe rendering', () => {
         headers: undefined,
         body: 'x'
       })
+      authenticatedFetch.mockClear()
+      window.dispatchEvent(new MessageEvent('message', {
+        source: frame.contentWindow,
+        data: {
+          type: 'solidos-preview-request',
+          nonce: frame.srcdoc.match(/const nonce = "([^"]+)"/)?.[1],
+          id: 'save-with-bridge',
+          url: dokieliUri,
+          method: 'PUT',
+          body: '<!doctype html><html><head><script data-solidos-preview-bridge="true">window.__bridge = true</script><script>(() =&gt; { const pending = new Map(); window.parent.postMessage({type: "solidos-preview-request"}); window.postMessage({type: "solidos-preview-response"}); })()</script></head><body><h1>Saved</h1></body></html>'
+        }
+      }))
+      await flush()
+      const savedBody = authenticatedFetch.mock.calls[0][1]?.body as string
+      expect(savedBody).toContain('<h1>Saved</h1>')
+      expect(savedBody).not.toContain('solidos-preview-bridge')
+      expect(savedBody).not.toContain('solidos-preview-request')
       authenticatedFetch.mockClear()
       window.dispatchEvent(new MessageEvent('message', {
         source: frame.contentWindow,
@@ -231,6 +269,7 @@ describe('human readable pane iframe rendering', () => {
         body: 'saved from file srcdoc'
       })
       authenticatedFetch.mockClear()
+      const postToPreview = vi.spyOn(frame.contentWindow!, 'postMessage')
       window.dispatchEvent(new MessageEvent('message', {
         source: frame.contentWindow,
         data: {
@@ -243,6 +282,13 @@ describe('human readable pane iframe rendering', () => {
       }))
       await flush()
       expect(authenticatedFetch).not.toHaveBeenCalled()
+      // Denied requests are still answered so the preview never waits forever.
+      expect(postToPreview).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'solidos-preview-response',
+        id: 'other',
+        ok: false,
+        status: 403
+      }), '*')
     } finally {
       pane.remove()
     }

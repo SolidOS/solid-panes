@@ -28,28 +28,14 @@ export async function getPaneItems (
 ) {
   if (typeof dispatchOpenPane !== 'function') return []
 
-  const menuItems = await Promise.all(relevantPanes.map(async pane => {
-    const label = pane.label(subject, context)
-    if (!label) return undefined
-
-    let iconSrc: string | undefined
-    if (pane.name === 'profile') {
-      iconSrc = personIcon
-    } else if (pane.name === 'social') {
-      iconSrc = friendsIcon
-    } else {
-      iconSrc = await getPaneIcon(pane, subject, context) || undefined
-    }
-
-    const icon = UI.utils.AJARImage(iconSrc || '', label, label, context.dom)
-    icon.setAttribute('slot', 'left-icon')
-
-    return {
-      label,
-      icon,
-      action: () => dispatchOpenPane(subject, pane.name)
-    }
-  }))
-
-  return menuItems.filter((item): item is NonNullable<typeof item> => item !== undefined)
+  return UI.preparePaneMenuItems({
+    subject,
+    context,
+    panes: relevantPanes,
+    iconOverrides: {
+      profile: () => personIcon,
+      social: () => friendsIcon
+    },
+    openPane: (paneSubject, paneName) => dispatchOpenPane(paneSubject, paneName)
+  })
 }

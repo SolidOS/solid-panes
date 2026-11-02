@@ -178,8 +178,33 @@ type PreviewResponse = {
 
 const PREVIEW_REQUEST_TYPE = 'solidos-preview-request'
 const PREVIEW_RESPONSE_TYPE = 'solidos-preview-response'
+const PREVIEW_BRIDGE_ATTRIBUTE = 'data-solidos-preview-bridge'
 const PREVIEW_READ_METHODS = new Set(['GET', 'HEAD'])
 const PREVIEW_WRITE_METHODS = new Set(['PUT', 'PATCH', 'DELETE'])
+
+function stripPreviewBridgeScripts (html: string | undefined): string | undefined {
+  if (typeof html !== 'string' || !html.includes(PREVIEW_REQUEST_TYPE)) return html
+
+  const parsed = new DOMParser().parseFromString(html, 'text/html')
+  let removed = false
+  for (const script of parsed.querySelectorAll('script')) {
+    const source = script.textContent || ''
+    const isPreviewBridge = script.hasAttribute(PREVIEW_BRIDGE_ATTRIBUTE) ||
+      (
+        source.includes(PREVIEW_REQUEST_TYPE) &&
+        source.includes(PREVIEW_RESPONSE_TYPE) &&
+        source.includes('const pending = new Map()')
+      )
+    if (isPreviewBridge) {
+      script.remove()
+      removed = true
+    }
+  }
+  if (!removed) return html
+
+  const doctype = html.match(/<!doctype[^>]*>/i)?.[0]
+  return `${doctype ? `${doctype}\n` : ''}${parsed.documentElement.outerHTML}`
+}
 
 function isSrcdocUrl (url: string): boolean {
   return url === 'about:srcdoc' || /^file:\/\/srcdoc\/?(?:[?#].*)?$/i.test(url)
@@ -190,7 +215,23 @@ export function previewRequestUrl (url: string, documentUri: string): string {
   return isSrcdocUrl(resolvedUrl) ? documentUri : resolvedUrl
 }
 
-export function isAllowedPreviewRequest (url: string, method: string, documentUri: string): boolean {
+function profileDocumentUrl (webId: string | null | undefined): string | undefined {
+  if (!webId) return undefined
+  try {
+    const url = new URL(webId)
+    url.hash = ''
+    return url.href
+  } catch {
+    return undefined
+  }
+}
+
+export function isAllowedPreviewRequest (
+  url: string,
+  method: string,
+  documentUri: string,
+  webId: string | null = null
+): boolean {
   let resolvedUrl: URL
   let expectedUrl: URL
   try {
@@ -205,16 +246,23 @@ export function isAllowedPreviewRequest (url: string, method: string, documentUr
   }
 
   const normalizedMethod = method.toUpperCase()
-  const isPreviewDocument = resolvedUrl.href === expectedUrl.href
-  const isApprovedProfileResource = resolvedUrl.pathname === '/profile/card'
+  const requestedDocument = new URL(resolvedUrl.href)
+  requestedDocument.hash = ''
+  const expectedDocument = new URL(expectedUrl.href)
+  expectedDocument.hash = ''
+  const isPreviewDocument = requestedDocument.href === expectedDocument.href
+  const isExactPreviewDocument = resolvedUrl.href === expectedUrl.href
+  // Path-based pods keep the viewer profile below the pod path, e.g. /alice/profile/card.
+  const isApprovedProfileResource = resolvedUrl.pathname === '/profile/card' ||
+    requestedDocument.href === profileDocumentUrl(webId)
   return (
     PREVIEW_READ_METHODS.has(normalizedMethod) &&
     (isPreviewDocument || isApprovedProfileResource)
-  ) || (isPreviewDocument && PREVIEW_WRITE_METHODS.has(normalizedMethod))
+  ) || (isExactPreviewDocument && PREVIEW_WRITE_METHODS.has(normalizedMethod))
 }
 
 function createPreviewBridge (html: string, uri: string, nonce: string, webId: string | null = null): string {
-  const bridge = `<script>
+  const bridge = `<script ${PREVIEW_BRIDGE_ATTRIBUTE}="true">
 (() => {
   const documentUri = ${JSON.stringify(uri)}
   const documentOrigin = new URL(documentUri).origin
@@ -335,6 +383,27 @@ function createPreviewBridge (html: string, uri: string, nonce: string, webId: s
       }
     }
     Object.defineProperty(window, 'indexedDB', { configurable: true, value: isolatedIndexedDB })
+  }
+  const createMemoryStorage = () => {
+    const values = new Map()
+    return {
+      get length () { return values.size },
+      key: index => Array.from(values.keys())[index] ?? null,
+      getItem: key => values.get(String(key)) ?? null,
+      setItem: (key, value) => values.set(String(key), String(value)),
+      removeItem: key => values.delete(String(key)),
+      clear: () => values.clear()
+    }
+  }
+  for (const storageName of ['localStorage', 'sessionStorage']) {
+    try {
+      window[storageName].getItem('__solidos_probe__')
+    } catch {
+      Object.defineProperty(window, storageName, {
+        configurable: true,
+        value: createMemoryStorage()
+      })
+    }
   }
   const nativeFetch = window.fetch.bind(window)
 
@@ -570,7 +639,8 @@ function createPreviewBridge (html: string, uri: string, nonce: string, webId: s
   window.addEventListener('load', installDokieliHooks)
 })()
 </script>`
-  return withBaseHref(html, uri).replace(/<head(\s[^>]*)?>/i, match => `${match}${bridge}`)
+  const cleanHtml = stripPreviewBridgeScripts(html) ?? html
+  return withBaseHref(cleanHtml, uri).replace(/<head(\s[^>]*)?>/i, match => `${match}${bridge}`)
 }
 
 function mountDokieliBridge (
@@ -593,19 +663,36 @@ function mountDokieliBridge (
       event.source !== frame.contentWindow ||
       !request ||
       request.type !== PREVIEW_REQUEST_TYPE ||
-      request.nonce !== nonce ||
-      !isAllowedPreviewRequest(request.url, request.method, expectedUri)
+      request.nonce !== nonce
     ) return
-    const requestUrl = previewRequestUrl(request.url, expectedUri)
 
     const respond = (response: PreviewResponse) => {
       frame.contentWindow?.postMessage(response, '*')
     }
 
+    // Always settle authenticated bridge requests. Dropping a denied request
+    // leaves the preview awaiting it forever (Dokieli then never leaves Loading…).
+    if (!isAllowedPreviewRequest(request.url, request.method, expectedUri, webId)) {
+      respond({
+        type: PREVIEW_RESPONSE_TYPE,
+        nonce,
+        id: request.id,
+        ok: false,
+        status: 403,
+        headers: [],
+        body: '',
+        error: 'Request not permitted by the SolidOS preview'
+      })
+      return
+    }
+    const requestUrl = previewRequestUrl(request.url, expectedUri)
+
     authenticatedFetch(requestUrl, {
       method: request.method,
       headers: request.headers,
-      body: PREVIEW_READ_METHODS.has(request.method) ? undefined : request.body
+      body: PREVIEW_READ_METHODS.has(request.method)
+        ? undefined
+        : stripPreviewBridgeScripts(request.body)
     }).then(async response => {
       respond({
         type: PREVIEW_RESPONSE_TYPE,
