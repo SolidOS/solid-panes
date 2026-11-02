@@ -183,7 +183,7 @@ const PREVIEW_READ_METHODS = new Set(['GET', 'HEAD'])
 const PREVIEW_WRITE_METHODS = new Set(['PUT', 'PATCH', 'DELETE'])
 
 function stripPreviewBridgeScripts (html: string | undefined): string | undefined {
-  if (!html?.includes(PREVIEW_REQUEST_TYPE)) return html
+  if (typeof html !== 'string' || !html.includes(PREVIEW_REQUEST_TYPE)) return html
 
   const parsed = new DOMParser().parseFromString(html, 'text/html')
   let removed = false
