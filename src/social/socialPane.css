@@ -874,9 +874,11 @@
 
 .social-pane .social-friends-grid > tr > td:nth-child(3),
 .social-pane .social-friends-grid > tbody > tr > td:nth-child(3) {
+  position: relative;
   width: 2.5rem;
   min-width: 2.5rem;
   padding-left: 0.25rem;
+  padding-right: 0.25rem;
   vertical-align: top;
 }
 
@@ -884,7 +886,28 @@
 .social-pane__all-friends .social-friends-grid > tbody > tr > td:nth-child(3) > a {
   float: right;
   clear: right;
+  display: inline-block;
   line-height: 0;
+  margin-top: 0.15em;
+  vertical-align: middle;
+}
+
+.social-pane .social-friends-grid > tr > td:nth-child(3) > img[data-testid='deleteButtonWithCheck'],
+.social-pane .social-friends-grid > tbody > tr > td:nth-child(3) > img[data-testid='deleteButtonWithCheck'] {
+  position: absolute;
+  top: 0.7em;
+  right: 0.7em;
+  display: block;
+  float: none;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  max-width: 1em;
+  min-height: 1em;
+  max-height: 1em;
+  margin: 0;
+  vertical-align: middle;
+  object-fit: contain;
 }
 
 .social-pane .social-friends-grid > tr > td:first-child,
