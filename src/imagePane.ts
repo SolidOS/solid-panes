@@ -86,6 +86,10 @@ export const imagePane: ImagePane = {
         const objectURL = URL.createObjectURL(myBlob)
         img.setAttribute('src', objectURL) // w640 h480 //
       })
+      .catch(function (error: unknown) {
+        img.setAttribute('alt', 'Unable to load image')
+        UI.log.warn('Unable to load image resource: ' + error)
+      })
     img.classList.add('image-pane__image')
     div.appendChild(img)
     return div
