@@ -211,7 +211,7 @@ describe('file explorer header', () => {
   it('is never shown over profile or friends panes', () => {
     expect(explorerHeaderForPane(true, 'profile')).toBe(false)
     expect(explorerHeaderForPane(true, 'social')).toBe(false)
-    expect(explorerHeaderForPane(true, 'folder')).toBe(true)
+    expect(explorerHeaderForPane(true, 'folder')).toBe(false)
     expect(explorerHeaderForPane(true, undefined)).toBe(true)
     expect(explorerHeaderForPane(false, 'folder')).toBe(false)
   })
@@ -219,7 +219,7 @@ describe('file explorer header', () => {
   it('is never shown over a storage view, which has its own header or the navbar', () => {
     expect(explorerHeaderForPane(true, 'folder', 'explorer')).toBe(false)
     expect(explorerHeaderForPane(true, 'folder', 'storage')).toBe(false)
-    expect(explorerHeaderForPane(true, 'folder', 'container')).toBe(true)
+    expect(explorerHeaderForPane(true, 'folder', 'container')).toBe(false)
     // A pane opened in place of the folder keeps its resource header
     expect(explorerHeaderForPane(true, 'source', 'explorer')).toBe(true)
   })

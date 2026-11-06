@@ -174,6 +174,6 @@ export function explorerHeaderForPane (
   folderView?: FolderView,
   solo = false
 ): boolean {
-  if (paneName === 'folder' && (folderView === 'explorer' || folderView === 'storage')) return false
+  if (paneName === 'folder') return false
   return resourceHeader && !isPersonPane(paneName)
 }
