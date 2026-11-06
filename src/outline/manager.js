@@ -344,7 +344,11 @@ export default function (context) {
       pane,
       relevantPanes: provider.relevantPanes || [],
       header: state && explorerHeaderForPane(state.showHeader, pane?.name, state.options.folderView, state.options.solo)
-        ? { paneIcon: getPaneIcon(pane, subject, context), menuItems: state.menuItems }
+        ? {
+            paneIcon: getPaneIcon(pane, subject, context),
+            menuItems: state.menuItems,
+            showBack: !state.options.solo
+          }
         : undefined,
       paneElement
     })
