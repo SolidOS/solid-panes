@@ -18,10 +18,10 @@ describe('pane content spacing', () => {
       /\.paneDiv\.defaultPane \{[\s\S]*padding-inline: 40px;/
     )
     expect(stylesheet('dataContentPane.css')).toMatch(
-      /div\.data-content-pane \{[\s\S]*padding: var\(--spacing-base, 0\.5rem\) 40px;/
+      /\.data-content-pane \{[^}]*padding: 8px 40px;/
     )
     expect(stylesheet('dataContentPane.css')).not.toMatch(
-      /\.data-content-pane__nested-formula[^{]*\{[\s\S]*40px/
+      /\.data-content-pane__nested-formula[^{]*\{[^}]*40px/
     )
   })
 

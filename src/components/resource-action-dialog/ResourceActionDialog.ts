@@ -97,7 +97,7 @@ export default class ResourceActionDialog extends WebComponent {
     })
     if (event.shiftKey && focusedIndex === 0) {
       event.preventDefault()
-      buttons.at(-1)?.focus()
+      buttons[buttons.length - 1]?.focus()
     } else if (!event.shiftKey && focusedIndex === buttons.length - 1) {
       event.preventDefault()
       buttons[0]?.focus()
