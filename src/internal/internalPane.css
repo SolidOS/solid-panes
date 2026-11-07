@@ -10,6 +10,21 @@
   box-sizing: border-box;
 }
 
+.internalPaneControls tr {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--spacing-sm, 1em);
+  width: 100%;
+}
+
+.internalPaneControls td {
+  padding: 0;
+}
+
 .internalPaneDeleteButton {
   height: var(--icon-base, 2em);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
