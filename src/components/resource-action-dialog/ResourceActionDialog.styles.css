@@ -1,0 +1,24 @@
+solid-ui-dialog-footer {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+solid-ui-dialog-header h2 {
+  margin: 0;
+  font: inherit;
+}
+
+solid-ui-dialog-content p {
+  overflow-wrap: anywhere;
+}
+
+solid-ui-button {
+  min-width: 24px;
+  min-height: 24px;
+}
+
+solid-ui-button:focus-within {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 5px;
+}
