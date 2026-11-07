@@ -105,6 +105,7 @@ export default class ResourceActionDialog extends WebComponent {
   }
 
   protected render () {
+    const [mainMessage, ...additionalMessages] = this.message.split('\n')
     return html`
       <solid-ui-dialog @keydown=${this.handleKeyDown}>
         <solid-ui-dialog-header slot="header">
@@ -115,7 +116,10 @@ export default class ResourceActionDialog extends WebComponent {
           </solid-ui-button>
         </solid-ui-dialog-header>
         <solid-ui-dialog-content>
-          <p>${this.message}</p>
+          <p>
+            ${mainMessage}
+            ${additionalMessages.map(message => html`<span class="resource-action-dialog-emphasis">${message}</span>`)}
+          </p>
         </solid-ui-dialog-content>
         <solid-ui-dialog-footer slot="footer">
           ${this.confirmation

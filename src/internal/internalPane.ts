@@ -4,7 +4,7 @@
  ** internal to the user's interaction with the web, and are not normally displayed
  */
 import { solidLogicSingleton } from 'solid-logic'
-import { icons, ns, widgets } from 'solid-ui'
+import { icons, ns, utils, widgets } from 'solid-ui'
 import { BlankNode, literal, NamedNode, st, sym, Variable, Store } from 'rdflib'
 import { PaneDefinition } from 'pane-registry'
 import './internalPane.css'
@@ -78,7 +78,8 @@ const pane: PaneDefinition = {
           'Remove this ' + noun,
           () => {
             if (deletionPending) return
-            return confirmDeletion(`Are you sure you want to delete ${subject}? This cannot be undone.`)
+            const resourceLabel = utils.label(subject) || subject.value
+            return confirmDeletion(`Are you sure you want to delete "${resourceLabel}"?\nThis can't be undone.`)
               .then(confirmed => {
                 if (!confirmed) return
                 deletionPending = true
@@ -86,7 +87,7 @@ const pane: PaneDefinition = {
                 const resourceLogic = context.session.logic?.resource || solidLogicSingleton.resource
                 return resourceLogic.recursiveDelete(subject)
                   .then(() => {
-                    const str = 'Deleted: ' + subject
+                    const str = `Deleted "${resourceLabel}"`
                     console.log(str)
                     showMessage('Resource deleted', str)
                     dom.dispatchEvent(new CustomEvent('solid-resource-deleted', {
@@ -107,6 +108,9 @@ const pane: PaneDefinition = {
         )
 
         deleteButton.classList.add('internalPaneDeleteButton')
+        deleteButton.style.backgroundColor = 'transparent'
+        deleteButton.style.border = 'none'
+        deleteButton.style.padding = '0'
         deleteCell.appendChild(deleteButton)
       }
 
@@ -149,7 +153,7 @@ const pane: PaneDefinition = {
         st(
           subject,
           sym('http://www.w3.org/2007/ont/link#uri'),
-          subject.uri as any, // @@ TODO Remove casting
+          sym(subject.uri),
           store.fetcher.appNode
         )
       )
@@ -159,7 +163,7 @@ const pane: PaneDefinition = {
           st(
             subject,
             sym('http://www.w3.org/2007/ont/link#documentURI'),
-            subject.uri.split('#')[0] as any, // @@ TODO Remove casting
+            sym(subject.uri.split('#')[0]),
             store.fetcher.appNode
           )
         )

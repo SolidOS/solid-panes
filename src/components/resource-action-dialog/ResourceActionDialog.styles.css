@@ -10,6 +10,13 @@ solid-ui-dialog-header h2 {
 
 solid-ui-dialog-content p {
   overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.resource-action-dialog-emphasis {
+  display: block;
+  font-weight: 600;
+  text-align: center;
 }
 
 solid-ui-button {
@@ -18,7 +25,7 @@ solid-ui-button {
 }
 
 solid-ui-button:focus-within {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-  border-radius: 5px;
+  outline: 1px solid currentColor;
+  outline-offset: 1px;
+  border-radius: 4px;
 }

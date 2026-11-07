@@ -52,8 +52,20 @@ describe('Under The Hood RDF bookkeeping', () => {
     internalPane.render(subject, context)
     internalPane.render(subject, context)
 
-    expect(appendPropertyTRs.mock.calls[0][1]).toEqual(expect.arrayContaining([
-      expect.objectContaining({ predicate: sym('http://www.w3.org/2007/ont/link#uri') })
+    const displayedStatements = appendPropertyTRs.mock.calls[0][1]
+    expect(displayedStatements).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        predicate: sym('http://www.w3.org/2007/ont/link#uri'),
+        object: subject
+      })
+    ]))
+    const fragment = sym('https://example.test/file.ttl#part')
+    internalPane.render(fragment, context)
+    expect(appendPropertyTRs.mock.calls[4][1]).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        predicate: sym('http://www.w3.org/2007/ont/link#documentURI'),
+        object: sym('https://example.test/file.ttl')
+      })
     ]))
     expect(store.statementsMatching(subject)).toEqual(originalStatements)
     expect(store.statements).toEqual(originalStatements)
