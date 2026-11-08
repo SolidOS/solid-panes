@@ -273,6 +273,7 @@
     font-size: 14px;
     padding-left: 0;
     padding-right: 0;
+    border: none;
   }
 
   .data-content-pane .data-content-pane__row--root {
