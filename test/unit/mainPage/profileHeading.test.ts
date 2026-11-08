@@ -91,7 +91,7 @@ describe('page-level profile heading', () => {
 
   it('opens the heading editor from Edit and announces the save to other views', async () => {
     const subject = sym('https://edit-flow.example/profile/card#me')
-    const profileData = { entryNode: subject, name: 'Profile Heading Test' }
+    const profileData = { sourceNode: subject, name: 'Profile Heading Test' }
     const onSaved = vi.fn()
     createHeadingEditDialogMock.mockReset().mockImplementation(
       async (_event, _store, _subject, _profile, _viewerMode, saved) => saved()
@@ -129,7 +129,7 @@ describe('page-level profile heading', () => {
 
   it('does not announce a save when the editor is closed without saving', async () => {
     const subject = sym('https://edit-flow-cancel.example/profile/card#me')
-    const profileData = { entryNode: subject, name: 'Profile Heading Test' }
+    const profileData = { sourceNode: subject, name: 'Profile Heading Test' }
     const onSaved = vi.fn()
     createHeadingEditDialogMock.mockReset().mockResolvedValue(undefined)
     const heading = document.createElement('solid-panes-profile-heading') as HTMLElement & {
@@ -252,7 +252,7 @@ describe('page-level profile heading', () => {
       compact: boolean
       editContext: {
         subject: ReturnType<typeof sym>
-        profileData: { entryNode: ReturnType<typeof sym>; name: string }
+        profileData: { sourceNode: ReturnType<typeof sym>; name: string }
         viewerMode: 'owner'
         onSaved: () => void
       }
@@ -269,7 +269,7 @@ describe('page-level profile heading', () => {
     heading.editContext = {
       subject: sym('https://compact-heading.example/profile/card#me'),
       profileData: {
-        entryNode: sym('https://compact-heading.example/profile/card#me'),
+        sourceNode: sym('https://compact-heading.example/profile/card#me'),
         name: 'Compact Heading Test'
       },
       viewerMode: 'owner',
@@ -510,7 +510,7 @@ describe('page-level profile heading', () => {
     expect(heading.shadowRoot?.textContent).toContain('old@example.com')
     const previousEditContext = heading.editContext
     const profileData = {
-      entryNode: subject,
+      sourceNode: subject,
       name: 'Saved Contacts Test',
       primaryPhone: { valueNode: sym('tel:+123456789') },
       primaryEmail: { valueNode: sym('mailto:new@example.com') },

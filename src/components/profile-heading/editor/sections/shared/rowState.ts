@@ -1,7 +1,7 @@
 import { RowStatus } from './types'
 
 export type EditableRow = {
-  entryNode: string
+  sourceNode: string
   status: RowStatus
 }
 
@@ -17,7 +17,7 @@ export function deleteRow<T extends EditableRow> (rows: T[], index: number) {
   const row = rows[index]
   if (!row) return
 
-  if (row.entryNode) {
+  if (row.sourceNode) {
     row.status = 'deleted'
     return
   }
@@ -32,7 +32,7 @@ export function applyRowSelectChange<T extends EditableRow, K extends StringKeyO
 ) {
   row[field] = nextValue.trim() as T[K]
 
-  if (row.entryNode) {
+  if (row.sourceNode) {
     row.status = row.status === 'existing' || row.status === 'deleted' ? 'modified' : row.status
     return
   }
@@ -59,11 +59,11 @@ export function applyRowFieldChange<T extends EditableRow, K extends keyof T> (
   row[field] = nextValue
 
   if (!hasContent(row)) {
-    row.status = row.entryNode ? 'deleted' : 'new'
+    row.status = row.sourceNode ? 'deleted' : 'new'
     return
   }
 
-  if (row.entryNode) {
+  if (row.sourceNode) {
     row.status = row.status === 'existing' || row.status === 'deleted' ? 'modified' : row.status
     return
   }

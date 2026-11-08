@@ -10,7 +10,7 @@ import { ProfileDetails, HeadingMutationPlan, ProfileBasicRow } from './types'
 import { Image } from './imagePreview'
 import '../../styles/EditDialogs.css'
 import { LiveStore, NamedNode } from 'rdflib'
-import { processHeadingMutations } from './mutations'
+import { solidLogicSingleton } from 'solid-logic'
 import { ViewerMode } from '../../../../../types'
 import {
   combinePhoneValue,
@@ -157,8 +157,8 @@ function toFormState (profileData: ProfileDetails): HeadingFormState {
     location: sanitizeTextValue(toText(profileData.location || '')),
     pronouns: normalizePronounsValue(toText(profileData.pronouns || '')),
     dateOfBirth: sanitizeTextValue(toText(profileData.dateOfBirth || '')),
-    entryNode: toText(profileData.entryNode),
-    status: toText(profileData.entryNode) ? 'existing' as const : 'new' as const
+    sourceNode: toText(profileData.sourceNode),
+    status: toText(profileData.sourceNode) ? 'existing' as const : 'new' as const
   }
   const primaryEmail = profileData.primaryEmail
   const primaryPhone = profileData.primaryPhone
@@ -172,16 +172,16 @@ function toFormState (profileData: ProfileDetails): HeadingFormState {
   const email: ContactPointRow = {
     value: sanitizeEmailValue(toText(primaryEmail?.valueNode).replace(/^mailto:/i, '')),
     type: normalizedEmailType,
-    entryNode: toText(primaryEmail?.entryNode),
-    status: toText(primaryEmail?.entryNode) ? 'existing' as const : 'new' as const
+    sourceNode: toText(primaryEmail?.sourceNode),
+    status: toText(primaryEmail?.sourceNode) ? 'existing' as const : 'new' as const
   }
   const phone: ContactPointRow = {
     value: sanitizeTextValue(
-      toText(primaryPhone?.valueNode || primaryPhone?.entryNode || '').replace(/^tel:/i, '')
+      toText(primaryPhone?.valueNode || primaryPhone?.sourceNode || '').replace(/^tel:/i, '')
     ),
     type: normalizedPhoneType,
-    entryNode: toText(primaryPhone?.entryNode || ''),
-    status: toText(primaryPhone?.entryNode || '') ? 'existing' as const : 'new' as const
+    sourceNode: toText(primaryPhone?.sourceNode || ''),
+    status: toText(primaryPhone?.sourceNode || '') ? 'existing' as const : 'new' as const
   }
   const address: ContactAddressRow = {
     streetAddress: sanitizeAddressFieldValue(toText(primaryAddress?.streetAddress)),
@@ -190,15 +190,15 @@ function toFormState (profileData: ProfileDetails): HeadingFormState {
     postalCode: sanitizeAddressFieldValue(toText(primaryAddress?.postalCode)),
     countryName: sanitizeAddressFieldValue(toText(primaryAddress?.countryName)),
     type: toTypeLabel(primaryAddress?.type),
-    entryNode: toText(primaryAddress?.entryNode),
-    status: toText(primaryAddress?.entryNode) ? 'existing' as const : 'new' as const
+    sourceNode: toText(primaryAddress?.sourceNode),
+    status: toText(primaryAddress?.sourceNode) ? 'existing' as const : 'new' as const
   }
 
   return {
-    basicInfo: (basicInfo) || { name: '', nickname: '', imageSrc: '', location: '', pronouns: '', dateOfBirth: '', entryNode: '', status: 'new' },
-    email: (email) || { value: '', type: '', entryNode: '', status: 'new' },
-    phone: (phone) || { value: '', type: '', entryNode: '', status: 'new' },
-    address: (address) || { streetAddress: '', locality: '', region: '', postalCode: '', countryName: '', type: '', entryNode: '', status: 'new' },
+    basicInfo: (basicInfo) || { name: '', nickname: '', imageSrc: '', location: '', pronouns: '', dateOfBirth: '', sourceNode: '', status: 'new' },
+    email: (email) || { value: '', type: '', sourceNode: '', status: 'new' },
+    phone: (phone) || { value: '', type: '', sourceNode: '', status: 'new' },
+    address: (address) || { streetAddress: '', locality: '', region: '', postalCode: '', countryName: '', type: '', sourceNode: '', status: 'new' },
     emailTypeWasMissing,
     phoneTypeWasMissing,
     imagePreviewSrc: '',
@@ -300,7 +300,7 @@ function summarizeHeadingContactOps (
 
   if (
     typeWasMissing &&
-    row.entryNode &&
+    row.sourceNode &&
     row.status === 'existing' &&
     rowHasContent(row) &&
     ops.create.length === 0 &&
@@ -355,7 +355,7 @@ function renderContactPhoneInput ({
             .value=${splitValue.localNumber}
             required
             data-contact-field="value"
-            data-entry-node=${phone?.entryNode || ''}
+            data-entry-node=${phone?.sourceNode || ''}
             data-row-status=${phone?.status || 'n/a'}
             placeholder=${label}
             autocomplete="tel-national"
@@ -415,7 +415,7 @@ function renderContactEmailInputRow ({
           .value=${email?.value || ''}
           required
           data-contact-field="value"
-          data-entry-node=${email?.entryNode || ''}
+          data-entry-node=${email?.sourceNode || ''}
           data-row-status=${email?.status || 'n/a'}
           placeholder="Email Address"
           autocomplete="email"
@@ -478,7 +478,7 @@ function renderContactAddressInput ({
         .value=${address?.streetAddress || ''}
         required
         data-contact-field="streetAddress"
-        data-entry-node=${address?.entryNode || ''}
+        data-entry-node=${address?.sourceNode || ''}
         data-row-status=${address?.status || 'n/a'}
         placeholder="Street Address"
         autocomplete="street-address"
@@ -496,7 +496,7 @@ function renderContactAddressInput ({
           name=${localityName}
           .value=${address?.locality || ''}
           data-contact-field="locality"
-          data-entry-node=${address?.entryNode || ''}
+          data-entry-node=${address?.sourceNode || ''}
           data-row-status=${address?.status || 'n/a'}
           placeholder="City / Locality"
           autocomplete="address-level2"
@@ -512,7 +512,7 @@ function renderContactAddressInput ({
           name=${postalCodeName}
           .value=${address?.postalCode || ''}
           data-contact-field="postalCode"
-          data-entry-node=${address?.entryNode || ''}
+          data-entry-node=${address?.sourceNode || ''}
           data-row-status=${address?.status || 'n/a'}
           placeholder="Postal Code"
           autocomplete="postal-code"
@@ -531,7 +531,7 @@ function renderContactAddressInput ({
           name=${regionName}
           .value=${address?.region || ''}
           data-contact-field="region"
-          data-entry-node=${address?.entryNode || ''}
+          data-entry-node=${address?.sourceNode || ''}
           data-row-status=${address?.status || 'n/a'}
           placeholder="State / Region"
           inputmode="text"
@@ -546,7 +546,7 @@ function renderContactAddressInput ({
           name=${countryName}
           .value=${address?.countryName || ''}
           data-contact-field="countryName"
-          data-entry-node=${address?.entryNode || ''}
+          data-entry-node=${address?.sourceNode || ''}
           data-row-status=${address?.status || 'n/a'}
           placeholder="Country"
           autocomplete="country-name"
@@ -614,7 +614,7 @@ function renderHeadingInfoInput (
       try {
         formState.pendingImageFile = file
         setHeadingImagePreview(formState, file)
-        basicInfo.status = basicInfo.entryNode ? 'modified' : 'new'
+        basicInfo.status = basicInfo.sourceNode ? 'modified' : 'new'
         rerender()
       } catch (error) {
         console.error('Profile image upload failed', error)
@@ -633,7 +633,7 @@ function renderHeadingInfoInput (
     try {
       formState.pendingImageFile = file
       setHeadingImagePreview(formState, file)
-      basicInfo.status = basicInfo.entryNode ? 'modified' : 'new'
+      basicInfo.status = basicInfo.sourceNode ? 'modified' : 'new'
       rerender()
     } catch (error) {
       console.error('Profile camera upload failed', error)
@@ -715,7 +715,7 @@ function renderHeadingInfoInput (
             .value=${basicInfo?.name || ''}
             required
             data-contact-field="name"
-            data-entry-node=${basicInfo?.entryNode || ''}
+            data-entry-node=${basicInfo?.sourceNode || ''}
             data-row-status=${basicInfo?.status || 'n/a'}
             placeholder="Full Name"
             autocomplete="name"
@@ -731,7 +731,7 @@ function renderHeadingInfoInput (
             name="nickname"
             .value=${basicInfo?.nickname || ''}
             data-contact-field="nickname"
-            data-entry-node=${basicInfo?.entryNode || ''}
+            data-entry-node=${basicInfo?.sourceNode || ''}
             data-row-status=${basicInfo?.status || 'n/a'}
             placeholder="Nickname"
             autocomplete="nickname"
@@ -767,7 +767,7 @@ function renderHeadingInfoInput (
             name="dateOfBirth"
             .value=${toStorageDateISO(basicInfo?.dateOfBirth || '')}
             data-contact-field="dateOfBirth"
-            data-entry-node=${basicInfo?.entryNode || ''}
+            data-entry-node=${basicInfo?.sourceNode || ''}
             data-row-status=${basicInfo?.status || 'n/a'}
             autocomplete="off"
             data-lpignore="true"
@@ -827,7 +827,7 @@ function isValidHeadingEmailAddress (value: string): boolean {
 }
 
 function isValidHeadingPhoneNumber (value: string): boolean {
-  return /^\d+$/.test(value)
+  return /^\d[\d\s().-]*$/.test(value) && /\d/.test(value)
 }
 
 function validateHeadingDataBeforeSave (formState: HeadingFormState): string | null {
@@ -907,7 +907,7 @@ export async function createHeadingEditDialog (
         emailOps: mapEmailOpsForSave(emailOps),
         addressOps: summarizeRowOps([formState.address], rowHasContent)
       }
-      await processHeadingMutations(store, subject, plan)
+      await solidLogicSingleton.profile.processHeadingMutations(subject, plan)
 
       const nextPhotoUri = sanitizeTextValue(formState.basicInfo.imageSrc || '')
       if (originalPhotoUri && originalPhotoUri !== nextPhotoUri) {

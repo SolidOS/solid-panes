@@ -36,7 +36,7 @@ describe('local profile heading presentation', () => {
     expect(profile.jobTitle).toBe('Engineer')
     expect(profile.primaryEmail?.valueNode.value).toBe('person@example.com')
     expect(profile.location).toBe('Example City, Example Country')
-    expect(profile.entryNode).toBe(subject)
+    expect(profile.sourceNode).toBe(subject)
   })
 
   it('determines anonymous and authenticated viewing modes locally', async () => {

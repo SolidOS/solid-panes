@@ -238,7 +238,7 @@ describe('profile heading friends', () => {
     const heading = await createHeading()
     heading.editContext = {
       subject,
-      profileData: { name: 'Friend Test', entryNode: subject },
+      profileData: { name: 'Friend Test', sourceNode: subject },
       viewerMode: 'owner',
       onSaved: vi.fn()
     }
@@ -252,7 +252,7 @@ describe('profile heading friends', () => {
     const heading = await createHeading()
     heading.editContext = {
       subject,
-      profileData: { name: 'Friend Test', entryNode: subject },
+      profileData: { name: 'Friend Test', sourceNode: subject },
       viewerMode: 'owner',
       onSaved: vi.fn()
     }

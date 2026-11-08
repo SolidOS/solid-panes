@@ -493,11 +493,11 @@ export function collectLinkedNodeStatements (
   }
 }
 
-export function findExistingNode (nodes: Node[], entryNode: string) {
-  const normalizedEntryNode = normalizeNodeId(entryNode)
+export function findExistingNode (nodes: Node[], sourceNode: string) {
+  const normalizedEntryNode = normalizeNodeId(sourceNode)
   return nodes.find((node) => {
     const nodeValue = normalizeNodeId(node.value)
     if (nodeValue === normalizedEntryNode) return true
-    return node.value === entryNode
+    return node.value === sourceNode
   })
 }

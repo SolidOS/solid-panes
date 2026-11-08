@@ -1,7 +1,7 @@
 import { Node } from 'rdflib'
 import { RowStatus } from '../shared/types'
 import { MutationOps } from '../shared/types'
-import type { AddressDetails, ContactAddressRow, ContactPointRow, PointDetails } from 'profile-pane'
+import type { AddressDetails, ContactAddressRow, ContactPointRow, PointDetails } from 'solid-logic'
 
 export interface ProfilePresentation {
   name: string;
@@ -17,11 +17,11 @@ export interface ProfilePresentation {
 }
 
 export interface ProfileDetails extends ProfilePresentation {
-  entryNode: Node
+  sourceNode: Node
 }
 
 export interface ProfileRow extends ProfilePresentation {
-  entryNode: string
+  sourceNode: string
   status: RowStatus
 }
 
@@ -31,7 +31,7 @@ export type ProfileBasicFields = Omit<
 >
 
 export type ProfileBasicRow = ProfileBasicFields & {
-  entryNode: string
+  sourceNode: string
   status: RowStatus
 }
 

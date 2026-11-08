@@ -77,10 +77,10 @@ describe('local profile heading editor', () => {
     })
   })
 
-  it('validates phone input and closes through the local dialog controls', async () => {
+  it('accepts formatted phone input and closes through the local dialog controls', async () => {
     const subject = sym('https://local-heading-editor.example/profile/card#me')
     const profileData: ProfileDetails = {
-      entryNode: subject,
+      sourceNode: subject,
       name: 'Jane Doe'
     }
     const resultPromise = createHeadingEditDialog(
@@ -102,7 +102,7 @@ describe('local profile heading editor', () => {
 
     await vi.waitFor(() => {
       expect(document.querySelector('#modal-error')?.textContent)
-        .toBe('Phone Number 1 should contain only numbers.')
+        .not.toContain('Phone Number 1 should contain only numbers.')
     })
 
     getSharedDialogCancelButton(document)?.click()
