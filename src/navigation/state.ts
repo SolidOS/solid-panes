@@ -52,6 +52,31 @@ export function readNavigationState (): NavigationState {
   return parseNavigationState(window.history.state)
 }
 
+const historyWrites = new WeakMap<History, number>()
+
+/** Whether a synchronous history write is being made by this application. */
+export function isWritingNavigationHistory (history: History): boolean {
+  return (historyWrites.get(history) ?? 0) > 0
+}
+
+/** Write an entry without treating its synchronous Navigation API event as browser navigation. */
+export function writeNavigationHistory (
+  history: History,
+  method: 'pushState' | 'replaceState',
+  state: unknown,
+  title: string,
+  url?: string
+): void {
+  historyWrites.set(history, (historyWrites.get(history) ?? 0) + 1)
+  try {
+    history[method](state, title, url)
+  } finally {
+    const remaining = (historyWrites.get(history) ?? 1) - 1
+    if (remaining) historyWrites.set(history, remaining)
+    else historyWrites.delete(history)
+  }
+}
+
 export interface HistoryStateChange {
   /** The pane that is being displayed, and its own subject if it has one. */
   pane?: { name: string, subject?: string }
@@ -92,5 +117,5 @@ export function withoutPaneState (raw: unknown): Record<string, unknown> {
 
 /** Forget what the current entry displayed, so the URL alone decides what to show. */
 export function clearPaneState (): void {
-  window.history.replaceState(withoutPaneState(window.history.state), '', window.location.href)
+  writeNavigationHistory(window.history, 'replaceState', withoutPaneState(window.history.state), '', window.location.href)
 }

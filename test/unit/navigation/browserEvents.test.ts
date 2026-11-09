@@ -79,6 +79,74 @@ describe('Enter on the current URL', () => {
   })
 })
 
+describe('application history writes in Safari', () => {
+  it('keeps a storage selection when replaceState dispatches a user-initiated navigate event', async () => {
+    const { registerBrowserNavigation } = await freshModule()
+    const { default: OutlineManager } = await import('../../../src/outline/manager')
+    const { sym } = await import('rdflib')
+    registerBrowserNavigation(controller)
+    window.history.replaceState({}, '', '/other/profile/card#me')
+
+    const original = window.history.replaceState.bind(window.history)
+    const intercept = vi.fn()
+    const replace = vi.spyOn(window.history, 'replaceState').mockImplementation((state, title, url) => {
+      listeners.navigate({
+        canIntercept: true,
+        userInitiated: true,
+        navigationType: 'replace',
+        destination: { url: window.location.href },
+        intercept
+      })
+      original(state, title, url)
+    })
+    const subject = sym(window.location.href)
+    const storage = sym(`${window.location.origin}/other/`)
+    const manager = new OutlineManager({ dom: document, session: { paneRegistry: { list: [], byName: () => undefined } } })
+
+    manager.GotoSubject(subject, false, { name: 'folder', subject: storage }, true)
+
+    expect(replace).toHaveBeenCalledOnce()
+    expect(intercept).not.toHaveBeenCalled()
+    expect(show).not.toHaveBeenCalled()
+    expect(window.history.state).toMatchObject({ paneName: 'folder', paneUri: storage.uri })
+    expect(window.location.href).toBe(subject.uri)
+    document.body.replaceChildren()
+  })
+
+  it('does not re-intercept the history write while handling address-bar navigation', async () => {
+    const { registerBrowserNavigation } = await freshModule()
+    registerBrowserNavigation(controller)
+    const original = window.history.replaceState.bind(window.history)
+    const nestedIntercept = vi.fn()
+    vi.spyOn(window.history, 'replaceState').mockImplementation((state, title, url) => {
+      listeners.navigate({
+        canIntercept: true,
+        userInitiated: true,
+        navigationType: 'replace',
+        destination: { url: window.location.href },
+        intercept: nestedIntercept
+      })
+      original(state, title, url)
+    })
+
+    await enter().mock.calls[0][0].handler()
+
+    expect(nestedIntercept).not.toHaveBeenCalled()
+    expect(window.history.state).toEqual({ other: 'kept' })
+    expect(show).toHaveBeenCalledOnce()
+  })
+
+  it('clears the write guard even if history throws', async () => {
+    const { registerBrowserNavigation } = await freshModule()
+    const { writeNavigationHistory } = await import('../../../src/navigation/state')
+    registerBrowserNavigation(controller)
+    vi.spyOn(window.history, 'replaceState').mockImplementation(() => { throw new Error('history failed') })
+
+    expect(() => writeNavigationHistory(window.history, 'replaceState', {}, '')).toThrow('history failed')
+    expect(enter()).toHaveBeenCalledOnce()
+  })
+})
+
 describe('back and forward', () => {
   it('shows what the URL is, after forgetting what the entry displayed', async () => {
     const { registerBrowserNavigation } = await freshModule()

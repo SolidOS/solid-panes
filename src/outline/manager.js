@@ -15,7 +15,7 @@ import { loadContainerRepresentation } from '../utils/podUtils'
 import { isWebIdUri } from '../utils/webIdUtils'
 import { deriveExplorerHeader, explorerHeaderForPane } from '../navigation/chrome'
 import { isPageInViewerPod } from '../navigation/podContext'
-import { nextHistoryState } from '../navigation/state'
+import { nextHistoryState, writeNavigationHistory } from '../navigation/state'
 import { announceNavigation } from '../navigation/events'
 import { resolveFolderView, resolveSource } from '../navigation/options'
 import { refreshNavbarVisibility } from '../navigation/navbarVisibility'
@@ -2001,15 +2001,16 @@ export default function (context) {
         const currentUrl = new URL(dom.location.href)
         const targetUrl = new URL(subject.uri, dom.location.href)
         if (preserveUrl) {
-          dom.defaultView.history.replaceState(stateObj, '')
+          writeNavigationHistory(dom.defaultView.history, 'replaceState', stateObj, '')
         } else if (currentUrl.origin === targetUrl.origin) {
           if (leavingPage) {
-            dom.defaultView.history.pushState(stateObj, subject.uri, subject.uri)
+            writeNavigationHistory(dom.defaultView.history, 'pushState', stateObj, subject.uri, subject.uri)
           } else if (JSON.stringify(currentState) !== JSON.stringify(stateObj)) {
-            dom.defaultView.history.replaceState(stateObj, subject.uri, subject.uri)
+            writeNavigationHistory(dom.defaultView.history, 'replaceState', stateObj, subject.uri, subject.uri)
           }
         }
       } catch (e) {
+        UI.log.error('Failed to update navigation history: ' + UI.utils.stackString(e))
       }
     }
 

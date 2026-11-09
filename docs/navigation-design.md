@@ -183,6 +183,12 @@ history entry, with the URL and the stored state. This is how calls that bypass 
 navigation lands in another pod, and the heading listens, to refresh itself. The heading does not
 watch the DOM.
 
+History writes made by the outline or `clearPaneState()` go through `writeNavigationHistory()`.
+While a write is in progress, the Navigation API's `navigate` handler ignores its synchronous
+event: Safari can report these programmatic replacements as user-initiated, which otherwise causes
+the handler to clear the state recursively. Actual address-bar navigation remains handled normally.
+History write failures are logged.
+
 ### Options (`navigation/options.ts`)
 `GotoSubject`'s seventh argument takes `{ source: 'accountMenu' | 'default' }`. The older boolean form
 (`false` for the account menu) is still accepted with the same meaning.
