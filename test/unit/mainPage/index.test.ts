@@ -167,7 +167,8 @@ describe('browser navigation without a reload', () => {
       canIntercept: true,
       userInitiated: true,
       navigationType: 'replace',
-      destination: { url: window.location.href },
+      hashChange: true,
+      destination: { url: window.location.href, sameDocument: true },
       intercept,
       ...overrides
     })
@@ -211,7 +212,10 @@ describe('browser navigation without a reload', () => {
     const GotoSubject = await setupLoaded({}, false)
     window.history.replaceState({ paneName: 'folder', paneUri: `${origin}/other/` }, '', window.location.href)
 
-    const intercept = enter()
+    const intercept = enter({
+      hashChange: false,
+      destination: { url: window.location.href, sameDocument: false }
+    })
     expect(intercept).toHaveBeenCalledOnce()
     await intercept.mock.calls[0][0].handler()
 
