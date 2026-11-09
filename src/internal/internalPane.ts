@@ -79,7 +79,10 @@ const pane: PaneDefinition = {
           () => {
             if (deletionPending) return
             const resourceLabel = utils.label(subject) || subject.value
-            return confirmDeletion(`Are you sure you want to delete "${resourceLabel}"?\nThis can't be undone.`)
+            const deleteMessage = isFolder
+              ? `Are you sure you want to delete "${resourceLabel}" and all its contents?\nThis can't be undone.`
+              : `Are you sure you want to delete "${resourceLabel}"?\nThis can't be undone.`
+            return confirmDeletion(deleteMessage)
               .then(confirmed => {
                 if (!confirmed) return
                 deletionPending = true
@@ -87,9 +90,11 @@ const pane: PaneDefinition = {
                 const resourceLogic = context.session.logic?.resource || solidLogicSingleton.resource
                 return resourceLogic.recursiveDelete(subject)
                   .then(() => {
-                    const str = `Deleted "${resourceLabel}"`
-                    console.log(str)
-                    showMessage('Resource deleted', str)
+                    const confirmDeleteMessage = isFolder
+                      ? `Deleted "${resourceLabel}" and all of its contents.`
+                      : `Deleted "${resourceLabel}".`
+                    console.log(confirmDeleteMessage)
+                    showMessage('Resource deleted', confirmDeleteMessage)
                     dom.dispatchEvent(new CustomEvent('solid-resource-deleted', {
                       detail: { resource: subject }
                     }))
