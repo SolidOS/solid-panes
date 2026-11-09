@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { authn } from 'solid-logic'
+import { authn, store } from 'solid-logic'
 import { sym } from 'rdflib'
 import type { NavigationController } from '../../../src/navigation/controller'
 import type { NavbarMenuItem } from '../../../src/components/navbar/Navbar'
@@ -24,6 +24,9 @@ vi.mock('../../../src/utils/webIdUtils', async (importOriginal) => ({
 }))
 
 import { createNavbar, selectNavbarPane } from '../../../src/mainPage/navbar'
+import { createNavigationController } from '../../../src/navigation/controller'
+import { registerBrowserNavigation } from '../../../src/navigation/browserEvents'
+import OutlineManager from '../../../src/outline/manager'
 
 // Without a profile of its own, the lookup answers with the URL it was asked about
 const noProfile = async (subject: ReturnType<typeof sym>) => subject
@@ -102,6 +105,60 @@ describe('page navbar visibility', () => {
 
     expect(storageItems.map(item => item.paneUri)).toEqual(storages.map(storage => storage.value))
     expect(storageItems.map(item => item.selected)).toEqual([false, true])
+  })
+
+  it('selects Storage after a Safari-style navigation event during the history write', async () => {
+    const listeners: Record<string, (event: unknown) => void> = {}
+    Object.defineProperty(window, 'navigation', {
+      configurable: true,
+      value: { addEventListener: (type: string, listener: (event: unknown) => void) => { listeners[type] = listener } }
+    })
+    try {
+      const owner = sym(`${window.location.origin}/other/profile/card#me`)
+      const storage = folderPane(sym(`${window.location.origin}/other/`))
+      storage.render.mockImplementation(() => document.createElement('div'))
+      loadProfile.mockResolvedValue(owner)
+      vi.mocked(getFolderPanesFromURI).mockResolvedValue([storage])
+      vi.spyOn(authn, 'currentUser').mockReturnValue(null)
+      window.history.replaceState({}, '', owner.uri)
+      const manager = new OutlineManager({ dom: document, session: { store, paneRegistry: { list: [], byName: () => undefined } } })
+      const navigation = createNavigationController({
+        store,
+        outliner: manager,
+        byName: () => undefined,
+        effects: { selectNavbarPane, refreshHeading: vi.fn().mockResolvedValue(undefined) }
+      })
+      registerBrowserNavigation(navigation)
+      const navbar = await createNavbar(navigation) as HTMLElement & { navbarItems: NavbarMenuItem[] }
+      const original = window.history.replaceState.bind(window.history)
+      const intercept = vi.fn()
+      vi.spyOn(window.history, 'replaceState').mockImplementation((state, title, url) => {
+        listeners.navigate({
+          canIntercept: true,
+          userInitiated: true,
+          navigationType: 'replace',
+          destination: { url: window.location.href },
+          intercept
+        })
+        original(state, title, url)
+      })
+
+      await vi.waitFor(() => expect(navbar.shadowRoot?.querySelectorAll('button')).toHaveLength(3))
+      navbar.shadowRoot!.querySelectorAll('button')[2].click()
+
+      await vi.waitFor(() => expect(window.history.state).toMatchObject({
+        paneName: 'folder', paneUri: storage.subject.uri
+      }))
+      await vi.waitFor(() => {
+        const buttons = navbar.shadowRoot!.querySelectorAll('button')
+        expect(buttons[0]).not.toHaveClass('selected')
+        expect(buttons[2]).toHaveClass('selected')
+      })
+      expect(intercept).not.toHaveBeenCalled()
+      expect(window.location.href).toBe(owner.uri)
+    } finally {
+      Reflect.deleteProperty(window, 'navigation')
+    }
   })
 
   it.each(['/profile/card#me', '/profile/card'])('hides a new navbar on the own profile URL %s', async (url) => {

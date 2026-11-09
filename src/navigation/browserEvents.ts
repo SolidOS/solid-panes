@@ -8,7 +8,7 @@
  */
 
 import type { NavigationController } from './controller'
-import { clearPaneState } from './state'
+import { clearPaneState, isWritingNavigationHistory } from './state'
 
 interface NavigationEvent extends Event {
   canIntercept: boolean
@@ -68,7 +68,8 @@ export function registerBrowserNavigation (controller: NavigationController): vo
   // "replace" navigation; intercepting it shows the URL without reloading. Without the API
   // there is no equivalent, see the fallback above.
   navigationApi.addEventListener('navigate', event => {
-    if (!event.canIntercept || !event.userInitiated || event.navigationType !== 'replace' ||
+    if (isWritingNavigationHistory(window.history) ||
+        !event.canIntercept || !event.userInitiated || event.navigationType !== 'replace' ||
         event.destination.url !== window.location.href) return
 
     event.intercept({
