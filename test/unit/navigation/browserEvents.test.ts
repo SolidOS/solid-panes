@@ -20,17 +20,31 @@ async function freshModule () {
   return import('../../../src/navigation/browserEvents')
 }
 
+// Enter on a URL ending in #me is a fragment navigation to the same URL
 function enter (overrides: object = {}) {
   const intercept = vi.fn()
   listeners.navigate({
     canIntercept: true,
     userInitiated: true,
     navigationType: 'replace',
-    destination: { url: window.location.href },
+    hashChange: true,
+    destination: { url: window.location.href, sameDocument: true },
     intercept,
     ...overrides
   })
   return intercept
+}
+
+// What Safari dispatches for history.replaceState during a tap
+function historyWrite (intercept: ReturnType<typeof vi.fn>) {
+  listeners.navigate({
+    canIntercept: true,
+    userInitiated: true,
+    navigationType: 'replace',
+    hashChange: false,
+    destination: { url: window.location.href, sameDocument: true },
+    intercept
+  })
 }
 
 const traverse = (navigationType = 'traverse') => listeners.currententrychange({ navigationType })
@@ -64,11 +78,23 @@ describe('Enter on the current URL', () => {
     expect(show).toHaveBeenCalledWith({ kind: 'restore', forceHeading: true })
   })
 
+  it('also handles Enter on a URL without a fragment, which is a cross-document navigation', async () => {
+    const { registerBrowserNavigation } = await freshModule()
+    registerBrowserNavigation(controller)
+
+    expect(enter({ hashChange: false, destination: { url: window.location.href, sameDocument: false } })).toHaveBeenCalledOnce()
+  })
+
   it.each([
     ['not started by the user', { userInitiated: false }],
     ['not a replacement of the entry', { navigationType: 'push' }],
     ['one that cannot be intercepted', { canIntercept: false }],
-    ['to another URL', { destination: { url: 'https://elsewhere.example/' } }]
+    ['to another URL', { destination: { url: 'https://elsewhere.example/', sameDocument: false } }],
+    ['a history API write', { hashChange: false }],
+    ['a history API write with same-document metadata omitted', {
+      hashChange: false,
+      destination: { url: window.location.href, sameDocument: undefined }
+    }]
   ])('leaves a navigation alone when it is %s', async (_name, overrides) => {
     const { registerBrowserNavigation } = await freshModule()
     registerBrowserNavigation(controller)
@@ -90,13 +116,7 @@ describe('application history writes in Safari', () => {
     const original = window.history.replaceState.bind(window.history)
     const intercept = vi.fn()
     const replace = vi.spyOn(window.history, 'replaceState').mockImplementation((state, title, url) => {
-      listeners.navigate({
-        canIntercept: true,
-        userInitiated: true,
-        navigationType: 'replace',
-        destination: { url: window.location.href },
-        intercept
-      })
+      historyWrite(intercept)
       original(state, title, url)
     })
     const subject = sym(window.location.href)
@@ -119,13 +139,7 @@ describe('application history writes in Safari', () => {
     const original = window.history.replaceState.bind(window.history)
     const nestedIntercept = vi.fn()
     vi.spyOn(window.history, 'replaceState').mockImplementation((state, title, url) => {
-      listeners.navigate({
-        canIntercept: true,
-        userInitiated: true,
-        navigationType: 'replace',
-        destination: { url: window.location.href },
-        intercept: nestedIntercept
-      })
+      historyWrite(nestedIntercept)
       original(state, title, url)
     })
 
@@ -134,6 +148,21 @@ describe('application history writes in Safari', () => {
     expect(nestedIntercept).not.toHaveBeenCalled()
     expect(window.history.state).toEqual({ other: 'kept' })
     expect(show).toHaveBeenCalledOnce()
+  })
+
+  it('keeps the account-menu profile when Safari dispatches the write after it has returned', async () => {
+    const { registerBrowserNavigation } = await freshModule()
+    const { writeNavigationHistory } = await import('../../../src/navigation/state')
+    registerBrowserNavigation(controller)
+    const profileState = { paneName: 'profile', paneUri: 'https://pod.example/profile/card#me', viaAccountMenu: true }
+    const intercept = vi.fn()
+
+    writeNavigationHistory(window.history, 'replaceState', profileState, '')
+    historyWrite(intercept)
+
+    expect(intercept).not.toHaveBeenCalled()
+    expect(show).not.toHaveBeenCalled()
+    expect(window.history.state).toEqual(profileState)
   })
 
   it('clears the write guard even if history throws', async () => {

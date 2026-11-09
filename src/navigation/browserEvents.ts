@@ -14,7 +14,8 @@ interface NavigationEvent extends Event {
   canIntercept: boolean
   userInitiated: boolean
   navigationType: string
-  destination: { url: string }
+  hashChange: boolean
+  destination: { url: string, sameDocument: boolean }
   intercept: (options: { handler: () => Promise<void>, scroll: 'manual', focusReset: 'manual' }) => void
 }
 
@@ -67,8 +68,17 @@ export function registerBrowserNavigation (controller: NavigationController): vo
   // NAVIGATION API: Enter on the current URL (typically one ending in #me) is a same-URL
   // "replace" navigation; intercepting it shows the URL without reloading. Without the API
   // there is no equivalent, see the fallback above.
+  //
+  // Enter is either a fragment navigation (`hashChange`) or a cross-document one. A replacement
+  // to the current URL without a hash change is a `history.replaceState` write. Safari marks the
+  // application's own writes as `userInitiated` during a tap and can dispatch them after
+  // `writeNavigationHistory` returns, so that guard alone does not stop them. Use the URL and hash
+  // rather than `sameDocument` here because WebKit versions differ in whether they report that
+  // property for a history API write.
   navigationApi.addEventListener('navigate', event => {
     if (isWritingNavigationHistory(window.history) ||
+        (!event.hashChange && event.destination.sameDocument !== false &&
+          event.destination.url === window.location.href) ||
         !event.canIntercept || !event.userInitiated || event.navigationType !== 'replace' ||
         event.destination.url !== window.location.href) return
 
