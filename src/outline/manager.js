@@ -313,6 +313,8 @@ export default function (context) {
 
       const currentPane = provider.querySelector(':scope > .paneDiv')
       if (!currentPane) continue
+      if (currentPane.matches('[data-preserve-pane-on-resize="true"]') ||
+        currentPane.querySelector('[data-preserve-pane-on-resize="true"]')) continue
       // Re-rendering the folder shell recreates its view and loses the resource
       // selected inside it. Nested providers can refresh their active resource
       // pane without replacing the shell.

@@ -101,7 +101,10 @@ export async function refreshUI (outliner: OutlineManager) {
   // Folder explorers adapt through CSS. Recreating one from the page's
   // history entry discards its internal resource/pane selection on resize.
   const themeUnchanged = currentSignature.split('|')[1] === previousSignature.split('|')[1]
-  if (envChanged && themeUnchanged && document.querySelector('#MainContent folder-pane-view')) {
+  const preserveExplorer = document.querySelector(
+    '#MainContent folder-pane-view, #MainContent [data-preserve-pane-on-resize="true"]'
+  )
+  if (envChanged && themeUnchanged && preserveExplorer) {
     if (activeExplorerRefreshPending) return
     activeExplorerRefreshPending = true
     await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))

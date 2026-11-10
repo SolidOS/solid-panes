@@ -330,6 +330,31 @@ describe('browser navigation without a reload', () => {
     expect(GotoSubject).toHaveBeenCalledOnce()
   })
 
+  it('refreshes explorers instead of replacing the page during an active edit', async () => {
+    const GotoSubject = await setupLoaded()
+    const main = document.createElement('main')
+    main.id = 'MainContent'
+    main.innerHTML = '<div data-preserve-pane-on-resize="true"></div>'
+    document.body.append(main)
+    const outliner = getOutliner()
+    const refresh = vi.fn()
+    outliner.refreshActiveExplorerPanes = refresh
+    outliner.__lastRenderEnvSignature = 'desktop|light|pointer|1280|800'
+    outliner.context = {
+      session: { store },
+      environment: { ...environment, layout: 'mobile', viewport: { width: 320, height: 800 } }
+    }
+
+    await refreshUI(outliner)
+
+    expect(refresh).toHaveBeenCalledOnce()
+    expect(GotoSubject).not.toHaveBeenCalled()
+
+    outliner.context.environment = { ...outliner.context.environment, theme: 'dark' }
+    await refreshUI(outliner)
+    expect(GotoSubject).toHaveBeenCalledOnce()
+  })
+
   it('falls back to popstate when the Navigation API is unavailable', async () => {
     Reflect.deleteProperty(window, 'navigation')
     vi.resetModules()
