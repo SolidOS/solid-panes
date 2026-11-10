@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { sym } from 'rdflib'
 import type { NavigationController } from '../../../src/navigation/controller'
+import OutlineManager from '../../../src/outline/manager'
 
 type Listener = (event: unknown) => void
 
@@ -108,8 +110,6 @@ describe('Enter on the current URL', () => {
 describe('application history writes in Safari', () => {
   it('keeps a storage selection when replaceState dispatches a user-initiated navigate event', async () => {
     const { registerBrowserNavigation } = await freshModule()
-    const { default: OutlineManager } = await import('../../../src/outline/manager')
-    const { sym } = await import('rdflib')
     registerBrowserNavigation(controller)
     window.history.replaceState({}, '', '/other/profile/card#me')
 
@@ -122,6 +122,7 @@ describe('application history writes in Safari', () => {
     const subject = sym(window.location.href)
     const storage = sym(`${window.location.origin}/other/`)
     const manager = new OutlineManager({ dom: document, session: { paneRegistry: { list: [], byName: () => undefined } } })
+    vi.spyOn(manager, 'outlineObjectDiv').mockReturnValue(document.createElement('div'))
 
     manager.GotoSubject(subject, false, { name: 'folder', subject: storage }, true)
 
