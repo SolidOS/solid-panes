@@ -67,9 +67,14 @@ export const RDFXMLPane: RDFXMLPaneDefinition = {
     const source = myDocument.createElement('solid-panes-editor-card') as HTMLElement & {
       contentType?: string
       content?: string
+      accessibilityLabel?: string
+      accessibilityDescription?: string
     }
     source.contentType = 'application/rdf+xml'
     source.content = serializedContent
+    source.accessibilityLabel = `Generated RDF/XML for ${subject.uri}`
+    source.accessibilityDescription =
+      'Generated RDF/XML serialization. This content is read-only.'
 
     div.appendChild(source)
     return div

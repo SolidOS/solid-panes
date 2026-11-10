@@ -68,9 +68,14 @@ export const n3Pane: N3PaneLike = {
     const source = myDocument.createElement('solid-panes-editor-card') as HTMLElement & {
       contentType?: string
       content?: string
+      accessibilityLabel?: string
+      accessibilityDescription?: string
     }
     source.contentType = 'text/n3'
     source.content = serializedContent
+    source.accessibilityLabel = `Generated N3 for ${subject.uri}`
+    source.accessibilityDescription =
+      'Generated N3 serialization. This content is read-only.'
 
     div.appendChild(source)
     return div
