@@ -451,6 +451,37 @@ describe('manager', () => {
         expect(provider.pane).toBe(pane)
       })
 
+      it.each([false, true])('preserves an editing pane and refreshes unrelated panes (nested marker: %s)', async nested => {
+        const pane = { ...MockPane, render: vi.fn(MockPane.render) }
+        const manager = new OutlineManager({
+          dom: document,
+          session: { paneRegistry: { list: [pane], byName: findPane }, store },
+          environment: { layout: 'desktop' }
+        })
+        const editing = manager.propertyTable(container, undefined, pane, {})
+        const unrelated = manager.propertyTable(sym(`${window.location.origin}/other.ttl`), undefined, pane, {})
+        document.body.append(editing, unrelated)
+        await vi.waitFor(() => expect(unrelated.querySelector('.paneDiv')).not.toBeNull())
+        const current = editing.querySelector<HTMLElement>('.paneDiv')!
+        const other = unrelated.querySelector('.paneDiv')
+        const marker = nested ? current.appendChild(document.createElement('div')) : current
+        marker.setAttribute('data-preserve-pane-on-resize', 'true')
+        const draft = current.appendChild(document.createElement('textarea'))
+        draft.value = 'unsaved draft'
+        pane.render.mockClear()
+
+        manager.refreshActiveExplorerPanes()
+
+        expect(editing.querySelector('.paneDiv')).toBe(current)
+        expect(draft.value).toBe('unsaved draft')
+        expect(unrelated.querySelector('.paneDiv')).not.toBe(other)
+        expect(pane.render).toHaveBeenCalledOnce()
+
+        marker.removeAttribute('data-preserve-pane-on-resize')
+        manager.refreshActiveExplorerPanes()
+        expect(editing.querySelector('.paneDiv')).not.toBe(current)
+      })
+
       it('does not re-render the folder shell while refreshing a nested resource pane', async () => {
         const folderPane = { ...MockPane, name: 'folder', render: vi.fn(MockPane.render) }
         const subject = sym(`${window.location.origin}/storage/`)
