@@ -26,9 +26,8 @@ export const slideshowPane = {
   label: function (subject, context) {
     const store = context.session.store
     if (solidLogicSingleton.resource.isContainer(subject)) {
-      const contents = store.each(subject, ns.ldp('contains'))
       const images = getImageContents(subject, store)
-      return new Set(images.map(image => image.uri)).size > 1 && images.length === contents.length ? 'Slideshow' : null
+      return new Set(images.map(image => image.uri)).size > 1 ? 'Slideshow' : null
     }
     return null
   },

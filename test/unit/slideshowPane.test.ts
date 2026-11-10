@@ -30,13 +30,14 @@ describe('slideshow pane', () => {
     expect(slideshowPane.label(subject as any, context)).toBeNull()
   })
 
-  it('rejects containers containing non-image resources', () => {
+  it('accepts containers containing multiple images and other resources', () => {
     const { subject, context } = contextFor([
       { uri: 'one.png', image: true },
-      { uri: 'notes.txt', image: false }
+      { uri: 'notes.txt', image: false },
+      { uri: 'two.png', image: true }
     ])
 
-    expect(slideshowPane.label(subject as any, context)).toBeNull()
+    expect(slideshowPane.label(subject as any, context)).toBe('Slideshow')
   })
 
   it('accepts containers containing multiple images only', () => {
