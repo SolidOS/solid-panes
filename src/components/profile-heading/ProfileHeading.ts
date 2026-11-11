@@ -115,7 +115,7 @@ export default class ProfileHeading extends WebComponent {
 
     widgets.makeDraggable(heading, this.draggableSubject)
     widgets.makeDraggable(name, this.draggableSubject)
-    this.draggableElementsAttached = true 
+    this.draggableElementsAttached = true
   }
 
   private startFriendCheck (): void {
