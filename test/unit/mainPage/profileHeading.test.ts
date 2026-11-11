@@ -87,6 +87,17 @@ describe('page-level profile heading', () => {
     expect(heading?.shadowRoot?.querySelector('.image-frame')).toHaveClass('image-frame--fallback')
     expect(heading?.shadowRoot?.querySelector('.hero-fallback icon-lucide-circle-user-round')).not.toBeNull()
     expect(heading?.shadowRoot?.querySelector('.profile__heading-edit-action')).toBeNull()
+
+    const name = heading?.shadowRoot?.querySelector<HTMLElement>('.name')
+    const dragData = new Map<string, string>()
+    const dragStart = new Event('dragstart', { bubbles: true })
+    Object.defineProperty(dragStart, 'dataTransfer', {
+      value: { setData: (type: string, value: string) => dragData.set(type, value) }
+    })
+    name?.dispatchEvent(dragStart)
+    expect(name).toHaveAttribute('draggable', 'true')
+    expect(dragData.get('text/uri-list')).toBe(subject.value)
+    expect(dragData.get('text/plain')).toBe(subject.value)
   })
 
   it('opens the heading editor from Edit and announces the save to other views', async () => {

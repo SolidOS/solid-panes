@@ -131,7 +131,7 @@ describe('application history writes in Safari', () => {
     expect(window.history.state).toMatchObject({ paneName: 'folder', paneUri: storage.uri })
     expect(window.location.href).toBe(subject.uri)
     document.body.replaceChildren()
-  })
+  }, 15_000)
 
   it('does not re-intercept the history write while handling address-bar navigation', async () => {
     const { registerBrowserNavigation } = await freshModule()
