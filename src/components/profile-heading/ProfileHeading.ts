@@ -1,6 +1,6 @@
 import { authn, store } from 'solid-logic'
 import type { NamedNode, Node } from 'rdflib'
-import { customElement, WebComponent } from 'solid-ui'
+import { customElement, WebComponent, widgets } from 'solid-ui'
 import { html, nothing, type PropertyValues, type TemplateResult } from 'lit'
 import { property, state } from 'lit/decorators.js'
 import { createHeadingEditDialog } from './editor/sections/heading/HeadingEditDialog'
@@ -43,6 +43,9 @@ export default class ProfileHeading extends WebComponent {
   accessor profileData: ProfileHeadingData | undefined = undefined
 
   @property({ attribute: false })
+  accessor subject: NamedNode | undefined = undefined
+
+  @property({ attribute: false })
   accessor editContext: ProfileHeadingEditContext | undefined = undefined
 
   @property({ attribute: false })
@@ -66,6 +69,8 @@ export default class ProfileHeading extends WebComponent {
   private friendRequest = 0
   private friendRequestInterrupted = false
   private friendMessageTimer: ReturnType<typeof setTimeout> | undefined
+  private readonly draggableSubject = { uri: '' }
+  private draggableElementsAttached = false
 
   connectedCallback (): void {
     super.connectedCallback()
@@ -98,6 +103,19 @@ export default class ProfileHeading extends WebComponent {
     if (!changed.has('friendSubject')) return
     this.friendRequestInterrupted = false
     this.startFriendCheck()
+  }
+
+  protected updated (): void {
+    if (this.subject) this.draggableSubject.uri = this.subject.value
+    if (this.draggableElementsAttached || !this.subject) return
+
+    const heading = this.shadowRoot?.querySelector<HTMLElement>('.profile-heading')
+    const name = this.shadowRoot?.querySelector<HTMLElement>('.name')
+    if (!heading || !name) return
+
+    widgets.makeDraggable(heading, this.draggableSubject)
+    widgets.makeDraggable(name, this.draggableSubject)
+    this.draggableElementsAttached = true
   }
 
   private startFriendCheck (): void {

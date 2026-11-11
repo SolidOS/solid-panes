@@ -207,12 +207,14 @@ export async function refreshProfileHeading (force = false): Promise<void> {
   const heading = (mount.querySelector(PROFILE_HEADING_TAG) ||
     document.createElement(PROFILE_HEADING_TAG)) as HTMLElement & {
       profileData?: ProfileDetails
+      subject?: NamedNode
       editContext?: ProfileHeadingEditContext
       friendSubject?: NamedNode
       compact?: boolean
       updateComplete?: Promise<unknown>
     }
   heading.profileData = profileData
+  heading.subject = subject
   const viewer = authn.currentUser()
   heading.friendSubject = offersFriendAction(decision.paneName) && viewer && !viewer.sameTerm(subject)
     ? subject
