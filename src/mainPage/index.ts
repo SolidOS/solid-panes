@@ -27,8 +27,7 @@ function renderEnvSignature (env?: RenderEnvironment): string {
     env.layout,
     env.theme,
     env.inputMode,
-    env.viewport?.width,
-    env.viewport?.height
+    env.viewport?.width
   ].join('|')
 }
 
