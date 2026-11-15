@@ -330,6 +330,20 @@ describe('browser navigation without a reload', () => {
     expect(GotoSubject).toHaveBeenCalledOnce()
   })
 
+  it('does not re-render when only the viewport height changes', async () => {
+    const GotoSubject = await setupLoaded()
+    const outliner = getOutliner()
+    outliner.__lastRenderEnvSignature = 'desktop|light|pointer|1280'
+    outliner.context = {
+      session: { store },
+      environment: { ...environment, viewport: { width: 1280, height: 620 } }
+    }
+
+    await refreshUI(outliner)
+
+    expect(GotoSubject).not.toHaveBeenCalled()
+  })
+
   it('refreshes explorers instead of replacing the page during an active edit', async () => {
     const GotoSubject = await setupLoaded()
     const main = document.createElement('main')
