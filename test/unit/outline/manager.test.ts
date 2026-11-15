@@ -586,7 +586,7 @@ describe('manager', () => {
         expect(provider.querySelector('solid-ui-file-explorer-header')).not.toBeNull()
       })
 
-      it('reuses resource visibility and menu items when switching panes', async () => {
+      it.each(['profile', 'basicPreferences', 'home', 'dashboard'])('reuses resource visibility and menu items when switching to %s and back', async paneName => {
         isInViewerPodMock.mockResolvedValue(true)
         const provider = createExplorer(MockPane, { headerOnlyInViewerPod: true })
         await vi.waitFor(() => {
@@ -594,7 +594,7 @@ describe('manager', () => {
         })
         const header = provider.querySelector<FileExplorerHeader>('solid-ui-file-explorer-header')!
         const menuItems = header.menuItems
-        findPane.mockReturnValue({ ...MockPane, name: 'profile' })
+        findPane.mockReturnValue({ ...MockPane, name: paneName })
         menuItems[0].action(new Event('click'))
         expect(provider.querySelector('solid-ui-file-explorer-header')).toBeNull()
 
@@ -716,6 +716,12 @@ describe('manager', () => {
         isInViewerPodMock.mockResolvedValue(true)
 
         expect(await headerShown(false)).toBe(true)
+      })
+
+      it.each(['basicPreferences', 'home', 'dashboard'])('is hidden for account-menu %s even inside the viewer\'s pod', async name => {
+        isInViewerPodMock.mockResolvedValue(true)
+
+        expect(await headerShown(false, { ...MockPane, name })).toBe(false)
       })
 
       it('is not affected for navbar navigation to a pane without its own subject', async () => {
