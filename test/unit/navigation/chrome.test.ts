@@ -216,6 +216,11 @@ describe('file explorer header', () => {
     expect(explorerHeaderForPane(false, 'folder')).toBe(false)
   })
 
+  it.each(['basicPreferences', 'home', 'dashboard'])('is never shown over %s', paneName => {
+    expect(explorerHeaderForPane(true, paneName)).toBe(false)
+    expect(explorerHeaderForPane(true, paneName, undefined, true)).toBe(false)
+  })
+
   it('is never shown over a storage view, which has its own header or the navbar', () => {
     expect(explorerHeaderForPane(true, 'folder', 'explorer')).toBe(false)
     expect(explorerHeaderForPane(true, 'folder', 'storage')).toBe(false)

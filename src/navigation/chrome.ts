@@ -165,7 +165,7 @@ export function deriveExplorerHeader (input: ExplorerHeaderInput): boolean {
 }
 
 /**
- * The header is never shown over a person's profile or friends, whatever the resource,
+ * The header is never shown over profile, friends, preferences or dashboard panes,
  * nor over a storage view, which has its own header or the navbar.
  */
 export function explorerHeaderForPane (
@@ -174,6 +174,6 @@ export function explorerHeaderForPane (
   folderView?: FolderView,
   solo = false
 ): boolean {
-  if (paneName === 'folder') return false
+  if (paneName === 'folder' || paneName === 'basicPreferences' || paneName === 'home' || paneName === 'dashboard') return false
   return resourceHeader && !isPersonPane(paneName)
 }

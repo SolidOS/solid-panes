@@ -114,10 +114,11 @@ the Storage shell during solo resource navigation.
 - It reads the owner from the pod context, so it does not depend on the navbar existing.
 
 ### File explorer header
-- Never shown for the profile and friends panes.
+- Never shown for profile, friends, preferences or dashboard panes (`home` and `dashboard`).
+- Never shown over the folder pane, which supplies its own storage header or navbar.
 - Never shown for root resources or WebIDs.
-- For account-menu views and for panes with their own subject: shown only when the URL is inside the
-  viewer's own pod.
+- For other account-menu views and panes with their own subject: shown only when the URL is inside
+  the viewer's own pod.
 
 ## Modules
 
