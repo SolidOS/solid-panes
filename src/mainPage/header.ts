@@ -1,7 +1,6 @@
-import { authn } from 'solid-logic'
 import { html, render } from 'lit-html'
 import type { AccountMenuItem } from 'solid-ui/components/account'
-import type { OutlineManager } from '../outline/manager'
+import type { NavigationController } from '../navigation/controller'
 
 import '~icons/lucide/user'
 import '~icons/lucide/users'
@@ -9,36 +8,25 @@ import '~icons/lucide/folder-open'
 import '~icons/lucide/layout-dashboard'
 import '~icons/lucide/settings-2'
 import '../components/header'
-import { getProfilePaneFromURI, getSocialPaneFromURI, getFolderPanesFromURI } from '../utils/paneUtils'
-import { sym } from 'rdflib'
+import { getFolderPanesFromURI } from '../utils/paneUtils'
+import { getCurrentViewer } from '../utils/viewerUtils'
 
-export async function createHeader (outliner: OutlineManager) {
+export async function createHeader (navigation: NavigationController) {
   const existingHeader = document.querySelector('solid-panes-header')
 
   if (existingHeader) {
     return existingHeader
   }
 
-  const me = authn.currentUser()
-
+  const viewer = await getCurrentViewer()
+  const storagePanes = viewer ? await getFolderPanesFromURI(viewer) : []
   const main = document.getElementById('MainContent')
-  const outlineView = document.getElementById('OutlineView')
   const tmpContainer = document.createElement('div')
-
-  function hideNavbar () {
-    const navbar = document.querySelector<HTMLElement>('solid-panes-navbar')
-    if (navbar) {
-      navbar.classList.add('navbar--hidden')
-    }
-  }
-
-  const storagePanes = me ? await getFolderPanesFromURI(me) : []
   const storageMenuItems: AccountMenuItem[] = storagePanes.map(pane => ({
     label: html`<icon-lucide-folder-open slot="left-icon"></icon-lucide-folder-open> ${pane.label()}`,
     async onSelected () {
-      hideNavbar()
-      if (me) {
-        outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)
+      if (await getCurrentViewer()) {
+        await navigation.show({ kind: 'storage', pane, source: 'accountMenu' })
       }
     }
   }))
@@ -46,45 +34,35 @@ export async function createHeader (outliner: OutlineManager) {
     {
       label: html`<icon-lucide-user slot="left-icon"></icon-lucide-user> Profile`,
       async onSelected () {
-        hideNavbar()
-        if (me) {
-          const profilePane = await getProfilePaneFromURI(me)
-          outliner.GotoSubject(sym(window.location.href), true, profilePane, true, undefined, outlineView, false)
+        const currentViewer = await getCurrentViewer()
+        if (currentViewer) {
+          await navigation.show({ kind: 'profile', subject: currentViewer.value, source: 'accountMenu' })
         }
       }
     },
     {
       label: html`<icon-lucide-users slot="left-icon"></icon-lucide-users> Friends`,
       async onSelected () {
-        hideNavbar()
-        if (me) {
-          const socialPane = await getSocialPaneFromURI(me)
-          outliner.GotoSubject(sym(window.location.href), true, socialPane, true, undefined, outlineView, false)
+        const currentViewer = await getCurrentViewer()
+        if (currentViewer) {
+          await navigation.show({ kind: 'friends', subject: currentViewer.value, source: 'accountMenu' })
         }
       }
     },
     ...storageMenuItems,
     {
       label: html`<icon-lucide-layout-dashboard slot="left-icon"></icon-lucide-layout-dashboard> Dashboard`,
-      onSelected () {
-        hideNavbar()
-        if (me) {
-          const pane = outliner.context.session.paneRegistry.byName('home')
-          if (pane) {
-            outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)
-          }
+      async onSelected () {
+        if (await getCurrentViewer()) {
+          await navigation.show({ kind: 'app', pane: 'home', source: 'accountMenu' })
         }
       }
     },
     {
       label: html`<icon-lucide-settings-2 slot="left-icon"></icon-lucide-settings-2> Preferences`,
-      onSelected () {
-        hideNavbar()
-        if (me) {
-          const pane = outliner.context.session.paneRegistry.byName('basicPreferences')
-          if (pane) {
-            outliner.GotoSubject(sym(window.location.href), true, pane, true, undefined, outlineView, false)
-          }
+      async onSelected () {
+        if (await getCurrentViewer()) {
+          await navigation.show({ kind: 'app', pane: 'basicPreferences', source: 'accountMenu' })
         }
       }
     },

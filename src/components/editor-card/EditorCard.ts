@@ -19,6 +19,12 @@ export default class EditorCard extends WebComponent {
   @property()
   accessor content: string | undefined
 
+  @property()
+  accessor accessibilityLabel: string | undefined
+
+  @property()
+  accessor accessibilityDescription: string | undefined
+
   getEditor () {
     return this._editor
   }
@@ -41,7 +47,17 @@ export default class EditorCard extends WebComponent {
       const { CodeEditor } = await import('solid-ui')
       this._editor = new CodeEditor()
       try {
-        await this._editor.initialize(editorDiv, this.content ?? '', this.contentType ?? '', 'dark')
+        await this._editor.initialize(
+          editorDiv,
+          this.content ?? '',
+          this.contentType ?? '',
+          'dark',
+          undefined,
+          {
+            label: this.accessibilityLabel,
+            description: this.accessibilityDescription
+          }
+        )
       } catch (err) {
         throw new Error(`Error initializing code editor: ${err instanceof Error ? err.message : String(err)}`)
       }

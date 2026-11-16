@@ -4,21 +4,31 @@
  */
 
 import { LiveStore, NamedNode } from 'rdflib'
+import { authSession } from 'solid-logic'
 import type { RenderEnvironment } from 'pane-registry'
-import * as paneRegistry from 'pane-registry'
 import { getOutliner, OutlineManager } from '../index'
 import { createHeader } from './header'
 import { createNavbar } from './navbar'
-import { getProfilePaneFromURI } from '../utils/paneUtils'
-import { isWebIdUri } from '../utils/webIdUtils'
+import { navigationFor } from './navigation'
+import { initializeProfileHeading, placeProfileHeading } from './profileHeading'
+import { registerBrowserNavigation } from '../navigation/browserEvents'
+import { clearPaneState } from '../navigation/state'
+import { resetPodContexts } from '../navigation/podContext'
+import { HUMAN_READABLE_PREVIEW_FRAME_NAME } from '../humanReadablePane'
 
 // Symbol used to stash the last render-relevant env snapshot on the outliner
 // so refreshUI can skip a full GotoSubject re-render when nothing changed.
 const LAST_RENDER_ENV_KEY = '__lastRenderEnvSignature'
+let activeExplorerRefreshPending = false
 
 function renderEnvSignature (env?: RenderEnvironment): string {
   if (!env) return ''
-  return [env.layout, env.theme, env.inputMode].join('|')
+  return [
+    env.layout,
+    env.theme,
+    env.inputMode,
+    env.viewport?.width
+  ].join('|')
 }
 
 function ensureMainContent () {
@@ -39,39 +49,47 @@ export async function initMainPage (
   uri?: string | NamedNode | null,
   environment?: RenderEnvironment
 ) {
+  // A page inside a preview frame navigated to a resource the server answered with the
+  // data browser (e.g. a 401); never nest a second SolidOS inside the pane.
+  if (window.name === HUMAN_READABLE_PREVIEW_FRAME_NAME && window.self !== window.top) {
+    document.body.textContent = 'This resource cannot be previewed here. Open it in a new tab instead.'
+    return
+  }
   ensureMainContent()
-  const outliner = getOutliner(document, environment)
-  ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
   uri = uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
-  const historyPaneName = window.history.state?.paneName
-  const historyPane = historyPaneName
-    ? paneRegistry.byName(historyPaneName)
-    : undefined
-  const initialPane = historyPane ??
-    (!historyPaneName && isWebIdUri(subject)
-      ? await getProfilePaneFromURI(subject)
-      : undefined)
+  // A reload shows what the URL is, whatever the history entry last displayed through the navbar
+  // or the account menu: the profile on a profile page, otherwise the resource or container itself.
+  // This is also what Enter on the current URL ends in where the Navigation API is missing (see
+  // NAVIGATION API FALLBACK in navigation/browserEvents.ts): the browser reloads the page.
+  clearPaneState()
+  await initializeProfileHeading()
+  const outliner = getOutliner(document, environment)
+  ;(outliner as any)[LAST_RENDER_ENV_KEY] = renderEnvSignature(environment)
+  const navigation = navigationFor(outliner, store)
+  registerBrowserNavigation(navigation)
+  const refreshNavigationAfterAuth = () => {
+    resetPodContexts()
+    navigation.show({ kind: 'restore', forceHeading: true }).catch((error: unknown) => {
+      console.error('Failed to refresh navigation after an authentication change.', error)
+    })
+  }
+  authSession.events.on('login', refreshNavigationAfterAuth)
+  authSession.events.on('sessionRestore', refreshNavigationAfterAuth)
+  authSession.events.on('logout', refreshNavigationAfterAuth)
+  authSession.events.on('sessionChange', refreshNavigationAfterAuth)
+  authSession.events.on('identityReplaced', refreshNavigationAfterAuth)
+  await navigation.show({ kind: 'restore', subject: subject.uri })
 
-  outliner.GotoSubject(subject, true, initialPane, true, undefined, undefined, true, false)
-
-  const header = await createHeader(outliner)
-  const navbar = await createNavbar(outliner)
+  const header = await createHeader(navigation)
+  const navbar = await createNavbar(navigation)
+  // The navbar went in at the top of the page; the heading belongs above it
+  placeProfileHeading()
   return Promise.all([header, navbar])
 }
 
 export async function refreshUI (outliner: OutlineManager) {
   const store = outliner?.context?.session?.store
-  const paneRegistry = outliner?.context?.session?.paneRegistry
-  const paneName = window.history.state?.paneName
-  const paneUri = window.history.state?.paneUri
-  // Panes rendered for a subject other than the page URL (storage/profile/social)
-  // must be restored from paneUri, since byName() returns the pane without that subject.
-  const usesOwnSubject = paneName === 'profile' || paneName === 'social' || paneName === 'folder'
-  const subjectUri = paneUri && usesOwnSubject
-    ? paneUri
-    : window.document.location.href
-  const pane = paneName ? paneRegistry?.byName?.(paneName) : undefined
 
   // Only re-run GotoSubject (full pane re-render) when render-relevant
   // environment fields actually changed since the last render.
@@ -79,8 +97,29 @@ export async function refreshUI (outliner: OutlineManager) {
   const previousSignature = (outliner as any)?.[LAST_RENDER_ENV_KEY] ?? ''
   const envChanged = currentSignature !== previousSignature
 
+  // Folder explorers adapt through CSS. Recreating one from the page's
+  // history entry discards its internal resource/pane selection on resize.
+  const themeUnchanged = currentSignature.split('|')[1] === previousSignature.split('|')[1]
+  const preserveExplorer = document.querySelector(
+    '#MainContent folder-pane-view, #MainContent [data-preserve-pane-on-resize="true"]'
+  )
+  if (envChanged && themeUnchanged && preserveExplorer) {
+    if (activeExplorerRefreshPending) return
+    activeExplorerRefreshPending = true
+    await new Promise<void>(resolve => requestAnimationFrame(() => resolve()))
+    try {
+      ;(outliner as OutlineManager & { refreshActiveExplorerPanes?: () => void }).refreshActiveExplorerPanes?.()
+      ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
+    } finally {
+      activeExplorerRefreshPending = false
+    }
+    return
+  }
+
   if (envChanged && store && typeof outliner?.GotoSubject === 'function') {
-    outliner.GotoSubject(store.sym(subjectUri), true, pane, true, undefined, undefined, true, false)
+    // Re-render what the current history entry displays without changing the
+    // URL or losing that it came from the account menu.
+    await navigationFor(outliner, store).show({ kind: 'restore' })
     ;(outliner as any)[LAST_RENDER_ENV_KEY] = currentSignature
   }
 }

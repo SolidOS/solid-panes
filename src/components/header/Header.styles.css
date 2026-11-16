@@ -30,7 +30,7 @@
     }
 
     @media (--solid-ui-mobile) {
-        padding: 0 16px 10px 16px;
+        padding: 5px 16px;
 
         a.logo,
         solid-ui-menu,

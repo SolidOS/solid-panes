@@ -1,0 +1,163 @@
+@import './dialog.responsive.css';
+
+/* CSS for the accessible modal dialogs created by dialog.ts */
+/* dialog host */
+#profile-modal {
+  --profile-modal-backdrop: var(--overlay-bg-muted, rgba(0, 0, 0, 0.5));
+  --profile-modal-panel-inline-padding: 25px;
+  --profile-modal-panel-block-padding: 20px;
+  --profile-modal-compact-padding: 15px;
+  --profile-modal-button-gap: 15px;
+  --profile-modal-error-padding: 12px;
+  --profile-modal-panel-width: min(600px, calc(100vw - 32px));
+  --profile-modal-panel-max-width: 600px;
+  --profile-modal-panel-max-height: calc(100dvh - 32px);
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: var(--profile-modal-backdrop);
+  max-width: none;
+  max-height: none;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  overscroll-behavior: contain;
+  padding-top: max(25px, env(safe-area-inset-top));
+  padding-right: 0;
+  padding-bottom: max(25px, env(safe-area-inset-bottom));
+  padding-left: 0;
+}
+
+#profile-modal:not([open]) {
+  display: none;
+}
+
+#profile-modal::backdrop {
+  background: var(--profile-modal-backdrop);
+}
+
+#profile-modal .modal {
+  box-sizing: border-box;
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  margin: 0;
+  background: var(--color-background);
+  border-radius: 5px;
+  max-width: var(--profile-modal-panel-max-width);
+  width: var(--profile-modal-panel-width);
+  max-height: var(--profile-modal-panel-max-height);
+  overflow: hidden;
+  box-shadow: var(--box-shadow-modal, 0 2px 10px rgba(0, 0, 0, 0.3));
+  align-self: center;
+  justify-self: center;
+}
+
+#profile-modal .modal .modal-header {
+  gap: var(--spacing-lg);
+  width: 100%;
+  min-width: 0;
+  padding: var(--profile-modal-panel-block-padding) var(--profile-modal-panel-inline-padding); 
+  box-sizing: border-box;
+  border-radius: 5px 5px 0 0;
+  border-bottom: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+  background: var(--solid-ui-color-slate-50, #F8FAFC);
+}
+
+#profile-modal .modal #modal-desc {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  width: 100%;
+  min-width: 0;
+  padding: var(--profile-modal-panel-inline-padding);
+  box-sizing: border-box;
+}
+
+#profile-modal .modal #modal-desc:has(> .profile__edit-form--projects) {
+  padding: 10px var(--profile-modal-panel-inline-padding);
+}
+
+#profile-modal .modal #modal-desc:has(> #contacts-addressbook-picker-dialog) {
+  padding-top: 0;
+}
+
+#profile-modal #modal-desc > .profile__edit-form--projects {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#profile-modal .modal #modal-title {
+  margin: 0;
+  color: var(--color-text-subheading, var(--gray-900, #101828));
+}
+
+#profile-modal .modal:has(#modal-desc > .profile__edit-form--projects) #modal-header-action,
+#profile-modal .modal:has(#modal-desc > .profile__edit-form--contact-info) #modal-header-action {
+  display: none;
+}
+
+/* button container: center buttons horizontally (uses id in markup) */
+#profile-modal #modal-buttons {
+  width: 100%;
+  min-width: 0;
+  padding: var(--profile-modal-panel-block-padding) calc(var(--profile-modal-panel-inline-padding) + var(--spacing-xxs, 0.3125rem)) var(--profile-modal-compact-padding);
+  gap: var(--profile-modal-button-gap);
+  align-self: stretch;
+  box-sizing: border-box;
+  border-top: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+  background: var(--color-surface-tertiary, var(--gray-50, #F9FAFB));
+}
+
+#profile-modal #modal-buttons[hidden] {
+  display: none !important;
+}
+
+#profile-modal #modal-buttons > solid-ui-button {
+  width: 10.8rem;
+}
+
+#profile-modal .modal__error-section {
+  margin-top: var(--spacing-sm);
+  margin-bottom: 0;
+  padding: var(--profile-modal-error-padding);
+  border: 1px solid var(--dialog-error-border, var(--pink-700, #ff98b3));
+  border-radius: 5px;
+  background: var(--dialog-error-background, var(--pink-500, #ffdde6));
+  color: var(--solid-ui-color-error, #B00020);
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#profile-modal .modal__error-section[hidden] {
+  display: none !important;
+}
+
+#profile-modal #modal-saving-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.78);
+  z-index: 10;
+}
+
+#profile-modal #modal-saving-overlay[hidden] {
+  display: none;
+}
+
+#profile-modal.modal--saving #modal-desc {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+#profile-modal .modal__saving-indicator {
+  gap: 0;
+}

@@ -91,9 +91,9 @@ export function registerPanes (register) {
 
   register(dokieliPane) // Should be above dataContentPane
   register(folderPane) // Should be above dataContentPane
+  register(slideshowPane) // Optional image-container view; Contents remains the default
   register(classInstancePane) // Should be above dataContentPane
   // register(require('./dynamic/dynamicPanes.js')) // warp etc  warp broken 2017/8
-  register(slideshowPane)
 
   register(socialPane)
 

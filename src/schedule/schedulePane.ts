@@ -87,16 +87,25 @@ export const schedulePane = {
     return new Promise<MintOptions>(function (resolve, reject) {
       const ns = UI.ns
       const kb = context.session.store
+      const agenda: AgendaTask[] = []
+      let settled = false
       let newBase = options.newBase
       const thisInstance =
         options.useExisting || $rdf.sym(options.newBase + 'index.ttl#this')
 
-      const complainIfBad = function (ok: boolean, body: string) {
-        if (ok) return
+      const fail = function (body: string) {
+        if (settled) return
+        settled = true
+        agenda.length = 0
         console.log(
           'Error in Schedule Pane: Error constructing new scheduler: ' + body
         )
         reject(new Error(body))
+      }
+
+      const complainIfBad = function (ok: boolean, body: string) {
+        if (ok) return
+        fail(body)
       }
 
       // ////////////////////// Accesss control
@@ -136,6 +145,12 @@ export const schedulePane = {
           */
 
       const setACL2 = function setACL2 (docURI, allWrite, callbackFunction) {
+        let callbackCalled = false
+        const callbackOnce = function (ok, message?) {
+          if (callbackCalled) return
+          callbackCalled = true
+          callbackFunction(ok, message)
+        }
         const aclDoc = kb.any(
           kb.sym(docURI),
           kb.sym('http://www.iana.org/assignments/link-relations/acl')
@@ -150,16 +165,13 @@ export const schedulePane = {
               data: aclText,
               contentType: 'text/turtle'
             })
-            .then(_result => callbackFunction(true))
+            .then(_result => callbackOnce(true))
             .catch(err => {
-              callbackFunction(false, err.message)
+              callbackOnce(false, err.message)
             })
         } else {
           return fetcher
             .load(docURI)
-            .catch(err => {
-              callbackFunction(false, 'Getting headers for ACL: ' + err)
-            })
             .then(() => {
               const aclDoc = kb.any(
                 kb.sym(docURI),
@@ -178,9 +190,9 @@ export const schedulePane = {
                 contentType: 'text/turtle'
               })
             })
-            .then(_result => callbackFunction(true))
+            .then(_result => callbackOnce(true))
             .catch(err => {
-              callbackFunction(false, err.message)
+              callbackOnce(false, err.message)
             })
         }
       }
@@ -193,6 +205,7 @@ export const schedulePane = {
       if (!me) {
         console.log('MUST BE LOGGED IN')
         alert('NOT LOGGED IN')
+        reject(new Error('Schedule pane requires a logged-in user'))
         return
       }
 
@@ -229,8 +242,6 @@ export const schedulePane = {
       const toBeCopied: CopySpec[] = options.noIndexHTML
         ? []
         : [{ local: 'index.html', contentType: 'text/html' }]
-
-      const agenda: AgendaTask[] = []
 
       //   @@ This needs some form of visible progress bar
       for (let f = 0; f < toBeCopied.length; f++) {
@@ -368,6 +379,8 @@ export const schedulePane = {
 
       agenda.push(function () {
         // give the user links to the new app
+        if (settled) return
+        settled = true
         console.log('Finished minting new scheduler')
         options.newInstance = newInstance
         resolve(options)

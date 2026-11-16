@@ -1,13 +1,30 @@
 .internalPaneContent {
   background-color: #ddddff;
-  padding: var(--spacing-xs, 0.5em);
+  padding: var(--spacing-xs, 0.5em) 40px;
+  box-sizing: border-box;
 }
 
 .internalPaneControls {
   width: 100%;
-  margin: var(--spacing-sm, 1em);
+  margin: var(--spacing-sm, 1em) 0;
+  box-sizing: border-box;
+}
+
+.internalPaneControls tr {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: var(--spacing-sm, 1em);
+  width: 100%;
+}
+
+.internalPaneControls td {
+  padding: 0;
 }
 
 .internalPaneDeleteButton {
   height: var(--icon-base, 2em);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }

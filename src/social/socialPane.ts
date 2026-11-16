@@ -16,14 +16,12 @@ import { DataBrowserContext } from 'pane-registry'
 import { locationIcon } from './icons'
 import {
   createAllFriendsSection,
-  createHeaderSection,
   FriendRowRenderers,
   createMutualSection,
-  createRequestsSection,
-  HeaderControls,
-  SocialHeaderElement
+  createRequestsSection
 } from './socialSections'
-import type { ViewerMode } from './socialSections'
+import type { ViewerMode } from '../types'
+import { getViewerRelation } from '../utils/viewerUtils'
 import { FriendshipTriage, loadFriendshipTriage, triageFriends } from './triage'
 
 function applyEnvironmentAttributes (
@@ -225,8 +223,7 @@ export const socialPane = {
     const mutualConnections = me && !thisIsYou
       ? uniqueNodes(common(uniqueFriends, myFriends)).filter(friend => !kb.sameThings(friend, me))
       : []
-    const mutualFriendCount = me && !thisIsYou ? mutualConnections.length : null
-    const viewerMode = getViewerMode(s, me)
+    const viewerMode = getViewerRelation(s, me)
 
     // Do I have a public profile document?
     let profile: NamedNode | null = null // This could be  SPARQL { ?me foaf:primaryTopic [ a foaf:PersonalProfileDocument ] }
@@ -320,36 +317,9 @@ export const socialPane = {
     } // me is defined
     // End of you and s
 
-    const shouldShowHeaderAddFriendAction = (mode: ViewerMode) => {
-      return mode === 'authenticated' && !thisIsYou && !outgoing
-    }
-
     const canEditOwnedProfile = viewerMode === 'owner' && editable
     const canManageRelationship = viewerMode === 'authenticated' && !thisIsYou && editable && Boolean(profile)
     const canModifyFriendsTab = canEditOwnedProfile
-
-    let headerControls: HeaderControls = {
-      canEdit: canEditOwnedProfile,
-      viewerMode,
-      showAddFriendAction: shouldShowHeaderAddFriendAction(viewerMode)
-    }
-
-    const header = createHeaderSection(context, s, headerControls, {
-      friendCount: uniqueFriends.length,
-      mutualFriendCount,
-      onSelectFriends: function () {
-        setActivePanel('all-friends')
-      },
-      onSelectMutual: typeof mutualFriendCount === 'number'
-        ? function () {
-          setActivePanel('mutual')
-        }
-        : undefined
-    }, function () {
-      return selectProfileData(context, s)
-    })
-    header.classList.add('social-pane__header-section', 'flex-column')
-    socialPane.prepend(header)
 
     // div.appendChild(dom.createTextNode(plural(friends.length, 'acquaintance') +'. '))
 
@@ -547,11 +517,6 @@ export const socialPane = {
 
     refreshRelationshipUi = function () {
       rebuildMutualSection()
-      headerControls = {
-        ...headerControls,
-        showAddFriendAction: shouldShowHeaderAddFriendAction(headerControls.viewerMode)
-      }
-      ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       requestsTriage = triageFriends(kb, s)
       requestsSection.refreshRequests(requestsTriage)
       setActivePanel(activePanel)
@@ -626,26 +591,11 @@ export const socialPane = {
 
     authn.checkUser()
       .then(webId => {
-        const confirmedViewerMode = getViewerMode(s, webId)
+        const confirmedViewerMode = getViewerRelation(s, webId)
         applyViewerMode(confirmedViewerMode)
-        const confirmedCanEditOwnedProfile = confirmedViewerMode === 'owner' && editable
-        headerControls = {
-          ...headerControls,
-          canEdit: confirmedCanEditOwnedProfile,
-          viewerMode: confirmedViewerMode,
-          showAddFriendAction: shouldShowHeaderAddFriendAction(confirmedViewerMode)
-        }
-        ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
       .catch(() => {
         applyViewerMode('anonymous')
-        headerControls = {
-          ...headerControls,
-          canEdit: false,
-          viewerMode: 'anonymous',
-          showAddFriendAction: false
-        }
-        ;(header as SocialHeaderElement).refreshSocialHeader?.(headerControls)
       })
 
     return socialPane
@@ -832,21 +782,4 @@ export function selectProfileData (context: DataBrowserContext, subject: NamedNo
     location,
     pronouns
   }
-}
-
-export type { ViewerMode } from './socialSections'
-
-function getViewerMode (subject: NamedNode, currentUser: unknown = authn.currentUser()): ViewerMode {
-  const currentUserUri =
-    typeof currentUser === 'string'
-      ? currentUser
-      : typeof currentUser === 'object' && currentUser !== null
-        ? ((currentUser as { value?: string, uri?: string }).value ||
-            (currentUser as { value?: string, uri?: string }).uri ||
-            null)
-        : null
-  let mode: ViewerMode = 'anonymous'
-  if (currentUserUri === subject.value) mode = 'owner'
-  if (currentUserUri && currentUserUri !== subject.value) mode = 'authenticated'
-  return mode
 }

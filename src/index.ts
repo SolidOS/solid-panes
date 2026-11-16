@@ -26,6 +26,7 @@ import {
 } from 'pane-registry'
 import { createContext } from './outline/context'
 import { initMainPage, refreshUI } from './mainPage'
+import { isHandlingBrowserNavigation } from './navigation/browserEvents'
 
 function getOutliner (dom, environment?: RenderEnvironment): OutlineManager {
   if (!dom.outlineManager) {
@@ -69,12 +70,18 @@ export {
   versionInfo,
   initMainPage,
   refreshUI,
+  isHandlingBrowserNavigation,
   list, // from paneRegistry
   paneForIcon, // from paneRegistry
   paneForPredicate, // from paneRegistry
   register, // from paneRegistry
   byName // from paneRegistry
 }
+
+export {
+  initializeProfileHeading,
+  refreshProfileHeading
+} from './mainPage/profileHeading'
 
 // export for simpler access by non-node scripts
 if (typeof window !== 'undefined') {

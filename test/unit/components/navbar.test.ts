@@ -1,9 +1,29 @@
 import { describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
 
 import '../../../src/components/navbar/Navbar'
 import type { NavbarMenuItem } from '../../../src/components/navbar/Navbar'
 
 describe('Navbar', () => {
+  it('owns its hover shadow and stacking styles independently of pane styles', () => {
+    const sheet = new CSSStyleSheet()
+    sheet.replaceSync(readFileSync('src/components/navbar/Navbar.styles.css', 'utf8'))
+    const rules = Array.from(sheet.cssRules).filter((rule): rule is CSSStyleRule => rule instanceof CSSStyleRule)
+    const host = rules.find(rule => rule.selectorText === ':host')
+    const hiddenHost = rules.find(rule => rule.selectorText === ':host(.navbar--hidden)')
+    const navbar = rules.find(rule => rule.selectorText === '.navbar')
+    const hover = rules.find(rule => rule.selectorText === '.navbar:hover')
+
+    expect(host?.style.getPropertyValue('position')).toBe('relative')
+    expect(host?.style.getPropertyValue('z-index')).toBe('1')
+    expect(host?.style.getPropertyValue('flex-shrink')).toBe('0')
+    expect(host?.style.getPropertyValue('margin-bottom')).toBe('20px')
+    expect(hiddenHost?.style.getPropertyValue('display')).toBe('none')
+    expect(hiddenHost?.style.getPropertyPriority('display')).toBe('important')
+    expect(navbar?.style.getPropertyValue('transition')).toBe('box-shadow 0.2s ease')
+    expect(hover?.style.getPropertyValue('box-shadow')).toBe('0 8px 10px rgba(124, 77, 255, 0.1)')
+  })
+
   it('emits solid-ui-select and lets the parent handle async onSelected failures', async () => {
     const error = new Error('pane load failed')
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
