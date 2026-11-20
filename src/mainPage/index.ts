@@ -56,7 +56,8 @@ export async function initMainPage (
     return
   }
   ensureMainContent()
-  uri = uri || window.location.href
+  const requestedUri = new URL(window.location.href).searchParams.get('uri')
+  uri = requestedUri || uri || window.location.href
   const subject: NamedNode = typeof uri === 'string' ? store.sym(uri) : uri
   // A reload shows what the URL is, whatever the history entry last displayed through the navbar
   // or the account menu: the profile on a profile page, otherwise the resource or container itself.
