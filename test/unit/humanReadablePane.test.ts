@@ -120,6 +120,23 @@ describe('isAllowedPreviewRequest', () => {
 })
 
 describe('human readable pane iframe rendering', () => {
+  it.each(['text/markdown', 'text/markdown; charset=utf-8', 'text/markdown; charset=UTF-8; format=flowed'])(
+    'renders Markdown from content type %s without a Markdown filename',
+    async contentType => {
+      const webOperation = vi.fn().mockResolvedValue({ responseText: '# Markdown heading' })
+      const store = { fetcher: { getHeader: vi.fn().mockReturnValue([contentType]) }, findTypeURIs: vi.fn().mockReturnValue({}) }
+      expect(humanReadablePane.label(sym(uri), { session: { store } } as any)).toBe('View')
+      const pane = renderWith(contentType, { webOperation })
+
+      await vi.waitFor(() => {
+        expect(pane.querySelector('.human-readable-pane__frame--markdown h1')?.textContent)
+          .toBe('Markdown heading')
+      })
+      expect(pane.querySelector('.human-readable-pane__frame--plain-text')).toBeNull()
+      expect(getFrame(pane)).toBeNull()
+    }
+  )
+
   it('renders JSON as readable text', async () => {
     const webOperation = vi.fn().mockResolvedValue({ responseText: '{\n  "enabled": true\n}' })
     const pane = renderWith('application/json', { webOperation })
@@ -467,6 +484,13 @@ describe('human readable pane iframe rendering', () => {
     const frame = getFrame(pane)!
     expect(frame.getAttribute('src')).toBeNull()
     expect(preview.shadowRoot?.querySelector('solid-ui-error-state')).toHaveProperty('message', '401')
+
+    preview.shadowRoot?.querySelector('solid-ui-error-state')?.dispatchEvent(new CustomEvent('close', {
+      bubbles: true,
+      composed: true
+    }))
+    await flush()
+    expect(preview.shadowRoot?.querySelector('solid-ui-error-state')).toBeNull()
   })
 
   it('falls back to the encoded filename when it is not valid UTF-8', async () => {
