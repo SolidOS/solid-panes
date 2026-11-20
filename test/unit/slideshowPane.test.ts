@@ -24,8 +24,24 @@ function contextFor (contents: Array<{ uri: string, image?: boolean }>) {
 }
 
 describe('slideshow pane', () => {
-  it('requires at least two images', () => {
+  it('offers Slideshow for a container with one image', () => {
     const { subject, context } = contextFor([{ uri: 'one.png', image: true }])
+
+    expect(slideshowPane.label(subject as any, context)).toBe('Slideshow')
+  })
+
+  it.each([
+    { contents: [] },
+    { contents: [{ uri: 'notes.txt', image: false }] }
+  ])('does not offer Slideshow without images: $contents', ({ contents }) => {
+    const { subject, context } = contextFor(contents)
+
+    expect(slideshowPane.label(subject as any, context)).toBeNull()
+  })
+
+  it('does not offer Slideshow for an individual image resource', () => {
+    const { subject, context } = contextFor([{ uri: 'one.png', image: true }])
+    resource.isContainer.mockReturnValueOnce(false)
 
     expect(slideshowPane.label(subject as any, context)).toBeNull()
   })
