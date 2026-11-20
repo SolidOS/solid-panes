@@ -27,7 +27,7 @@ export const slideshowPane = {
     const store = context.session.store
     if (solidLogicSingleton.resource.isContainer(subject)) {
       const images = getImageContents(subject, store)
-      return new Set(images.map(image => image.uri)).size > 1 ? 'Slideshow' : null
+      return images.length > 0 ? 'Slideshow' : null
     }
     return null
   },
