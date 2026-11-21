@@ -5,8 +5,8 @@
  ** review.   It does not use turtle, but RDF/a
  */
 
-import * as UI from 'solid-ui'
-import * as $rdf from 'rdflib'
+import { icons, log, ns } from 'solid-ui'
+import { sym } from 'rdflib'
 import * as mime from 'mime-types'
 
 // const DOKIELI_TEMPLATE_URI = 'https://dokie.li/new' // Copy to make new dok
@@ -14,11 +14,11 @@ import * as mime from 'mime-types'
 import DOKIELI_TEMPLATE from './new.js' // Distributed with this library
 
 export default {
-  icon: UI.icons.iconBase + 'dokieli-logo.png', // @@ improve? more like doccument?
+  icon: icons.iconBase + 'dokieli-logo.png', // @@ improve? more like doccument?
 
   name: 'Dokieli',
 
-  mintClass: UI.ns.solid('DokieliDocument'), // @@ A better class?
+  mintClass: ns.solid('DokieliDocument'), // @@ A better class?
 
   // Don't provide viewing - let humanReadablePane handle that with appropriate icon
   label: function (subject, context) {
@@ -40,7 +40,7 @@ export default {
 
     const contentType = mime.lookup(newInstance.uri)
     if (!contentType || !contentType.includes('html')) {
-      newInstance = $rdf.sym(newInstance.uri + '.html')
+      newInstance = sym(newInstance.uri + '.html')
     }
     newPaneOptions.newInstance = newInstance // Save for creation system
 
@@ -65,13 +65,12 @@ export default {
         contentType: 'text/html'
       })
       .then(function () {
-        console.log(
+        log.info(
           'new Dokieli document created at ' + newPaneOptions.newInstance
         )
         return newPaneOptions
       })
   }
 
-  // render: removed - now handled by humanReadablePane with appropriate dokieli icon
 }
-// ends
+

@@ -107,7 +107,7 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
   width: 100%;
 }
 
-.human-readable-document-status[data-visible='true'] ~ .human-readable-document-frame {
+.human-readable-document-status[data-visible='true'][data-keep-frame='false'] ~ .human-readable-document-frame {
   display: none;
 }
 
@@ -260,12 +260,12 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
   background: var(--solid-ui-color-slate-100, #F1F5F9);
 }
 
-.human-readable-docx-preview .docx-wrapper {
+.human-readable-docx-preview .human-readable-docx-wrapper {
   max-width: 100%;
   margin: 0 auto;
 }
 
-.human-readable-docx-preview .docx {
+.human-readable-docx-preview .human-readable-docx {
   max-width: 100%;
   overflow-x: auto;
 }

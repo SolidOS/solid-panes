@@ -204,6 +204,7 @@ describe('human readable pane iframe rendering', () => {
     expect((pane.querySelector('solid-ui-error-state') as HTMLElement & { message: string }).message)
       .toBe('Invalid JSON — showing the original content.')
     expect(pane.querySelector('pre')?.textContent).toBe(source)
+    expect(pane.querySelector('.human-readable-document-status')).toHaveAttribute('data-keep-frame', 'true')
     expect(pane.querySelector('script, img')).toBeNull()
   })
 

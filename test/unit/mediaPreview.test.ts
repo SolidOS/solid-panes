@@ -73,4 +73,52 @@ describe('media preview rendering', () => {
     await vi.waitFor(() => expect(status.querySelector('solid-ui-error-state')).not.toBeNull())
     expect(frame.childElementCount).toBe(0)
   })
+
+  it('revokes an image URL when its preview is removed', async () => {
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue(objectUrl)
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const { frame, status } = renderTarget()
+
+    renderImageContent(mediaStore(), { uri: 'https://pod.example/image.png' } as any, frame, status)
+    await vi.waitFor(() => expect(frame.querySelector('img')).not.toBeNull())
+    frame.remove()
+
+    await vi.waitFor(() => expect(revokeObjectURL).toHaveBeenCalledWith(objectUrl))
+  })
+
+  it('shows an error and revokes the URL when media decoding fails', async () => {
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue(objectUrl)
+    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+    const { frame, status } = renderTarget()
+
+    renderVideoContent(mediaStore(), { uri: 'https://pod.example/video.mp4' } as any, frame, status)
+    const video = await vi.waitFor(() => {
+      const element = frame.querySelector('video')
+      if (!element) throw new Error('Video preview was not created.')
+      return element
+    })
+    video.dispatchEvent(new Event('error'))
+
+    await vi.waitFor(() => expect(status.querySelector('solid-ui-error-state')).not.toBeNull())
+    expect(frame.childElementCount).toBe(0)
+    expect(revokeObjectURL).toHaveBeenCalledWith(objectUrl)
+  })
+
+  it('does not create a URL when the preview is removed during fetch', async () => {
+    let resolveResponse!: (response: Response) => void
+    const responsePromise = new Promise<Response>(resolve => { resolveResponse = resolve })
+    const createObjectURL = vi.spyOn(URL, 'createObjectURL')
+    const { frame, status } = renderTarget()
+
+    renderImageContent({
+      fetcher: { _fetch: vi.fn().mockReturnValue(responsePromise) }
+    } as any, { uri: 'https://pod.example/image.png' } as any, frame, status)
+    frame.remove()
+    resolveResponse({
+      ok: true,
+      blob: vi.fn().mockResolvedValue(new Blob(['media']))
+    } as unknown as Response)
+
+    await vi.waitFor(() => expect(createObjectURL).not.toHaveBeenCalled())
+  })
 })
