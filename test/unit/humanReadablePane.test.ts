@@ -11,12 +11,16 @@ import humanReadablePane, {
 
 const uri = 'https://pod.example/docs/page.html'
 
-function renderWith (contentType: string, fetcher: Record<string, any>) {
+function renderWith (
+  contentType: string,
+  fetcher: Record<string, any>,
+  environment: Record<string, any> = {}
+) {
   const subject = { uri, doc: () => subject }
   const store = {
     fetcher: { getHeader: vi.fn().mockReturnValue([contentType]), ...fetcher }
   }
-  const context = { dom: document, session: { store } } as any
+  const context = { dom: document, session: { store }, environment } as any
   const pane = humanReadablePane.render(subject as any, context)
   document.body.appendChild(pane)
   return pane
@@ -422,17 +426,26 @@ describe('human readable pane iframe rendering', () => {
     revokeObjectURL.mockRestore()
   })
 
-  it('revokes an active blob URL when the preview is removed', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/resource')
-    const revokeObjectURL = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
+  it('renders the PDF viewer without an iframe or blob URL', async () => {
     const pane = renderWith('application/pdf', {
       _fetch: vi.fn().mockResolvedValue(new Response('pdf', { headers: { 'content-type': 'application/pdf' } }))
     })
-    await vi.waitFor(() => expect(getFrame(pane)?.src).toBe('blob:https://pod.example/resource'))
-    pane.remove()
-    expect(revokeObjectURL).toHaveBeenCalledWith('blob:https://pod.example/resource')
-    createObjectURL.mockRestore()
-    revokeObjectURL.mockRestore()
+    const preview = pane.querySelector('solid-panes-pdf-viewer') as HTMLElement & {
+      pdfData?: ArrayBuffer
+    }
+    await vi.waitFor(() => expect(preview.pdfData).toBeInstanceOf(ArrayBuffer))
+    expect(pane.querySelector('iframe')).toBeNull()
+    const main = preview.shadowRoot?.querySelector('.main')
+    expect(main).toHaveAttribute('tabindex', '0')
+    expect(main).toHaveAttribute('aria-describedby', 'pdf-preview-description')
+    expect(preview.shadowRoot?.querySelector('#pdf-preview-description')?.textContent)
+      .toContain('PDF text and links are not accessible in this preview')
+    expect(preview.shadowRoot?.querySelector('.canvas')).toHaveAttribute('role', 'img')
+  })
+
+  it('passes the pane registry mobile layout to the PDF viewer', () => {
+    const pane = renderWith('application/pdf', { _fetch: vi.fn() }, { layout: 'mobile' })
+    expect(pane.querySelector('solid-panes-pdf-viewer')).toHaveAttribute('data-layout', 'mobile')
   })
 
   it('loads a changed subject and ignores the earlier response', async () => {
@@ -506,9 +519,9 @@ describe('human readable pane iframe rendering', () => {
     }
     const pane = humanReadablePane.render(subject as any, { dom: document, session: { store } } as any)
     document.body.appendChild(pane)
-    await vi.waitFor(() => expect(getFrame(pane)?.title).toBe('file%FF.pdf'))
-
-    expect(getFrame(pane)?.title).toBe('file%FF.pdf')
+    await vi.waitFor(() => expect(
+      pane.querySelector('solid-panes-pdf-viewer')?.shadowRoot?.querySelector('section')
+    ).toHaveAttribute('aria-label', 'Preview of file%FF.pdf'))
   })
 
   it('gives Dokieli the signed-in viewer as a bridged session', async () => {
