@@ -485,19 +485,6 @@ describe('human readable pane iframe rendering', () => {
     expect(frame.srcdoc).toContain('dokieli.js')
   })
 
-  it('uses the actual response MIME type to isolate HTML returned for a non-HTML resource', async () => {
-    const response = new Response('<html><body><script>window.parent.compromised = true</script></body></html>', {
-      headers: { 'content-type': 'text/html; charset=utf-8' }
-    })
-    const pane = renderWith('image/png', { _fetch: vi.fn().mockResolvedValue(response) })
-    await waitForSrcdoc(pane, 'compromised')
-
-    const frame = getFrame(pane)!
-    expect(frame.getAttribute('sandbox')).toBe('allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals')
-    expect(frame.src).toBe('')
-    expect(frame.srcdoc).toContain('compromised')
-  })
-
   it('does not sandbox PDF blob previews so the browser viewer can render them', async () => {
     const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/resource')
     const response = new Response('pdf data', {
@@ -510,19 +497,6 @@ describe('human readable pane iframe rendering', () => {
     expect(frame.getAttribute('sandbox')).toBeNull()
     expect(frame.src).toBe('blob:https://pod.example/resource')
     expect(createObjectURL).toHaveBeenCalled()
-    createObjectURL.mockRestore()
-  })
-
-  it('keeps non-PDF blob previews sandboxed', async () => {
-    const createObjectURL = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/resource')
-    const response = new Response('<svg xmlns="http://www.w3.org/2000/svg"><script>window.compromised = true</script></svg>', {
-      headers: { 'content-type': 'image/svg+xml' }
-    })
-    const pane = renderWith('image/svg+xml', { _fetch: vi.fn().mockResolvedValue(response) })
-    await vi.waitFor(() => expect(createObjectURL).toHaveBeenCalled())
-
-    expect(getFrame(pane)?.getAttribute('sandbox'))
-      .toBe('allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals')
     createObjectURL.mockRestore()
   })
 

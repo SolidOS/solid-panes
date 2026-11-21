@@ -14,6 +14,12 @@ import { renderMarkdownContent } from './markdownPreview'
 import { renderJsonContent } from './jsonPreview'
 import { renderPlainTextContent } from './textPreview'
 import { isDocxContentType, isDocxFile, renderDocxContent } from './docxPreview'
+import {
+  isImageContentType,
+  isVideoContentType,
+  renderImageContent,
+  renderVideoContent
+} from './mediaPreview'
 import { createPreviewContainer } from './previewFrame'
 import { escapeAttribute, HTML_PREVIEW_SANDBOX } from './previewHelpers'
 import type IframePreview from '../components/iframe-preview'
@@ -363,6 +369,8 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       'application/ld+json',
       'application/xhtml+xml',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'image/',
+      'video/',
       'application/pdf'
     ]
 
@@ -467,6 +475,8 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
     const isDocx = isDocxContentType(ct) || isDocxFile(subject.uri)
+    const isImage = isImageContentType(ct)
+    const isVideo = isVideoContentType(ct)
     const isJson = isJsonContentType(ct) ||
       (isJsonFile(subject.uri) && canUseJsonExtensionFallback(ct))
     const isPlainText = ct === 'text/plain'
@@ -482,7 +492,17 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     div.classList.add('human-readable-pane')
     applyEnvironmentAttributes(div)
 
-    if (isPdf) {
+    if (isImage || isVideo) {
+      const frame = myDocument.createElement('div')
+      const { container: frameContainer, status } = createPreviewContainer(myDocument, frame)
+      if (isImage) {
+        renderImageContent(kb, subject, frame, status)
+      } else {
+        renderVideoContent(kb, subject, frame, status)
+      }
+      div.appendChild(frameContainer)
+      div.classList.add('human-readable-pane--document')
+    } else if (isPdf) {
       const preview = myDocument.createElement('solid-panes-pdf-viewer') as PdfViewer
       preview.dataset.layout = context.environment?.layout ?? 'desktop'
       preview.store = kb
