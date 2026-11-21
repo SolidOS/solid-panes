@@ -199,9 +199,10 @@ describe('human readable pane iframe rendering', () => {
     })
 
     await vi.waitFor(() => {
-      expect(pane.querySelector('[role="alert"]')?.textContent)
-        .toBe('Invalid JSON — showing the original content.')
+      expect(pane.querySelector('solid-ui-error-state')).not.toBeNull()
     })
+    expect((pane.querySelector('solid-ui-error-state') as HTMLElement & { message: string }).message)
+      .toBe('Invalid JSON — showing the original content.')
     expect(pane.querySelector('pre')?.textContent).toBe(source)
     expect(pane.querySelector('script, img')).toBeNull()
   })
@@ -215,10 +216,10 @@ describe('human readable pane iframe rendering', () => {
     })
 
     await vi.waitFor(() => {
-      expect(pane.querySelector('[role="alert"]')?.textContent)
-        .toBe('Unable to validate JSON — showing the original content.')
+      expect(pane.querySelector('solid-ui-error-state')).not.toBeNull()
     })
-    expect(pane.querySelector('[role="alert"]')?.textContent).not.toContain('Invalid JSON')
+    expect((pane.querySelector('solid-ui-error-state') as HTMLElement & { message: string }).message)
+      .toBe('Unable to validate JSON — showing the original content.')
     expect(pane.querySelector('pre')?.textContent).toBe('{"valid":true}')
   })
 

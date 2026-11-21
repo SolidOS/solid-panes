@@ -17,6 +17,8 @@ afterEach(() => {
 describe('renderMarkdownContent', () => {
   it('renders Markdown and removes raw HTML', async () => {
     const frame = createFrame()
+    const status = document.createElement('div')
+    document.body.appendChild(status)
     const store = {
       fetcher: {
         webOperation: vi.fn().mockResolvedValue({
@@ -25,7 +27,7 @@ describe('renderMarkdownContent', () => {
       }
     }
 
-    renderMarkdownContent(store as any, subject, frame)
+    renderMarkdownContent(store as any, subject, frame, status)
 
     await vi.waitFor(() => {
       expect(frame.querySelector('h1')?.textContent).toBe('Heading')
@@ -38,21 +40,22 @@ describe('renderMarkdownContent', () => {
 
   it('shows an error when Markdown cannot be fetched', async () => {
     const frame = createFrame()
-    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const status = document.createElement('div')
+    document.body.appendChild(status)
     const store = {
       fetcher: {
         webOperation: vi.fn().mockRejectedValue(new Error('network failure'))
       }
     }
 
-    renderMarkdownContent(store as any, subject, frame)
+    renderMarkdownContent(store as any, subject, frame, status)
 
     await vi.waitFor(() => {
-      expect(frame.textContent).toBe('Error loading content')
+      expect(status.querySelector('solid-ui-error-state')).not.toBeNull()
     })
-    expect(console.error).toHaveBeenCalledWith(
-      'Error fetching markdown content:',
-      expect.any(Error)
-    )
+    await vi.waitFor(() => {
+      expect(status.querySelector('solid-ui-error-state')?.shadowRoot?.textContent)
+        .toContain('The document could not be loaded.')
+    })
   })
 })

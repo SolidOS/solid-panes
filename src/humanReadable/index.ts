@@ -3,7 +3,7 @@
  **  This outline pane contains the document contents for an HTML document
  **  This is for peeking at a page, because the user might not want to leave the data browser.
  */
-import { icons, ns } from 'solid-ui'
+import { icons, log, ns } from 'solid-ui'
 import { Util } from 'rdflib'
 import { authn } from 'solid-logic'
 import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
@@ -13,6 +13,7 @@ import { createPreviewBridge } from './previewBridge'
 import { renderMarkdownContent } from './markdownPreview'
 import { renderJsonContent } from './jsonPreview'
 import { renderPlainTextContent } from './textPreview'
+import { createPreviewContainer } from './previewFrame'
 import { escapeAttribute, HTML_PREVIEW_SANDBOX } from './previewHelpers'
 import type IframePreview from '../components/iframe-preview'
 import '../components/iframe-preview'
@@ -466,9 +467,9 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     const isPdf = ct === 'application/pdf'
 
     if (ct) {
-      // console.log('humanReadablePane: c-t:' + ct)
+      // Unknown types are intentionally left to the browser fallback.
     } else {
-      console.log('humanReadablePane: unknown content-type?')
+      log.debug(`Human Readable: unknown content type ${ct}`)
     }
 
     //  @@ When we can, use CSP to turn off scripts within the iframe
@@ -485,20 +486,16 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     } else if (isMarkdown) {
       // For markdown, use a DIV element and render the content
       const frame = myDocument.createElement('div')
-      renderMarkdownContent(kb, subject, frame)
-      const frameContainer = myDocument.createElement('div')
-      frameContainer.classList.add('human-readable-document-container')
-      frameContainer.appendChild(frame)
+      const { container: frameContainer, status } = createPreviewContainer(myDocument, frame)
+      renderMarkdownContent(kb, subject, frame, status)
       div.appendChild(frameContainer)
       div.classList.add('human-readable-pane--document')
     } else if (isJson) {
       const frame = myDocument.createElement('pre')
       frame.tabIndex = 0
       frame.setAttribute('aria-label', 'JSON document')
-      renderJsonContent(kb, subject, frame)
-      const frameContainer = myDocument.createElement('div')
-      frameContainer.classList.add('human-readable-document-container')
-      frameContainer.appendChild(frame)
+      const { container: frameContainer, status } = createPreviewContainer(myDocument, frame)
+      renderJsonContent(kb, subject, frame, status)
       div.appendChild(frameContainer)
       div.classList.add('human-readable-pane--document')
     } else if (isPlainText) {
@@ -506,10 +503,8 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       const frame = myDocument.createElement('pre')
       frame.tabIndex = 0
       frame.setAttribute('aria-label', 'Plain text document')
-      renderPlainTextContent(kb, subject, frame)
-      const frameContainer = myDocument.createElement('div')
-      frameContainer.classList.add('human-readable-document-container')
-      frameContainer.appendChild(frame)
+      const { container: frameContainer, status } = createPreviewContainer(myDocument, frame)
+      renderPlainTextContent(kb, subject, frame, status)
       div.appendChild(frameContainer)
       div.classList.add('human-readable-pane--document')
     } else {

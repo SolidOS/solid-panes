@@ -1,6 +1,8 @@
+import { log } from 'solid-ui'
 import type { LiveStore, NamedNode } from 'rdflib'
 import { html, render } from 'lit-html'
 import { configurePreviewFrame } from './previewFrame'
+import { renderPreviewError } from './previewError'
 
 type JsonToken = {
   text: string
@@ -79,27 +81,24 @@ function prettyTokens (tokens: JsonToken[]): Array<JsonToken | string> {
 
 function showOriginalWithError (
   frame: HTMLPreElement,
+  status: HTMLElement,
   source: string,
   errorMessage: string
 ): void {
-  const message = frame.ownerDocument.createElement('div')
-  message.className = 'human-readable-json-error'
-  message.setAttribute('role', 'alert')
-  message.textContent = errorMessage
-  frame.parentElement?.insertBefore(message, frame)
+  renderPreviewError(status, 'Unable to display JSON', errorMessage)
   render(html`${source}`, frame)
 }
 
-function renderJson (frame: HTMLPreElement, source: string): void {
+function renderJson (frame: HTMLPreElement, status: HTMLElement, source: string): void {
   try {
     // Validate without serializing: JSON.parse/stringify would round large numeric values.
     JSON.parse(source)
   } catch (error) {
     if (error instanceof SyntaxError) {
-      showOriginalWithError(frame, source, 'Invalid JSON — showing the original content.')
+      showOriginalWithError(frame, status, source, 'Invalid JSON — showing the original content.')
     } else {
-      console.error('Error validating JSON content:', error)
-      showOriginalWithError(frame, source, 'Unable to validate JSON — showing the original content.')
+      log.debug(`Error validating JSON content: ${String(error)}`)
+      showOriginalWithError(frame, status, source, 'Unable to validate JSON — showing the original content.')
     }
     return
   }
@@ -118,27 +117,23 @@ function renderJson (frame: HTMLPreElement, source: string): void {
     })
     render(html`${highlightedParts}`, frame)
   } catch (error) {
-    console.error('Error formatting JSON content:', error)
-    showOriginalWithError(frame, source, 'Unable to format JSON content — showing the original content.')
+    log.debug(`Error formatting JSON content: ${String(error)}`)
+    showOriginalWithError(frame, status, source, 'Unable to format JSON content — showing the original content.')
   }
 }
 
 export function renderJsonContent (
   store: LiveStore,
   subject: NamedNode,
-  frame: HTMLPreElement
+  frame: HTMLPreElement,
+  status: HTMLElement
 ): void {
+  configurePreviewFrame(frame, 'json')
   store.fetcher.webOperation('GET', subject.uri).then(response => {
-    configurePreviewFrame(frame, 'json')
-    renderJson(frame, response.responseText ?? '')
+    renderJson(frame, status, response.responseText ?? '')
   }).catch(error => {
-    console.error('Error fetching JSON content:', error)
-    const message = frame.ownerDocument.createElement('div')
-    message.className = 'human-readable-json-error'
-    message.setAttribute('role', 'alert')
-    message.textContent = 'Unable to load JSON content.'
-    frame.parentElement?.insertBefore(message, frame)
-    configurePreviewFrame(frame, 'json')
+    log.debug(`Error fetching JSON content: ${String(error)}`)
+    renderPreviewError(status, 'Unable to load JSON', 'The document could not be loaded.')
     render(html``, frame)
   })
 }
