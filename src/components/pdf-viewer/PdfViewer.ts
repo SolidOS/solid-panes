@@ -5,6 +5,7 @@ import type { LiveStore, NamedNode } from 'rdflib'
 import { resourceFilename } from '../../humanReadable/previewHelpers'
 import 'solid-ui/components/error-state'
 import styles from './PdfViewier.styles.css'
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 
 type PdfJsModule = typeof import('pdfjs-dist')
 type PdfDocument = Awaited<ReturnType<PdfJsModule['getDocument']>['promise']>
@@ -106,10 +107,7 @@ export default class PdfViewer extends WebComponent {
   private async renderMainPage (generation: number): Promise<void> {
     if (!this.pdfJs || !this.pdfData) return
 
-    this.pdfJs.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.min.mjs',
-      import.meta.url
-    ).toString()
+    this.pdfJs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
     const loadingTask = this.pdfJs.getDocument({ data: this.pdfData })
     this.pdfLoadingTask = loadingTask
     const pdfDocument = await loadingTask.promise
