@@ -104,7 +104,7 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
   width: 100%;
 }
 
-.human-readable-document-status[data-visible='true'] ~ .human-readable-document-frame {
+.human-readable-document-status[data-visible='true'][data-keep-frame='false'] ~ .human-readable-document-frame {
   display: none;
 }
 

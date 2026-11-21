@@ -68,6 +68,18 @@ export default class PdfViewer extends WebComponent {
   private selectPage (pageNumber: number): void {
     if (!this.pdfDocument || pageNumber < 1 || pageNumber > this.pageCount) return
     this.currentPage = pageNumber
+    const generation = this.fetchGeneration
+    this.renderSelectedPage(pageNumber, generation).catch(error => {
+      if (generation === this.fetchGeneration) {
+        this.errorMessage = error instanceof Error ? error.message : String(error)
+      }
+    })
+  }
+
+  private async renderSelectedPage (pageNumber: number, generation: number): Promise<void> {
+    await this.updateComplete
+    const canvas = this.renderRoot.querySelectorAll<HTMLCanvasElement>('.canvas')[pageNumber - 1]
+    if (canvas) await this.renderPage(pageNumber, canvas, 1.25, generation)
   }
 
   private async renderPage (
@@ -91,12 +103,17 @@ export default class PdfViewer extends WebComponent {
     await this.updateComplete
     const canvases = this.renderRoot.querySelectorAll<HTMLCanvasElement>('.canvas')
     if (canvases.length === 0) throw new Error('Unable to create a PDF canvas.')
-    await Promise.all(Array.from(canvases, (canvas, index) =>
-      this.renderPage(index + 1, canvas, 1.25, generation)
-    ))
+    if (this.dataset.layout === 'mobile') {
+      await Promise.all(Array.from(canvases, (canvas, index) =>
+        this.renderPage(index + 1, canvas, 1.25, generation)
+      ))
+      return
+    }
+    await this.renderPage(this.currentPage, canvases[this.currentPage - 1], 1.25, generation)
   }
 
   private async renderThumbnailCanvases (generation: number): Promise<void> {
+    if (this.dataset.layout === 'mobile') return
     await this.updateComplete
     const canvases = this.renderRoot.querySelectorAll<HTMLCanvasElement>('.thumbnail-canvas')
     await Promise.all(Array.from(canvases, (canvas, index) =>

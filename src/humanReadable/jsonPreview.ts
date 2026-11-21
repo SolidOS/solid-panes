@@ -85,7 +85,7 @@ function showOriginalWithError (
   source: string,
   errorMessage: string
 ): void {
-  renderPreviewError(status, 'Unable to display JSON', errorMessage)
+  renderPreviewError(status, 'Unable to display JSON', errorMessage, false)
   render(html`${source}`, frame)
 }
 
