@@ -10,8 +10,8 @@ import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode } from 'rdflib'
 import './humanReadablePane.css'
 import { createPreviewBridge } from './previewBridge'
-import { configurePreviewFrame } from './previewFrame'
 import { renderMarkdownContent } from './markdown'
+import { renderPlainTextContent } from './textPreview'
 import { escapeAttribute, HTML_PREVIEW_SANDBOX } from './previewHelpers'
 import type IframePreview from '../components/iframe-preview'
 import '../components/iframe-preview'
@@ -458,19 +458,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     div.classList.add('human-readable-pane')
     applyEnvironmentAttributes(div)
 
-    // render plain text in a PRE element
-    const renderPlainTextContent = function (frame: HTMLPreElement) {
-      kb.fetcher.webOperation('GET', subject.uri).then(response => {
-        const plainText = response.responseText ?? ''
-        const lines = Math.min(30, plainText.split(/\n/).length + 5)
-        frame.textContent = plainText
-        configurePreviewFrame(frame, 'plain-text', lines)
-      }).catch(error => {
-        console.error('Error fetching plain text content:', error)
-        frame.textContent = 'Error loading content'
-      })
-    }
-
     if (isPdf) {
       const preview = myDocument.createElement('solid-panes-pdf-viewer') as PdfViewer
       preview.dataset.layout = context.environment?.layout ?? 'desktop'
@@ -490,7 +477,9 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     } else if (isPlainText) {
       // For plain text, use a PRE element and render the content
       const frame = myDocument.createElement('pre')
-      renderPlainTextContent(frame)
+      frame.tabIndex = 0
+      frame.setAttribute('aria-label', 'Plain text document')
+      renderPlainTextContent(kb, subject, frame)
       const frameContainer = myDocument.createElement('div')
       frameContainer.classList.add('human-readable-pane__container')
       frameContainer.appendChild(frame)

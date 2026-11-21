@@ -115,11 +115,15 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
 }
 
 .human-readable-pane__frame--plain-text {
-  font-family: monospace;
   margin: 0;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.human-readable-pane__frame--plain-text:focus-visible {
+  outline: 2px solid var(--solid-ui-color-gray-800, #101828);
+  outline-offset: -2px;
 }
 
 .human-readable-pane__frame--markdown > * {
