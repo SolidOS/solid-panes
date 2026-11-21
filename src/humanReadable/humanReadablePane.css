@@ -43,7 +43,8 @@
 
 .human-readable-markdown-preview,
 .human-readable-plain-text-preview,
-.human-readable-json-preview {
+.human-readable-json-preview,
+.human-readable-docx-preview {
   flex: 1 1 auto;
   height: auto;
   min-height: 100%;
@@ -135,7 +136,8 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
 
 .human-readable-pane--document > .human-readable-document-container > .human-readable-markdown-preview,
 .human-readable-pane--document > .human-readable-document-container > .human-readable-plain-text-preview,
-.human-readable-pane--document > .human-readable-document-container > .human-readable-json-preview {
+.human-readable-pane--document > .human-readable-document-container > .human-readable-json-preview,
+.human-readable-pane--document > .human-readable-document-container > .human-readable-docx-preview {
   flex: 1 1 0%;
   height: 100%;
   min-height: 0;
@@ -250,6 +252,22 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
   box-sizing: border-box;
 }
 
+.human-readable-docx-preview {
+  overflow: auto;
+  padding: 1rem;
+  background: var(--solid-ui-color-slate-100, #F1F5F9);
+}
+
+.human-readable-docx-preview .docx-wrapper {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.human-readable-docx-preview .docx {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .human-readable-markdown-preview img,
 .human-readable-markdown-preview video,
 .human-readable-markdown-preview canvas,
@@ -296,7 +314,8 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
 
 .human-readable-pane[data-layout='mobile'] .human-readable-markdown-preview,
 .human-readable-pane[data-layout='mobile'] .human-readable-plain-text-preview,
-.human-readable-pane[data-layout='mobile'] .human-readable-json-preview {
+.human-readable-pane[data-layout='mobile'] .human-readable-json-preview,
+.human-readable-pane[data-layout='mobile'] .human-readable-docx-preview {
   min-height: 100%;
   max-height: none;
 }
@@ -338,13 +357,18 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
 
   .human-readable-markdown-preview,
   .human-readable-plain-text-preview,
-  .human-readable-json-preview {
+  .human-readable-json-preview,
+  .human-readable-docx-preview {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
   .human-readable-json-preview {
     white-space: pre-wrap;
+  }
+
+  .human-readable-docx-preview {
+    padding: 0.75rem;
   }
 
   .human-readable-pane__frame--iframe {

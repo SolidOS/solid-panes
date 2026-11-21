@@ -12,7 +12,7 @@ export function createPreviewContainer (
 
 export function configurePreviewFrame (
   frame: HTMLElement,
-  modifier: 'markdown' | 'plain-text' | 'json'
+  modifier: 'markdown' | 'plain-text' | 'json' | 'docx'
 ): void {
   frame.className = ''
   frame.classList.add('human-readable-document-frame')
