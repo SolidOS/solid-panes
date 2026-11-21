@@ -10,7 +10,8 @@ import type { DataBrowserContext, RenderEnvironment } from 'pane-registry'
 import type { NamedNode } from 'rdflib'
 import './humanReadablePane.css'
 import { createPreviewBridge } from './previewBridge'
-import { renderMarkdownContent } from './markdown'
+import { renderMarkdownContent } from './markdownPreview'
+import { renderJsonContent } from './jsonPreview'
 import { renderPlainTextContent } from './textPreview'
 import { escapeAttribute, HTML_PREVIEW_SANDBOX } from './previewHelpers'
 import type IframePreview from '../components/iframe-preview'
@@ -49,8 +50,14 @@ const isMarkdownFile = (uri?: string | null): boolean => {
 const isJsonFile = (uri?: string | null): boolean => {
   if (!uri) return false
   const path = uri.split('?')[0].split('#')[0]
-  return /\.json$/i.test(path)
+  return /\.(json|jsonld)$/i.test(path)
 }
+
+const isJsonContentType = (contentType?: string | null): boolean =>
+  contentType === 'application/json' || contentType === 'application/ld+json'
+
+const canUseJsonExtensionFallback = (contentType?: string | null): boolean =>
+  !contentType || contentType === 'application/octet-stream'
 
 // Cache for dokieli detection results (keyed by subject URI)
 const dokieliCache = new Map<string, DokieliCacheValue>()
@@ -351,6 +358,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       'text/html',
       'text/markdown',
       'application/json',
+      'application/ld+json',
       'application/xhtml+xml',
       'application/pdf',
       'video/mp4'
@@ -396,6 +404,13 @@ const humanReadablePane: HumanReadablePaneDefinition = {
 
     // Check file extension for markdown files
     if (isMarkdownFile(subject.uri)) {
+      return 'View'
+    }
+
+    const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
+    const contentType = cts ? cts[0].split(';', 1)[0].trim() : null
+    if (isJsonFile(subject.uri) &&
+      (isJsonContentType(contentType) || canUseJsonExtensionFallback(contentType))) {
       return 'View'
     }
 
@@ -445,7 +460,9 @@ const humanReadablePane: HumanReadablePaneDefinition = {
 
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
-    const isPlainText = ct === 'text/plain' || ct === 'application/json' || (!ct && isJsonFile(subject.uri))
+    const isJson = isJsonContentType(ct) ||
+      (isJsonFile(subject.uri) && canUseJsonExtensionFallback(ct))
+    const isPlainText = ct === 'text/plain'
     const isPdf = ct === 'application/pdf'
 
     if (ct) {
@@ -470,7 +487,17 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       const frame = myDocument.createElement('div')
       renderMarkdownContent(kb, subject, frame)
       const frameContainer = myDocument.createElement('div')
-      frameContainer.classList.add('human-readable-pane__container')
+      frameContainer.classList.add('human-readable-document-container')
+      frameContainer.appendChild(frame)
+      div.appendChild(frameContainer)
+      div.classList.add('human-readable-pane--document')
+    } else if (isJson) {
+      const frame = myDocument.createElement('pre')
+      frame.tabIndex = 0
+      frame.setAttribute('aria-label', 'JSON document')
+      renderJsonContent(kb, subject, frame)
+      const frameContainer = myDocument.createElement('div')
+      frameContainer.classList.add('human-readable-document-container')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
       div.classList.add('human-readable-pane--document')
@@ -481,7 +508,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       frame.setAttribute('aria-label', 'Plain text document')
       renderPlainTextContent(kb, subject, frame)
       const frameContainer = myDocument.createElement('div')
-      frameContainer.classList.add('human-readable-pane__container')
+      frameContainer.classList.add('human-readable-document-container')
       frameContainer.appendChild(frame)
       div.appendChild(frameContainer)
       div.classList.add('human-readable-pane--document')
