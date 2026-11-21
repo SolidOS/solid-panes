@@ -1,19 +1,19 @@
 /*   Single video play Pane
  **
  */
-import * as UI from 'solid-ui'
-import * as $rdf from 'rdflib'
+import { icons } from 'solid-ui'
+import { Util } from 'rdflib'
+import './videoPane.css'
 
 export default {
-  icon: UI.icons.iconBase + 'noun_1619.svg',
+  icon: icons.iconBase + 'noun_1619.svg',
 
   name: 'video',
 
-  // Does the subject deserve an slideshow pane?
   label: function (subject, context) {
     const kb = context.session.store
     const typeURIs = kb.findTypeURIs(subject)
-    const prefix = $rdf.Util.mediaTypeClass('video/*').uri.split('*')[0]
+    const prefix = Util.mediaTypeClass('video/*').uri.split('*')[0]
     for (const t in typeURIs) {
       if (t.startsWith(prefix)) return 'Play video'
     }
@@ -25,8 +25,12 @@ export default {
     const kb = context.session.store
     const dom = context.dom
     const div = dom.createElement('div')
+    div.classList.add('video-pane')
+    div.dataset.layout = context.environment?.layout ?? 'desktop'
     const video = div.appendChild(dom.createElement('video'))
     video.setAttribute('controls', 'yes')
+    video.setAttribute('aria-label', 'Video preview')
+    video.setAttribute('playsinline', '')
     // get video with authenticated fetch
     kb.fetcher._fetch(subject.uri)
       .then(function (response) {
@@ -37,8 +41,6 @@ export default {
         video.setAttribute('src', objectURL) // w640 h480 //
       })
 
-    video.setAttribute('width', '100%')
     return div
   }
 }
-// ends
