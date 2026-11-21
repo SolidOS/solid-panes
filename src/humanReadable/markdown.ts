@@ -7,11 +7,10 @@ import { configurePreviewFrame } from './previewFrame'
 export const renderMarkdownContent = function (store: LiveStore, subject: NamedNode, frame: HTMLDivElement) {
       store.fetcher.webOperation('GET', subject.uri).then(response => {
         const markdownText = response.responseText ?? ''
-        const lines = Math.min(30, markdownText.split(/\n/).length + 5)
         const res = marked.parse(markdownText, { async: false })
         const clean = DOMPurify.sanitize(res)
         frame.innerHTML = clean
-        configurePreviewFrame(frame, 'markdown', lines)
+        configurePreviewFrame(frame, 'markdown')
       }).catch(error => {
         console.error('Error fetching markdown content:', error)
         frame.innerHTML = '<p>Error loading content</p>'

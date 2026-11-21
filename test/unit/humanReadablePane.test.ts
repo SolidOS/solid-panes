@@ -151,6 +151,26 @@ describe('human readable pane iframe rendering', () => {
     expect(webOperation).toHaveBeenCalledWith('GET', uri)
   })
 
+  it('renders plain text as escaped text through Lit', async () => {
+    const webOperation = vi.fn().mockResolvedValue({ responseText: '<script>unsafe()</script>' })
+    const pane = renderWith('text/plain', { webOperation })
+    await flush()
+
+    expect(pane.querySelector('pre')?.textContent).toBe('<script>unsafe()</script>')
+    expect(pane.querySelector('script')).toBeNull()
+  })
+
+  it('makes plain text keyboard accessible in the mobile layout', () => {
+    const pane = renderWith('text/plain', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: 'Text' })
+    }, { layout: 'mobile' })
+    const frame = pane.querySelector('pre')
+
+    expect(pane).toHaveAttribute('data-layout', 'mobile')
+    expect(frame).toHaveAttribute('tabindex', '0')
+    expect(frame).toHaveAttribute('aria-label', 'Plain text document')
+  })
+
   it('renders HTML from the authenticated fetch instead of letting the iframe request it', async () => {
     const fetch = vi.fn().mockResolvedValue(htmlResponse('<html><head></head><body>Hello</body></html>'))
     const pane = renderWith('text/html', { _fetch: fetch })
