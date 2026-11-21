@@ -15,6 +15,8 @@ import { renderMarkdownContent } from './markdown'
 import { escapeAttribute, HTML_PREVIEW_SANDBOX } from './previewHelpers'
 import type IframePreview from '../components/iframe-preview'
 import '../components/iframe-preview'
+import type PdfViewer from '../components/pdf-viewer'
+import '../components/pdf-viewer'
 
 export { IFRAME_PREVIEW_FRAME_NAME } from './previewHelpers'
 
@@ -444,6 +446,7 @@ const humanReadablePane: HumanReadablePaneDefinition = {
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
     const isPlainText = ct === 'text/plain' || ct === 'application/json' || (!ct && isJsonFile(subject.uri))
+    const isPdf = ct === 'application/pdf'
 
     if (ct) {
       // console.log('humanReadablePane: c-t:' + ct)
@@ -468,7 +471,14 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       })
     }
 
-    if (isMarkdown) {
+    if (isPdf) {
+      const preview = myDocument.createElement('solid-panes-pdf-viewer') as PdfViewer
+      preview.dataset.layout = context.environment?.layout ?? 'desktop'
+      preview.store = kb
+      preview.subject = subject
+      div.appendChild(preview)
+      div.classList.add('human-readable-pane--document')
+    } else if (isMarkdown) {
       // For markdown, use a DIV element and render the content
       const frame = myDocument.createElement('div')
       renderMarkdownContent(kb, subject, frame)
