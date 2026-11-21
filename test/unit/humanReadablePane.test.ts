@@ -14,9 +14,10 @@ const uri = 'https://pod.example/docs/page.html'
 function renderWith (
   contentType: string,
   fetcher: Record<string, any>,
-  environment: Record<string, any> = {}
+  environment: Record<string, any> = {},
+  resourceUri: string = uri
 ) {
-  const subject = { uri, doc: () => subject }
+  const subject = { uri: resourceUri, doc: () => subject }
   const store = {
     fetcher: { getHeader: vi.fn().mockReturnValue([contentType]), ...fetcher }
   }
@@ -133,22 +134,121 @@ describe('human readable pane iframe rendering', () => {
       const pane = renderWith(contentType, { webOperation })
 
       await vi.waitFor(() => {
-        expect(pane.querySelector('.human-readable-pane__frame--markdown h1')?.textContent)
+        expect(pane.querySelector('.human-readable-markdown-preview h1')?.textContent)
           .toBe('Markdown heading')
       })
-      expect(pane.querySelector('.human-readable-pane__frame--plain-text')).toBeNull()
+      expect(pane.querySelector('.human-readable-plain-text-preview')).toBeNull()
       expect(getFrame(pane)).toBeNull()
     }
   )
 
-  it('renders JSON as readable text', async () => {
+  it('enhances Markdown with links, line breaks, and formatting', async () => {
+    const webOperation = vi.fn().mockResolvedValue({
+      responseText: 'Visit https://example.com\nfor more.\n\n~~old~~'
+    })
+    const pane = renderWith('text/markdown', { webOperation })
+
+    await vi.waitFor(() => {
+      expect(pane.querySelector('a[href="https://example.com"]')).not.toBeNull()
+    })
+    expect(pane.querySelector('br')).not.toBeNull()
+    expect(pane.querySelector('s')?.textContent).toBe('old')
+  })
+
+  it('renders JSON in the syntax-highlighted JSON frame', async () => {
     const webOperation = vi.fn().mockResolvedValue({ responseText: '{\n  "enabled": true\n}' })
     const pane = renderWith('application/json', { webOperation })
     await flush()
 
-    expect(pane.querySelector('pre')?.textContent).toBe('{\n  "enabled": true\n}')
+    expect(pane.querySelector('.human-readable-json-preview')?.textContent)
+      .toBe('{\n  "enabled": true\n}')
+    expect(pane.querySelector('.human-readable-plain-text-preview')).toBeNull()
     expect(pane.querySelector('iframe')).toBeNull()
     expect(webOperation).toHaveBeenCalledWith('GET', uri)
+  })
+
+  it('pretty prints and safely colors JSON-LD without changing large number lexemes', async () => {
+    const source = '{"@context":{"name":"https://schema.org/name"},"value":900719925474099312345,"active":true,"empty":null,"script":"</span><img src=x>"}'
+    const pane = renderWith('application/ld+json; charset=utf-8', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: source })
+    })
+    await vi.waitFor(() => {
+      expect(pane.querySelector('.human-readable-json-preview')).not.toBeNull()
+    })
+    const frame = pane.querySelector('pre')!
+
+    await vi.waitFor(() => expect(frame.textContent).toContain('900719925474099312345'))
+    expect(frame.textContent).toContain('  "@context": {')
+    expect(frame.querySelector('.human-readable-json-number')?.textContent)
+      .toBe('900719925474099312345')
+    expect(frame.querySelector('.human-readable-json-key')?.textContent)
+      .toBe('"@context"')
+    expect(frame.querySelector('.human-readable-json-string')?.textContent)
+      .toBe('"https://schema.org/name"')
+    expect(frame.querySelector('.human-readable-json-boolean')?.textContent).toBe('true')
+    expect(frame.querySelector('.human-readable-json-null')?.textContent).toBe('null')
+    expect(frame.querySelector('img')).toBeNull()
+    expect(frame).toHaveAttribute('tabindex', '0')
+    expect(frame).toHaveAttribute('aria-label', 'JSON document')
+  })
+
+  it('preserves invalid JSON exactly and displays an accessible parse error', async () => {
+    const source = '{ "value": 01, "<img>": "<script>unsafe()</script>" }'
+    const pane = renderWith('application/json', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: source })
+    })
+
+    await vi.waitFor(() => {
+      expect(pane.querySelector('[role="alert"]')?.textContent)
+        .toBe('Invalid JSON — showing the original content.')
+    })
+    expect(pane.querySelector('pre')?.textContent).toBe(source)
+    expect(pane.querySelector('script, img')).toBeNull()
+  })
+
+  it('does not report internal JSON validation errors as invalid JSON', async () => {
+    vi.spyOn(JSON, 'parse').mockImplementation(() => {
+      throw new Error('unexpected validator failure')
+    })
+    const pane = renderWith('application/json', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: '{"valid":true}' })
+    })
+
+    await vi.waitFor(() => {
+      expect(pane.querySelector('[role="alert"]')?.textContent)
+        .toBe('Unable to validate JSON — showing the original content.')
+    })
+    expect(pane.querySelector('[role="alert"]')?.textContent).not.toContain('Invalid JSON')
+    expect(pane.querySelector('pre')?.textContent).toBe('{"valid":true}')
+  })
+
+  it('keeps long JSON available in the mobile layout', async () => {
+    const pane = renderWith('application/json', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: `{"value":"${'x'.repeat(120)}"}` })
+    }, { layout: 'mobile' })
+    const frame = pane.querySelector('pre')!
+
+    await vi.waitFor(() => expect(frame.textContent).toContain('x'.repeat(120)))
+    expect(pane).toHaveAttribute('data-layout', 'mobile')
+    expect(frame).toHaveClass('human-readable-json-preview')
+  })
+
+  it('uses JSON filename fallback only without a conflicting known MIME type', async () => {
+    const jsonPane = renderWith('', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: '{"ok":true}' })
+    }, {}, 'https://pod.example/docs/data.jsonld?download=1')
+    await vi.waitFor(() => expect(jsonPane.querySelector('.human-readable-json-preview')).not.toBeNull())
+
+    const genericMimePane = renderWith('application/octet-stream', {
+      webOperation: vi.fn().mockResolvedValue({ responseText: '{"ok":true}' })
+    }, {}, 'https://pod.example/docs/data.json')
+    await vi.waitFor(() => expect(genericMimePane.querySelector('.human-readable-json-preview')).not.toBeNull())
+
+    const htmlPane = renderWith('text/html', {
+      _fetch: vi.fn().mockResolvedValue(htmlResponse('<html><body>Known HTML</body></html>'))
+    }, {}, 'https://pod.example/docs/data.json')
+    await waitForSrcdoc(htmlPane, 'Known HTML')
+    expect(htmlPane.querySelector('.human-readable-json-preview')).toBeNull()
   })
 
   it('renders plain text as escaped text through Lit', async () => {
