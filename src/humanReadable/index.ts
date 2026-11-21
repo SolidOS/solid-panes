@@ -374,8 +374,12 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       const cts = kb.fetcher.getHeader(x, 'content-type')
       if (cts) {
         for (let j = 0; j < cts.length; j++) {
+          const contentType = cts[j].split(';', 1)[0].trim().toLowerCase()
           for (let k = 0; k < displayables.length; k++) {
-            if (cts[j].indexOf(displayables[k]) >= 0) {
+            const displayable = displayables[k]
+            if (displayable.endsWith('/')
+              ? contentType.startsWith(displayable)
+              : contentType === displayable) {
               return true
             }
           }
@@ -391,8 +395,13 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       displayables: string[]
     ): boolean {
       const t = kb.findTypeURIs(x)
+      if (t['http://purl.org/dc/terms/Image']) return true
       for (let k = 0; k < displayables.length; k++) {
-        if (Util.mediaTypeClass(displayables[k]).uri in t) {
+        const displayable = displayables[k]
+        if (displayable.endsWith('/')) {
+          const mediaTypePrefix = `http://www.w3.org/ns/iana/media-types/${displayable}`
+          if (Object.keys(t).some(type => type.startsWith(mediaTypePrefix))) return true
+        } else if (Util.mediaTypeClass(displayable).uri in t) {
           return true
         }
       }

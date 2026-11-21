@@ -209,6 +209,15 @@ describe('restoring a history entry', () => {
     expect(refreshHeading).toHaveBeenCalledWith(false)
   })
 
+  it('restores a cross-origin resource from a ?uri= deep link', async () => {
+    const target = 'https://other.example/private/document.html'
+    window.history.replaceState({}, '', `/?uri=${encodeURIComponent(target)}`)
+
+    await controller.show({ kind: 'restore' })
+
+    expect(GotoSubject.mock.calls[0][0]).toEqual(store.sym(target))
+  })
+
   it('still shows the default view when the entry names a pane that cannot be built', async () => {
     getFolderPane.mockResolvedValue(null)
     window.history.replaceState({ paneName: 'folder', paneUri: 'https://pod.example/timea/' }, '', '/timea2/docs/')

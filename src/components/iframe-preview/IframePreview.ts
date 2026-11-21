@@ -65,6 +65,7 @@ export default class IframePreview extends WebComponent {
   private clearPreview (): void {
     this.removeDokieliBridge()
     this.removeDokieliBridge = () => {}
+    this.renderRoot.querySelector('iframe')?.removeAttribute('srcdoc')
     if (this.objectUrl) {
       URL.revokeObjectURL(this.objectUrl)
       this.objectUrl = undefined

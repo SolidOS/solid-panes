@@ -125,6 +125,18 @@ describe('isAllowedPreviewRequest', () => {
 })
 
 describe('human readable pane iframe rendering', () => {
+  it.each([
+    'http://www.w3.org/ns/iana/media-types/image/png#Resource',
+    'http://purl.org/dc/terms/Image'
+  ])('recognizes image RDF types without a cached content type (%s)', typeUri => {
+    const store = {
+      fetcher: { getHeader: vi.fn().mockReturnValue(null) },
+      findTypeURIs: vi.fn().mockReturnValue({ [typeUri]: true })
+    }
+
+    expect(humanReadablePane.label(sym(uri), { session: { store } } as any)).toBe('View')
+  })
+
   it.each(['text/markdown', 'text/markdown; charset=utf-8', 'text/markdown; charset=UTF-8; format=flowed'])(
     'renders Markdown from content type %s without a Markdown filename',
     async contentType => {
@@ -589,6 +601,22 @@ describe('human readable pane iframe rendering', () => {
     await flush()
     expect(getFrame(pane)?.srcdoc).toContain('New document')
     expect(getFrame(pane)?.srcdoc).not.toContain('Stale document')
+  })
+
+  it('clears an old srcdoc when switching to a blob preview', async () => {
+    const fetch = vi.fn()
+      .mockResolvedValueOnce(htmlResponse('<html><body>HTML preview</body></html>'))
+      .mockResolvedValueOnce(new Response('binary', { headers: { 'content-type': 'application/octet-stream' } }))
+    const pane = renderWith('text/html', { _fetch: fetch })
+    const preview = pane.querySelector('solid-panes-iframe-preview') as IframePreview
+    await waitForSrcdoc(pane, 'HTML preview')
+
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/next')
+    preview.subject = sym('https://pod.example/docs/next.bin')
+    await vi.waitFor(() => expect(getFrame(pane)?.src).toBe('blob:https://pod.example/next'))
+
+    expect(getFrame(pane)?.getAttribute('srcdoc')).toBeNull()
+    vi.restoreAllMocks()
   })
 
   it.each(['text/html', 'application/octet-stream'])('does not attach a late Dokieli bridge after a %s preview is removed', async contentType => {

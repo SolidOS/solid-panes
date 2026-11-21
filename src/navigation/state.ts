@@ -52,6 +52,11 @@ export function readNavigationState (): NavigationState {
   return parseNavigationState(window.history.state)
 }
 
+/** Resolve the resource represented by the application URL, including ?uri= deep links. */
+export function navigationSubjectUri (location: Location = window.location): string | undefined {
+  return new URL(location.href).searchParams.get('uri') || undefined
+}
+
 const historyWrites = new WeakMap<History, number>()
 
 /** Whether a synchronous history write is being made by this application. */

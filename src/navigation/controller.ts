@@ -12,7 +12,7 @@ import type { PaneDefinition } from 'pane-registry'
 import type { OutlineManager } from '../outline/manager'
 import { getFolderPaneForStorage, getProfilePaneFromURI, getSocialPaneFromURI, type PaneItem } from '../utils/paneUtils'
 import { setNavbarHidden } from './navbarVisibility'
-import { readNavigationState, type NavigationState, type NavigationView } from './state'
+import { navigationSubjectUri, readNavigationState, type NavigationState, type NavigationView } from './state'
 import type { FolderView, NavigationSource } from './options'
 import { isWebIdUri } from '../utils/webIdUtils'
 import { deriveStorageView } from './chrome'
@@ -114,7 +114,11 @@ export function createNavigationController (deps: NavigationDeps): NavigationCon
       // The account menu shows the viewer's own content, so the navbar for the page is not offered
       if (source === 'accountMenu') setNavbarHidden(true)
 
-      const subject = store.sym(intent.kind === 'restore' && intent.subject ? intent.subject : window.location.href)
+      const subject = store.sym(
+        intent.kind === 'restore'
+          ? intent.subject ?? navigationSubjectUri() ?? window.location.href
+          : window.location.href
+      )
       const pane = await paneFor(intent, subject, state)
       if (request !== latest) return
 
