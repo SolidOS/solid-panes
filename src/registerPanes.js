@@ -16,16 +16,14 @@ import { longChatPane, shortChatPane } from 'chat-pane'
 import { schedulePane } from './schedule/schedulePane'
 // import publicationPane from './publication/publicationPane.js'
 import tripPane from './trip/tripPane.js'
-import { imagePane } from './imagePane'
 import playListPane from './playlist/playlistPane.js'
-import videoPane from './video/videoPane.js'
 import audioPane from './audio/audioPane.js'
 import dokieliPane from './dokieli/dokieliPane.js'
 import folderPane from 'folder-pane'
 import { classInstancePane } from './classInstancePane.js'
 import { slideshowPane } from './slideshow/slideshowPane.js'
 import { socialPane } from './social/socialPane'
-import humanReadablePane from './humanReadablePane'
+import humanReadablePane from './humanReadable'
 
 import { dataContentPane } from './dataContentPane'
 import sourcePane from 'source-pane'
@@ -83,10 +81,8 @@ export function registerPanes (register) {
 
   // Content views
 
-  register(imagePane) // Basic image view
   register(playListPane) // Basic playlist view
 
-  register(videoPane) // Video clip player
   register(audioPane) // Audio clip player
 
   register(dokieliPane) // Should be above dataContentPane
