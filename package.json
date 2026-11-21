@@ -88,6 +88,7 @@
     "@types/node": "^22.20.0",
     "@typescript-eslint/parser": "^8.59.3",
     "@vitest/coverage-v8": "^4.0.18",
+    "axe-core": "^4.14.1",
     "eslint": "^9.39.4",
     "globals": "^17.6.0",
     "jsdom": "^28.1.0",
@@ -96,7 +97,8 @@
     "typescript": "^6.0.3",
     "unplugin-icons": "^23.0.1",
     "vite": "^8.0.16",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "vitest-axe": "^0.1.0"
   },
   "solidosDependencies": [
     "rdflib",
