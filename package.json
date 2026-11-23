@@ -1,6 +1,6 @@
 {
   "name": "solid-panes",
-  "version": "5.1.1",
+  "version": "5.1.2",
   "description": "Solid-compatible Panes: applets and views for the mashlib and databrowser",
   "main": "dist/index.cjs.js",
   "types": "dist/index.d.ts",
@@ -62,7 +62,7 @@
     "chat-pane": "4.1.0",
     "contacts-pane": "4.1.0",
     "dompurify": "^3.4.4",
-    "folder-pane": "4.1.0",
+    "folder-pane": "4.1.4",
     "issue-pane": "4.1.0",
     "lit-html": "^3.3.2",
     "marked": "^18.0.3",
