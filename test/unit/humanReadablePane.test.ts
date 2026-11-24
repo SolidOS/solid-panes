@@ -6,7 +6,8 @@ import humanReadablePane, {
   IFRAME_PREVIEW_FRAME_NAME,
   isAllowedPreviewRequest,
   previewRequestUrl,
-  withBaseHref
+  withBaseHref,
+  addResponsivePreviewStyles
 } from '../../src/humanReadable'
 
 const uri = 'https://pod.example/docs/page.html'
@@ -67,6 +68,17 @@ describe('withBaseHref', () => {
     const html = '<head><base href="../assets/"></head>'
     expect(withBaseHref(html, uri))
       .toBe('<head><base href="https://pod.example/assets/"></head>')
+  })
+})
+
+describe('addResponsivePreviewStyles', () => {
+  it('adds mobile document sizing styles inside the preview document head', () => {
+    const html = addResponsivePreviewStyles('<html><head><title>x</title></head><body></body></html>')
+
+    expect(html).toContain('<style data-solidos-mobile-preview>')
+    expect(html.indexOf('<style data-solidos-mobile-preview>')).toBeGreaterThan(html.indexOf('<head>'))
+    expect(html).toContain('main, article')
+    expect(addResponsivePreviewStyles(html)).toBe(html)
   })
 })
 

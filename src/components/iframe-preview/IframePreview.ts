@@ -6,7 +6,8 @@ import {
   documentTitle,
   HTML_PREVIEW_SANDBOX,
   IFRAME_PREVIEW_FRAME_NAME,
-  resourceFilename
+  resourceFilename,
+  addResponsivePreviewStyles
 } from '../../humanReadable/previewHelpers'
 import styles from './IframePreview.styles.css'
 import 'solid-ui/components/error-state'
@@ -101,7 +102,8 @@ export default class IframePreview extends WebComponent {
         this.rawHtml = htmlContent
         this.fetchedTitle = documentTitle(htmlContent, subject.uri)
         this.contentType = contentType
-        this.content = this.withBaseHref?.(htmlContent, subject.uri) ?? htmlContent
+        const documentHtml = this.withBaseHref?.(htmlContent, subject.uri) ?? htmlContent
+        this.content = addResponsivePreviewStyles(documentHtml)
       } else {
         const blob = await response.blob()
         if (!isCurrent()) return

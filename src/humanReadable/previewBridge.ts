@@ -4,6 +4,8 @@
  * The preview remains untrusted: the parent window validates every request
  * before delegating it to the authenticated Solid fetcher.
  */
+import { addResponsivePreviewStyles } from './previewHelpers'
+
 export type PreviewBridgeOptions = {
   bridgeAttribute: string
   requestType: string
@@ -399,5 +401,6 @@ export function createPreviewBridge (
 })()
 </script>`
   const cleanHtml = options.stripPreviewBridgeScripts(html) ?? html
-  return options.withBaseHref(cleanHtml, uri).replace(/<head(\s[^>]*)?>/i, match => `${match}${bridge}`)
+  const previewHtml = options.withBaseHref(cleanHtml, uri)
+  return addResponsivePreviewStyles(previewHtml).replace(/<head(\s[^>]*)?>/i, match => `${match}${bridge}`)
 }

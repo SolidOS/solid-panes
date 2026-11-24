@@ -22,6 +22,7 @@ import type PdfViewer from '../components/pdf-viewer'
 import '../components/pdf-viewer'
 
 export { IFRAME_PREVIEW_FRAME_NAME } from './previewHelpers'
+export { addResponsivePreviewStyles } from './previewHelpers'
 
 function viewerWebId (): string | null {
   try {
