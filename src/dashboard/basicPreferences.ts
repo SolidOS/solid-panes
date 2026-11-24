@@ -82,7 +82,7 @@ export const basicPreferencesPane: PaneDefinition = {
       profileEditable: false,
       trustedApps: [],
       newAppUrl: '',
-      newAppModes: ['Read'],
+      newAppModes: [],
       appsStatus: null,
       busyOrigins: new Set(),
       deletion: { checking: true, links: [], servers: [] }
@@ -163,7 +163,7 @@ export const basicPreferencesPane: PaneDefinition = {
         }
         const modes = state.newAppModes.length ? state.newAppModes : ['Read' as AccessMode]
         state.newAppUrl = ''
-        state.newAppModes = ['Read']
+        state.newAppModes = []
         await actions.setAppModes(origin, modes)
       }
     }
@@ -368,8 +368,8 @@ function trustedAppsSection (state: PreferencesState, actions: Actions): Templat
         </table>
       </div>
       <p id="preferences-new-app-hint" class="preferences-muted">
-        Tick the access modes first, then type the application's URL and press Enter,
-        for example https://trusted.app or http://localhost:3000.
+        To add an application, tick its access modes, then type its URL and press Enter,
+        for example https://trusted.app or http://localhost:3000. With no modes ticked it gets Read access.
       </p>
       ${statusLine(state.appsStatus)}
     </section>

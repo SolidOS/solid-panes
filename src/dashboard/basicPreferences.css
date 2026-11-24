@@ -8,6 +8,8 @@
   --preferences-danger: var(--solid-ui-color-red-600, #dc2626);
   --preferences-danger-bg: var(--solid-ui-color-red-50, #fef2f2);
   --preferences-header-bg: color-mix(in srgb, var(--preferences-primary) 10%, #ffffff);
+  /* Checked access modes are orange in the design */
+  --preferences-check: var(--solid-ui-color-orange-500, #f97316);
 
   box-sizing: border-box;
   width: 100%;
@@ -55,8 +57,8 @@
   align-items: center;
   gap: 6px;
   margin: 0 0 8px;
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 500;
   line-height: 1.3;
 }
 
@@ -113,14 +115,17 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  max-width: 480px;
+}
+
+.preferences-field .preferences-select {
+  max-width: 340px;
 }
 
 .preferences-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .preferences-select,
@@ -128,7 +133,7 @@
   width: 100%;
   min-height: 40px;
   padding: 8px 12px;
-  border: 1px solid var(--solid-ui-color-gray-400, #9ca3af);
+  border: 1px solid var(--solid-ui-color-gray-300, #d1d5db);
   border-radius: 5px;
   background: var(--solid-ui-color-white, #ffffff);
   color: inherit;
@@ -168,7 +173,7 @@
 
 .preferences-table thead th {
   background: var(--preferences-header-bg);
-  font-weight: 600;
+  font-weight: 500;
   text-align: left;
 }
 
@@ -191,7 +196,7 @@
 }
 
 .preferences-table__url {
-  font-weight: 500;
+  font-weight: 400;
   text-align: left;
   overflow-wrap: anywhere;
 }
@@ -204,7 +209,7 @@
   width: 16px;
   height: 16px;
   margin: 0;
-  accent-color: var(--preferences-primary);
+  accent-color: var(--preferences-check);
   cursor: pointer;
 }
 
@@ -250,12 +255,16 @@
 .preferences-warning {
   display: flex;
   gap: 8px;
-  margin-bottom: 16px;
-  padding: 12px 16px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
   border-radius: 5px;
   background: var(--preferences-danger-bg);
   color: var(--preferences-danger);
   font-size: var(--solid-ui-font-size-sm, 0.875rem);
+}
+
+.preferences-warning strong {
+  font-weight: 500;
 }
 
 .preferences-warning icon-lucide-triangle-alert {
@@ -266,8 +275,8 @@
 }
 
 .preferences-warning p {
-  margin: 4px 0 0;
-  color: var(--preferences-text);
+  margin: 8px 0 0;
+  color: var(--preferences-muted);
 }
 
 .preferences-delete-actions {
@@ -287,6 +296,7 @@
   background: var(--solid-ui-color-white, #ffffff);
   color: var(--preferences-danger);
   font-size: var(--solid-ui-font-size-sm, 0.875rem);
+  font-weight: 500;
   text-decoration: none;
 }
 
