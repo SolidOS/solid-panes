@@ -77,8 +77,18 @@ describe('addResponsivePreviewStyles', () => {
 
     expect(html).toContain('<style data-solidos-mobile-preview>')
     expect(html.indexOf('<style data-solidos-mobile-preview>')).toBeGreaterThan(html.indexOf('<head>'))
+    expect(html.indexOf('<style data-solidos-mobile-preview>')).toBeLessThan(html.indexOf('</head>'))
     expect(html).toContain('main, article')
     expect(addResponsivePreviewStyles(html)).toBe(html)
+  })
+
+  it('places mobile rules after the document styles so they win the cascade', () => {
+    const html = addResponsivePreviewStyles(
+      '<html><head><style>body { margin: 40px } main { max-width: 900px }</style></head><body></body></html>'
+    )
+
+    expect(html.indexOf('body { margin: 40px }')).toBeLessThan(html.indexOf('<style data-solidos-mobile-preview>'))
+    expect(html.indexOf('main { max-width: 900px }')).toBeLessThan(html.indexOf('<style data-solidos-mobile-preview>'))
   })
 })
 

@@ -168,8 +168,7 @@ export default class PdfViewer extends WebComponent {
 
   private async renderSelectedPage (pageNumber: number, generation: number): Promise<void> {
     await this.updateComplete
-    const canvas = this.renderRoot.querySelectorAll<HTMLCanvasElement>('.canvas')[pageNumber - 1]
-    if (canvas) await this.renderPage(pageNumber, canvas, 1.25, generation)
+    await this.renderPageBatch([pageNumber], generation)
   }
 
   private async renderPage (

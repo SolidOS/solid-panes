@@ -355,3 +355,14 @@ solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
     height: 100vh;
   }
 }
+
+@media (max-width: 768px) {
+  .human-readable-pane--iframe,
+  solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
+    flex: 0 0 auto;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}

@@ -49,10 +49,10 @@ export function escapeAttribute (value: string): string {
 
 export function addResponsivePreviewStyles (html: string): string {
   if (html.includes('data-solidos-mobile-preview')) return html
-  const headMatch = html.match(/<head(\s[^>]*)?>/i)
+  const headMatch = html.match(/<head(\s[^>]*)?>[\s\S]*?<\/head\s*>/i)
   if (headMatch && headMatch.index !== undefined) {
-    const insertAt = headMatch.index + headMatch[0].length
-    return html.slice(0, insertAt) + MOBILE_PREVIEW_STYLES + html.slice(insertAt)
+    const closingHeadIndex = headMatch.index + headMatch[0].length - headMatch[0].match(/<\/head\s*>$/i)![0].length
+    return html.slice(0, closingHeadIndex) + MOBILE_PREVIEW_STYLES + html.slice(closingHeadIndex)
   }
   return MOBILE_PREVIEW_STYLES + html
 }
