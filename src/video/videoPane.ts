@@ -1,7 +1,7 @@
 /*   Single video play Pane
  **
  */
-import { icons } from 'solid-ui'
+import { icons, log } from 'solid-ui'
 import { Util } from 'rdflib'
 import './videoPane.css'
 
@@ -31,14 +31,51 @@ export default {
     video.setAttribute('controls', 'yes')
     video.setAttribute('aria-label', 'Video preview')
     video.setAttribute('playsinline', '')
+    let active = true
+    let objectURL: string | undefined
+    const observer = new MutationObserver(() => {
+      if (!div.isConnected) cleanup()
+    })
+
+    const cleanup = () => {
+      active = false
+      video.removeEventListener('error', handleVideoError)
+      if (objectURL) {
+        URL.revokeObjectURL(objectURL)
+        objectURL = undefined
+      }
+      observer.disconnect()
+    }
+
+    const handleVideoError = () => {
+      if (!active) return
+      cleanup()
+      log.warn('Unable to load video resource')
+    }
+
+    const observationRoot = dom.body ?? dom.documentElement
+    if (observationRoot) observer.observe(observationRoot, { childList: true, subtree: true })
+    video.addEventListener('error', handleVideoError)
+
     // get video with authenticated fetch
     kb.fetcher._fetch(subject.uri)
       .then(function (response) {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.blob()
       })
       .then(function (myBlob) {
-        const objectURL = URL.createObjectURL(myBlob)
-        video.setAttribute('src', objectURL) // w640 h480 //
+        if (!active || !div.isConnected) {
+          cleanup()
+          return
+        }
+        const previewURL = URL.createObjectURL(myBlob)
+        objectURL = previewURL
+        video.setAttribute('src', previewURL) // w640 h480 //
+      })
+      .catch(function (error) {
+        if (!active) return
+        cleanup()
+        log.warn('Unable to load video resource: ' + error)
       })
 
     return div
