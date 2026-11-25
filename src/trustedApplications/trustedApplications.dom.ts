@@ -1,6 +1,7 @@
 import { NamedNode, Statement, sym } from 'rdflib'
 import { ns } from 'solid-ui'
 import { store } from 'solid-logic'
+import '~icons/lucide/trash-2'
 import { generateRandomString, getStatementsToAdd, getStatementsToDelete } from './trustedApplications.utils'
 
 interface FormElements {
@@ -14,14 +15,15 @@ interface FormElements {
 
 export function createApplicationTable (subject: NamedNode) {
   const applicationsTable = createElement('table', {
-    class: 'results'
+    class: 'results',
+    style: styles.table
   })
 
-  // creating headers
+  // creating headers: one column per access mode, as in the Preferences design
   const header = createContainer('tr', [
-    createText('th', 'Application URL'),
-    createText('th', 'Access modes'),
-    createText('th', 'Actions')
+    createText('th', 'Application URL', { style: styles.th + styles.urlCell }),
+    ...modes.map(mode => createText('th', mode, { style: styles.th })),
+    createText('th', '', { style: styles.th })
   ])
   applicationsTable.appendChild(header);
 
@@ -80,6 +82,8 @@ function createApplicationEntry (
             {
               class: 'textinput',
               placeholder: 'Write new URL here',
+              'aria-label': origin ? 'Application URL' : 'New application URL (press Enter to add)',
+              style: styles.urlInput,
               value: origin ? origin.value : ''
             },
             {},
@@ -93,50 +97,24 @@ function createApplicationEntry (
           submit: addOrEditApplication
         }
       )
-    ]),
-    createContainer('td', [
-      createContainer(
-        'form',
-        createModesInput(trustedApplicationState),
-        {},
-        {
-          submit: addOrEditApplication
-        }
-      )
-    ]),
-    createContainer('td', [
-      createContainer(
-        'form',
-        origin
-          ? [
-              createText('button', 'Update', {
-                class: 'controlButton',
-                style: 'background: LightGreen;'
-              }),
-              createText(
-                'button',
-                'Delete',
-                {
-                  class: 'controlButton',
-                  style: 'background: LightCoral;'
-                },
-                {
-                  click: removeApplication
-                }
-              )
-            ]
-          : [
-              createText('button', 'Add', {
-                class: 'controlButton',
-                style: 'background: LightGreen;'
-              })
-            ],
-        {},
-        {
-          submit: addOrEditApplication
-        }
-      )
-    ])
+    ], { style: styles.td + styles.urlCell }),
+    // Ticking a mode saves straight away for an existing app;
+    // for the new-app row, the modes are saved when the URL is entered
+    ...createModesInput(trustedApplicationState, origin ? addOrEditApplication : null)
+      .map(checkbox => createContainer('td', [checkbox], { style: styles.td })),
+    createContainer('td', origin
+      ? [
+          createContainer('button', [createIcon('icon-lucide-trash-2')], {
+            type: 'button',
+            class: 'controlButton',
+            title: 'Remove',
+            'aria-label': `Remove ${origin.value}`,
+            style: styles.trashButton
+          }, {
+            click: removeApplication
+          })
+        ]
+      : [], { style: styles.td + 'text-align: right;' })
   ])
 
   function addOrEditApplication (event: Event) {
@@ -251,26 +229,50 @@ export function createText<K extends keyof globalThis.HTMLElementTagNameMap> (
   return element
 }
 
-function createModesInput ({ appModes, formElements }: {
+const modes = ['Read', 'Write', 'Append', 'Control']
+
+/** A 16px decorative icon, e.g. <icon-lucide-trash-2> */
+export function createIcon (tagName: string): HTMLElement {
+  const icon = document.createElement(tagName)
+  icon.setAttribute('aria-hidden', 'true')
+  icon.setAttribute('style', 'width: 16px; height: 16px;')
+  return icon
+}
+
+function createModesInput ({ appModes, formElements, origin }: {
   appModes: NamedNode[]
   formElements: FormElements
-}) {
-  return ['Read', 'Write', 'Append', 'Control'].map(mode => {
+  origin: NamedNode | null
+}, onChange: ((event: Event) => void) | null) {
+  return modes.map(mode => {
     const isChecked = appModes.some(
       appMode => appMode.value === ns.acl(mode).value
     )
-    return createContainer('label', [
-      createElement(
-        'input',
-        {
-          type: 'checkbox',
-          ...(isChecked ? { checked: '' } : {}),
-          value: ns.acl(mode).uri
-        },
-        {},
-        element => formElements.modes.push(element)
-      ),
-      createText('span', mode)
-    ])
+    return createElement(
+      'input',
+      {
+        type: 'checkbox',
+        ...(isChecked ? { checked: '' } : {}),
+        value: ns.acl(mode).uri,
+        'aria-label': `${mode} access for ${origin ? origin.value : 'the new application'}`,
+        style: styles.checkbox
+      },
+      onChange ? { change: onChange } : {},
+      element => formElements.modes.push(element)
+    )
   })
+}
+
+/** Inline styles for the trusted applications table, as in the Preferences design (#710) */
+const border = '1px solid var(--solid-ui-color-slate-200, #e2e8f0)'
+const styles = {
+  table: `width: 100%; border-collapse: separate; border-spacing: 0; border: ${border}; border-bottom: none; border-radius: 5px; font-size: 0.875rem;`,
+  th: 'padding: 12px 16px; text-align: left; font-weight: 500; background: color-mix(in srgb, var(--solid-ui-color-primary, #7c4dff) 10%, #ffffff); ' +
+    `border-bottom: ${border};`,
+  td: `padding: 12px 16px; border-bottom: ${border}; vertical-align: middle;`,
+  urlCell: `border-right: ${border}; min-width: 240px;`,
+  urlInput: 'width: 100%; box-sizing: border-box; padding: 4px 0; border: none; background: transparent; font: inherit; color: inherit;',
+  checkbox: 'width: 16px; height: 16px; margin: 0; cursor: pointer; accent-color: var(--solid-ui-color-orange-500, #f97316);',
+  trashButton: 'display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; ' +
+    'border: none; border-radius: 5px; background: transparent; color: var(--solid-ui-color-gray-400, #9ca3af); cursor: pointer;'
 }

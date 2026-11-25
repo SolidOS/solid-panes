@@ -5,14 +5,8 @@
 
 :this <http://purl.org/dc/elements/1.1/title> "Basic preferences" ;
       a ui:Form ;
-      ui:part :categorizeUser, :privateComment, :personalInformationHeading;
-      ui:parts ( :personalInformationHeading :privateComment :categorizeUser ).
-
-:personalInformationHeading a ui:Heading;
-      ui:contents "Personal information".
-
-:privateComment a ui:Comment;
-      ui:contents "This information is private.".
+      ui:part :categorizeUser;
+      ui:parts ( :categorizeUser ).
 
 :categorizeUser a ui:Classifier;
-      ui:label "Level of user"; ui:property rdf:type ; ui:category solid:User.
+      ui:label "Role"; ui:property rdf:type ; ui:category solid:User.
