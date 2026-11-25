@@ -17,6 +17,7 @@ import { schedulePane } from './schedule/schedulePane'
 // import publicationPane from './publication/publicationPane.js'
 import tripPane from './trip/tripPane.js'
 import { imagePane } from './imagePane'
+import { officePane } from './officePane'
 import playListPane from './playlist/playlistPane.js'
 import videoPane from './video/videoPane.js'
 import audioPane from './audio/audioPane.js'
@@ -85,6 +86,7 @@ export function registerPanes (register) {
 
   register(imagePane) // Basic image view
   register(playListPane) // Basic playlist view
+  register(officePane) // Microsoft Office document view
 
   register(videoPane) // Video clip player
   register(audioPane) // Audio clip player

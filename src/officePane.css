@@ -1,0 +1,47 @@
+.office-pane {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--solid-ui-color-slate-100, #F1F5F9);
+}
+
+.office-pane__frame {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.office-pane__document {
+  max-width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .office-pane__frame {
+    padding: 0.75rem;
+  }
+
+  .office-pane__document {
+    width: 100% !important;
+    min-width: 0;
+    padding: 0.75rem !important;
+  }
+
+  .office-pane__document table {
+    width: 100% !important;
+    max-width: 100%;
+    table-layout: fixed;
+  }
+
+  .office-pane__document th,
+  .office-pane__document td {
+    max-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
