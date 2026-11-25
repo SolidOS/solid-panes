@@ -13,7 +13,6 @@ import { createPreviewBridge } from './previewBridge'
 import { renderMarkdownContent } from './markdownPreview'
 import { renderJsonContent } from './jsonPreview'
 import { renderPlainTextContent } from './textPreview'
-import { isDocxContentType, isDocxFile, renderDocxContent } from './docxPreview'
 import { createPreviewContainer } from './previewFrame'
 import { escapeAttribute, HTML_PREVIEW_SANDBOX } from './previewHelpers'
 import type IframePreview from '../components/iframe-preview'
@@ -419,10 +418,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       return 'View'
     }
 
-    if (isDocxFile(subject.uri)) {
-      return 'View'
-    }
-
     const cts = kb.fetcher.getHeader(subject.doc(), 'content-type')
     const contentType = cts ? cts[0].split(';', 1)[0].trim() : null
     if (isJsonFile(subject.uri) &&
@@ -476,7 +471,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
 
     // Fallback: detect markdown by file extension if content-type is not text/markdown
     const isMarkdown = ct === 'text/markdown' || isMarkdownFile(subject.uri)
-    const isDocx = isDocxContentType(ct) || isDocxFile(subject.uri)
     const isJson = isJsonContentType(ct) ||
       (isJsonFile(subject.uri) && canUseJsonExtensionFallback(ct))
     const isPlainText = ct === 'text/plain'
@@ -498,12 +492,6 @@ const humanReadablePane: HumanReadablePaneDefinition = {
       preview.store = kb
       preview.subject = subject
       div.appendChild(preview)
-      div.classList.add('human-readable-pane--document')
-    } else if (isDocx) {
-      const frame = myDocument.createElement('div')
-      const { container: frameContainer, status } = createPreviewContainer(myDocument, frame)
-      renderDocxContent(kb, subject, frame, status)
-      div.appendChild(frameContainer)
       div.classList.add('human-readable-pane--document')
     } else if (isMarkdown) {
       // For markdown, use a DIV element and render the content
