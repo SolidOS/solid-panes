@@ -76,6 +76,7 @@ export const imagePane: ImagePane = {
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'image-pane')
     const img = myDocument.createElement('img')
+    img.setAttribute('alt', 'Image preview')
     let active = true
     let objectURL: string | undefined
     const observer = new MutationObserver(() => {

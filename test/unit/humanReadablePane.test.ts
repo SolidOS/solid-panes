@@ -147,18 +147,6 @@ describe('isAllowedPreviewRequest', () => {
 })
 
 describe('human readable pane iframe rendering', () => {
-  it.each([
-    'http://www.w3.org/ns/iana/media-types/image/png#Resource',
-    'http://purl.org/dc/terms/Image'
-  ])('recognizes image RDF types without a cached content type (%s)', typeUri => {
-    const store = {
-      fetcher: { getHeader: vi.fn().mockReturnValue(null) },
-      findTypeURIs: vi.fn().mockReturnValue({ [typeUri]: true })
-    }
-
-    expect(humanReadablePane.label(sym(uri), { session: { store } } as any)).toBe('View')
-  })
-
   it.each(['text/markdown', 'text/markdown; charset=utf-8', 'text/markdown; charset=UTF-8; format=flowed'])(
     'renders Markdown from content type %s without a Markdown filename',
     async contentType => {

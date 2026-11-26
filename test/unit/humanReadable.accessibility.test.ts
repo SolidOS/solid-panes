@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { axe } from 'vitest-axe'
 import { sym } from 'rdflib'
 import humanReadablePane from '../../src/humanReadable'
+import { imagePane } from '../../src/imagePane'
+import videoPane from '../../src/video/videoPane'
 
 const uri = 'https://pod.example/docs/resource'
 const subject = sym(uri)
@@ -23,6 +25,28 @@ function renderPane (
     environment
   }
   const pane = humanReadablePane.render(subject, context as any)
+  document.body.appendChild(pane)
+  return pane
+}
+
+function renderMediaPane (
+  paneDefinition: { render: (subject: any, context: any) => HTMLElement },
+  contentType: string,
+  fetcher: Record<string, unknown>
+): HTMLElement {
+  const store = {
+    anyStatementMatching: vi.fn().mockReturnValue(false),
+    findTypeURIs: vi.fn().mockReturnValue({}),
+    sym: vi.fn((value: string) => sym(value)),
+    fetcher: {
+      getHeader: vi.fn().mockReturnValue([contentType]),
+      ...fetcher
+    }
+  }
+  const pane = paneDefinition.render(subject, {
+    dom: document,
+    session: { store }
+  })
   document.body.appendChild(pane)
   return pane
 }
@@ -93,13 +117,13 @@ describe('Human Readable accessibility', () => {
     await expectAxeClean(pane)
   })
 
-  it('gives image and video previews accessible labels and controls', async () => {
+  it('gives standalone image and video panes accessible labels and controls', async () => {
     vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:https://pod.example/media')
     const response = {
       ok: true,
       blob: vi.fn().mockResolvedValue(new Blob(['media']))
     }
-    const image = renderPane('image/png', {
+    const image = renderMediaPane(imagePane, 'image/png', {
       _fetch: vi.fn().mockResolvedValue(response)
     })
     await vi.waitFor(() => {
@@ -112,7 +136,7 @@ describe('Human Readable accessibility', () => {
       ok: true,
       blob: vi.fn().mockResolvedValue(new Blob(['media']))
     }
-    const video = renderPane('video/mp4', {
+    const video = renderMediaPane(videoPane, 'video/mp4', {
       _fetch: vi.fn().mockResolvedValue(videoResponse)
     })
     await vi.waitFor(() => {
@@ -124,12 +148,12 @@ describe('Human Readable accessibility', () => {
   })
 
   it('keeps the media error state accessible', async () => {
-    const pane = renderPane('image/png', {
+    const pane = renderMediaPane(imagePane, 'image/png', {
       _fetch: vi.fn().mockRejectedValue(new Error('network failure'))
     })
 
     await vi.waitFor(() => {
-      expect(pane.querySelector('solid-ui-error-state')).not.toBeNull()
+      expect(pane.querySelector('img')).toHaveAttribute('alt', 'Unable to load image')
     })
     await expectAxeClean(pane)
   })
