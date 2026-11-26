@@ -148,6 +148,24 @@ describe('main page load', () => {
     expect(GotoSubject.mock.calls[0][2]).toBeUndefined()
     expect(window.history.state).toEqual({})
   })
+
+  it('loads the resource requested by a SolidOS deep link', async () => {
+    const GotoSubject = setup({}, false)
+    const resourceUri = 'https://pod.example/docs/readme.md'
+    window.history.replaceState({}, '', `/?uri=${encodeURIComponent(resourceUri)}`)
+
+    await initMainPage(store)
+
+    expect(GotoSubject).toHaveBeenCalledWith(
+      store.sym(resourceUri),
+      true,
+      undefined,
+      true,
+      undefined,
+      undefined,
+      expect.anything()
+    )
+  })
 })
 
 describe('browser navigation without a reload', () => {

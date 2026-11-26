@@ -102,7 +102,14 @@ describe('data content pane', () => {
     expect(table.querySelector(`a[href="${related.uri}"]`)).toBeTruthy()
     expect(table.querySelector('ol > li')).toBeTruthy()
     expect(table.querySelector('table[aria-label="Properties"]')).toBeTruthy()
-    expect(table.querySelector('.bnodeDef[tabindex="-1"]')).toBeTruthy()
+    const reference = table.querySelector('.bnodeRef')
+    const definition = table.querySelector('.bnodeDef[tabindex="-1"]')
+    expect(reference).toHaveAttribute('href', '#nested')
+    expect(reference).toHaveTextContent('*nested')
+    expect(reference).toHaveAttribute('aria-label', 'Referenced blank node nested')
+    expect(definition).toHaveAttribute('id', 'nested')
+    expect(definition).toHaveTextContent('nested)')
+    expect(definition).toHaveAttribute('aria-label', 'Blank node nested')
   })
 
   it('preserves sanitized XMLLiteral content and labels its embedded region', () => {

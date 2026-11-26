@@ -198,9 +198,9 @@ export const dataContentPane = {
             referenceAnchor.setAttribute('class', 'bnodeRef')
             referenceAnchor.setAttribute(
               'aria-label',
-              `Referenced blank node ${obj.toNT().slice(3)}`
+              `Referenced blank node ${obj.toNT().slice(2)}`
             )
-            referenceAnchor.textContent = '*' + obj.toNT().slice(3)
+            referenceAnchor.textContent = '*' + obj.toNT().slice(2)
             return referenceAnchor
           }
           doneBnodes[obj.toNT()] = true
@@ -279,8 +279,8 @@ export const dataContentPane = {
       anchor.setAttribute('id', bNT.slice(2))
       anchor.setAttribute('tabindex', '-1')
       anchor.setAttribute('class', 'bnodeDef')
-      anchor.setAttribute('aria-label', `Blank node ${bNT.slice(3)}`)
-      anchor.textContent = bNT.slice(3) + ')'
+      anchor.setAttribute('aria-label', `Blank node ${bNT.slice(2)}`)
+      anchor.textContent = bNT.slice(2) + ')'
       caption.appendChild(anchor)
       table.insertBefore(caption, table.firstChild)
     }

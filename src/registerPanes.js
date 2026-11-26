@@ -25,7 +25,7 @@ import folderPane from 'folder-pane'
 import { classInstancePane } from './classInstancePane.js'
 import { slideshowPane } from './slideshow/slideshowPane.js'
 import { socialPane } from './social/socialPane'
-import humanReadablePane from './humanReadablePane'
+import humanReadablePane from './humanReadable'
 
 import { dataContentPane } from './dataContentPane'
 import sourcePane from 'source-pane'

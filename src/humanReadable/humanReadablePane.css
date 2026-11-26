@@ -1,0 +1,368 @@
+.human-readable-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  padding: 0 40px;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: auto;
+}
+
+.human-readable-document-container {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+.human-readable-pane__frame,
+.human-readable-document-frame {
+  display: block;
+  border: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+  padding: 1rem;
+  height: var(--human-readable-pane-height, 480px);
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  resize: both;
+  overflow: auto;
+}
+
+.human-readable-markdown-preview,
+.human-readable-plain-text-preview,
+.human-readable-json-preview {
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 100%;
+  max-height: 100%;
+  resize: none;
+}
+
+.human-readable-pane__frame--iframe {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  background: var(--color-background, white);
+}
+
+/* Webpages, PDFs and video fill the pane; the framed document scrolls internally. */
+/* Iframe panes fill the explorer and scroll inside the bordered frame, not the pane. */
+.human-readable-pane--iframe,
+solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
+  display: flex;
+  flex: 1 1 0%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.human-readable-pane__container--iframe {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.human-readable-document-status {
+  display: none;
+  box-sizing: border-box;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  border: 0;
+  background: transparent;
+}
+
+.human-readable-document-status[data-visible='true'] {
+  display: flex;
+  flex: 1 1 0%;
+}
+
+.human-readable-document-status > solid-ui-error-state {
+  display: block;
+  width: 100%;
+}
+
+.human-readable-document-status[data-visible='true'][data-keep-frame='false'] ~ .human-readable-document-frame {
+  display: none;
+}
+
+.human-readable-pane__container--iframe > .human-readable-pane__frame--iframe {
+  flex: 1 1 0%;
+  height: 100%;
+  min-height: 0;
+  resize: none;
+}
+
+.human-readable-markdown-preview,
+.human-readable-plain-text-preview,
+.human-readable-json-preview {
+  overflow: visible;
+  max-height: none;
+}
+
+.human-readable-pane--document {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.human-readable-pane--document > .human-readable-document-container {
+  overflow: hidden;
+}
+
+.human-readable-pane--document > .human-readable-document-container > .human-readable-markdown-preview,
+.human-readable-pane--document > .human-readable-document-container > .human-readable-plain-text-preview,
+.human-readable-pane--document > .human-readable-document-container > .human-readable-json-preview {
+  flex: 1 1 0%;
+  height: 100%;
+  min-height: 0;
+  max-height: none;
+  overflow: auto;
+}
+
+.human-readable-markdown-preview {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-markdown-preview h1,
+.human-readable-markdown-preview h2,
+.human-readable-markdown-preview h3,
+.human-readable-markdown-preview h4,
+.human-readable-markdown-preview h5,
+.human-readable-markdown-preview h6 {
+  line-height: 1.25;
+  margin: 0 0 0.75rem;
+}
+
+.human-readable-markdown-preview a {
+  color: var(--solid-ui-color-primary, #2563EB);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.human-readable-markdown-preview blockquote {
+  border-left: 4px solid var(--solid-ui-color-slate-400, #98A2B3);
+  margin: 1rem 0;
+  padding: 0 1rem;
+}
+
+.human-readable-markdown-preview code {
+  background: var(--solid-ui-color-slate-100, #F1F5F9);
+  border-radius: 0.25rem;
+  padding: 0.1em 0.25em;
+}
+
+.human-readable-markdown-preview pre {
+  background: var(--solid-ui-color-slate-100, #F1F5F9);
+  border-radius: 0.375rem;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.human-readable-markdown-preview pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.human-readable-plain-text-preview {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-json-preview {
+  margin: 0;
+  background: var(--solid-ui-color-slate-50, #F8FAFC);
+  color: var(--solid-ui-color-gray-900, #101828);
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  white-space: pre;
+  overflow: auto;
+  overflow-wrap: normal;
+  word-break: normal;
+  tab-size: 2;
+}
+
+.human-readable-json-preview:focus-visible {
+  outline: 2px solid var(--solid-ui-color-gray-800, #101828);
+  outline-offset: -2px;
+}
+
+.human-readable-json-string {
+  color: #067647;
+}
+
+.human-readable-json-key {
+  color: #6941c6;
+  font-weight: 600;
+}
+
+.human-readable-json-number {
+  color: #175cd3;
+}
+
+.human-readable-json-boolean {
+  color: #b54708;
+  font-weight: 600;
+}
+
+.human-readable-json-null {
+  color: #475467;
+}
+
+.human-readable-json-punctuation {
+  color: #475467;
+}
+
+.human-readable-plain-text-preview:focus-visible {
+  outline: 2px solid var(--solid-ui-color-gray-800, #101828);
+  outline-offset: -2px;
+}
+
+.human-readable-markdown-preview > * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.human-readable-markdown-preview img,
+.human-readable-markdown-preview video,
+.human-readable-markdown-preview canvas,
+.human-readable-markdown-preview iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+.human-readable-markdown-preview pre,
+.human-readable-markdown-preview code {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-markdown-preview pre {
+  white-space: pre-wrap;
+}
+
+.human-readable-markdown-preview table {
+  border-collapse: collapse;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.human-readable-markdown-preview th,
+.human-readable-markdown-preview td {
+  border: 1px solid var(--solid-ui-color-slate-300, #CBD5E1);
+  padding: 0.5rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-pane__frame,
+.human-readable-pane[data-layout='mobile'] .human-readable-document-frame {
+  padding: 0.75rem;
+  resize: none;
+  min-width: 0;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-markdown-preview,
+.human-readable-pane[data-layout='mobile'] .human-readable-plain-text-preview,
+.human-readable-pane[data-layout='mobile'] .human-readable-json-preview {
+  min-height: 100%;
+  max-height: none;
+}
+
+.human-readable-pane[data-layout='mobile'] {
+  padding: 0;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-markdown-preview,
+.human-readable-pane[data-layout='mobile'] .human-readable-plain-text-preview,
+.human-readable-pane[data-layout='mobile'] .human-readable-json-preview {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-json-preview {
+  white-space: pre-wrap;
+}
+
+.human-readable-pane[data-layout='mobile'] .human-readable-pane__frame--iframe {
+  width: 100%;
+  max-width: 100%;
+  flex: 0 0 auto;
+  min-height: 100vh;
+  height: 100vh;
+}
+
+@media (max-width: 576px) {
+  .human-readable-pane {
+    padding: 0;
+  }
+
+  .human-readable-pane__frame,
+  .human-readable-document-frame {
+    padding: 0.75rem;
+    resize: none;
+    min-width: 0;
+  }
+
+  .human-readable-markdown-preview,
+  .human-readable-plain-text-preview,
+  .human-readable-json-preview {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .human-readable-json-preview {
+    white-space: pre-wrap;
+  }
+
+  .human-readable-pane__frame--iframe {
+    width: 100%;
+    max-width: 100%;
+    flex: 0 0 auto;
+    min-height: 100vh;
+    height: 100vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .human-readable-pane--iframe,
+  solid-ui-file-explorer-provider > .paneDiv.human-readable-pane--iframe {
+    flex: 0 0 auto;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}

@@ -76,17 +76,52 @@ export const imagePane: ImagePane = {
     const div = myDocument.createElement('div')
     div.setAttribute('class', 'image-pane')
     const img = myDocument.createElement('img')
+    img.setAttribute('alt', 'Image preview')
+    let active = true
+    let objectURL: string | undefined
+    const observer = new MutationObserver(() => {
+      if (!div.isConnected) cleanup()
+    })
+
+    const cleanup = () => {
+      active = false
+      img.removeEventListener('error', handleImageError)
+      if (objectURL) {
+        URL.revokeObjectURL(objectURL)
+        objectURL = undefined
+      }
+      observer.disconnect()
+    }
+
+    const handleImageError = () => {
+      if (!active) return
+      cleanup()
+      img.setAttribute('alt', 'Unable to load image')
+      UI.log.warn('Unable to load image resource')
+    }
+
+    const observationRoot = myDocument.body ?? myDocument.documentElement
+    if (observationRoot) observer.observe(observationRoot, { childList: true, subtree: true })
+    img.addEventListener('error', handleImageError)
 
     // get image with authenticated fetch
     store.fetcher._fetch(subject.uri)
       .then(function (response: Response) {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
         return response.blob()
       })
       .then(function (myBlob: Blob) {
-        const objectURL = URL.createObjectURL(myBlob)
-        img.setAttribute('src', objectURL) // w640 h480 //
+        if (!active || !div.isConnected) {
+          cleanup()
+          return
+        }
+        const previewURL = URL.createObjectURL(myBlob)
+        objectURL = previewURL
+        img.setAttribute('src', previewURL) // w640 h480 //
       })
       .catch(function (error: unknown) {
+        if (!active) return
+        cleanup()
         img.setAttribute('alt', 'Unable to load image')
         UI.log.warn('Unable to load image resource: ' + error)
       })

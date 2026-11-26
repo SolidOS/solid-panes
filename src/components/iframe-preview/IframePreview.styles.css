@@ -1,0 +1,23 @@
+:host {
+  display: flex;
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.editor-card,
+.human-readable-pane__container--iframe {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.human-readable-pane__frame--iframe {
+  flex: 1 1 0%;
+  width: 100%;
+  min-height: 0;
+  box-sizing: border-box;
+  border: 1px solid var(--solid-ui-color-slate-200, #E2E8F0);
+}

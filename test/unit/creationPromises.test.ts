@@ -116,4 +116,42 @@ describe('pane creation promise contracts', () => {
       newBase: 'https://pod.example/pad/'
     })).rejects.toThrow('write failed')
   })
+
+  it('writes the initial Pad linked-list pointers to the indexed subject', async () => {
+    const store = $rdf.graph()
+    const put = vi.fn((_doc, statements, _contentType, callback) => {
+      expect(statements).toEqual(expect.arrayContaining([
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            uri: 'https://pod.example/pad/index.ttl#this'
+          }),
+          predicate: expect.objectContaining({ uri: 'http://www.w3.org/ns/pim/pad#next' }),
+          object: expect.objectContaining({
+            uri: 'https://pod.example/pad/index.ttl#this_line0'
+          })
+        }),
+        expect.objectContaining({
+          subject: expect.objectContaining({
+            uri: 'https://pod.example/pad/index.ttl#this_line0'
+          }),
+          predicate: expect.objectContaining({ uri: 'http://www.w3.org/ns/pim/pad#next' }),
+          object: expect.objectContaining({
+            uri: 'https://pod.example/pad/index.ttl#this'
+          })
+        })
+      ]))
+      callback(_doc.uri, true)
+    })
+    store.updater = { put } as any
+
+    await (padPane as any).mintNew({ session: { store } }, {
+      newBase: 'https://pod.example/pad/',
+      me: $rdf.sym('https://pod.example/profile#me')
+    })
+
+    expect((store.any(
+      $rdf.sym('https://pod.example/pad/index.ttl#this'),
+      $rdf.sym('http://www.w3.org/ns/pim/pad#next')
+    ) as $rdf.NamedNode | undefined)?.uri).toBe('https://pod.example/pad/index.ttl#this_line0')
+  })
 })
