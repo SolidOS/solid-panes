@@ -49,6 +49,11 @@ function subjectDirectoryUri (subject: NamedNode): string {
   return lastSlash >= 0 ? docUri.slice(0, lastSlash + 1) : docUri
 }
 
+function fallbackFilename (extension: string, index: number): string {
+  const randomPart = Math.random().toString(36).slice(2, 10)
+  return `image_${Date.now()}_${index}_${randomPart}.${extension}`
+}
+
 export async function resolvePhotoDisplaySrc (store: LiveStore, imageSrc?: string): Promise<string | undefined> {
   if (!imageSrc || imageSrc.startsWith('blob:') || imageSrc.startsWith('data:')) {
     return imageSrc
@@ -100,23 +105,72 @@ export async function uploadPhotoFile (store: LiveStore, subject: NamedNode, fil
   }
 
   const directoryUri = subjectDirectoryUri(subject)
+  const data = await file.arrayBuffer()
   let candidateUri = `${directoryUri}${filename}`
+  let fallbackIndex = 0
+  let checkCandidate = true
 
-  for (let index = 0; store.holds(subject, ns.vcard('hasPhoto'), sym(candidateUri)); index++) {
-    const fallbackName = `image_${index}.${extension}`
-    candidateUri = `${directoryUri}${fallbackName}`
-  }
-  try {
-    const data = await file.arrayBuffer()
-    const response = await store.fetcher.webOperation('PUT', candidateUri, {
-      data: data as unknown as string,
-      contentType: detectedContentType
-    } as any)
-    if (!response.ok) {
-      throw new Error(`Error uploading picture: ${response.status} ${response.statusText}`)
+  while (true) {
+    const linkedPhoto = store.holds(subject, ns.vcard('hasPhoto'), sym(candidateUri))
+    if (!checkCandidate) {
+      if (linkedPhoto) {
+        candidateUri = `${directoryUri}${fallbackFilename(extension, fallbackIndex)}`
+        fallbackIndex++
+        continue
+      }
+    } else if (!linkedPhoto) {
+      let response: Response
+      try {
+        response = await store.fetcher.webOperation('HEAD', candidateUri)
+      } catch (error: any) {
+        const status = error?.response?.status ?? error?.status
+        if (status === 404) {
+          response = { status: 404, ok: false, statusText: 'Not Found' } as Response
+        } else {
+          throw new Error(`Error checking picture destination: ${error}`)
+        }
+      }
+
+      if (response.status === 404) {
+        checkCandidate = false
+      } else if (!response.ok) {
+        throw new Error(`Error checking picture destination: ${response.status} ${response.statusText}`)
+      } else {
+        candidateUri = `${directoryUri}${fallbackFilename(extension, fallbackIndex)}`
+        fallbackIndex++
+        checkCandidate = false
+      }
+    } else if (linkedPhoto) {
+      candidateUri = `${directoryUri}${fallbackFilename(extension, fallbackIndex)}`
+      fallbackIndex++
+      checkCandidate = false
+      continue
     }
-  } catch (error) {
-    throw new Error(`Error uploading picture: ${error}`)
+
+    try {
+      const response = await store.fetcher.webOperation('PUT', candidateUri, {
+        data: data as unknown as string,
+        contentType: detectedContentType,
+        headers: { 'If-None-Match': '*' }
+      } as any)
+      if (response.status === 412) {
+        candidateUri = `${directoryUri}${fallbackFilename(extension, fallbackIndex)}`
+        fallbackIndex++
+        continue
+      }
+      if (!response.ok) {
+        throw new Error(`Error uploading picture: ${response.status} ${response.statusText}`)
+      }
+    } catch (error) {
+      const status = (error as any)?.response?.status ?? (error as any)?.status
+      if (status === 412) {
+        candidateUri = `${directoryUri}${fallbackFilename(extension, fallbackIndex)}`
+        fallbackIndex++
+        continue
+      }
+      throw new Error(`Error uploading picture: ${error}`)
+    }
+    break
   }
 
   const currentUser = authn.currentUser()
